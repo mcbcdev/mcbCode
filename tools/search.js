@@ -1,4 +1,3 @@
-// 1. Inject CSS immediately (No DOMContentLoaded wrapper needed for styles)
 const style = document.createElement('style');
 style.textContent = `
 * {
@@ -167,3 +166,24 @@ document.addEventListener('click', (e) => {
     closeSearch();
   }
 });
+
+
+// REPLACE your DOMContentLoaded listener with this:
+const initSearch = () => {
+    if (document.getElementById('search-tabs')) return; // Prevent doubles
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
+        <div id="search-results" class="results-panel"></div>
+    `);
+
+    // ... Put all your variable assignments (searchArea, etc.) 
+    // and event listeners (keydown, input) inside here ...
+};
+
+// This ensures it runs even if the page is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSearch);
+} else {
+    initSearch();
+}
