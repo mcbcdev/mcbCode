@@ -1,19 +1,102 @@
+// 1. Inject CSS immediately (No DOMContentLoaded wrapper needed for styles)
+const style = document.createElement('style');
+style.textContent = `
+* {
+    font-family: mcfont;
+  }
+#search-tabs {
+  /* Visibility & Animation */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* Keeps it from blocking clicks while hidden */
+  transform: translateY(-20px);
+  /* Combined transitions into one property to prevent overrides */
+  transition: opacity 0.2s ease-in-out, 
+              visibility 0.2s ease-in-out, 
+              transform 0.2s ease-in-out, 
+              width 0.3s ease-in-out, 
+              border 0.2s ease-in-out;
+  top: 10%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 25%;
+  background-color: #232323;
+  color: #ffffff;
+  font-size: 18px;
+  padding: 8px;
+  border: 3px solid #454545;
+  outline: none;
+  resize: none;
+  white-space: nowrap;
+}
 
-// css
-const searchStyles = document.createElement('link');
-searchStyles.rel = 'stylesheet';
-searchStyles.href = 'https://mcbcode.com/tools/search.css';
-document.head.appendChild(searchStyles);
+#search-tabs.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto; /* Enables interaction when shown */
+  transform: translateY(0);
+  width: 50%;
+  border: 3px solid #05ee93;
+}
 
-// html
-document.body.insertAdjacentHTML('beforeend', `
-  <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
-  <div id="search-results" class="results-panel"></div>
-`);
+/* Container for the search panel */
+.results-panel {
+  opacity: 0;
+  visibility: hidden;
+  position: fixed;
+  top: calc(10% + 50px); /* Adjust '50px' based on your textarea's height */
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 25%; /* Matches your textarea's expanded width */
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #232323;
+  border: 3px solid #454545;
+  border-top: none; /* Merges it with the textarea */
+  transition: all 0.2s ease-in-out, width 0.3s ease-in-out;
+  z-index: 999;
+  text-align: left;
+}
 
+/* Show when active */
+#search-tabs.is-visible ~ .results-panel {
+  opacity: 1;
+  visibility: visible;
+  width: 50%;
+}
 
-const searchArea = document.querySelector('#search-tabs');
-const resultsPanel = document.querySelector('#search-results');
+/* Individual result styling */
+.result-item {
+  padding: 10px 15px;
+  color: white;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+  transition: all 0.2s ease-in-out;
+}
+
+.result-item:hover {
+  color: #05ee93;
+}
+`;
+document.head.appendChild(style);
+
+// 2. Inject HTML as soon as the body is ready
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.insertAdjacentHTML('beforeend', `
+        <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
+        <div id="search-results" class="results-panel"></div>
+    `);
+
+    // ... (Your existing T-toggle and filtering logic goes here) ...
+    const searchArea = document.querySelector('#search-tabs');
+    const resultsPanel = document.querySelector('#search-results');
+    
+    // Logic remains the same as before
+});
+
 
 const data = [
   { name: "Dashboard", url: "https://mcbcode.com/dashboard" },
