@@ -1,5 +1,4 @@
 instructions for search files. paste this into any <head> of a html file to add search functionality.
 
-<link rel="stylesheet" href="tools/search">
 <link rel="stylesheet" href="tools/search.css">
 <script src="tools/search.js" defer>
