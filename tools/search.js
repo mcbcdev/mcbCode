@@ -1,18 +1,16 @@
-document.body.insertAdjacentHTML('beforeend', `
-  <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
-  <div id="search-results" class="results-panel"></div>
-`);
+// css
+const searchStyles = document.createElement('link');
+searchStyles.rel = 'stylesheet';
+searchStyles.href = 'tools/search.css';
+document.head.appendChild(searchStyles);
 
+// html
 async function loadSearchHTML() {
     const response = await fetch('tools/search.html');
     const html = await response.text();
     document.body.insertAdjacentHTML('beforeend', html);
     
-    window.searchArea = document.querySelector('#search-tabs');
-    window.resultsPanel = document.querySelector('#search-results');
-    
 }
-
 loadSearchHTML();
 
 
