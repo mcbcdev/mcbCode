@@ -1,7 +1,7 @@
 // css
 const searchStyles = document.createElement('link');
 searchStyles.rel = 'stylesheet';
-searchStyles.href = 'tools/search.css';
+searchStyles.href = 'https://mcbcode.com/tools/search.css';
 document.head.appendChild(searchStyles);
 
 // html
