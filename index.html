@@ -437,13 +437,13 @@
   left: 0;
   right: 0;
   margin: auto;
-  width: 50%; /* Matches your textarea's expanded width */
+  width: 25%; /* Matches your textarea's expanded width */
   max-height: 300px;
   overflow-y: auto;
   background-color: #232323;
   border: 3px solid #454545;
   border-top: none; /* Merges it with the textarea */
-  transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out, width 0.3s ease-in-out;
   z-index: 999;
   text-align: left;
 }
@@ -452,6 +452,7 @@
 #search-tabs.is-visible ~ .results-panel {
   opacity: 1;
   visibility: visible;
+  width: 50%;
 }
 
 /* Individual result styling */
@@ -460,18 +461,18 @@
   color: white;
   cursor: pointer;
   border-bottom: 1px solid #333;
+  transition: all 0.2s ease-in-out;
 }
 
 .result-item:hover {
-  background-color: #05ee93;
-  color: #232323;
+  color: #05ee93;
 }
 
 </style>
 </head>
 <body>
 
-    <textarea id="search-tabs" rows="1"></textarea>
+    <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
     <div id="search-results" class="results-panel"></div>
     <div class="navi">
         <div class="navi-brand">
@@ -686,6 +687,7 @@ const data = [
   { name: "Source Code", url: "https://github.com/xyztoast/mcbCode" },
   { name: "Terms", url: "https://mcbcode.com/terms-of-use" },
   { name: "Roadmap", url: "https://roadmap.mcbcode.com" },
+  { name: "Home", url: "https://mcbcode.com" },
   { name: "About", url: "https://mcbcode.com/about"}
 ];
 
