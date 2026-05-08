@@ -1,3 +1,8 @@
+document.body.insertAdjacentHTML('beforeend', `
+  <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
+  <div id="search-results" class="results-panel"></div>
+`);
+
 async function loadSearchHTML() {
     const response = await fetch('tools/search.html');
     const html = await response.text();
