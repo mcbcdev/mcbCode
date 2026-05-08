@@ -1,3 +1,17 @@
+async function loadSearchHTML() {
+    const response = await fetch('tools/search.html');
+    const html = await response.text();
+    document.body.insertAdjacentHTML('beforeend', html);
+    
+    window.searchArea = document.querySelector('#search-tabs');
+    window.resultsPanel = document.querySelector('#search-results');
+    
+}
+
+loadSearchHTML();
+
+
+
 const searchArea = document.querySelector('#search-tabs');
 const resultsPanel = document.querySelector('#search-results');
 
