@@ -160,7 +160,6 @@
                         {
                             "pattern": [
                                 { "type": "word", "options": ["score"] },
-                                { "type": "target" },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["matches"] },
@@ -171,7 +170,6 @@
                         {
                             "pattern": [
                                 { "type": "word", "options": ["score"] },
-                                { "type": "target" },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["<", "<=", "=", ">=", ">"] },
