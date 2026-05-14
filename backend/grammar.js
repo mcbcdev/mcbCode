@@ -41,7 +41,7 @@ let selectorArgKeys = null;
  */
 function renderTarget(word) {
     // Plain player name
-    if (/^[A-Za-z0-9_]{3,16}$/.test(word)) {
+    if (/^[A-Za-z0-9_]{1,36}$/.test(word)) {
         return { html: `<span class="hl-selector">${escapeHtml(word)}</span>`, valid: true };
     }
 
