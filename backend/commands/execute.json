@@ -173,7 +173,6 @@
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["<", "<=", "=", ">=", ">"] },
-                                { "type": "target" },
                                 { "type": "word", "options": ["*"] }
                                 { "type": "word", "options": ["*"] }
                             ]
