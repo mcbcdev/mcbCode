@@ -163,8 +163,7 @@
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["matches"] },
-                                { "type": "word", "options": ["*"] },
-                                { "type": "word", "options": ["*"] }
+                                { "type": "int" }
                             ]
                         },
                         {
@@ -173,8 +172,7 @@
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["*"] },
                                 { "type": "word", "options": ["<", "<=", "=", ">=", ">"] },
-                                { "type": "word", "options": ["*"] },
-                                { "type": "word", "options": ["*"] }
+                                { "type": "int" }
                             ]
                         }
                     ]
