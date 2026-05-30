@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta name="google-adsense-account" content="ca-pub-2825557346768110">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mcbcode.com/docs/index.html">
+<meta property="og:title" content="mcbCode Documentation | Bedrock mcfunction editor guides">
+<meta property="og:description" content="Learn how to write, format, and organize Minecraft Bedrock Edition .mcfunction files with mcbCode. Guides, shortcuts, and syntax references for addon creators.">
+<meta property="og:image" content="https://mcbcode.com/theme/favicon.png">
+<meta property="og:site_name" content="mcbCode Documentation">
+<meta name="keywords" content="minecraft bedrock mcfunction documentation help guides tutorials code editor">
+<meta name="description" content="Learn how to write, format, and organize Minecraft Bedrock Edition .mcfunction files with mcbCode. Guides, shortcuts, and syntax references for addon creators.">
+<meta name="robots" content="index, follow">
+
+<link rel="stylesheet" href="https://mcbcode.com/tools/search.css">
+<script src="https://mcbcode.com/tools/search.js" defer></script>
+
+  <link rel="icon" href="https://mcbcode.com/theme/docs_favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>mcbCode | Docs</title>
+  <style>
+    html,body{
+      min-height:100%;
+      margin:0;
+      font-family:'mcfont', sans-serif;
+      background:#0c0c0c;
+      font-weight: 0;
+      color: #bebebe;
+      box-sizing: border-box;
+    }
+
+    h1{
+      font-family: "mcfontb", sans-serif;
+      font-size: 32px;
+      margin: 0 0 10px 0;
+      color: #ffffff;
+      text-align: left;
+    }
+
+    h2 {
+     font-size: 24px;
+     color: #ffffff;
+     margin-top: 30px;
+     margin-bottom: 12px;
+     font-family: "mcfontb", sans-serif;
+    }
+
+    h3 {
+      font-family: "mcfontb", sans-serif;
+      font-size: 18px;
+      color: #05ee93;
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+
+    a {
+        text-decoration: none;
+        color: #bebebe;
+        transition: color 0.2s ease-in-out;
+    }
+
+    a:hover {
+        text-decoration: none;
+        color: #05ee93;
+    }
+
+  .mcbc {
+    position: fixed;
+    left: 5px;
+    top: 10px;
+    height: 50px;
+    max-width: 50px;
+  }
+
+  c {
+      color: #e7007b;
+  }
+
+  /* Navigation Bar styles */
+  .navi {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background-color: rgba(15, 15, 15, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 0 24px;
+      z-index: 100;
+      border-bottom: 1px solid #222;
+  }
+
+  .navi-brand {
+    display: flex;
+    background-color: #9adbb31a;
+    padding: 4px 8px;
+  }
+
+  .navi-brand h2 {
+      margin: 0;
+      font-size: 22px;
+  }
+
+  .quick-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+  }
+
+  /* Dual-Column Wiki Layout */
+  .wiki-container {
+    display: flex;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Right Sidebar Style (wiki.bedrock.dev inspired, strictly locked width) */
+  .wiki-sidebar {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    background-color: #111112;
+    border-left: 1px solid #222224;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 70px;
+    bottom: 0;
+    right: 0;
+    overflow-y: auto;
+    text-align: left;
+    transition: right 0.2s ease-in-out;
+  }
+
+  /* Sidebar Section Title */
+  .sidebar-section {
+    font-family: "mcfontb", sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #55555d;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    padding-left: 8px;
+  }
+
+  .sidebar-section:first-child {
+    margin-top: 0;
+  }
+
+  /* Sidebar Links */
+  .sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sidebar-item {
+    margin-bottom: 4px;
+  }
+
+  .sidebar-link {
+    display: block;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #a0a0a5;
+    border-radius: 0;
+    border-left: 2px solid transparent;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  .sidebar-link:hover {
+    color: #ffffff;
+    background-color: #1a1a1c;
+  }
+
+  .sidebar-link.active {
+    color: #05ee93;
+    background-color: rgba(5, 238, 147, 0.05);
+    border-left-color: #05ee93;
+    font-family: "mcfontb", sans-serif;
+  }
+
+  /* Main Reading Area on Left - dynamically resizes to fill remaining space */
+  .wiki-main {
+    margin-right: 280px;
+    width: calc(100% - 280px);
+    flex-grow: 1;
+    padding: 40px 60px;
+    box-sizing: border-box;
+    text-align: left;
+    transition: margin-right 0.2s ease-in-out, width 0.2s ease-in-out;
+  }
+
+  /* Top search input styled like wiki.bedrock.dev */
+  .wiki-search-box {
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 450px;
+  }
+
+  .doc-search-bar {
+    width: 100%;
+    background-color: #161618;
+    border: 1px solid #2e2e30;
+    border-radius: 0;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .doc-search-bar:focus {
+    outline: none;
+    border-color: #05ee93;
+    box-shadow: 0 0 8px rgba(5, 238, 147, 0.15);
+  }
+
+  /* Content Article Display Area */
+  .wiki-article {
+    line-height: 1.8;
+    font-size: 15px;
+    color: #cccccc;
+  }
+
+  .wiki-article code {
+    background-color: #1d1d20;
+    padding: 2px 6px;
+    border-radius: 0;
+    font-family: monospace;
+    color: #ff5555;
+    font-size: 14px;
+  }
+
+  .wiki-article p {
+    margin-bottom: 20px;
+  }
+
+  .wiki-article ul {
+    margin-bottom: 24px;
+    padding-left: 20px;
+  }
+
+  .wiki-article li {
+    margin-bottom: 6px;
+  }
+
+  /* --- Dropdown Styles (Behaves as mobile wiki sidebar) --- */
+  .dropdown-btn {
+    top: 25px;
+    right: 25px;
+    z-index: 1000;
+    color: #ffffff;
+    text-align: center;
+    user-select: none;
+    transition: all 0.2s ease-in-out;
+    display: none; /* Hidden by default on desktop/wide screens */
+  }
+
+  .dropdown-btn:hover {
+    color: #05ee93;
+  }
+
+  .dropdown {
+    position: fixed;
+    width: 100%;
+    background-color: rgba(17, 17, 18, 0.98);
+    backdrop-filter: blur(8px) !important;
+    z-index: 9999 !important; 
+    top: 70px;
+    padding: 24px;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    opacity: 0;
+    margin: auto;
+    visibility: hidden;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 0;
+    border-bottom: 1px solid #222224;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
+
+  .dropdown-btn.active ~ .dropdown,
+  .dropdown.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .dropdown-content {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .dropdown-content .sidebar-section {
+    margin-top: 16px;
+  }
+
+  .dropdown-content .sidebar-section:first-child {
+    margin-top: 0;
+  }
+
+  #dd {
+    width: 18px;
+    height: 18px;
+    background-image: url(https://mcbcode.com/img/icons/dropdown.png);
+    background-size: cover;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  #dd:hover,
+  #dd.active {
+    background-image: url(https://mcbcode.com/img/icons/dropdown-selected.png);
+    cursor: pointer;
+  }
+
+  #dd.active {
+    transform: rotate(180deg);
+  }
+
+  /* Responsive styling */
+  @media (max-width: 850px) {
+    .wiki-sidebar {
+      display: none; /* Collapse sidebar completely on narrow screens */
+    }
+    .wiki-main {
+      margin-right: 0;
+      width: 100%;
+      padding: 30px 20px;
+    }
+    .wiki-container {
+      flex-direction: column;
+    }
+    .dropdown-btn {
+      display: block; /* Show the dropdown menu activator ONLY on narrow viewports */
+    }
+  }
+
+  footer {
+    color: #777;
+    border-top: 1px solid #222;
+    padding: 24px;
+    margin-top: 60px;
+    text-align: left;
+    font-size: 13px;
+  }
+
+  footer g {
+    color: #008e4c;
+  }
+
+</style>
+</head>
+<body>
+
+    <div class="navi">
+        <div class="navi-brand">
+            <a href="https://mcbcode.com">
+                <h2><span style="color: #fff; font-family: mcfontb;">mcb</span><span style="color: #05ee93;">Code</span></h2>
+            </a>
+        </div>
+        <div class="quick-links">
+            <a href="https://mcbcode.com/editor">Editor</a>
+            <a href="https://mcbcode.com/account">Account</a>
+            <div class="dropdown-btn" id="dd"></div>
+            <div class="dropdown">
+                <div class="dropdown-content">
+                    <div class="sidebar-section">Introduction</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/index.html" class="sidebar-link active" data-keywords="welcome introduction docs main">Welcome</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="getting started files setup project open">Getting Started</a>
+                        </li>
+                    </ul>
+
+                    <div class="sidebar-section">Editor Configuration</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="syntax coloring highlight formatting commands">Syntax Colors</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="shortcuts hotkeys keys comment edit find select">Shortcuts</a>
+                        </li>
+                    </ul>
+
+                    <div class="sidebar-section">Bedrock Syntax</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="selectors variables parameters entities target players">Target Selectors</a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="coordinates relative tilde positioning fill setblock">Coordinates</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <!-- Dual-Column Layout -->
+  <div class="wiki-container">
+    
+    <!-- Main article space -->
+    <main class="wiki-main">
+      
+      <div class="wiki-search-box">
+        <input type="text" class="doc-search-bar" id="docSearch" placeholder="Filter pages (e.g. shortcuts, syntax)...">
+      </div>
+
+      <article class="wiki-article" id="wikiArticle">
+        <!-- Default Welcoming Page Content -->
+        <div id="content-welcome">
+          <h1>mcbCode <span class="h1thing">Docs</span></h1>
+          <p>Welcome to the official documentation wiki for mcbCode—the premier, browser-based coding space built exclusively for Minecraft Bedrock Edition <code>.mcfunction</code> script files.</p>
+          <p>This resource guide is modeled to provide quick, responsive access to configuration metrics, keyboard maps, syntax highlighting guides, and entity selection parameters.</p>
+          
+          <h3>Explore categories on the sidebar:</h3>
+          <ul>
+            <li><strong>Getting Started</strong>: Setup workspaces, manage behaviors, and import assets safely.</li>
+            <li><strong>Syntax Highlighting</strong>: Review color identifiers and token assignments.</li>
+            <li><strong>Shortcuts</strong>: Speed up your productivity with keyboard binds.</li>
+            <li><strong>Bedrock Specifics</strong>: Understand target selectors and spatial structures.</li>
+          </ul>
+        </div>
+      </article>
+
+      <footer>
+        Not affiliated with Microsoft or Mojang AB.<br><br>
+        © Copyright 2026 mcb<g>Code</g>
+      </footer>
+
+    </main>
+
+    <!-- right-side navigation sidebar -->
+    <aside class="wiki-sidebar">
+      
+      <div class="sidebar-section">Introduction</div>
+      <ul class="sidebar-list">
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/index.html" class="sidebar-link active" data-keywords="welcome introduction docs main">Welcome</a>
+        </li>
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="getting started files setup project open">Getting Started</a>
+        </li>
+      </ul>
+
+      <div class="sidebar-section">Editor Configuration</div>
+      <ul class="sidebar-list">
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="syntax coloring highlight formatting commands">Syntax Colors</a>
+        </li>
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="shortcuts hotkeys keys comment edit find select">Shortcuts</a>
+        </li>
+      </ul>
+
+      <div class="sidebar-section">Bedrock Syntax</div>
+      <ul class="sidebar-list">
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="selectors variables parameters entities target players">Target Selectors</a>
+        </li>
+        <li class="sidebar-item">
+          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="coordinates relative tilde positioning fill setblock">Coordinates</a>
+        </li>
+      </ul>
+
+    </aside>
+
+  </div>
+
+  <script>
+  (function() {
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+      const dropdownBtn = document.getElementById('dd');
+      const dropdownMenu = document.querySelector('.dropdown');
+
+      // Simple real-time search filtering logic for sidebar links
+      const searchBar = document.getElementById('docSearch');
+      if (searchBar && sidebarLinks.length > 0) {
+          searchBar.addEventListener('input', function() {
+              const query = searchBar.value.toLowerCase();
+              sidebarLinks.forEach(link => {
+                  const keywords = link.getAttribute('data-keywords').toLowerCase();
+                  const text = link.textContent.toLowerCase();
+
+                  // Find containing li element to toggle
+                  const parentLi = link.closest('.sidebar-item');
+                  if (parentLi) {
+                      if (keywords.includes(query) || text.includes(query)) {
+                          parentLi.style.display = 'block';
+                      } else {
+                          parentLi.style.display = 'none';
+                      }
+                  }
+              });
+
+              // Toggle visibility of sidebar section headers if empty
+              const sections = document.querySelectorAll('.sidebar-section');
+              sections.forEach(section => {
+                  const siblingUl = section.nextElementSibling;
+                  if (siblingUl && siblingUl.tagName === 'UL') {
+                      const visibleItems = Array.from(siblingUl.children).filter(li => li.style.display !== 'none');
+                      section.style.display = visibleItems.length === 0 ? 'none' : 'block';
+                  }
+              });
+          });
+      }
+
+      // Close mobile dropdown smoothly if browser window is resized to desktop mode
+      window.addEventListener('resize', function() {
+          if (window.innerWidth > 850) {
+              if (dropdownBtn && dropdownMenu) {
+                  dropdownBtn.classList.remove('active');
+                  dropdownMenu.classList.remove('active');
+              }
+          }
+      });
+  })();
+  </script>
+
+<script>
+    const dropdownBtn = document.getElementById('dd');
+    const dropdownMenu = document.querySelector('.dropdown');
+
+    if (dropdownBtn && dropdownMenu) {
+        dropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownBtn.classList.toggle('active');
+            dropdownMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
+                dropdownBtn.classList.remove('active');
+                dropdownMenu.classList.remove('active');
+            }
+        });
+    }
+</script>
+
+  <!-- Required search DOM dependencies for external tool "search.js" -->
+  <textarea id="search-tabs" rows="1" placeholder="Search..." style="display: none;"></textarea>
+  <div id="search-results" class="results-panel" style="display: none;"></div>
+
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
