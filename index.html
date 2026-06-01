@@ -42,6 +42,15 @@
       text-align: center;
     }
 
+    #mcb {
+      text-shadow: 0 0 75px #ffffff;
+    }
+
+    #Code {
+      text-shadow: 0 0 75px #05ee93;
+    }
+
+
     h2 {
      font-size: 25px;
      color: #ffffff;
@@ -77,25 +86,30 @@
       font-size: 18px;
       padding: 8px 12px;
       color: #ffffff;
-      transition: color 0.2s ease-in-out;
+      transition: color 0.2s ease-in-out, border-radius 0.2s ease-in-out;
       cursor: pointer;
+      text-shadow: 0 0 0px #ffffff;
   }
 
   button:hover {
       color: #05ee93;
+      border-radius: 10px;
+      text-shadow: 0 0 10px rgba(5, 238, 147, 0.5);
   }
 
+  
   #tryitout {
-      color: #0c0c0c;
-      background-color: #05ee93;
-      box-shadow: 0 0 20px 10px #05ee934;
-      transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-      border: 4px solid #00a459;
+      color: #ffffff;
+      background-color: #00a459;
+      box-shadow: 0 0 20px #00a459;
+      transition: color 0.3s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.4s ease-in-out, border-radius 0.2s ease-in-out;
   }
 
   #tryitout:hover {
-      color: #ffffff;
-      background-color: #00a459;
+      color: #0c0c0c;
+      background-color: #05ee93;
+      box-shadow: 0 0 0px #05ee93;
+      border-radius: 10px;
   }
 
 
@@ -424,13 +438,14 @@
     </div>
 
 
-  <h1>mcb<span class="h1thing">Code</span></h1>
+  <h1><span id="mcb" style="font-family: 'mcfontb">mcb<span class="h1thing" id="Code">Code</span></h1>
   <p style="color: #fff;">The <g>best</g> exclusively Minecraft Bedrock <c>.mcfunction</c> code editor</p>
   <div style="user-select: none;">
     <div class="top-btn-wrapper">
       <div class="top-navi">
           <a href="https://mcbcode.com/editor"><button id="tryitout">To Editor</button></a>
           <a href="https://mcbcode.com/dashboard"><button>Dashboard</button></a>
+          <a href="https://mcbcode.com/docs/"><button>Documentation</button></a>
       </div>
       </div>
   </div>
