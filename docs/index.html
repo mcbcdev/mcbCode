@@ -380,45 +380,13 @@
             <a href="https://mcbcode.com/account">Account</a>
             <div class="dropdown-btn" id="dd"></div>
             <div class="dropdown">
-                <div class="dropdown-content">
-                    <div class="sidebar-section">Introduction</div>
-                    <ul class="sidebar-list">
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/index.html" class="sidebar-link active" data-keywords="welcome introduction docs main">Welcome</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="getting started files setup project open">Getting Started</a>
-                        </li>
-                    </ul>
-
-                    <div class="sidebar-section">Editor Configuration</div>
-                    <ul class="sidebar-list">
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="syntax coloring highlight formatting commands">Syntax Colors</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="shortcuts hotkeys keys comment edit find select">Shortcuts</a>
-                        </li>
-                    </ul>
-
-                    <div class="sidebar-section">Bedrock Syntax</div>
-                    <ul class="sidebar-list">
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="selectors variables parameters entities target players">Target Selectors</a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="coordinates relative tilde positioning fill setblock">Coordinates</a>
-                        </li>
-                    </ul>
-                </div>
+                <div class="dropdown-content" id="mobileSidebarContainer"></div>
             </div>
         </div>
     </div>
 
-  <!-- Dual-Column Layout -->
   <div class="wiki-container">
     
-    <!-- Main article space -->
     <main class="wiki-main">
       
       <div class="wiki-search-box">
@@ -426,7 +394,6 @@
       </div>
 
       <article class="wiki-article" id="wikiArticle">
-        <!-- Default Welcoming Page Content -->
         <div id="content-welcome">
           <h1>mcbCode <span class="h1thing">Docs</span></h1>
           <p>Welcome to the official documentation wiki for mcbCode—the premier, browser-based coding space built exclusively for Minecraft Bedrock Edition <code>.mcfunction</code> script files.</p>
@@ -449,82 +416,92 @@
 
     </main>
 
-    <!-- right-side navigation sidebar -->
-    <aside class="wiki-sidebar">
-      
-      <div class="sidebar-section">Introduction</div>
-      <ul class="sidebar-list">
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/index.html" class="sidebar-link active" data-keywords="welcome introduction docs main">Welcome</a>
-        </li>
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="getting started files setup project open">Getting Started</a>
-        </li>
-      </ul>
-
-      <div class="sidebar-section">Editor Configuration</div>
-      <ul class="sidebar-list">
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="syntax coloring highlight formatting commands">Syntax Colors</a>
-        </li>
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="shortcuts hotkeys keys comment edit find select">Shortcuts</a>
-        </li>
-      </ul>
-
-      <div class="sidebar-section">Bedrock Syntax</div>
-      <ul class="sidebar-list">
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="selectors variables parameters entities target players">Target Selectors</a>
-        </li>
-        <li class="sidebar-item">
-          <a href="https://mcbcode.com/docs/404" class="sidebar-link" data-keywords="coordinates relative tilde positioning fill setblock">Coordinates</a>
-        </li>
-      </ul>
-
-    </aside>
+    <aside class="wiki-sidebar" id="desktopSidebarContainer"></aside>
 
   </div>
 
   <script>
-  (function() {
-      const sidebarLinks = document.querySelectorAll('.sidebar-link');
-      const dropdownBtn = document.getElementById('dd');
-      const dropdownMenu = document.querySelector('.dropdown');
+  (async function() {
+      const desktopContainer = document.getElementById('desktopSidebarContainer');
+      const mobileContainer = document.getElementById('mobileSidebarContainer');
 
-      // Simple real-time search filtering logic for sidebar links
-      const searchBar = document.getElementById('docSearch');
-      if (searchBar && sidebarLinks.length > 0) {
-          searchBar.addEventListener('input', function() {
-              const query = searchBar.value.toLowerCase();
-              sidebarLinks.forEach(link => {
-                  const keywords = link.getAttribute('data-keywords').toLowerCase();
-                  const text = link.textContent.toLowerCase();
+      // Change this to match your real file path location (e.g., './sidebar.json')
+      const jsonUrl = 'https://mcbcode.com/docs/sidebar.json'; 
 
-                  // Find containing li element to toggle
-                  const parentLi = link.closest('.sidebar-item');
-                  if (parentLi) {
-                      if (keywords.includes(query) || text.includes(query)) {
-                          parentLi.style.display = 'block';
-                      } else {
-                          parentLi.style.display = 'none';
-                      }
-                  }
+      try {
+          const response = await fetch(jsonUrl);
+          const data = await response.json();
+          
+          let htmlMarkup = '';
+
+          // Loop through categories and items parsed from the JSON
+          data.forEach(section => {
+              htmlMarkup += `<div class="sidebar-section">${section.category}</div>`;
+              htmlMarkup += `<ul class="sidebar-list">`;
+              
+              section.items.forEach(item => {
+                  const activeClass = item.active ? ' active' : '';
+                  // Constructs link path pointing explicitly toward your domain
+                  const fullUrl = `https://mcbcode.com/docs${item.link}`;
+                  
+                  htmlMarkup += `
+                    <li class="sidebar-item">
+                        <a href="${fullUrl}" class="sidebar-link${activeClass}" data-keywords="${item.keywords || ''}">
+                            ${item.title}
+                        </a>
+                    </li>`;
               });
-
-              // Toggle visibility of sidebar section headers if empty
-              const sections = document.querySelectorAll('.sidebar-section');
-              sections.forEach(section => {
-                  const siblingUl = section.nextElementSibling;
-                  if (siblingUl && siblingUl.tagName === 'UL') {
-                      const visibleItems = Array.from(siblingUl.children).filter(li => li.style.display !== 'none');
-                      section.style.display = visibleItems.length === 0 ? 'none' : 'block';
-                  }
-              });
+              
+              htmlMarkup += `</ul>`;
           });
+
+          // Inject parsed HTML structural layers into desktop and mobile holders
+          if (desktopContainer) desktopContainer.innerHTML = htmlMarkup;
+          if (mobileContainer) mobileContainer.innerHTML = htmlMarkup;
+
+          // Re-initialize your original Filtering and Search functionality after layout loads
+          initializeSidebarSearch();
+
+      } catch (error) {
+          console.error("Error loading sidebar data:", error);
+      }
+
+      function initializeSidebarSearch() {
+          const sidebarLinks = document.querySelectorAll('.sidebar-link');
+          const searchBar = document.getElementById('docSearch');
+          
+          if (searchBar && sidebarLinks.length > 0) {
+              searchBar.addEventListener('input', function() {
+                  const query = searchBar.value.toLowerCase();
+                  sidebarLinks.forEach(link => {
+                      const keywords = link.getAttribute('data-keywords').toLowerCase();
+                      const text = link.textContent.toLowerCase();
+                      const parentLi = link.closest('.sidebar-item');
+                      
+                      if (parentLi) {
+                          if (keywords.includes(query) || text.includes(query)) {
+                              parentLi.style.display = 'block';
+                          } else {
+                              parentLi.style.display = 'none';
+                          }
+                      }
+                  });
+
+                  const sections = document.querySelectorAll('.sidebar-section');
+                  sections.forEach(section => {
+                      const siblingUl = section.nextElementSibling;
+                      if (siblingUl && siblingUl.tagName === 'UL') {
+                          const visibleItems = Array.from(siblingUl.children).filter(li => li.style.display !== 'none');
+                          section.style.display = visibleItems.length === 0 ? 'none' : 'block';
+                      }
+                  });
+              });
+          }
       }
 
       // Close mobile dropdown smoothly if browser window is resized to desktop mode
+      const dropdownBtn = document.getElementById('dd');
+      const dropdownMenu = document.querySelector('.dropdown');
       window.addEventListener('resize', function() {
           if (window.innerWidth > 850) {
               if (dropdownBtn && dropdownMenu) {
@@ -556,10 +533,8 @@
     }
 </script>
 
-  <!-- Required search DOM dependencies for external tool "search.js" -->
   <textarea id="search-tabs" rows="1" placeholder="Search..." style="display: none;"></textarea>
   <div id="search-results" class="results-panel" style="display: none;"></div>
-
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count"
           async src="//gc.zgo.at/count.js"></script>
