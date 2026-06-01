@@ -392,6 +392,7 @@
           <h1>mcb<g>Code</g> <span style="color: #00b2ff; font-family: 'mcfontb'">Documentation</span></h1>
           <p>Welcome to the official documentation wiki for mcbCode—the premier, browser-based coding space built exclusively for Minecraft Bedrock Edition .mcfunction script files.</p>
           <p>This resource guide is modeled to provide quick, responsive access to configuration metrics, keyboard maps, syntax highlighting guides, and entity selection parameters.</p>
+        </div>
       </article>
 
       <footer>
@@ -409,9 +410,80 @@
   (async function() {
       const desktopContainer = document.getElementById('desktopSidebarContainer');
       const mobileContainer = document.getElementById('mobileSidebarContainer');
+      const wikiArticle = document.getElementById('wikiArticle');
+      const defaultContent = wikiArticle.innerHTML;
 
       // Change this to match your real file path location (e.g., './sidebar.json')
       const jsonUrl = 'https://mcbcode.com/docs/sidebar.json'; 
+
+      // Basic local Markdown Parser engine
+      function parseMarkdown(md) {
+          return md
+              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape HTML characters
+              .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+              .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+              .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+              .replace(/^\s*\n\* (.*)/gim, '<ul>\n<li>$1</li>\n</ul>') // simple single ul structure wrapper
+              .replace(/<\/ul>\n<ul>/g, '')
+              .replace(/^\* (.*$)/gim, '<li>$1</li>')
+              .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+              .replace(/`(.*?)`/gim, '<code>$1</code>')
+              .replace(/\n\n/g, '</p><p>')
+              .replace(/\n/g, '<br>');
+      }
+
+      // Router configuration system to parse the actual markdown item contents
+      async function handleRouting() {
+          const path = window.location.pathname;
+          // Check if path is in format /docs/page-name
+          const match = path.match(/\/docs\/([^\/]+)$/);
+          
+          if (match && match[1] && match[1] !== 'index.html') {
+              const pageName = match[1];
+              wikiArticle.innerHTML = '<h1>Loading...</h1>';
+              try {
+                  const mdResponse = await fetch(`https://mcbcode.com/docs/md/${pageName}.md`);
+                  if (!mdResponse.ok) throw new Error('Page not found');
+                  const mdText = await mdResponse.text();
+                  wikiArticle.innerHTML = `<p>${parseMarkdown(mdText)}</p>`;
+              } catch (err) {
+                  wikiArticle.innerHTML = '<h1>404</h1><p>The requested document page could not be located.</p>';
+              }
+          } else {
+              wikiArticle.innerHTML = defaultContent;
+          }
+          updateActiveLink();
+      }
+
+      function updateActiveLink() {
+          const currentPath = window.location.pathname;
+          document.querySelectorAll('.sidebar-link').forEach(link => {
+              const linkUrl = new URL(link.href);
+              if (linkUrl.pathname === currentPath) {
+                  link.classList.add('active');
+              } else {
+                  link.classList.remove('active');
+              }
+          });
+      }
+
+      // Intercept sidebar clicks to render routes dynamically without breaking browser window states
+      function setupLinkInterceptors() {
+          document.querySelectorAll('.sidebar-link').forEach(link => {
+              link.addEventListener('click', function(e) {
+                  const targetUrl = new URL(this.href);
+                  // Ensure it is internal routing
+                  if (targetUrl.origin === window.location.origin) {
+                      e.preventDefault();
+                      window.history.pushState({}, '', this.href);
+                      handleRouting();
+                  }
+              });
+          });
+      }
+
+      // Track back and forward browser page history mechanics
+      window.addEventListener('popstate', handleRouting);
 
       try {
           const response = await fetch(jsonUrl);
@@ -443,6 +515,10 @@
           // Inject parsed HTML structural layers into desktop and mobile holders
           if (desktopContainer) desktopContainer.innerHTML = htmlMarkup;
           if (mobileContainer) mobileContainer.innerHTML = htmlMarkup;
+
+          // Enable structural intercepts and load page route on fresh access instances
+          setupLinkInterceptors();
+          handleRouting();
 
           // Re-initialize your original Filtering and Search functionality after layout loads
           initializeSidebarSearch();
