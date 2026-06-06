@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2825557346768110"
+     crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<link id="theme-link" rel="stylesheet" href="https://mcbcode.com/theme/editor/default.css">
+<meta charset="UTF-8">
+<link rel="icon" href="/theme/favicon.png">
+<title>mcbCode | Manifest Editor</title>
+<style>
+  body { margin:0; background-color:#323232; color:#fff; overflow:hidden; font-family:mcfont; }
+
+  header.top-thing {
+    background-color:#323232; display:flex; align-items:center; height:50px;
+    position:fixed; top:0; left:0; right:0; z-index:1001;
+  }
+  .navi {
+    font-size:14px; padding:3px; user-select:none;
+    display:flex; justify-content:space-between; align-items:center;
+    position:fixed; top:50px; left:0; right:0;
+    background-color:#323232; z-index:1001; border-bottom:1px solid #444;
+  }
+  .tab-strip {
+    display:flex; align-items:stretch;
+    position:fixed; top:80px; left:60px; right:0; height:30px;
+    background-color:#1a1a1a; border-bottom:1px solid #2a2a2a;
+    z-index:999; font-family:'Fira Code',monospace; font-size:12px;
+  }
+  .tab {
+    padding:0 18px; display:flex; align-items:center; cursor:pointer;
+    color:#666; border-right:1px solid #2a2a2a; user-select:none;
+    transition:color .15s,background .15s; white-space:nowrap;
+  }
+  .tab:hover { color:#bebebe; background:#222; }
+  .tab.active { color:#05ee93; background:#0c0c0c; border-bottom:2px solid #05ee93; }
+
+  .editor {
+    display:flex; height:calc(100vh - 110px); overflow:hidden;
+    position:relative; background-color:#0c0c0c; margin-top:110px;
+  }
+  .sidebar {
+    background-color:#323232; width:60px; font-size:12px; padding:6px 0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    position:fixed; top:110px; left:0; bottom:0; z-index:1000;
+  }
+  .content-area {
+    flex:1; height:100%; overflow-y:auto; margin-left:60px; background-color:#0c0c0c;
+  }
+
+  /* ---- shared field styles ---- */
+  .f-str {
+    background:transparent; border:none; border-bottom:1px solid #333;
+    color:#ce9178; font-family:'Fira Code',monospace; font-size:13px;
+    outline:none; padding:0 2px; min-width:100px; max-width:380px; line-height:1.4;
+  }
+  .f-str:focus { border-bottom-color:#05ee93; color:#fff; }
+  .f-num {
+    background:transparent; border:none; border-bottom:1px solid #333;
+    color:#b5cea8; font-family:'Fira Code',monospace; font-size:13px;
+    outline:none; padding:0 2px; width:38px; text-align:center; line-height:1.4;
+  }
+  .f-num:focus { border-bottom-color:#05ee93; color:#fff; }
+  .f-uuid {
+    background:transparent; border:none; border-bottom:1px solid #333;
+    color:#c586c0; font-family:'Fira Code',monospace; font-size:13px;
+    outline:none; padding:0 2px; width:264px; letter-spacing:.3px; line-height:1.4;
+  }
+  .f-uuid:focus { border-bottom-color:#05ee93; color:#fff; }
+  .btn-regen {
+    background:#1c1c1c; border:1px solid #333; color:#05ee93;
+    font-family:'Fira Code',monospace; font-size:10px; padding:1px 5px;
+    cursor:pointer; margin-left:6px; border-radius:1px; transition:background .1s;
+    vertical-align:middle;
+  }
+  .btn-regen:hover { background:#252525; }
+
+  /* ---- json span colors ---- */
+  .j-brace   { color:#d4d4d4; white-space:pre; }
+  .j-key     { color:#9cdcfe; white-space:pre; }
+  .j-colon   { color:#d4d4d4; white-space:pre; margin-right:4px; }
+  .j-sq      { color:#ce9178; white-space:pre; }
+  .j-num-lit { color:#b5cea8; white-space:pre; }
+  .j-comma   { color:#d4d4d4; white-space:pre; }
+  .j-comment { color:#4a9955; font-size:11px; font-family:'Fira Code',monospace; }
+
+  /* ---- FORM VIEW ---- */
+  #viewForm {
+    padding:20px 28px; font-family:'Fira Code',monospace;
+    font-size:13px; line-height:1.6; display:block;
+  }
+  .mblock { margin-bottom:18px; }
+  .mblock-comment { color:#4a9955; margin-bottom:4px; font-size:12px; user-select:none; }
+  .mblock-inner { background-color:#111; border-left:2px solid #2a2a2a; padding:10px 14px; }
+  .jline { display:flex; align-items:baseline; min-height:24px; flex-wrap:wrap; }
+  .jline+.jline { margin-top:2px; }
+  .ind1 { padding-left:16px; }
+  .ind2 { padding-left:32px; }
+  .cap-label {
+    display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+    color:#9cdcfe; margin-right:14px; font-family:'Fira Code',monospace; font-size:12px;
+  }
+  .cap-label input { accent-color:#05ee93; }
+  .mod-badge {
+    display:inline-block; font-size:10px; padding:0 6px;
+    background:#1a1a1a; border:1px solid #2a2a2a; color:#05ee93; margin-bottom:6px; vertical-align:middle;
+  }
+  .mod-badge.bp { color:#00b2ff; }
+
+  /* ---- JSON VIEW ---- */
+  #viewJson {
+    padding:20px 28px; font-family:'Fira Code',monospace;
+    font-size:13px; line-height:1.9; display:none; color:#d4d4d4;
+  }
+
+  /* block toggle row */
+  .jv-block {
+    position:relative;
+    margin-bottom:0;
+  }
+
+  /* the toggle button that sits at the start of a collapsible section */
+  .jv-toggle {
+    display:inline-flex; align-items:center; gap:5px;
+    cursor:pointer; user-select:none;
+    font-family:'Fira Code',monospace; font-size:11px;
+    color:#555; border:1px solid #2a2a2a;
+    background:#141414; padding:1px 7px;
+    border-radius:1px; margin-left:6px;
+    vertical-align:middle;
+    transition:color .1s, border-color .1s;
+  }
+  .jv-toggle:hover { color:#05ee93; border-color:#05ee93; }
+  .jv-toggle.on { color:#05ee93; border-color:#444; }
+  .jv-toggle.remove { color:#ff5555; border-color:#2a2a2a; }
+  .jv-toggle.remove:hover { border-color:#ff5555; }
+
+  /* add-entry button for arrays like subpacks */
+  .jv-add-entry {
+    display:inline-flex; align-items:center; gap:4px;
+    cursor:pointer; user-select:none;
+    font-family:'Fira Code',monospace; font-size:11px;
+    color:#555; border:1px dashed #2a2a2a;
+    background:transparent; padding:1px 7px;
+    border-radius:1px; margin-left:6px;
+    transition:color .1s, border-color .1s;
+  }
+  .jv-add-entry:hover { color:#05ee93; border-color:#05ee93; }
+
+  /* collapsible content wrapper */
+  .jv-collapsible { display:none; }
+  .jv-collapsible.open { display:block; }
+
+  /* subpack entry box */
+  .jv-sp-entry {
+    border-left:2px solid #1e1e1e;
+    padding-left:8px;
+    margin-bottom:4px;
+    position:relative;
+  }
+
+  /* ---- NAV ---- */
+  .nav-left { display:flex; gap:0; align-items:center; padding-top:1px; }
+  button {
+    background-color:transparent; border:none; color:#f0f0f0;
+    user-select:none; margin:0; cursor:pointer; font-family:mcfont;
+  }
+  .nav-item { position:relative; display:inline-block; }
+  .nav-dropdown {
+    display:none; position:absolute; top:100%; left:0;
+    background-color:#323232; border:1px solid #bebebe;
+    min-width:200px; z-index:1002; box-shadow:0 0 5px rgba(0,0,0,.5);
+    flex-direction:column;
+  }
+  .nav-dropdown div { cursor:pointer; font-size:12px; background-color:#323232; padding:6px 12px; }
+  .nav-dropdown div:hover { background-color:#454545; }
+  .nav-item:hover .nav-dropdown { display:flex; }
+  .sub-dropdown {
+    display:none; position:absolute; top:0; left:95%;
+    border:1px solid #bebebe; min-width:200px; background-color:#323232; z-index:1003;
+  }
+  .has-submenu:hover .sub-dropdown { display:block; }
+  .file-name-static { background-color:#1f1f1f; padding:6px 8px; font-family:'Fira Code',monospace; font-size:13px; color:#ce9178; }
+  .filename-label { background-color:#454545; padding:6px; padding-right:12px; }
+  .pack-name-input {
+    background:transparent; border:none; border-bottom:1px solid #444; color:#fff;
+    font-family:'Fira Code',monospace; font-size:13px; outline:none;
+    padding:1px 4px; min-width:80px; max-width:220px;
+  }
+  .pack-name-input:focus { border-bottom-color:#05ee93; }
+  .copyshortcut {
+    transition:background-color .2s; background-color:#1f1f1f;
+    padding:6px; margin-left:8px; cursor:pointer;
+  }
+  .copyshortcut:hover { background-color:#454545; }
+  #exportBtn { color:#00b2ff; }
+  .mode-badge {
+    font-size:10px; padding:2px 8px; border-radius:2px;
+    font-family:'Fira Code',monospace; user-select:none; margin-left:10px;
+  }
+  .mode-badge.rp { background:#1a3a1a; color:#05ee93; border:1px solid #05ee93; }
+  .mode-badge.bp { background:#1a2a3a; color:#00b2ff; border:1px solid #00b2ff; }
+  .mode-option.active-mode { color:#05ee93; }
+  .sidebar-kbd {
+    text-align:center; padding:6px 0; background-color:#343434;
+    font-size:10px; font-family:mcfont; color:#bebebe; user-select:none;
+    transition:color .2s,background-color .2s;
+  }
+  .sidebar-kbd:hover,.sidebar-kbd.active { color:#05ee93; background-color:#454545; }
+  #saveBtn { cursor:pointer; }
+  #saveBtn.saving { color:#888; cursor:not-allowed; }
+  #saveBtn.saved  { color:#05ee93; }
+  #saveBtn.error  { color:#ff5555; }
+  kbs { background-color:#454545; padding:3px; }
+  .delete { color:#ff4d4d; }
+</style>
+</head>
+<body>
+
+<header class="top-thing">
+  <a href="https://mcbcode.com" style="padding-left:12px;"><img src="https://mcbcode.com/theme/favicon.png" alt="icon" style="width:36px"></a>
+  <h2 style="padding:0 12px;">mcb<g>Code</g></h2>
+  <div class="filename-label">Filename:</div>
+  <div class="file-name-static">manifest.json</div>
+  <div style="background:#0c0c0c;padding:6px 8px;display:flex;align-items:center;gap:4px;">
+    <span style="color:#555;font-family:'Fira Code',monospace;font-size:12px;">pack name:</span>
+    <input type="text" id="packNameHeader" class="pack-name-input" placeholder="My Pack" maxlength="64" />
+  </div>
+  <a href="https://mcbcode.com/account" style="color:#fff;text-decoration:none;"><div class="copyshortcut">Account</div></a>
+  <div class="copyshortcut" id="saveBtn" style="display:none;" onclick="doSave()">Save</div>
+</header>
+
+<div class="navi">
+  <div class="nav-left">
+    <div class="nav-item">
+      <button>File</button>
+      <div class="nav-dropdown">
+        <div id="exportBtn"><img src="https://ccvaults.com/thumbnails/10.%20Items/11.%20Materials/Diamond.png" style="width:16px;height:16px;padding-right:4px;">Export manifest.json</div>
+        <div id="copyJsonBtn"><img src="https://ccvaults.com/thumbnails/10.%20Items/15.%20Projectiles/Ender_Pearl.png" style="width:16px;height:16px;padding-right:4px;">Copy JSON</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Mode</button>
+      <div class="nav-dropdown">
+        <div class="mode-option active-mode" id="modeRP" onclick="setMode('rp')">
+          <img src="https://ccvaults.com/thumbnails/20.%20Blocks/18.%20Decoration/Dirt.png" style="width:16px;height:16px;padding-right:4px;">Resource Pack
+        </div>
+        <div class="mode-option" id="modeBP" onclick="setMode('bp')">
+          <img src="https://ccvaults.com/thumbnails/20.%20Blocks/22.%20Redstone/Sticky_Piston.png" style="width:16px;height:16px;padding-right:4px;">Behavior Pack
+        </div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Help</button>
+      <div class="nav-dropdown">
+        <div class="has-submenu">
+          <img src="https://ccvaults.com/thumbnails/20.%20Blocks/18.%20Decoration/Dirt.png" style="width:16px;height:16px;padding-right:4px;">Reference
+          <div class="sub-dropdown">
+            <a href="https://minecraft.wiki/w/Bedrock_Edition_add-on_documentation" target="_blank" style="text-decoration:none;color:#fff"><div>minecraft.wiki - manifest</div></a>
+            <a href="https://wiki.bedrock.dev/concepts/manifest.html" target="_blank" style="text-decoration:none;color:#fff"><div>wiki.bedrock.dev - manifest</div></a>
+          </div>
+        </div>
+        <div class="has-submenu">
+          <img src="https://ccvaults.com/thumbnails/20.%20Blocks/22.%20Redstone/Sticky_Piston.png" style="width:16px;height:16px;padding-right:4px;">Keyboard Shortcuts
+          <div class="sub-dropdown" style="padding:10px;font-size:11px;">
+            <p><kbs>Ctrl+E</kbs> Export JSON</p>
+            <p><kbs>Ctrl+R</kbs> Regen all UUIDs</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="mode-badge rp" id="modeBadge">RESOURCE PACK</span>
+  </div>
+</div>
+
+<div class="tab-strip">
+  <div class="tab active" id="tabForm" onclick="switchTab('form')">Form View</div>
+  <div class="tab" id="tabJson" onclick="switchTab('json')">JSON View</div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-kbd" style="color:#00b2ff;font-size:9px;">Mode:</div>
+  <div class="sidebar-kbd" id="sidebarMode" style="color:#05ee93;font-size:9px;">RP</div>
+  <div style="border-bottom:1px solid #bebebe"></div>
+  <div class="sidebar-kbd" onclick="regenAllUUIDs()">Regen</div>
+  <div class="sidebar-kbd" onclick="exportJson()" style="color:#00b2ff;">Export</div>
+</div>
+
+<div class="editor">
+  <div class="content-area" id="contentArea">
+
+    <!-- ===================== FORM VIEW ===================== -->
+    <div id="viewForm">
+
+      <div class="mblock">
+        <div class="mblock-comment">// format_version</div>
+        <div class="mblock-inner">
+          <div class="jline"><span class="j-brace">{</span></div>
+          <div class="jline ind1"><span class="j-key">"format_version"</span><span class="j-colon">: </span><span class="j-num-lit">2</span><span class="j-comma">,</span></div>
+        </div>
+      </div>
+
+      <div class="mblock">
+        <div class="mblock-comment">// header</div>
+        <div class="mblock-inner">
+          <div class="jline ind1"><span class="j-key">"header"</span><span class="j-colon">: </span><span class="j-brace">{</span></div>
+          <div class="jline ind2">
+            <span class="j-key">"name"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" id="f_name" placeholder="My Pack" maxlength="128" /><span class="j-sq">"</span><span class="j-comma">,</span>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"description"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" id="f_desc" placeholder="A cool pack" maxlength="256" style="min-width:180px;" /><span class="j-sq">"</span><span class="j-comma">,</span>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"uuid"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-uuid" id="uuid_header" maxlength="36" /><span class="j-sq">"</span><span class="j-comma">,</span>
+            <button class="btn-regen" onclick="regenUUID('uuid_header')">&#x21bb; regen</button>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"version"</span><span class="j-colon">: </span><span class="j-brace">[</span><input type="number" class="f-num" id="f_ver_major" value="1" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="f_ver_minor" value="0" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="f_ver_patch" value="0" min="0" max="99"/><span class="j-brace">]</span><span class="j-comma">,</span>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"min_engine_version"</span><span class="j-colon">: </span><span class="j-brace">[</span><input type="number" class="f-num" id="f_min_major" value="1" min="1" max="9"/><span class="j-comma">, </span><input type="number" class="f-num" id="f_min_minor" value="21" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="f_min_patch" value="0" min="0" max="99"/><span class="j-brace">]</span>
+          </div>
+          <div class="jline ind1"><span class="j-brace">}</span><span class="j-comma">,</span></div>
+        </div>
+      </div>
+
+      <div class="mblock">
+        <div class="mblock-comment">// modules</div>
+        <div class="mblock-inner" id="modulesBlock"></div>
+      </div>
+
+      <div class="mblock" id="depsBlock" style="display:none;">
+        <div class="mblock-comment">// dependencies <span style="color:#555;font-size:11px;">(optional — link to RP)</span></div>
+        <div class="mblock-inner">
+          <div class="jline ind1"><span class="j-key">"dependencies"</span><span class="j-colon">: </span><span class="j-brace">[{</span></div>
+          <div class="jline ind2">
+            <span class="j-key">"uuid"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-uuid" id="uuid_dep" maxlength="36" placeholder="paste RP header uuid" /><span class="j-sq">"</span><span class="j-comma">,</span>
+            <button class="btn-regen" onclick="regenUUID('uuid_dep')">&#x21bb; regen</button>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"version"</span><span class="j-colon">: </span><span class="j-brace">[</span><input type="number" class="f-num" id="dep_ver_major" value="1" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="dep_ver_minor" value="0" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="dep_ver_patch" value="0" min="0" max="99"/><span class="j-brace">]</span>
+          </div>
+          <div class="jline ind1"><span class="j-brace">}]</span><span class="j-comma">,</span></div>
+          <div class="jline" style="margin-top:4px;"><span class="j-comment">// leave uuid blank to omit from export</span></div>
+        </div>
+      </div>
+
+      <div class="mblock" id="capsBlock">
+        <div class="mblock-comment">// capabilities <span style="color:#555;font-size:11px;">(optional)</span></div>
+        <div class="mblock-inner">
+          <div class="jline ind1"><span class="j-key">"capabilities"</span><span class="j-colon">: </span><span class="j-brace">[</span></div>
+          <div class="jline ind2" style="gap:14px;flex-wrap:wrap;margin:4px 0;">
+            <label class="cap-label"><input type="checkbox" id="cap_pbr" /><span>"pbr"</span></label>
+            <label class="cap-label"><input type="checkbox" id="cap_raytracing" /><span>"raytracing"</span></label>
+            <label class="cap-label"><input type="checkbox" id="cap_chemistry" /><span>"chemistry"</span></label>
+            <label class="cap-label"><input type="checkbox" id="cap_scripting" /><span>"experimental_custom_ui"</span></label>
+          </div>
+          <div class="jline ind1"><span class="j-brace">]</span><span class="j-comma">,</span></div>
+          <div class="jline" style="margin-top:4px;"><span class="j-comment">// uncheck all to omit from export</span></div>
+        </div>
+      </div>
+
+      <div class="mblock">
+        <div class="mblock-comment">// metadata <span style="color:#555;font-size:11px;">(optional)</span></div>
+        <div class="mblock-inner">
+          <div class="jline ind1"><span class="j-key">"metadata"</span><span class="j-colon">: </span><span class="j-brace">{</span></div>
+          <div class="jline ind2">
+            <span class="j-key">"authors"</span><span class="j-colon">: </span><span class="j-brace">[</span><span class="j-sq">"</span><input type="text" class="f-str" id="f_author" placeholder="your name" maxlength="64" /><span class="j-sq">"</span><span class="j-brace">]</span><span class="j-comma">,</span>
+          </div>
+          <div class="jline ind2">
+            <span class="j-key">"url"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" id="f_url" placeholder="https://mcbcode.com" maxlength="200" style="min-width:160px;" /><span class="j-sq">"</span>
+          </div>
+          <div class="jline ind1"><span class="j-brace">}</span></div>
+          <div class="jline" style="margin-top:4px;"><span class="j-comment">// leave both blank to omit from export</span></div>
+        </div>
+      </div>
+
+      <div class="jline"><span class="j-brace">}</span></div>
+      <div style="height:32px;"></div>
+    </div>
+
+    <!-- ===================== JSON VIEW ===================== -->
+    <div id="viewJson"></div>
+
+  </div>
+</div>
+
+<script>
+// ================================================================
+//  STATE
+// ================================================================
+let currentMode = 'rp';
+let currentTab  = 'form';
+
+// json view block visibility state (persists across tab switches)
+const jvState = {
+  scriptModule : false,
+  dependencies : false,
+  capabilities : false,
+  subpacks     : false,
+  metadata     : false,
+};
+
+// subpack entries [ { folder, name, desc, scale } ]
+let subpackEntries = [];
+
+// ================================================================
+//  UUID
+// ================================================================
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+function regenUUID(id) {
+  const el = document.getElementById(id);
+  if (el) { el.value = generateUUID(); onAnyInput(); }
+}
+function regenAllUUIDs() {
+  ['uuid_header','uuid_module','uuid_script'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = generateUUID();
+  });
+  onAnyInput();
+}
+
+// ================================================================
+//  TAB SWITCH
+// ================================================================
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabForm').classList.toggle('active', tab === 'form');
+  document.getElementById('tabJson').classList.toggle('active', tab === 'json');
+  document.getElementById('viewForm').style.display = tab === 'form' ? 'block' : 'none';
+  document.getElementById('viewJson').style.display = tab === 'json' ? 'block' : 'none';
+  if (tab === 'json') renderJsonView();
+}
+
+// ================================================================
+//  MODE
+// ================================================================
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeRP').classList.toggle('active-mode', mode === 'rp');
+  document.getElementById('modeBP').classList.toggle('active-mode', mode === 'bp');
+  const badge = document.getElementById('modeBadge');
+  const sm    = document.getElementById('sidebarMode');
+  if (mode === 'rp') {
+    badge.className = 'mode-badge rp'; badge.textContent = 'RESOURCE PACK';
+    sm.style.color = '#05ee93'; sm.textContent = 'RP';
+  } else {
+    badge.className = 'mode-badge bp'; badge.textContent = 'BEHAVIOR PACK';
+    sm.style.color = '#00b2ff'; sm.textContent = 'BP';
+  }
+  document.getElementById('depsBlock').style.display  = mode === 'bp' ? '' : 'none';
+  document.getElementById('capsBlock').style.display  = mode === 'rp' ? '' : 'none';
+  buildModulesBlock(mode);
+  onAnyInput();
+}
+
+// ================================================================
+//  FORM: modules block
+// ================================================================
+function buildModulesBlock(mode) {
+  const container  = document.getElementById('modulesBlock');
+  const modType    = mode === 'rp' ? 'resources' : 'data';
+  const prevUUID   = (document.getElementById('uuid_module') || {}).value || generateUUID();
+  const prevDesc   = (document.getElementById('f_module_desc') || {}).value || '';
+
+  container.innerHTML = `
+    <div class="jline ind1"><span class="j-key">"modules"</span><span class="j-colon">: </span><span class="j-brace">[{</span></div>
+    <div class="jline ind2"><span class="mod-badge${mode==='bp'?' bp':''}">${modType}</span></div>
+    <div class="jline ind2">
+      <span class="j-key">"type"</span><span class="j-colon">: </span><span class="j-sq">"</span><span style="color:#ce9178;font-family:'Fira Code',monospace;">${modType}</span><span class="j-sq">"</span><span class="j-comma">,</span>
+    </div>
+    <div class="jline ind2">
+      <span class="j-key">"description"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" id="f_module_desc" placeholder="module description" maxlength="128" value="${esc(prevDesc)}" /><span class="j-sq">"</span><span class="j-comma">,</span>
+    </div>
+    <div class="jline ind2">
+      <span class="j-key">"uuid"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-uuid" id="uuid_module" value="${esc(prevUUID)}" maxlength="36" /><span class="j-sq">"</span><span class="j-comma">,</span>
+      <button class="btn-regen" onclick="regenUUID('uuid_module')">&#x21bb; regen</button>
+    </div>
+    <div class="jline ind2">
+      <span class="j-key">"version"</span><span class="j-colon">: </span><span class="j-brace">[</span><input type="number" class="f-num" id="mod_ver_major" value="1" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="mod_ver_minor" value="0" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="mod_ver_patch" value="0" min="0" max="99"/><span class="j-brace">]</span>
+    </div>
+    <div class="jline ind1"><span class="j-brace">}]</span><span class="j-comma">,</span></div>
+    ${mode === 'bp' ? `
+    <div class="jline ind1" style="margin-top:6px;">
+      <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:'Fira Code',monospace;font-size:12px;color:#666;">
+        <input type="checkbox" id="addScriptModule" style="accent-color:#00b2ff;" onchange="onAnyInput()" />
+        <span>add script module (Scripting API)</span>
+      </label>
+    </div>
+    <div id="scriptModuleBlockForm" style="display:none;">
+      <div class="jline ind2" style="margin-top:4px;"><span class="j-comma">, {</span><span class="mod-badge bp" style="margin-left:8px;">javascript</span></div>
+      <div class="jline ind2">
+        <span class="j-key">"type"</span><span class="j-colon">: </span><span class="j-sq">"javascript"</span><span class="j-comma">,</span>
+      </div>
+      <div class="jline ind2">
+        <span class="j-key">"uuid"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-uuid" id="uuid_script" maxlength="36" /><span class="j-sq">"</span><span class="j-comma">,</span>
+        <button class="btn-regen" onclick="regenUUID('uuid_script')">&#x21bb; regen</button>
+      </div>
+      <div class="jline ind2">
+        <span class="j-key">"entry"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" id="f_script_entry" value="scripts/main.js" maxlength="128" style="min-width:140px;" /><span class="j-sq">"</span><span class="j-comma">,</span>
+      </div>
+      <div class="jline ind2">
+        <span class="j-key">"version"</span><span class="j-colon">: </span><span class="j-brace">[</span><input type="number" class="f-num" id="scr_ver_major" value="1" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="scr_ver_minor" value="0" min="0" max="99"/><span class="j-comma">, </span><input type="number" class="f-num" id="scr_ver_patch" value="0" min="0" max="99"/><span class="j-brace">]</span>
+      </div>
+    </div>` : ''}
+  `;
+
+  // wire up script module checkbox in form
+  const cb = document.getElementById('addScriptModule');
+  if (cb) {
+    cb.addEventListener('change', () => {
+      const block = document.getElementById('scriptModuleBlockForm');
+      if (block) block.style.display = cb.checked ? '' : 'none';
+      if (cb.checked) {
+        const s = document.getElementById('uuid_script');
+        if (s && !s.value) s.value = generateUUID();
+      }
+      jvState.scriptModule = cb.checked;
+      onAnyInput();
+    });
+  }
+
+  attachListeners();
+}
+
+// ================================================================
+//  BUILD MANIFEST OBJECT
+// ================================================================
+function gv(id)  { const e = document.getElementById(id); return e ? e.value.trim() : ''; }
+function gn(id)  { const e = document.getElementById(id); return e ? (parseInt(e.value)||0) : 0; }
+function gc(id)  { const e = document.getElementById(id); return e ? e.checked : false; }
+
+function buildManifest() {
+  const obj = {
+    format_version: 2,
+    header: {
+      name: gv('f_name') || 'My Pack',
+      description: gv('f_desc') || '',
+      uuid: gv('uuid_header'),
+      version: [gn('f_ver_major'), gn('f_ver_minor'), gn('f_ver_patch')],
+      min_engine_version: [gn('f_min_major'), gn('f_min_minor'), gn('f_min_patch')]
+    },
+    modules: []
+  };
+
+  const modType = currentMode === 'rp' ? 'resources' : 'data';
+  const mainMod = { type: modType, uuid: gv('uuid_module'), version: [gn('mod_ver_major'), gn('mod_ver_minor'), gn('mod_ver_patch')] };
+  const modDesc = gv('f_module_desc');
+  if (modDesc) mainMod.description = modDesc;
+  obj.modules.push(mainMod);
+
+  // script module — check both form checkbox and jvState
+  const scriptOn = currentTab === 'form' ? gc('addScriptModule') : jvState.scriptModule;
+  if (currentMode === 'bp' && scriptOn) {
+    obj.modules.push({
+      type: 'javascript',
+      uuid: gv('uuid_script'),
+      entry: gv('f_script_entry') || 'scripts/main.js',
+      version: [gn('scr_ver_major'), gn('scr_ver_minor'), gn('scr_ver_patch')]
+    });
+  }
+
+  // dependencies — BP only
+  if (currentMode === 'bp') {
+    const depState = currentTab === 'form' ? !!gv('uuid_dep') : jvState.dependencies;
+    if (depState) {
+      obj.dependencies = [{ uuid: gv('uuid_dep'), version: [gn('dep_ver_major'), gn('dep_ver_minor'), gn('dep_ver_patch')] }];
+    }
+  }
+
+  // capabilities — RP only
+  if (currentMode === 'rp') {
+    const capsState = currentTab === 'form'
+      ? (gc('cap_pbr') || gc('cap_raytracing') || gc('cap_chemistry') || gc('cap_scripting'))
+      : jvState.capabilities;
+    if (capsState) {
+      const caps = [];
+      if (gc('cap_pbr')) caps.push('pbr');
+      if (gc('cap_raytracing')) caps.push('raytracing');
+      if (gc('cap_chemistry')) caps.push('chemistry');
+      if (gc('cap_scripting')) caps.push('experimental_custom_ui');
+      if (caps.length) obj.capabilities = caps;
+    }
+  }
+
+  // subpacks (json view only)
+  if (jvState.subpacks && subpackEntries.length > 0) {
+    obj.subpacks = subpackEntries.map(sp => {
+      const o = { folder_name: sp.folder || '', name: sp.name || '' };
+      if (sp.desc)  o.description = sp.desc;
+      if (sp.scale !== undefined) o.memory_tier = Number(sp.scale) || 0;
+      return o;
+    });
+  }
+
+  // metadata
+  const metaState = currentTab === 'form'
+    ? (!!gv('f_author') || !!gv('f_url'))
+    : jvState.metadata;
+  if (metaState) {
+    const author = gv('f_author'), url = gv('f_url');
+    if (author || url) {
+      obj.metadata = {};
+      if (author) obj.metadata.authors = [author];
+      if (url)    obj.metadata.url = url;
+    }
+  }
+
+  return obj;
+}
+
+// ================================================================
+//  JSON VIEW RENDERER
+// ================================================================
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function iStr(formId, style) {
+  const el  = document.getElementById(formId);
+  const val = el ? el.value : '';
+  return `<span class="j-sq">"</span><input type="text" class="f-str" data-sync="${formId}" value="${esc(val)}" style="${style||''}" /><span class="j-sq">"</span>`;
+}
+function iUUID(formId) {
+  const el  = document.getElementById(formId);
+  const val = el ? el.value : '';
+  return `<span class="j-sq">"</span><input type="text" class="f-uuid" data-sync="${formId}" value="${esc(val)}" maxlength="36" /><span class="j-sq">"</span> <button class="btn-regen" onclick="regenSynced('${formId}')">&#x21bb;</button>`;
+}
+function iNum(formId) {
+  const el  = document.getElementById(formId);
+  const val = el ? el.value : '0';
+  return `<input type="number" class="f-num" data-sync="${formId}" value="${esc(val)}" min="0" max="99" />`;
+}
+function verArr(a,b,c) {
+  return `<span class="j-brace">[</span>${iNum(a)}<span class="j-comma">, </span>${iNum(b)}<span class="j-comma">, </span>${iNum(c)}<span class="j-brace">]</span>`;
+}
+
+// toggle button html
+function toggleBtn(key, label, isOn) {
+  return `<button class="jv-toggle${isOn?' on':''}" onclick="jvToggle('${key}')">${isOn ? '&#x2212; remove' : '&#x2b; add'} ${label}</button>`;
+}
+
+function renderJsonView() {
+  const modType   = currentMode === 'rp' ? 'resources' : 'data';
+  const container = document.getElementById('viewJson');
+
+  let h = '';
+
+  // helper: a "line" in the json view
+  const L = (...parts) => `<div style="display:block;">${parts.join('')}</div>`;
+  const sp = n => `<span style="display:inline-block;width:${n*8}px;"></span>`;
+
+  // ---- always-present ----
+  h += L(`<span class="j-brace">{</span>`);
+  h += L(sp(1), `<span class="j-key">"format_version"</span><span class="j-colon">: </span><span class="j-num-lit">2</span><span class="j-comma">,</span>`);
+  h += L(sp(1), `<span class="j-key">"header"</span><span class="j-colon">: </span><span class="j-brace">{</span>`);
+  h += L(sp(2), `<span class="j-key">"name"</span><span class="j-colon">: </span>`, iStr('f_name','min-width:140px;'), `<span class="j-comma">,</span>`);
+  h += L(sp(2), `<span class="j-key">"description"</span><span class="j-colon">: </span>`, iStr('f_desc','min-width:200px;'), `<span class="j-comma">,</span>`);
+  h += L(sp(2), `<span class="j-key">"uuid"</span><span class="j-colon">: </span>`, iUUID('uuid_header'), `<span class="j-comma">,</span>`);
+  h += L(sp(2), `<span class="j-key">"version"</span><span class="j-colon">: </span>`, verArr('f_ver_major','f_ver_minor','f_ver_patch'), `<span class="j-comma">,</span>`);
+  h += L(sp(2), `<span class="j-key">"min_engine_version"</span><span class="j-colon">: </span>`, verArr('f_min_major','f_min_minor','f_min_patch'));
+  h += L(sp(1), `<span class="j-brace">}</span><span class="j-comma">,</span>`);
+
+  // modules
+  h += L(sp(1), `<span class="j-key">"modules"</span><span class="j-colon">: </span><span class="j-brace">[</span>`);
+  h += L(sp(2), `<span class="j-brace">{</span>`);
+  h += L(sp(3), `<span class="j-key">"type"</span><span class="j-colon">: </span><span class="j-sq">"${modType}"</span><span class="j-comma">,</span>`);
+  h += L(sp(3), `<span class="j-key">"description"</span><span class="j-colon">: </span>`, iStr('f_module_desc'), `<span class="j-comma">,</span>`);
+  h += L(sp(3), `<span class="j-key">"uuid"</span><span class="j-colon">: </span>`, iUUID('uuid_module'), `<span class="j-comma">,</span>`);
+  h += L(sp(3), `<span class="j-key">"version"</span><span class="j-colon">: </span>`, verArr('mod_ver_major','mod_ver_minor','mod_ver_patch'));
+  h += L(sp(2), `<span class="j-brace">}</span>${jvState.scriptModule ? '<span class="j-comma">,</span>' : ''}`);
+
+  // ---- SCRIPT MODULE toggle (BP only) ----
+  if (currentMode === 'bp') {
+    if (jvState.scriptModule) {
+      h += L(sp(2), `<span class="j-brace">{</span>`, toggleBtn('scriptModule','script module', true));
+      h += L(sp(3), `<span class="j-key">"type"</span><span class="j-colon">: </span><span class="j-sq">"javascript"</span><span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"uuid"</span><span class="j-colon">: </span>`, iUUID('uuid_script'), `<span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"entry"</span><span class="j-colon">: </span>`, iStr('f_script_entry','min-width:140px;'), `<span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"version"</span><span class="j-colon">: </span>`, verArr('scr_ver_major','scr_ver_minor','scr_ver_patch'));
+      h += L(sp(2), `<span class="j-brace">}</span>`);
+    } else {
+      h += L(sp(2), toggleBtn('scriptModule','script module', false));
+    }
+  }
+
+  h += L(sp(1), `<span class="j-brace">]</span><span class="j-comma">,</span>`);
+
+  // ---- DEPENDENCIES toggle (BP only) ----
+  if (currentMode === 'bp') {
+    if (jvState.dependencies) {
+      h += L(sp(1), `<span class="j-key">"dependencies"</span><span class="j-colon">: </span><span class="j-brace">[{</span>`, toggleBtn('dependencies','dependencies', true));
+      h += L(sp(2), `<span class="j-key">"uuid"</span><span class="j-colon">: </span>`, iUUID('uuid_dep'), `<span class="j-comma">,</span>`);
+      h += L(sp(2), `<span class="j-key">"version"</span><span class="j-colon">: </span>`, verArr('dep_ver_major','dep_ver_minor','dep_ver_patch'));
+      h += L(sp(1), `<span class="j-brace">}]</span><span class="j-comma">,</span>`);
+    } else {
+      h += L(sp(1), toggleBtn('dependencies','dependencies', false), ` <span class="j-comment">// link to a resource pack</span>`);
+    }
+  }
+
+  // ---- CAPABILITIES toggle (RP only) ----
+  if (currentMode === 'rp') {
+    if (jvState.capabilities) {
+      h += L(sp(1), `<span class="j-key">"capabilities"</span><span class="j-colon">: </span><span class="j-brace">[</span>`, toggleBtn('capabilities','capabilities', true));
+      h += L(sp(2), `<span style="color:#666;font-family:'Fira Code',monospace;font-size:12px;">// check any that apply:</span>`);
+      h += L(sp(2),
+        `<label class="cap-label"><input type="checkbox" id="cap_pbr" ${gc('cap_pbr')?'checked':''} onchange="onAnyInput()"/><span>"pbr"</span></label>`,
+        `<label class="cap-label"><input type="checkbox" id="cap_raytracing" ${gc('cap_raytracing')?'checked':''} onchange="onAnyInput()"/><span>"raytracing"</span></label>`,
+        `<label class="cap-label"><input type="checkbox" id="cap_chemistry" ${gc('cap_chemistry')?'checked':''} onchange="onAnyInput()"/><span>"chemistry"</span></label>`,
+        `<label class="cap-label"><input type="checkbox" id="cap_scripting" ${gc('cap_scripting')?'checked':''} onchange="onAnyInput()"/><span>"experimental_custom_ui"</span></label>`
+      );
+      h += L(sp(1), `<span class="j-brace">]</span><span class="j-comma">,</span>`);
+    } else {
+      h += L(sp(1), toggleBtn('capabilities','capabilities', false), ` <span class="j-comment">// pbr, raytracing, chemistry, ...</span>`);
+    }
+  }
+
+  // ---- SUBPACKS toggle (both modes) ----
+  if (jvState.subpacks) {
+    h += L(sp(1), `<span class="j-key">"subpacks"</span><span class="j-colon">: </span><span class="j-brace">[</span>`, toggleBtn('subpacks','subpacks', true));
+    subpackEntries.forEach((sp_entry, idx) => {
+      h += `<div class="jv-sp-entry" style="padding-left:32px;" id="sp_entry_${idx}">`;
+      h += L(`<span class="j-brace">{</span> <button class="jv-toggle remove" onclick="removeSubpack(${idx})">&#x2212; remove</button>`);
+      h += L(sp(3), `<span class="j-key">"folder_name"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" data-spkey="folder" data-spidx="${idx}" value="${esc(sp_entry.folder)}" placeholder="LowQuality" style="min-width:100px;" /><span class="j-sq">"</span><span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"name"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" data-spkey="name" data-spidx="${idx}" value="${esc(sp_entry.name)}" placeholder="Low Quality" style="min-width:100px;" /><span class="j-sq">"</span><span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"description"</span><span class="j-colon">: </span><span class="j-sq">"</span><input type="text" class="f-str" data-spkey="desc" data-spidx="${idx}" value="${esc(sp_entry.desc)}" placeholder="optional description" style="min-width:140px;" /><span class="j-sq">"</span><span class="j-comma">,</span>`);
+      h += L(sp(3), `<span class="j-key">"memory_tier"</span><span class="j-colon">: </span><input type="number" class="f-num" data-spkey="scale" data-spidx="${idx}" value="${sp_entry.scale||0}" min="0" max="3" />`);
+      h += L(sp(2), `<span class="j-brace">}</span>${idx < subpackEntries.length-1 ? '<span class="j-comma">,</span>' : ''}`);
+      h += `</div>`;
+    });
+    h += L(sp(2), `<button class="jv-add-entry" onclick="addSubpack()">&#x2b; add subpack</button>`);
+    h += L(sp(1), `<span class="j-brace">]</span><span class="j-comma">,</span>`);
+  } else {
+    h += L(sp(1), toggleBtn('subpacks','subpacks', false), ` <span class="j-comment">// texture quality subpacks</span>`);
+  }
+
+  // ---- METADATA toggle ----
+  if (jvState.metadata) {
+    h += L(sp(1), `<span class="j-key">"metadata"</span><span class="j-colon">: </span><span class="j-brace">{</span>`, toggleBtn('metadata','metadata', true));
+    h += L(sp(2), `<span class="j-key">"authors"</span><span class="j-colon">: </span><span class="j-brace">[</span>`, iStr('f_author'), `<span class="j-brace">]</span><span class="j-comma">,</span>`);
+    h += L(sp(2), `<span class="j-key">"url"</span><span class="j-colon">: </span>`, iStr('f_url','min-width:160px;'));
+    h += L(sp(1), `<span class="j-brace">}</span>`);
+  } else {
+    h += L(sp(1), toggleBtn('metadata','metadata', false), ` <span class="j-comment">// authors, url</span>`);
+  }
+
+  h += L(`<span class="j-brace">}</span>`);
+  h += `<div style="height:32px;"></div>`;
+
+  container.innerHTML = h;
+
+  // wire sync listeners
+  container.querySelectorAll('[data-sync]').forEach(el => {
+    const sync = () => {
+      const t = document.getElementById(el.dataset.sync);
+      if (t) t.value = el.value;
+      syncHeader();
+    };
+    el.addEventListener('input', sync);
+    el.addEventListener('change', sync);
+  });
+
+  // wire subpack field listeners
+  container.querySelectorAll('[data-spkey]').forEach(el => {
+    el.addEventListener('input', () => {
+      const idx = parseInt(el.dataset.spidx);
+      const key = el.dataset.spkey;
+      if (subpackEntries[idx] !== undefined) subpackEntries[idx][key] = el.value;
+    });
+  });
+}
+
+// ================================================================
+//  JV BLOCK TOGGLE
+// ================================================================
+function jvToggle(key) {
+  jvState[key] = !jvState[key];
+  // init uuid when first opening script module
+  if (key === 'scriptModule' && jvState.scriptModule) {
+    const el = document.getElementById('uuid_script');
+    if (el && !el.value) el.value = generateUUID();
+  }
+  // init a first subpack entry
+  if (key === 'subpacks' && jvState.subpacks && subpackEntries.length === 0) {
+    subpackEntries.push({ folder:'', name:'', desc:'', scale:0 });
+  }
+  renderJsonView();
+}
+
+// ================================================================
+//  SUBPACKS
+// ================================================================
+function addSubpack() {
+  subpackEntries.push({ folder:'', name:'', desc:'', scale:0 });
+  renderJsonView();
+}
+function removeSubpack(idx) {
+  subpackEntries.splice(idx, 1);
+  renderJsonView();
+}
+
+// ================================================================
+//  REGEN from json view (syncs to form)
+// ================================================================
+function regenSynced(formId) {
+  const val = generateUUID();
+  const formEl = document.getElementById(formId);
+  if (formEl) formEl.value = val;
+  const jsonEl = document.querySelector(`#viewJson [data-sync="${formId}"]`);
+  if (jsonEl) jsonEl.value = val;
+}
+
+// ================================================================
+//  SYNC / LISTENERS
+// ================================================================
+function syncHeader() {
+  const el = document.getElementById('f_name');
+  if (el) document.getElementById('packNameHeader').value = el.value;
+}
+
+document.getElementById('packNameHeader').addEventListener('input', function() {
+  const el = document.getElementById('f_name');
+  if (el) el.value = this.value;
+  const jEl = document.querySelector('#viewJson [data-sync="f_name"]');
+  if (jEl) jEl.value = this.value;
+});
+
+function onAnyInput() {
+  syncHeader();
+}
+
+function attachListeners() {
+  document.querySelectorAll('#viewForm .f-str, #viewForm .f-uuid, #viewForm input[type="number"], #viewForm input[type="checkbox"]').forEach(el => {
+    el.removeEventListener('input', onAnyInput);
+    el.addEventListener('input', onAnyInput);
+    el.removeEventListener('change', onAnyInput);
+    el.addEventListener('change', onAnyInput);
+  });
+}
+
+// ================================================================
+//  EXPORT
+// ================================================================
+function exportJson() {
+  const json = JSON.stringify(buildManifest(), null, 2);
+  const blob = new Blob([json], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'manifest.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportJson);
+document.getElementById('copyJsonBtn').addEventListener('click', () => {
+  const json = JSON.stringify(buildManifest(), null, 2);
+  navigator.clipboard.writeText(json).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = json; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e') { e.preventDefault(); exportJson(); }
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='r') { e.preventDefault(); regenAllUUIDs(); }
+});
+
+// ================================================================
+//  SAVE SYSTEM
+// ================================================================
+const AUTH = "https://auth.mcbcode.com";
+const saveBtn = document.getElementById('saveBtn');
+let currentSaveId = null, currentUserId = null;
+
+function setSaveBtnState(state, label) {
+  saveBtn.textContent = label || 'Save';
+  saveBtn.className = 'copyshortcut' + (state ? ' '+state : '');
+}
+function setSaveParam(id) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('save', id);
+  window.history.replaceState({}, '', url.toString());
+}
+function updateSaveBtnVisibility(ownerId) {
+  saveBtn.style.display = (currentUserId !== null && (currentUserId === ownerId || ownerId === null)) ? '' : 'none';
+}
+async function doSave() {
+  if (saveBtn.classList.contains('saving')) return;
+  setSaveBtnState('saving', 'Saving...');
+  try {
+    const res = await fetch(`${AUTH}/save`, {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ save_id:currentSaveId, content:JSON.stringify(buildManifest(),null,2), filename:'manifest' })
+    });
+    const data = await res.json();
+    if (res.ok && data.save_id) {
+      currentSaveId = data.save_id; setSaveParam(currentSaveId);
+      setSaveBtnState('saved','Saved!'); setTimeout(()=>setSaveBtnState('','Save'),2000);
+    } else { setSaveBtnState('error','Error'); setTimeout(()=>setSaveBtnState('','Save'),2000); }
+  } catch { setSaveBtnState('error','Error'); setTimeout(()=>setSaveBtnState('','Save'),2000); }
+}
+
+function populateFromManifest(m) {
+  if (!m || !m.header) return;
+  const h = m.header;
+  const set = (id, val) => { const e = document.getElementById(id); if (e && val !== undefined) e.value = val; };
+  set('f_name', h.name||''); set('f_desc', h.description||''); set('uuid_header', h.uuid||'');
+  if (h.version) { set('f_ver_major',h.version[0]); set('f_ver_minor',h.version[1]); set('f_ver_patch',h.version[2]); }
+  if (h.min_engine_version) { set('f_min_major',h.min_engine_version[0]); set('f_min_minor',h.min_engine_version[1]); set('f_min_patch',h.min_engine_version[2]); }
+  const mods = m.modules||[];
+  const mainMod = mods.find(mod => mod.type==='resources'||mod.type==='data');
+  if (mainMod) {
+    setMode(mainMod.type==='resources'?'rp':'bp');
+    set('uuid_module',mainMod.uuid||''); set('f_module_desc',mainMod.description||'');
+    if (mainMod.version) { set('mod_ver_major',mainMod.version[0]); set('mod_ver_minor',mainMod.version[1]); set('mod_ver_patch',mainMod.version[2]); }
+  }
+  const scriptMod = mods.find(mod => mod.type==='javascript');
+  if (scriptMod) {
+    jvState.scriptModule = true;
+    set('uuid_script',scriptMod.uuid||''); set('f_script_entry',scriptMod.entry||'scripts/main.js');
+    if (scriptMod.version) { set('scr_ver_major',scriptMod.version[0]); set('scr_ver_minor',scriptMod.version[1]); set('scr_ver_patch',scriptMod.version[2]); }
+  }
+  if (m.dependencies && m.dependencies[0]) {
+    jvState.dependencies = true;
+    set('uuid_dep',m.dependencies[0].uuid||'');
+    if (m.dependencies[0].version) { set('dep_ver_major',m.dependencies[0].version[0]); set('dep_ver_minor',m.dependencies[0].version[1]); set('dep_ver_patch',m.dependencies[0].version[2]); }
+  }
+  if (m.capabilities && m.capabilities.length) {
+    jvState.capabilities = true;
+    const setCap = (id, key) => { const e=document.getElementById(id); if(e) e.checked=m.capabilities.includes(key); };
+    setCap('cap_pbr','pbr'); setCap('cap_raytracing','raytracing');
+    setCap('cap_chemistry','chemistry'); setCap('cap_scripting','experimental_custom_ui');
+  }
+  if (m.subpacks && m.subpacks.length) {
+    jvState.subpacks = true;
+    subpackEntries = m.subpacks.map(sp => ({ folder:sp.folder_name||'', name:sp.name||'', desc:sp.description||'', scale:sp.memory_tier||0 }));
+  }
+  if (m.metadata) {
+    jvState.metadata = true;
+    if (m.metadata.authors) set('f_author',m.metadata.authors[0]||'');
+    set('f_url',m.metadata.url||'');
+  }
+  document.getElementById('packNameHeader').value = h.name||'';
+  attachListeners();
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('uuid_header').value = generateUUID();
+  setMode('rp');
+
+  try {
+    const meRes = await fetch(`${AUTH}/me`, { credentials:'include' });
+    if (meRes.ok) { const me = await meRes.json(); currentUserId = me.id; }
+  } catch {}
+
+  const params = new URLSearchParams(window.location.search);
+  const saveParam = params.get('save');
+  if (saveParam) {
+    try {
+      const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(saveParam)}`, { credentials:'include' });
+      if (res.ok) {
+        const data = await res.json();
+        currentSaveId = data.save_id;
+        try { populateFromManifest(JSON.parse(data.content)); } catch {}
+        updateSaveBtnVisibility(data.owner_id);
+      } else { updateSaveBtnVisibility(null); }
+    } catch { updateSaveBtnVisibility(null); }
+  } else { updateSaveBtnVisibility(null); }
+
+  attachListeners();
+});
+</script>
+
+<script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
