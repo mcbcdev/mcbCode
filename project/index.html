@@ -318,7 +318,12 @@
     const AUTH = "https://auth.mcbcode.com";
 
     // share code from url: /project/xxxxxxxx/
-    const shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
+const pathParts = window.location.pathname.split("/").filter(Boolean);
+
+const projectIndex = pathParts.indexOf("project");
+const shareCode = projectIndex !== -1
+  ? pathParts[projectIndex + 1] || ""
+  : "";
 
     let projectData   = null;
     let allFiles      = [];
