@@ -1,161 +1,89 @@
 <!doctype html>
 <html lang="en">
 <head>
-
-  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
-  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <title>mcbCode | 404</title>
   <style>
-    html,body{
-      min-height:100%;
-      margin:0;
-      font-family:'mcfont', sans-serif;
-      background:#0c0c0c;
-      font-weight: 0;
-      color:#bebebe;
-      justify-content: center;
-      margin: auto;
-      text-align: center;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0c0c0c; color: #bebebe; font-family: 'mcfont', sans-serif; overflow: hidden; }
+    g { color: #05ee93; }
 
-    h2{
-      font-family: "mcfontb", sans-serif;
-      margin-top: 20vh;
-      text-align: center;
-    }
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(20,20,20,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; padding: 0 24px; z-index: 200; }
+    .topnav-title { font-size: 20px; color: #ffffff; font-family: 'mcfontb', sans-serif; }
 
-    a {
-        text-decoration: underline;
-        color: #ffffff;
-        transition: color 0.2s ease-in-out;
-    }
+    .scene { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 0; position: relative; }
 
-    a:hover {
-        color: #05ee93;
-    }
+    .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 24px; }
 
-  .mcbc {
-    position: fixed;
-    left: 5px;
-    top: 10px;
-    height: 50px;
-    max-width: 50px;
-  }
+    .code { font-size: clamp(80px, 18vw, 160px); color: #05ee93; font-family: 'mcfontb', sans-serif; line-height: 1; letter-spacing: -4px; opacity: 0.15; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0; user-select: none; pointer-events: none; }
 
-  c {
-      color: #e7007b;
-      font-family: inherit !important;
-  }
+    .icon { font-size: 48px; margin-bottom: 8px; filter: grayscale(0.3); }
+    .headline { font-size: 22px; color: #ffffff; font-family: 'mcfontb', sans-serif; }
+    .sub { font-size: 14px; color: #444; max-width: 380px; line-height: 1.6; margin-top: 4px; }
+    .sub g { color: #05ee93; }
 
-  button {
-      text-align: center;
-      background-color: #313131;
-      border: none;
-      font-size: 18px;
-      border-radius: 12px;
-      padding: 8px 12px;
-      color: #ffffff;
-      transition: color 0.2s ease-in-out;
-      cursor: pointer;
-  }
+    .actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; justify-content: center; }
+    .btn { background: #141414; border: 1px solid #2a2a2a; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 20px; cursor: pointer; text-decoration: none; transition: color 0.2s, border-color 0.2s; display: inline-block; }
+    .btn:hover { color: #05ee93; border-color: #05ee93; }
+    .btn.primary { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
+    .btn.primary:hover { background: #78e3a6; color: #0c0c0c; }
 
-  button:hover {
-      color: #05ee93;
-  }
-
-  #tryitout {
-      color: #0c0c0c;
-      background-color: #05ee93;
-      box-shadow: 0 0 20px 10px #05ee934;
-      transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-      border: 4px solid #00a459;
-  }
-
-  #tryitout:hover {
-      color: #ffffff;
-      background-color: #00a95c;
-  }
-
-  .navi {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 75px;
-      background-color: rgba(45, 45, 45, 0.6);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-sizing: border-box;
-      padding: 0 24px;
-      z-index: 100;
-  }
-
-  .navi-brand h2 {
-      margin: 0;
-  }
-
-  
-    h2 {
-    font-size: 30px;
-    color: #ffffff;
-  }
-
-  .terms p {
-    color: #fff;
-  }
-
-  be {
-    color: #bebebe
-  }
-  #p {
-    text-align: center;
-  }
-
-  .quick-links a {
-    text-decoration: none;
-  }
-
-  .quick-links {
-    gap: 30px;
-  }
-
-  footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 3%;
-  }
+    .coords { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #2a2a2a; font-family: 'Fira Code', monospace; letter-spacing: 0.05em; }
   </style>
 </head>
 <body>
 
-  <div class="navi">
-      <div class="navi-brand"><h2><ee style="color: #fff; font-family: mcfontb;">mcb</aa><g>Code</g></h2></div>
-      <div class="quick-links">
-          <a href="https://mcbcode.com">Home</a>
-          <a href="https://mcbcode.com/editor">Editor</a>
-          <a href="https://github.com/xyztoast/mcfunction">Source</a>
-      </div>
+  <div class="topnav">
+    <a href="/" style="text-decoration:none;">
+      <span class="topnav-title">mcb<g>Code</g></span>
+    </a>
   </div>
 
+  <div class="scene">
+    <div class="code">404</div>
+    <div class="content">
+      <img src="/img/diamond_pickaxe.png" style="width:48px; height:48px; image-rendering:pixelated;" alt="pickaxe">
+      <div class="headline">You dug too deep.</div>
+      <div class="sub">This page doesn't exist — or it fell into the void.<br>Either way, <g>it's gone</g>.</div>
+      <div class="actions">
+        <a class="btn primary" href="/">Go Home</a>
+        <a class="btn" href="/dashboard">Dashboard</a>
+      </div>
+    </div>
+  </div>
 
-  <h2>
-    
+  <div class="coords" id="coords">XYZ: — / -64 / —</div>
 
-    Even the <g>compass</g> is lost.<br><c>This page does not exist.</c>
-  
-  
-  </h2>
+  <script>
+    // fake minecraft coords that drift
+    const coords = document.getElementById("coords");
+    let x = Math.floor(Math.random() * 10000) - 5000;
+    let z = Math.floor(Math.random() * 10000) - 5000;
+    setInterval(() => {
+      x += Math.floor(Math.random() * 3) - 1;
+      z += Math.floor(Math.random() * 3) - 1;
+      coords.textContent = `XYZ: ${x} / -64 / ${z}`;
+    }, 800);
 
+    // redirect logic for github pages dynamic routing
+    // if the path looks like /project/xxxxxxxx/, redirect to the project page handler
+    const path = location.pathname;
+    const match = path.match(/^\/project\/([a-z0-9]{8})\/?$/i);
+    if (match) {
+      // load the project page instead of showing 404
+      fetch("/project/index.html")
+        .then(r => r.text())
+        .then(html => {
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .catch(() => {});
+    }
+  </script>
 
-  <footer>Not affiliated with Microsoft or Mojang AB.<br><br>
-  © Copyright 2026 mcb<g>Code</g></footer>
-  <br><br>
-  <script data-goatcounter="https://mcbcode.goatcounter.com/count"
-          async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
