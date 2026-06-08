@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- google adsense stuff below -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2825557346768110"
+     crossorigin="anonymous"></script>
+
+<!-- google adsense stuff above-->
+
+  
+<link rel="manifest" href="/app/manifest.json">
+<!-- Import Fira Code -->
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<!-- External Theme Link -->
+<link id="theme-link" rel="stylesheet" href="https://mcbcode.com/theme/editor/default.css">
+<meta charset="UTF-8">
+<link rel="icon" href="/theme/favicon.png">
+<title>mcbCode | Editor</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #323232;
+    font-weight: 0 !important; 
+    color: #fff;
+    overflow: hidden;
+    font-family: mcfont;
+  }
+
+  header.top-thing {
+    background-color: #323232;
+    display: flex; 
+    align-items: center; 
+    height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+  }
+
+  .navi {
+    font-size: 14px;
+    padding: 3px 3px;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    background-color: #323232;
+    z-index: 1001;
+    border-bottom: 1px solid #444;
+  }
+
+  .editor {
+    display: flex;
+    height: calc(100vh - 80px); 
+    overflow: hidden;
+    align-items: flex-start;
+    position: relative;
+    background-color: #0c0c0c;
+    margin-top: 80px; /* Offset for fixed top elements */
+  }
+
+  .sidebar {
+    background-color: #323232;
+    width: 60px;
+    height: 100%;
+    font-size: 12px;
+    padding: 6px 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Pushed content to bottom */
+    position: fixed;
+    top: 80px;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+  }
+
+  .nav-left, .nav-right {
+    display: flex;
+    gap: 0px;
+    align-items: center;
+    padding-top: 1px
+  }
+
+  .nav-left img {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding-top: 1px
+  }
+
+  button {
+    background-color: transparent;
+    border: none;
+    color: #f0f0f0;
+    user-select: none;
+    margin: 0;
+    cursor: pointer;
+    font-family: mcfont;
+  }
+
+  .code-container {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    margin-left: 60px; /* Offset for fixed sidebar */
+  }
+
+  /* EXTREME OVERRIDE: 
+     We use double ID selectors to beat site.css specificity.
+     We also disable ligatures and kerning to ensure pixel-perfect character alignment.
+  */
+  #editor #codeArea, 
+  #editor #highlightLayer,
+  #editor #highlightLayer * {
+    font-family: 'Fira Code', monospace !important; 
+    font-variant-ligatures: none !important;
+    font-feature-settings: "liga" 0, "calt" 0 !important;
+    letter-spacing: normal !important;
+    line-height: 1.4 !important;
+    font-size: 16px !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    tab-size: 4 !important;
+  }
+
+  .code-container textarea#codeArea, 
+  .code-container div#highlightLayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 4px; /* Added some padding for better readability */
+    margin: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .code-area {
+    z-index: 2;
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #05ee93 !important;
+    resize: none;
+  }
+
+  .highlight-layer {
+    z-index: 1;
+    background-color: #0c0c0c;
+    pointer-events: none; 
+  }
+
+  .nav-item {
+    position: relative;
+    display: inline-block;
+  }
+
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #323232;
+    border: 1px solid #bebebe;
+    min-width: 250px;
+    z-index: 1002;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    flex-direction: column;
+  }
+
+  .nav-dropdown div {
+    cursor: pointer;
+    font-size: 12px;
+    background-color: #323232;
+    padding: 6px 12px;
+  }
+
+  .nav-dropdown div:hover {
+    background-color: #454545;
+  }
+  
+  .nav-item:hover .nav-dropdown {
+    display: flex;
+  }
+
+  .sub-dropdown {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 95%;
+    border: 1px solid #bebebe;
+    min-width: 200px;
+    background-color: #323232;
+    z-index: 1003;
+  }
+
+  .has-submenu:hover .sub-dropdown {
+    display: block;
+  }
+
+  #exportCode { color: #00b2ff; }
+  .delete { color: #ff4d4d; }
+  
+  .file-name {
+    background-color: #0c0c0c;
+    color: #ffffff;
+    white-space: nowrap;
+    height: 18px;
+    font-size: 16px;
+    outline: none;
+    border: none;
+    padding: 6px 2px;
+    resize: none;
+    min-width: 10%;
+    line-height: 18px;
+    overflow-y: hidden
+  }
+
+  .filename-txt { background-color: #454545; padding: 6px 6px; padding-right: 12px; }
+  .filename-mcf { background-color: #1f1f1f; padding: 6px 6px; }
+
+  .copyshortcut {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #1f1f1f;
+    padding: 6px 6px; margin-left: 8px;
+  }
+
+  .copyshortcut:hover { background-color: #454545; cursor: pointer; }
+
+  kbs { background-color: #454545; padding: 3px 3px; }
+
+  .find-panel-wrapper {
+    background-color: rgba(50, 50, 50, 0.25);
+    backdrop-filter: blur(5px);
+    padding: 4px 8px;
+    position: fixed;
+    top: 100px;
+    z-index: 1050;
+    right: 30px;
+    /* Fade effects */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  }
+
+  #findthing {
+    resize: none;
+    background-color: #0c0c0c;
+    outline: none;
+    border: none;
+    color: #ffffff;
+    height: 180px;
+  }
+
+  .sidebar-kbd {
+    text-align: center;
+    padding: 6px 0;
+    background-color: #343434;
+    font-size: 10px;
+    font-family: 'mcfont';
+    color: #bebebe;
+    user-select: none;
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  }
+
+  .sidebar-kbd:hover, .sidebar-kbd.active {
+    color: #05ee93;
+    background-color: #454545;
+  }
+
+  /* save button state */
+  #saveBtn { cursor: pointer; }
+  #saveBtn.saving { color: #888; cursor: not-allowed; }
+  #saveBtn.saved  { color: #05ee93; }
+  #saveBtn.error  { color: #ff5555; }
+
+  #ad-editor-bottom {
+    position: fixed;
+    width: 0px;
+    height: 0px;
+  }
+</style>
+</head>
+<body>
+  <!-- adsense stuff -->
+<div id="ad-editor-bottom"></div>
+
+
+
+  <!-- actual html below-->
+  <div class="find-panel-wrapper">
+    <p>Find Tool</p>
+    <textarea id="findthing"></textarea>
+  </div>
+
+  <header class="top-thing">
+      <a href="https://mcbcode.com" style="padding-left: 12px;"><img src="https://mcbcode.com/theme/favicon.png" alt="icon" style="width: 36px"></a>
+      <h2 style="padding: 0px 12px;">mcb<g>Code</g></h2>
+      <div class="filename-txt">Filename:</div>
+      <textarea id="autoWidth" class="file-name" maxlength="72"></textarea>
+      <div class="filename-mcf">.mcfunction</div>
+      <a href="https://mcbcode.com/account" style="color: #ffffff; text-decoration: none;"><div class="copyshortcut">Account</div></a>
+      <!-- Save button: hidden until we confirm user is signed in and is the owner -->
+      <div class="copyshortcut" id="saveBtn" style="display:none;" onclick="doSave()">Save</div>
+  </header>
+
+  <div class="navi">
+    <div class="nav-left">
+      <div class="nav-item">
+        <button>File</button>
+        <div class="nav-dropdown">
+          <div id="copyCodeMenu"><img src="https://ccvaults.com/thumbnails/10.%20Items/15.%20Projectiles/Ender_Pearl.png" style="width: 16px; height: 16px; padding-right: 4px;">Copy Code</div>
+          <div id="exportCode"><img src="https://ccvaults.com/thumbnails/10.%20Items/11.%20Materials/Diamond.png" style="width: 16px; height: 16px; padding-right: 4px;">Export as .mcfunction</div>
+          <div id="exportCodeTxt"><img src="https://ccvaults.com/thumbnails/10.%20Items/11.%20Materials/Emerald.png" style="width: 16px; height: 16px; padding-right: 4px;"><g>Export as .txt</g></div>
+        </div>
+      </div>
+      <div class="nav-item">
+        <button>Edit</button>
+        <div class="nav-dropdown">
+         <div id="deleteCode" class="delete"><img src="https://ccvaults.com/thumbnails/10.%20Items/19.%20Buckets/Lava_Bucket.png" style="width: 16px; height: 16px; padding-right: 4px;">Delete Code</div>
+        </div>
+      </div>
+
+
+
+
+
+      <div class="nav-item">
+        <button>View</button>
+        <div class="nav-dropdown">
+          <div class="has-submenu">
+            <img src="https://ccvaults.com/thumbnails/10.%20Items/18.%20Consumables/Enchanted_Golden_Apple.png" style="width: 16px; height: 16px; padding-right: 4px;">Themes
+            <div class="sub-dropdown">
+              <div class="theme-btn" onclick="setTheme('default')">Default</div>
+              <div class="theme-btn" onclick="setTheme('neon')">Neon</div>
+              <div class="theme-btn" onclick="setTheme('blue')">Blue</div>
+              <div class="theme-btn" onclick="setTheme('soft')">Soft</div>
+              <div class="theme-btn" onclick="setTheme('grayscale')">Grayscale</div>
+              <div class="theme-btn" onclick="setTheme('solid')">Solid</div>
+              <div class="theme-btn" onclick="setTheme('summer')">Summer</div>
+              <div class="theme-btn" onclick="setTheme('modern')">Modern</div>
+            </div>
+          </div>   
+        </div>
+      </div>
+
+
+
+
+
+
+
+      <div class="nav-item">
+        <button>Help</button>
+        <div class="nav-dropdown">
+          <div class="has-submenu"><img src="https://ccvaults.com/thumbnails/20.%20Blocks/18.%20Decoration/Dirt.png" style="width: 16px; height: 16px; padding-right: 4px;">Third Party Sites
+            <div class="sub-dropdown">
+              <a href="https://minecraft.wiki/w/Commands" target="_blank" style="text-decoration: none; color: #ffffff"><div>Open <g>minecraft.wiki</g></div></a>
+              <a href="https://wiki.bedrock.dev/commands/intro-to-command-blocks" target="_blank" style="text-decoration: none; color: #ffffff"><div>Open <g>wiki.bedrock.dev</g></div></a>
+            </div>
+          </div>
+          <div class="has-submenu">
+            <img src="https://ccvaults.com/thumbnails/20.%20Blocks/22.%20Redstone/Sticky_Piston.png" style="width: 16px; height: 16px; padding-right: 4px;">Keyboard Shortcuts
+            <div class="sub-dropdown" style="padding: 10px; font-size: 11px;">
+        <p><g>Clipboard Operations</g></p>
+        <p><kbs>Ctrl+C</kbs> Copy</p>
+        <p><kbs>Ctrl+V</kbs> Paste</p>
+        <p><kbs>Ctrl+X</kbs> Cut</p>
+        <br>
+        <p><g>Action History</g></p>
+        <p><kbs>Ctrl+Z</kbs> Undo</p>
+        <p><kbs>Ctrl+Y</kbs> Redo</p>
+        <br>
+        <p><g>Selections</g></p>
+        <p><kbs>Ctrl+A</kbs> Select All</p>
+        <br>
+        <p><g>mcbCode Shortcuts</g></p>
+        <p><kbs>Ctrl+Alt+D</kbs> Delete Code</p>
+        <p><kbs>Ctrl+S</kbs> Download File</p>
+        <p><kbs>Ctrl+F</kbs> Find and Replace</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="editor" id="editor">
+    <div class="sidebar">
+      <div class="sidebar-kbd" style="color: #00b2ff">Font:</div>
+      <div class="sidebar-kbd" id="fontdisplay" style="color: #00b2ff">16px</div>
+      <div style="border-bottom: 1px solid #bebebe"></div>
+      <div class="sidebar-kbd" id="other">Other</div>
+      <div class="sidebar-kbd" id="shift">Shift</div>
+      <div class="sidebar-kbd" id="alt">Alt</div>
+      <div class="sidebar-kbd" id="ctrl">Ctrl</div>
+    </div>
+    <div class="code-container">
+      <div class="highlight-layer" id="highlightLayer"></div>
+      <textarea class="code-area" id="codeArea" spellcheck="false" placeholder="# welcome to mcbCode"># welcome to mcbCode. 
+# remove this text to start coding
+tellraw @a {"rawtext":[{"text":"§aThis is §2mcbCode"}]}</textarea>
+    </div>
+  </div>
+
+<script>
+// Handle Filename Width and Find Tool expansion
+const autoWidthTextarea = document.getElementById('autoWidth');
+const findTextarea = document.getElementById('findthing');
+
+const measurer = document.createElement('span');
+measurer.style.visibility = 'hidden';
+measurer.style.whiteSpace = 'pre';
+measurer.style.position = 'absolute';
+document.body.appendChild(measurer);
+
+function adjustFilenameWidth() {
+  measurer.style.font = window.getComputedStyle(autoWidthTextarea).font;
+  measurer.textContent = autoWidthTextarea.value || autoWidthTextarea.placeholder;
+  autoWidthTextarea.style.width = (measurer.offsetWidth + 10) + 'px';
+}
+
+autoWidthTextarea.addEventListener('input', adjustFilenameWidth);
+adjustFilenameWidth();
+
+findTextarea.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
+});
+</script>
+
+<script src="https://mcbcode.com/backend/grammar.js"></script>
+<script src="https://mcbcode.com/backend/highlight.js"></script>
+
+<script>
+const codeArea = document.getElementById('codeArea');
+const highlightLayer = document.getElementById('highlightLayer');
+let highlightTimeout;
+
+let isHighlighting = false;
+async function updateHighlighting() {
+    if (isHighlighting || typeof applyHighlighting !== 'function') return; 
+    const text = codeArea.value;
+    isHighlighting = true;
+    window.requestAnimationFrame(async () => {
+        const highlighted = await applyHighlighting(text);
+        highlightLayer.innerHTML = highlighted;
+        isHighlighting = false;
+        syncScroll();
+    });
+}
+
+function syncScroll() {
+    highlightLayer.scrollTop = codeArea.scrollTop;
+    highlightLayer.scrollLeft = codeArea.scrollLeft;
+}
+
+codeArea.addEventListener('scroll', syncScroll);
+codeArea.addEventListener('input', () => {
+    clearTimeout(highlightTimeout);
+    highlightTimeout = setTimeout(updateHighlighting, 10);
+});
+
+// Auto-pairs
+codeArea.addEventListener('keydown', (e) => {
+    const pairs = { '(': ')', '{': '}', '[': ']', '"': '"' };
+    if (pairs[e.key]) {
+        e.preventDefault();
+        const start = codeArea.selectionStart;
+        const end = codeArea.selectionEnd;
+        const val = codeArea.value;
+        codeArea.value = val.substring(0, start) + e.key + pairs[e.key] + val.substring(end);
+        codeArea.setSelectionRange(start + 1, start + 1);
+        updateHighlighting();
+    }
+});
+
+// Download Function Logic
+const triggerDownload = (ext) => {
+  const code = document.getElementById('codeArea').value;
+  const fileNameInput = document.getElementById('autoWidth');
+  if (!code) return;
+  let fileName = (fileNameInput.value || 'untitled').replace(/[^a-z0-9_\-]/gi, '_') + '.' + ext;
+  const blob = new Blob([code], { type: 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+document.getElementById('exportCode').addEventListener('click', () => triggerDownload('mcfunction'));
+document.getElementById('exportCodeTxt').addEventListener('click', () => triggerDownload('txt'));
+
+// Copy Logic
+const copyToClipboard = () => {
+  const text = codeArea.value;
+  if (!text) return;
+  const dummy = document.createElement("textarea");
+  document.body.appendChild(dummy);
+  dummy.value = text;
+  dummy.select();
+  document.execCommand("copy");
+  document.body.removeChild(dummy);
+  console.log('Copied to clipboard');
+};
+
+document.getElementById('copyCodeMenu').addEventListener('click', copyToClipboard);
+
+document.getElementById('deleteCode').addEventListener('click', () => {
+  codeArea.value = '';
+  updateHighlighting();
+});
+
+// Global Key Listeners
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  if (e.ctrlKey && e.altKey && key === 'd') {
+    e.preventDefault();
+    codeArea.value = '';
+    updateHighlighting();
+  }
+  if (e.ctrlKey && key === 's') {
+    e.preventDefault();
+    triggerDownload('mcfunction');
+  }
+});
+
+// Font Size
+let currentFontSize = 16;
+function setFontSize(size) {
+  currentFontSize = Math.min(Math.max(size, 8), 48);
+  const px = currentFontSize + 'px';
+  [codeArea, highlightLayer].forEach(el => el.style.fontSize = px);
+  const display = document.getElementById('fontdisplay');
+  if (display) display.textContent = px;
+  updateHighlighting();
+}
+
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === '[' || e.key === ']')) {
+    e.preventDefault();
+    setFontSize(e.key === ']' ? currentFontSize + 2 : currentFontSize - 2);
+  }
+}, true);
+
+// Find Panel
+const findPanel = document.querySelector('.find-panel-wrapper');
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    const isHidden = window.getComputedStyle(findPanel).visibility === 'hidden';
+    if (isHidden) {
+      findPanel.style.visibility = 'visible';
+      findPanel.style.opacity = '1';
+      setTimeout(() => document.getElementById('findthing').focus(), 50);
+    } else {
+      findPanel.style.opacity = '0';
+      findPanel.style.visibility = 'hidden';
+    }
+  }
+  if (e.key === 'Escape') {
+    findPanel.style.opacity = '0';
+    findPanel.style.visibility = 'hidden';
+  }
+});
+
+// Keyboard State Visuals
+const keys = {
+  ctrl: document.getElementById('ctrl'),
+  shift: document.getElementById('shift'),
+  alt: document.getElementById('alt'),
+  other: document.getElementById('other')
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Control') keys.ctrl.classList.add('active');
+  if (e.key === 'Shift') keys.shift.classList.add('active');
+  if (e.key === 'Alt') keys.alt.classList.add('active');
+  const isMod = ['Control', 'Shift', 'Alt'].includes(e.key);
+  if ((e.ctrlKey || e.shiftKey || e.altKey) && !isMod) keys.other.classList.add('active');
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'Control') keys.ctrl.classList.remove('active');
+  if (e.key === 'Shift') keys.shift.classList.remove('active');
+  if (e.key === 'Alt') keys.alt.classList.remove('active');
+  keys.other.classList.remove('active');
+});
+
+// Service Worker Fix
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => console.log('sw registered'))
+    .catch(err => console.warn('SW registration failed:', err));
+}
+
+// Initial Run
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updateHighlighting, 100);
+});
+</script>
+
+<!-- =====================
+     SAVE / SHARE SYSTEM
+     - on load: checks ?save= param, loads code from backend if present
+     - checks /me to see if signed in, and if user is the owner of the save
+     - save button only shown to the owner
+     - doSave() posts to /save, updates ?save= in url without reloading
+===================== -->
+<script>
+const AUTH = "https://auth.mcbcode.com";
+const saveBtn = document.getElementById('saveBtn');
+
+let currentSaveId = null;   // the save_id currently loaded
+let currentUserId = null;   // the logged-in user's id, null if not signed in
+
+// set save button visual state
+function setSaveBtnState(state, label) {
+    saveBtn.textContent = label || 'Save';
+    saveBtn.className = 'copyshortcut' + (state ? ' ' + state : '');
+}
+
+// update the ?save= url param without reloading the page
+function setSaveParam(id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('save', id);
+    window.history.replaceState({}, '', url.toString());
+}
+
+// show/hide the save button based on whether the user is the owner
+function updateSaveBtnVisibility(ownerId) {
+    if (currentUserId !== null && currentUserId === ownerId) {
+        saveBtn.style.display = '';
+    } else if (currentUserId !== null && ownerId === null) {
+        // no save loaded yet — show save btn so they can save a new one
+        saveBtn.style.display = '';
+    } else {
+        saveBtn.style.display = 'none';
+    }
+}
+
+async function doSave() {
+    if (saveBtn.classList.contains('saving')) return;
+    setSaveBtnState('saving', 'Saving...');
+
+    try {
+        const res = await fetch(`${AUTH}/save`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                save_id: currentSaveId,
+                content: codeArea.value,
+                filename: document.getElementById('autoWidth').value || 'untitled',
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.save_id) {
+            currentSaveId = data.save_id;
+            setSaveParam(currentSaveId);
+            setSaveBtnState('saved', 'Saved!');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        } else {
+            setSaveBtnState('error', 'Error');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        }
+    } catch {
+        setSaveBtnState('error', 'Error');
+        setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+    }
+}
+
+// on page load: check ?save= and auth state
+window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const saveParam = params.get('save');
+
+    // check auth (non-blocking — we don't redirect, editor is public)
+    try {
+        const meRes = await fetch(`${AUTH}/me`, { credentials: 'include' });
+        if (meRes.ok) {
+            const me = await meRes.json();
+            currentUserId = me.id;
+        }
+    } catch {}
+
+    if (saveParam) {
+        // load the save from backend
+        try {
+            const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(saveParam)}`, {
+                credentials: 'include'
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                currentSaveId = data.save_id;
+
+                // load content and filename
+                codeArea.value = data.content;
+                if (data.filename) {
+                    document.getElementById('autoWidth').value = data.filename;
+                    adjustFilenameWidth();
+                }
+
+                updateHighlighting();
+                updateSaveBtnVisibility(data.owner_id);
+            } else {
+                // save not found or bad id
+                codeArea.value = '# this share code does not exist';
+                updateHighlighting();
+                saveBtn.style.display = 'none';
+            }
+        } catch {
+            codeArea.value = '# this share code does not exist';
+            updateHighlighting();
+            saveBtn.style.display = 'none';
+        }
+    } else {
+        // no ?save= param — show save button only if signed in
+        updateSaveBtnVisibility(null);
+    }
+});
+</script>
+
+<script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
