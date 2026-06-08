@@ -61,7 +61,6 @@
 
     .empty { margin-top: 20px; padding: 40px; background: #111; border: 1px dashed #2a2a2a; text-align: center; color: #bebebe; font-size: 14px; }
 
-    /* settings / account rows */
     select { padding: 4px; width: 120px; background-color: #111; border: 1px dashed #2a2a2a; color: #bebebe; font-family: 'mcfont', sans-serif; transition: all 0.2s ease-in-out; }
     select:hover { border: 1px dashed #05ee93; color: #05ee93; }
     input[type="checkbox"] { appearance: none; -webkit-appearance: none; background-color: #323232; width: 1.5em; height: 1.5em; cursor: pointer; display: inline-block; vertical-align: middle; transition: all 0.2s ease-in-out; flex-shrink: 0; }
@@ -78,17 +77,38 @@
     .save-msg.err { color: #ff5555; display: inline; }
 
     /* projects */
-    .project-list { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-    .project-list-header { font-size: 12px; color: #444; margin-top: 12px; }
-    .project-row { display: flex; align-items: center; background: #141414; border: 1px solid #1f1f1f; padding: 12px 16px; gap: 16px; }
-    .project-name { flex: 1; color: #ffffff; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .project-name span { color: #05ee93; }
+    .project-toolbar { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 8px; }
+    .project-list-header { font-size: 12px; color: #444; }
+    .new-project-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 14px; cursor: pointer; transition: background 0.2s; }
+    .new-project-btn:hover { background: #78e3a6; }
+    .new-project-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .project-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .project-row { display: flex; align-items: center; background: #141414; border: 1px solid #1f1f1f; padding: 12px 16px; gap: 16px; transition: border-color 0.2s; }
+    .project-row:hover { border-color: #2a2a2a; }
+    .project-info { flex: 1; min-width: 0; }
+    .project-name { color: #ffffff; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .project-name span { color: #444; font-size: 12px; margin-left: 6px; }
+    .project-desc { font-size: 12px; color: #444; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .project-date { font-size: 12px; color: #444; white-space: nowrap; flex-shrink: 0; }
     .project-actions { display: flex; gap: 8px; flex-shrink: 0; }
     .proj-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 4px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
     .proj-btn:hover { color: #05ee93; border-color: #05ee93; }
-    .proj-btn.ok { color: #05ee93; border-color: #05ee93; }
     .proj-btn.danger:hover { color: #ff5555; border-color: #ff5555; }
+    .proj-badge { font-size: 10px; padding: 2px 6px; border: 1px solid #2a2a2a; color: #444; margin-left: 6px; }
+    .proj-badge.public { border-color: #05ee93; color: #05ee93; }
+
+    /* new project modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 28px 32px; min-width: 360px; max-width: 480px; width: 100%; }
+    .modal-box h3 { color: #fff; font-size: 16px; margin-bottom: 20px; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label { display: block; font-size: 12px; color: #555; margin-bottom: 6px; }
+    .modal-field input, .modal-field textarea { width: 100%; background: #111; border: 1px solid #2e2e2e; color: #fff; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 8px 10px; outline: none; transition: border-color 0.2s; resize: none; }
+    .modal-field input:focus, .modal-field textarea:focus { border-color: #05ee93; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    .modal-err { font-size: 12px; color: #ff5555; margin-top: 8px; display: none; }
+    .modal-err.visible { display: block; }
 
     /* confirm overlay */
     .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
@@ -115,14 +135,34 @@
 </head>
 <body>
 
-  <!-- delete save confirm -->
+  <!-- new project modal -->
+  <div class="modal-overlay" id="new-project-modal">
+    <div class="modal-box">
+      <h3>New Project</h3>
+      <div class="modal-field">
+        <label>PROJECT NAME</label>
+        <input type="text" id="np-name" maxlength="72" placeholder="My Awesome Addon">
+      </div>
+      <div class="modal-field">
+        <label>DESCRIPTION <span style="color:#333">(optional)</span></label>
+        <textarea id="np-desc" rows="3" maxlength="256" placeholder="What does this addon do?"></textarea>
+      </div>
+      <div class="modal-err" id="np-err"></div>
+      <div class="modal-actions">
+        <button class="confirm-no" onclick="closeNewProject()">Cancel</button>
+        <button class="save-btn" id="np-submit" onclick="submitNewProject()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- delete project confirm -->
   <div class="confirm-overlay" id="confirm-overlay">
     <div class="confirm-box">
       <p>Delete this project?</p>
-      <small id="confirm-filename"></small>
+      <small id="confirm-projname"></small>
       <div class="confirm-actions">
         <button class="confirm-yes" onclick="confirmDelete()">Delete</button>
-        <button class="confirm-no" onclick="closeConfirm('save')">Cancel</button>
+        <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
       </div>
     </div>
   </div>
@@ -134,7 +174,7 @@
       <small>This will permanently delete your account, all projects, and settings.</small>
       <div class="confirm-actions">
         <button class="confirm-yes" onclick="delAccountStep2()">Yes, continue</button>
-        <button class="confirm-no" onclick="closeConfirm('account1')">Cancel</button>
+        <button class="confirm-no" onclick="document.getElementById('del-account-1').classList.remove('visible')">Cancel</button>
       </div>
     </div>
   </div>
@@ -146,7 +186,7 @@
       <small>There is no undo. Everything will be gone forever.</small>
       <div class="confirm-actions">
         <button class="confirm-yes" onclick="confirmDeleteAccount()">Delete my account</button>
-        <button class="confirm-no" onclick="closeConfirm('account2')">Cancel</button>
+        <button class="confirm-no" onclick="document.getElementById('del-account-2').classList.remove('visible')">Cancel</button>
       </div>
     </div>
   </div>
@@ -211,10 +251,13 @@
       <!-- PROJECTS -->
       <div class="dash-section" id="section-projects">
         <h2>Projects</h2>
-        <p>Your saved mcfunction projects.</p>
-        <p class="project-list-header" id="projects-limit-label"></p>
+        <p>Your Minecraft addon projects.</p>
+        <div class="project-toolbar">
+          <span class="project-list-header" id="projects-limit-label"></span>
+          <button class="new-project-btn" id="new-proj-btn" onclick="openNewProject()">+ New Project</button>
+        </div>
         <div class="project-list" id="project-list">
-          <div class="empty" id="projects-empty" style="display:none;">No projects yet. Open the editor to get started.</div>
+          <div class="empty" id="projects-empty" style="display:none;">No projects yet. Hit "New Project" to get started.</div>
         </div>
       </div>
 
@@ -260,13 +303,11 @@
         <h2>Account</h2>
         <p>Manage your mcbCode account.</p>
         <br>
-
         <div class="account-field">
           <label>EMAIL</label>
           <span id="acct-email" style="color:#fff; font-size:14px;"></span>
           <span class="account-badge github" id="acct-github-badge" style="display:none;">GitHub</span>
         </div>
-
         <div class="account-field">
           <label>USERNAME</label>
           <div class="settings-row" style="margin-bottom:0;">
@@ -276,7 +317,6 @@
           </div>
           <small style="color:#444; font-size:11px; display:block; margin-top:4px;">letters, numbers, _ and - only</small>
         </div>
-
         <div class="danger-zone">
           <h3>Danger Zone</h3>
           <p style="font-size:13px; margin-bottom:14px;">Deleting your account removes all your projects and settings permanently.</p>
@@ -289,8 +329,8 @@
 
   <script>
     const AUTH = "https://auth.mcbcode.com";
-    let pendingDeleteId = null;
-    let pendingDeleteRow = null;
+    let pendingDeleteCode = null;
+    let pendingDeleteRow  = null;
 
     (async () => {
       try {
@@ -326,89 +366,138 @@
     function formatDate(str) {
       if (!str) return "";
       const d = new Date(str.endsWith("Z") ? str : str + "Z");
-      return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }) + " " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+      return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
     }
 
     async function loadProjects() {
       const list  = document.getElementById("project-list");
       const empty = document.getElementById("projects-empty");
       const label = document.getElementById("projects-limit-label");
+      const btn   = document.getElementById("new-proj-btn");
       Array.from(list.querySelectorAll(".project-row")).forEach(r => r.remove());
+
       try {
-        const res = await fetch(`${AUTH}/saves`, { credentials: "include" });
+        const res = await fetch(`${AUTH}/projects`, { credentials: "include" });
         if (!res.ok) throw new Error();
-        const { saves, max_saves } = await res.json();
-        document.getElementById("stat-projects").textContent = saves.length;
-        label.textContent = `${saves.length} / ${max_saves} projects used`;
-        if (saves.length === 0) { empty.style.display = ""; return; }
+        const { projects, max_saves } = await res.json();
+
+        document.getElementById("stat-projects").textContent = projects.length;
+        label.textContent = `${projects.length} / ${max_saves} projects used`;
+        btn.disabled = projects.length >= max_saves;
+
+        if (projects.length === 0) { empty.style.display = ""; return; }
         empty.style.display = "none";
-        saves.forEach(save => {
-          const filename = save.filename || "untitled";
+
+        projects.forEach(proj => {
           const row = document.createElement("div");
           row.className = "project-row";
-          row.id = `row-${escHtml(save.save_id)}`;
+          row.id = `row-${escHtml(proj.share_code)}`;
+          const isPublic = proj.is_public === 1 || proj.is_public === true;
           row.innerHTML = `
-            <div class="project-name">${escHtml(filename)}<span>.mcfunction</span></div>
-            <div class="project-date">${escHtml(formatDate(save.last_updated))}</div>
+            <div class="project-info">
+              <div class="project-name">
+                ${escHtml(proj.name)}
+                <span class="proj-badge${isPublic ? ' public' : ''}">${isPublic ? 'public' : 'private'}</span>
+              </div>
+              ${proj.description ? `<div class="project-desc">${escHtml(proj.description)}</div>` : ''}
+            </div>
+            <div class="project-date">${escHtml(formatDate(proj.updated_at))}</div>
             <div class="project-actions">
-              <button class="proj-btn" onclick="openProject('${escHtml(save.save_id)}')">Open</button>
-              <button class="proj-btn" onclick="copyCode('${escHtml(save.save_id)}', this)">Copy Code</button>
-              <button class="proj-btn danger" onclick="askDelete('${escHtml(save.save_id)}', '${escHtml(filename)}', this)">Delete</button>
+              <button class="proj-btn" onclick="openProject('${escHtml(proj.share_code)}')">Open</button>
+              <button class="proj-btn danger" onclick="askDelete('${escHtml(proj.share_code)}', '${escHtml(proj.name)}', this)">Delete</button>
             </div>`;
           list.appendChild(row);
         });
-      } catch { empty.textContent = "Could not load projects."; empty.style.display = ""; }
+      } catch {
+        empty.textContent = "Could not load projects.";
+        empty.style.display = "";
+      }
     }
 
-    function openProject(saveId) { window.location.href = `/editor?save=${saveId}`; }
+    function openProject(shareCode) {
+      window.location.href = `/project/${shareCode}/`;
+    }
 
-    async function copyCode(saveId, btn) {
-      const orig = btn.textContent;
+    // ---- new project modal ----
+    function openNewProject() {
+      document.getElementById("np-name").value = "";
+      document.getElementById("np-desc").value = "";
+      document.getElementById("np-err").textContent = "";
+      document.getElementById("np-err").classList.remove("visible");
+      document.getElementById("new-project-modal").classList.add("visible");
+      setTimeout(() => document.getElementById("np-name").focus(), 50);
+    }
+
+    function closeNewProject() {
+      document.getElementById("new-project-modal").classList.remove("visible");
+    }
+
+    async function submitNewProject() {
+      const name = document.getElementById("np-name").value.trim();
+      const desc = document.getElementById("np-desc").value.trim();
+      const err  = document.getElementById("np-err");
+      const btn  = document.getElementById("np-submit");
+      if (!name) { err.textContent = "Project name is required."; err.classList.add("visible"); return; }
+      btn.disabled = true; btn.textContent = "Creating...";
       try {
-        const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(saveId)}`, { credentials: "include" });
-        if (!res.ok) throw new Error();
-        const { content } = await res.json();
-        await navigator.clipboard.writeText(content);
-        btn.textContent = "Copied!"; btn.classList.add("ok");
-        setTimeout(() => { btn.textContent = orig; btn.classList.remove("ok"); }, 2000);
-      } catch { btn.textContent = "Error"; setTimeout(() => { btn.textContent = orig; }, 2000); }
+        const res = await fetch(`${AUTH}/projects`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, description: desc })
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.error || "Failed to create project."; err.classList.add("visible"); return; }
+        closeNewProject();
+        window.location.href = `/project/${data.share_code}/`;
+      } catch {
+        err.textContent = "Something went wrong.";
+        err.classList.add("visible");
+      } finally {
+        btn.disabled = false; btn.textContent = "Create";
+      }
     }
 
-    function askDelete(saveId, filename, btn) {
-      pendingDeleteId  = saveId;
-      pendingDeleteRow = document.getElementById(`row-${saveId}`);
-      document.getElementById("confirm-filename").textContent = `${filename}.mcfunction`;
+    // ---- delete project ----
+    function askDelete(shareCode, name, btn) {
+      pendingDeleteCode = shareCode;
+      pendingDeleteRow  = document.getElementById(`row-${shareCode}`);
+      document.getElementById("confirm-projname").textContent = name;
       document.getElementById("confirm-overlay").classList.add("visible");
     }
 
-    function closeConfirm(which) {
-      if (which === "save")     { pendingDeleteId = null; pendingDeleteRow = null; document.getElementById("confirm-overlay").classList.remove("visible"); }
-      if (which === "account1") document.getElementById("del-account-1").classList.remove("visible");
-      if (which === "account2") document.getElementById("del-account-2").classList.remove("visible");
+    function closeConfirm() {
+      pendingDeleteCode = null;
+      pendingDeleteRow  = null;
+      document.getElementById("confirm-overlay").classList.remove("visible");
     }
 
     async function confirmDelete() {
-      if (!pendingDeleteId) return closeConfirm("save");
-      const id = pendingDeleteId; const row = pendingDeleteRow;
-      closeConfirm("save");
+      if (!pendingDeleteCode) return closeConfirm();
+      const code = pendingDeleteCode;
+      const row  = pendingDeleteRow;
+      closeConfirm();
       try {
-        const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(id)}`, { method: "DELETE", credentials: "include" });
+        const res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
         if (res.ok) { row && row.remove(); await loadProjects(); }
       } catch {}
     }
 
-    document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm("save"); });
-    document.getElementById("del-account-1").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm("account1"); });
-    document.getElementById("del-account-2").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm("account2"); });
+    document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm(); });
+    document.getElementById("new-project-modal").addEventListener("click", e => { if (e.target === e.currentTarget) closeNewProject(); });
 
+    // ---- account ----
     function askDeleteAccount() { document.getElementById("del-account-1").classList.add("visible"); }
-    function delAccountStep2() { closeConfirm("account1"); document.getElementById("del-account-2").classList.add("visible"); }
-
+    function delAccountStep2() {
+      document.getElementById("del-account-1").classList.remove("visible");
+      document.getElementById("del-account-2").classList.add("visible");
+    }
     async function confirmDeleteAccount() {
-      closeConfirm("account2");
-      try {
-        await fetch(`${AUTH}/account`, { method: "DELETE", credentials: "include" });
-      } catch {}
+      document.getElementById("del-account-2").classList.remove("visible");
+      try { await fetch(`${AUTH}/account`, { method: "DELETE", credentials: "include" }); } catch {}
       window.location.href = "/account";
     }
 
