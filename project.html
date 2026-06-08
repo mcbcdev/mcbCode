@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <title>mcbCode | Project</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0c0c0c; color: #bebebe; font-family: 'mcfont', sans-serif; overflow-x: hidden; }
+    a { text-decoration: none; color: #ffffff; transition: color 0.2s; }
+    a:hover { color: #05ee93; }
+    g { color: #05ee93; }
+
+    /* ---- TOPNAV ---- */
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(12,12,12,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; padding: 0 24px; z-index: 200; gap: 12px; }
+    .topnav-title { font-size: 20px; color: #ffffff; font-family: 'mcfontb', sans-serif; }
+    .topnav-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #444; }
+    .topnav-breadcrumb a { color: #666; }
+    .topnav-breadcrumb a:hover { color: #05ee93; }
+    .topnav-breadcrumb span { color: #333; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topnav-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .topnav-btn:hover { color: #05ee93; border-color: #05ee93; }
+
+    /* ---- LAYOUT ---- */
+    .page { display: flex; flex-direction: column; margin-top: 56px; min-height: calc(100vh - 56px); }
+    .project-header { border-bottom: 1px solid #1a1a1a; padding: 24px 32px 0; }
+    .project-header-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 0; }
+    .project-title { font-size: 24px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .proj-badge { font-size: 11px; padding: 2px 8px; border: 1px solid #2a2a2a; color: #444; margin-left: 4px; vertical-align: middle; }
+    .proj-badge.public { border-color: #05ee93; color: #05ee93; }
+    .project-tabs { display: flex; gap: 0; margin-top: 16px; }
+    .tab { padding: 8px 16px; font-size: 13px; color: #555; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+    .tab:hover { color: #aaa; }
+    .tab.active { color: #fff; border-bottom-color: #05ee93; }
+
+    /* ---- MAIN CONTENT ---- */
+    .content { display: flex; flex: 1; gap: 0; }
+
+    /* LEFT PANEL */
+    .left-panel { width: 340px; min-width: 340px; border-right: 1px solid #1a1a1a; padding: 28px 28px; display: flex; flex-direction: column; gap: 24px; }
+
+    .meta-block { display: flex; flex-direction: column; gap: 6px; }
+    .meta-label { font-size: 11px; color: #444; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+    .meta-value { font-size: 13px; color: #bebebe; line-height: 1.5; }
+    .meta-value.owner { color: #05ee93; font-size: 14px; }
+    .meta-desc { font-size: 13px; color: #888; line-height: 1.6; }
+    .meta-divider { border: none; border-top: 1px solid #1a1a1a; }
+
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; padding: 3px 8px; background: #141414; border: 1px solid #2a2a2a; color: #666; cursor: default; }
+    .tag-input-row { display: flex; gap: 6px; margin-top: 6px; }
+    .tag-input { flex: 1; background: #111; border: 1px solid #2a2a2a; color: #fff; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 4px 8px; outline: none; transition: border-color 0.2s; }
+    .tag-input:focus { border-color: #05ee93; }
+    .tag-add-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 4px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
+    .tag-add-btn:hover { color: #05ee93; border-color: #05ee93; }
+    .tag.removable { cursor: pointer; transition: border-color 0.2s, color 0.2s; }
+    .tag.removable:hover { border-color: #ff5555; color: #ff5555; }
+
+    .edit-field { display: flex; flex-direction: column; gap: 6px; }
+    .edit-field textarea, .edit-field input[type="text"] { background: #111; border: 1px solid #2a2a2a; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; resize: vertical; width: 100%; }
+    .edit-field textarea:focus, .edit-field input[type="text"]:focus { border-color: #05ee93; }
+    .edit-row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+    .small-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 4px 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .small-btn:hover { color: #05ee93; border-color: #05ee93; }
+    .small-btn.danger:hover { color: #ff5555; border-color: #ff5555; }
+    .small-btn.primary { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
+    .small-btn.primary:hover { background: #78e3a6; }
+    .save-inline-msg { font-size: 11px; }
+    .save-inline-msg.ok  { color: #05ee93; }
+    .save-inline-msg.err { color: #ff5555; }
+
+    .visibility-toggle { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    input[type="checkbox"].toggle { appearance: none; -webkit-appearance: none; background-color: #323232; width: 1.5em; height: 1.5em; cursor: pointer; display: inline-block; vertical-align: middle; transition: background 0.2s; flex-shrink: 0; }
+    input[type="checkbox"].toggle:checked { background-color: #05ee93; }
+
+    .stat-row-small { display: flex; gap: 16px; flex-wrap: wrap; }
+    .stat-small { display: flex; flex-direction: column; gap: 2px; }
+    .stat-small-val { font-size: 18px; color: #05ee93; font-family: 'mcfontb', sans-serif; }
+    .stat-small-lbl { font-size: 11px; color: #444; }
+
+    /* RIGHT PANEL — file tree */
+    .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .filetree-toolbar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #1a1a1a; }
+    .filetree-toolbar-left { font-size: 12px; color: #444; flex: 1; }
+    .filetree { padding: 8px 0; overflow-y: auto; flex: 1; }
+    .ft-item { display: flex; align-items: center; gap: 0; padding: 0; }
+    .ft-row { display: flex; align-items: center; gap: 8px; padding: 5px 20px; cursor: pointer; flex: 1; transition: background 0.15s; font-size: 13px; color: #aaa; min-width: 0; user-select: none; }
+    .ft-row:hover { background: #141414; color: #fff; }
+    .ft-row.selected { background: #161616; color: #fff; }
+    .ft-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; color: #555; }
+    .ft-icon.folder { color: #05ee93; }
+    .ft-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ft-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; padding-right: 12px; }
+    .ft-item:hover .ft-actions { opacity: 1; }
+    .ft-action-btn { background: none; border: none; color: #555; font-size: 11px; padding: 2px 5px; cursor: pointer; font-family: 'mcfont', sans-serif; transition: color 0.15s; }
+    .ft-action-btn:hover { color: #ff5555; }
+    .ft-children { display: flex; flex-direction: column; }
+    .ft-children.collapsed { display: none; }
+
+    /* editor pane */
+    .editor-pane { border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; }
+    .editor-pane.hidden { display: none; }
+    .editor-header { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid #1a1a1a; background: #0f0f0f; }
+    .editor-filename { font-size: 13px; color: #aaa; flex: 1; }
+    .editor-filename span { color: #05ee93; }
+    .editor-save-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 4px 14px; cursor: pointer; transition: background 0.2s; }
+    .editor-save-btn:hover { background: #78e3a6; }
+    .editor-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .editor-close-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 2px 6px; transition: color 0.2s; font-family: 'mcfont', sans-serif; }
+    .editor-close-btn:hover { color: #ff5555; }
+    .editor-save-msg { font-size: 11px; }
+    .editor-save-msg.ok  { color: #05ee93; }
+    .editor-save-msg.err { color: #ff5555; }
+    .editor-textarea { width: 100%; background: #0c0c0c; border: none; outline: none; color: #d4d4d4; font-family: 'Fira Code', 'Courier New', monospace; font-size: 13px; line-height: 1.6; padding: 16px 20px; resize: none; min-height: 320px; tab-size: 2; }
+    .editor-textarea[readonly] { color: #777; cursor: default; }
+
+    /* modals */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 28px 32px; min-width: 340px; }
+    .modal-box h3 { color: #fff; font-size: 15px; margin-bottom: 18px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 11px; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .modal-field input, .modal-field select { width: 100%; background: #111; border: 1px solid #2a2a2a; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
+    .modal-field input:focus { border-color: #05ee93; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; justify-content: flex-end; }
+    .modal-err { font-size: 12px; color: #ff5555; margin-top: 8px; display: none; }
+    .modal-err.visible { display: block; }
+
+    .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 600; align-items: center; justify-content: center; }
+    .confirm-overlay.visible { display: flex; }
+    .confirm-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 28px 32px; min-width: 300px; text-align: center; }
+    .confirm-box p { font-size: 14px; color: #fff; margin-bottom: 6px; }
+    .confirm-box small { font-size: 12px; color: #555; }
+    .confirm-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: center; }
+    .confirm-yes { background: #ff5555; border: none; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 18px; cursor: pointer; }
+    .confirm-yes:hover { background: #cc0000; }
+    .confirm-no { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 18px; cursor: pointer; }
+
+    .empty-tree { padding: 40px 20px; text-align: center; color: #333; font-size: 13px; }
+    .loading { padding: 40px 20px; text-align: center; color: #333; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- new file/folder modal -->
+  <div class="modal-overlay" id="new-file-modal">
+    <div class="modal-box">
+      <h3 id="new-file-title">New File</h3>
+      <div class="modal-field">
+        <label>Name</label>
+        <input type="text" id="nf-name" maxlength="128" placeholder="e.g. player.mcfunction">
+      </div>
+      <div class="modal-err" id="nf-err"></div>
+      <div class="modal-actions">
+        <button class="small-btn" onclick="closeNewFile()">Cancel</button>
+        <button class="small-btn primary" id="nf-submit" onclick="submitNewFile()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- delete file confirm -->
+  <div class="confirm-overlay" id="del-file-confirm">
+    <div class="confirm-box">
+      <p>Delete this item?</p>
+      <small id="del-file-name"></small>
+      <div class="confirm-actions">
+        <button class="confirm-yes" onclick="confirmDeleteFile()">Delete</button>
+        <button class="confirm-no" onclick="closeDelFile()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- topnav -->
+  <div class="topnav">
+    <a href="/dashboard" style="font-size:20px; color:#fff; font-family:'mcfontb',sans-serif;">mcb<g>Code</g></a>
+    <div class="topnav-breadcrumb">
+      <span>/</span>
+      <a href="/dashboard">dashboard</a>
+      <span>/</span>
+      <span id="nav-project-name" style="color:#bebebe;">...</span>
+    </div>
+    <div class="topnav-right">
+      <span id="nav-user" style="font-size:12px; color:#444;"></span>
+      <button class="topnav-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- project header -->
+    <div class="project-header">
+      <div class="project-header-top">
+        <div>
+          <span class="project-title" id="hdr-name">Loading...</span>
+          <span class="proj-badge" id="hdr-badge">private</span>
+        </div>
+      </div>
+      <div class="project-tabs">
+        <div class="tab active" onclick="switchTab('files', this)">Files</div>
+        <div class="tab" onclick="switchTab('settings', this)" id="tab-settings" style="display:none;">Settings</div>
+      </div>
+    </div>
+
+    <!-- FILES TAB -->
+    <div class="content" id="tab-files">
+
+      <!-- left panel -->
+      <div class="left-panel">
+
+        <div class="meta-block">
+          <div class="meta-label">About</div>
+          <div class="meta-desc" id="meta-desc">—</div>
+        </div>
+
+        <hr class="meta-divider">
+
+        <div class="meta-block">
+          <div class="meta-label">Owner</div>
+          <div class="meta-value owner" id="meta-owner">—</div>
+        </div>
+
+        <div class="meta-block">
+          <div class="meta-label">Last Updated</div>
+          <div class="meta-value" id="meta-updated">—</div>
+        </div>
+
+        <div class="meta-block">
+          <div class="meta-label">Project ID</div>
+          <div class="meta-value" id="meta-code" style="font-size:12px; color:#444; font-family:'Fira Code',monospace;">—</div>
+        </div>
+
+        <hr class="meta-divider">
+
+        <div class="meta-block">
+          <div class="meta-label">Tags</div>
+          <div class="tags-wrap" id="tags-wrap">
+            <span style="font-size:12px; color:#333;">none</span>
+          </div>
+        </div>
+
+        <hr class="meta-divider">
+
+        <div class="stat-row-small">
+          <div class="stat-small">
+            <div class="stat-small-val" id="stat-files">—</div>
+            <div class="stat-small-lbl">Files</div>
+          </div>
+          <div class="stat-small">
+            <div class="stat-small-val" id="stat-folders">—</div>
+            <div class="stat-small-lbl">Folders</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- right panel -->
+      <div class="right-panel" id="right-panel">
+        <div class="filetree-toolbar">
+          <span class="filetree-toolbar-left" id="ft-path-label">/ root</span>
+          <div id="owner-toolbar" style="display:none; display:flex; gap:8px;">
+            <button class="small-btn" onclick="openNewFile('file', null)">+ File</button>
+            <button class="small-btn" onclick="openNewFile('folder', null)">+ Folder</button>
+          </div>
+        </div>
+        <div class="filetree" id="filetree">
+          <div class="loading">Loading files...</div>
+        </div>
+        <!-- inline editor -->
+        <div class="editor-pane hidden" id="editor-pane">
+          <div class="editor-header">
+            <span class="editor-filename" id="editor-filename">no file selected</span>
+            <span class="editor-save-msg" id="editor-save-msg"></span>
+            <button class="editor-save-btn" id="editor-save-btn" onclick="saveFile()" style="display:none;">Save</button>
+            <button class="editor-close-btn" onclick="closeEditor()">x</button>
+          </div>
+          <textarea class="editor-textarea" id="editor-textarea" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SETTINGS TAB (owner only) -->
+    <div style="display:none; padding:32px; max-width:600px;" id="tab-settings-panel">
+      <h3 style="color:#fff; margin-bottom:24px; font-size:16px;">Project Settings</h3>
+
+      <div class="edit-field" style="margin-bottom:20px;">
+        <label style="font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:6px;">Project Name</label>
+        <input type="text" id="set-name" maxlength="72" class="tag-input" style="width:100%; padding:8px 10px; font-size:14px;">
+      </div>
+
+      <div class="edit-field" style="margin-bottom:20px;">
+        <label style="font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:6px;">Description</label>
+        <textarea id="set-desc" rows="4" maxlength="256" class="tag-input" style="width:100%; padding:8px 10px; font-size:13px; resize:vertical;"></textarea>
+      </div>
+
+      <div class="edit-field" style="margin-bottom:24px;">
+        <label style="font-size:11px; color:#555; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;">Visibility</label>
+        <div class="visibility-toggle">
+          <input type="checkbox" class="toggle" id="set-public">
+          <label for="set-public" style="cursor:pointer;">Make project public</label>
+        </div>
+      </div>
+
+      <div class="edit-row">
+        <button class="small-btn primary" onclick="saveProjectSettings()">Save Changes</button>
+        <span class="save-inline-msg" id="set-msg"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const AUTH = "https://auth.mcbcode.com";
+
+    // share code from url: /project/xxxxxxxx/
+    const shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
+
+    let projectData   = null;
+    let allFiles      = [];
+    let isOwner       = false;
+    let selectedFileId = null;
+    let pendingDelFileId  = null;
+    let pendingDelIsFolder = false;
+    let newFileParentId   = null;
+    let newFileType       = "file";
+    let currentUserId     = null;
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    }
+    function formatDate(str) {
+      if (!str) return "—";
+      const d = new Date(str.endsWith("Z") ? str : str + "Z");
+      return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }) +
+             " " + d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+    }
+
+    // ---- INIT ----
+    (async () => {
+      if (!shareCode) return showError("No project ID in URL.");
+
+      // get current user (optional — viewer may not be logged in if public)
+      try {
+        const r = await fetch(`${AUTH}/me`, { credentials: "include" });
+        if (r.ok) {
+          const d = await r.json();
+          currentUserId = d.id;
+          document.getElementById("nav-user").textContent = d.email;
+        }
+      } catch {}
+
+      // load project
+      try {
+        const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+        if (!r.ok) {
+          const d = await r.json();
+          return showError(d.error || "Project not found.");
+        }
+        const d = await r.json();
+        projectData = d.project;
+        allFiles    = d.files || [];
+        isOwner     = currentUserId && (projectData.owner_id === currentUserId);
+        renderProject();
+      } catch {
+        showError("Failed to load project.");
+      }
+    })();
+
+    function showError(msg) {
+      document.getElementById("filetree").innerHTML = `<div class="loading" style="color:#ff5555;">${escHtml(msg)}</div>`;
+      document.getElementById("hdr-name").textContent = "Error";
+    }
+
+    function renderProject() {
+      const p = projectData;
+
+      // header
+      document.title = `mcbCode | ${p.name}`;
+      document.getElementById("hdr-name").textContent = p.name;
+      document.getElementById("nav-project-name").textContent = p.name;
+      const badge = document.getElementById("hdr-badge");
+      const isPublic = p.is_public === 1 || p.is_public === true;
+      badge.textContent = isPublic ? "public" : "private";
+      if (isPublic) badge.classList.add("public");
+
+      // left panel
+      document.getElementById("meta-desc").textContent    = p.description || "No description.";
+      document.getElementById("meta-owner").textContent   = isOwner ? "you" : `user #${p.owner_id}`;
+      document.getElementById("meta-updated").textContent = formatDate(p.updated_at);
+      document.getElementById("meta-code").textContent    = p.share_code;
+
+      // stats
+      const fileCount   = allFiles.filter(f => f.type === "file").length;
+      const folderCount = allFiles.filter(f => f.type === "folder").length;
+      document.getElementById("stat-files").textContent   = fileCount;
+      document.getElementById("stat-folders").textContent = folderCount;
+
+      // tags
+      renderTags();
+
+      // owner-only ui
+      if (isOwner) {
+        document.getElementById("owner-toolbar").style.display = "flex";
+        document.getElementById("tab-settings").style.display  = "";
+        // pre-fill settings tab
+        document.getElementById("set-name").value    = p.name;
+        document.getElementById("set-desc").value    = p.description || "";
+        document.getElementById("set-public").checked = isPublic;
+      }
+
+      // file tree
+      renderTree();
+    }
+
+    // ---- TAGS ----
+    let tags = [];
+
+    async function loadTags() {
+      // tags come from project_tags table via a future endpoint — for now read from allFiles-adjacent data
+      // we'll store tags in projectData if the endpoint returns them
+      tags = projectData.tags || [];
+    }
+
+    function renderTags() {
+      const wrap = document.getElementById("tags-wrap");
+      wrap.innerHTML = "";
+      if (tags.length === 0 && !isOwner) {
+        wrap.innerHTML = `<span style="font-size:12px; color:#333;">none</span>`;
+        return;
+      }
+      tags.forEach((t, i) => {
+        const el = document.createElement("span");
+        el.className = isOwner ? "tag removable" : "tag";
+        el.textContent = t;
+        if (isOwner) el.title = "click to remove";
+        if (isOwner) el.onclick = () => removeTag(i);
+        wrap.appendChild(el);
+      });
+      if (isOwner) {
+        const row = document.createElement("div");
+        row.className = "tag-input-row";
+        row.innerHTML = `<input class="tag-input" id="tag-input" maxlength="32" placeholder="add tag..." onkeydown="if(event.key==='Enter')addTag()">
+                         <button class="tag-add-btn" onclick="addTag()">Add</button>`;
+        wrap.appendChild(row);
+      }
+    }
+
+    function addTag() {
+      const input = document.getElementById("tag-input");
+      if (!input) return;
+      const val = input.value.trim().toLowerCase().replace(/[^a-z0-9\-_]/g, "");
+      if (!val || tags.includes(val) || tags.length >= 10) return;
+      tags.push(val);
+      renderTags();
+      // TODO: persist tags to backend when tag endpoint is added
+    }
+
+    function removeTag(i) {
+      tags.splice(i, 1);
+      renderTags();
+    }
+
+    // ---- FILE TREE ----
+    function buildTree(files, parentId = null) {
+      return files
+        .filter(f => (f.parent_id === parentId) || (parentId === null && f.parent_id === null))
+        .sort((a, b) => {
+          if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+    }
+
+    function renderTree() {
+      const container = document.getElementById("filetree");
+      container.innerHTML = "";
+      const roots = buildTree(allFiles, null);
+      if (roots.length === 0) {
+        container.innerHTML = `<div class="empty-tree">No files yet.${isOwner ? ' Use the buttons above to add some.' : ''}</div>`;
+        return;
+      }
+      roots.forEach(node => container.appendChild(renderNode(node, 0)));
+    }
+
+    function renderNode(node, depth) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "ft-item";
+      wrapper.style.flexDirection = "column";
+      wrapper.style.alignItems = "stretch";
+
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+
+      const rowInner = document.createElement("div");
+      rowInner.className = "ft-row" + (selectedFileId === node.id ? " selected" : "");
+      rowInner.style.paddingLeft = `${20 + depth * 16}px`;
+      rowInner.dataset.id = node.id;
+
+      const icon = document.createElement("span");
+      icon.className = "ft-icon" + (node.type === "folder" ? " folder" : "");
+      icon.textContent = node.type === "folder" ? "+" : ">";
+      icon.id = `icon-${node.id}`;
+
+      const name = document.createElement("span");
+      name.className = "ft-name";
+      name.textContent = node.name;
+
+      rowInner.appendChild(icon);
+      rowInner.appendChild(name);
+
+      const actions = document.createElement("div");
+      actions.className = "ft-actions";
+
+      if (isOwner) {
+        if (node.type === "folder") {
+          const btnFile = document.createElement("button");
+          btnFile.className = "ft-action-btn";
+          btnFile.textContent = "+file";
+          btnFile.style.color = "#555";
+          btnFile.onmouseenter = () => btnFile.style.color = "#05ee93";
+          btnFile.onmouseleave = () => btnFile.style.color = "#555";
+          btnFile.onclick = (e) => { e.stopPropagation(); openNewFile("file", node.id); };
+
+          const btnFolder = document.createElement("button");
+          btnFolder.className = "ft-action-btn";
+          btnFolder.textContent = "+folder";
+          btnFolder.style.color = "#555";
+          btnFolder.onmouseenter = () => btnFolder.style.color = "#05ee93";
+          btnFolder.onmouseleave = () => btnFolder.style.color = "#555";
+          btnFolder.onclick = (e) => { e.stopPropagation(); openNewFile("folder", node.id); };
+
+          actions.appendChild(btnFile);
+          actions.appendChild(btnFolder);
+        }
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "ft-action-btn";
+        btnDel.textContent = "del";
+        btnDel.onclick = (e) => { e.stopPropagation(); askDeleteFile(node.id, node.name, node.type === "folder"); };
+        actions.appendChild(btnDel);
+      }
+
+      row.appendChild(rowInner);
+      row.appendChild(actions);
+      wrapper.appendChild(row);
+
+      if (node.type === "folder") {
+        const children = document.createElement("div");
+        children.className = "ft-children collapsed";
+        children.id = `children-${node.id}`;
+
+        const childNodes = buildTree(allFiles, node.id);
+        childNodes.forEach(child => children.appendChild(renderNode(child, depth + 1)));
+
+        wrapper.appendChild(children);
+
+        rowInner.onclick = () => {
+          const c = document.getElementById(`children-${node.id}`);
+          const ico = document.getElementById(`icon-${node.id}`);
+          const open = c.classList.toggle("collapsed");
+          ico.textContent = !open ? "-" : "+";
+        };
+      } else {
+        rowInner.onclick = () => openEditor(node);
+      }
+
+      return wrapper;
+    }
+
+    // ---- EDITOR ----
+    function openEditor(node) {
+      selectedFileId = node.id;
+      renderTree(); // re-render to update selected state
+
+      const pane = document.getElementById("editor-pane");
+      const textarea = document.getElementById("editor-textarea");
+      const filename = document.getElementById("editor-filename");
+      const saveBtn  = document.getElementById("editor-save-btn");
+      const saveMsg  = document.getElementById("editor-save-msg");
+
+      pane.classList.remove("hidden");
+      filename.innerHTML = `<span>${escHtml(node.name)}</span>`;
+      textarea.value = node.content || "";
+      textarea.readOnly = !isOwner;
+      saveMsg.textContent = "";
+      saveMsg.className = "editor-save-msg";
+      saveBtn.style.display = isOwner ? "" : "none";
+
+      // store current file id on the button
+      saveBtn.dataset.fileId = node.id;
+      saveBtn.dataset.fileName = node.name;
+
+      textarea.focus();
+    }
+
+    function closeEditor() {
+      selectedFileId = null;
+      document.getElementById("editor-pane").classList.add("hidden");
+      document.getElementById("editor-textarea").value = "";
+      renderTree();
+    }
+
+    async function saveFile() {
+      const btn      = document.getElementById("editor-save-btn");
+      const textarea = document.getElementById("editor-textarea");
+      const msg      = document.getElementById("editor-save-msg");
+      const fileId   = btn.dataset.fileId;
+      const fileName = btn.dataset.fileName;
+      if (!fileId) return;
+
+      btn.disabled = true;
+      msg.textContent = "Saving...";
+      msg.className = "editor-save-msg";
+
+      try {
+        const res = await fetch(`${AUTH}/project/file`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project_code: shareCode,
+            file_id: parseInt(fileId),
+            name: fileName,
+            type: "file",
+            content: textarea.value
+          })
+        });
+        if (res.ok) {
+          // update local cache
+          const f = allFiles.find(f => f.id === parseInt(fileId));
+          if (f) f.content = textarea.value;
+          msg.textContent = "Saved!";
+          msg.className = "editor-save-msg ok";
+        } else {
+          const d = await res.json();
+          msg.textContent = d.error || "Failed.";
+          msg.className = "editor-save-msg err";
+        }
+      } catch {
+        msg.textContent = "Error.";
+        msg.className = "editor-save-msg err";
+      }
+
+      btn.disabled = false;
+      setTimeout(() => { msg.textContent = ""; msg.className = "editor-save-msg"; }, 3000);
+    }
+
+    // ---- NEW FILE/FOLDER ----
+    function openNewFile(type, parentId) {
+      newFileType     = type;
+      newFileParentId = parentId;
+      document.getElementById("new-file-title").textContent = type === "folder" ? "New Folder" : "New File";
+      document.getElementById("nf-name").value = "";
+      document.getElementById("nf-name").placeholder = type === "folder" ? "e.g. functions" : "e.g. player.mcfunction";
+      document.getElementById("nf-err").textContent = "";
+      document.getElementById("nf-err").classList.remove("visible");
+      document.getElementById("new-file-modal").classList.add("visible");
+      setTimeout(() => document.getElementById("nf-name").focus(), 50);
+    }
+
+    function closeNewFile() {
+      document.getElementById("new-file-modal").classList.remove("visible");
+    }
+
+    async function submitNewFile() {
+      const name = document.getElementById("nf-name").value.trim();
+      const err  = document.getElementById("nf-err");
+      const btn  = document.getElementById("nf-submit");
+      if (!name) { err.textContent = "Name is required."; err.classList.add("visible"); return; }
+
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${AUTH}/project/file`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project_code: shareCode,
+            parent_id: newFileParentId,
+            name,
+            type: newFileType,
+            content: newFileType === "file" ? "" : null
+          })
+        });
+        const d = await res.json();
+        if (!res.ok) { err.textContent = d.error || "Failed."; err.classList.add("visible"); return; }
+        // add to local cache and re-render
+        allFiles.push({
+          id: d.file_id,
+          project_id: projectData.id,
+          parent_id: newFileParentId,
+          name,
+          type: newFileType,
+          content: newFileType === "file" ? "" : null,
+          updated_at: new Date().toISOString()
+        });
+        closeNewFile();
+        renderTree();
+        updateStats();
+      } catch {
+        err.textContent = "Something went wrong.";
+        err.classList.add("visible");
+      }
+      btn.disabled = false;
+    }
+
+    // ---- DELETE FILE ----
+    function askDeleteFile(id, name, isFolder) {
+      pendingDelFileId   = id;
+      pendingDelIsFolder = isFolder;
+      document.getElementById("del-file-name").textContent = name + (isFolder ? " (and all its contents)" : "");
+      document.getElementById("del-file-confirm").classList.add("visible");
+    }
+
+    function closeDelFile() {
+      pendingDelFileId = null;
+      document.getElementById("del-file-confirm").classList.remove("visible");
+    }
+
+    async function confirmDeleteFile() {
+      if (!pendingDelFileId) return closeDelFile();
+      const id = pendingDelFileId;
+      closeDelFile();
+      try {
+        const res = await fetch(`${AUTH}/project/file?file_id=${encodeURIComponent(id)}&project_code=${encodeURIComponent(shareCode)}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+        if (res.ok) {
+          // remove from local cache (including children)
+          removeFromCache(id);
+          if (selectedFileId === id) closeEditor();
+          renderTree();
+          updateStats();
+        }
+      } catch {}
+    }
+
+    function removeFromCache(id) {
+      const children = allFiles.filter(f => f.parent_id === id).map(f => f.id);
+      children.forEach(cid => removeFromCache(cid));
+      const idx = allFiles.findIndex(f => f.id === id);
+      if (idx !== -1) allFiles.splice(idx, 1);
+    }
+
+    function updateStats() {
+      document.getElementById("stat-files").textContent   = allFiles.filter(f => f.type === "file").length;
+      document.getElementById("stat-folders").textContent = allFiles.filter(f => f.type === "folder").length;
+    }
+
+    // ---- TABS ----
+    function switchTab(tab, el) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+      document.getElementById("tab-files").style.display        = tab === "files" ? "" : "none";
+      document.getElementById("tab-settings-panel").style.display = tab === "settings" ? "" : "none";
+    }
+
+    // ---- PROJECT SETTINGS ----
+    async function saveProjectSettings() {
+      const name     = document.getElementById("set-name").value.trim();
+      const desc     = document.getElementById("set-desc").value.trim();
+      const isPublic = document.getElementById("set-public").checked;
+      const msg      = document.getElementById("set-msg");
+      if (!name) return;
+
+      try {
+        const res = await fetch(`${AUTH}/project/settings`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, name, description: desc, is_public: isPublic })
+        });
+        if (res.ok) {
+          projectData.name        = name;
+          projectData.description = desc;
+          projectData.is_public   = isPublic;
+          document.getElementById("hdr-name").textContent  = name;
+          document.getElementById("nav-project-name").textContent = name;
+          document.getElementById("meta-desc").textContent = desc || "No description.";
+          const badge = document.getElementById("hdr-badge");
+          badge.textContent = isPublic ? "public" : "private";
+          badge.classList.toggle("public", isPublic);
+          msg.textContent = "Saved!";
+          msg.className = "save-inline-msg ok";
+        } else {
+          const d = await res.json();
+          msg.textContent = d.error || "Failed.";
+          msg.className = "save-inline-msg err";
+        }
+      } catch {
+        msg.textContent = "Error.";
+        msg.className = "save-inline-msg err";
+      }
+      setTimeout(() => { msg.textContent = ""; msg.className = "save-inline-msg"; }, 3000);
+    }
+
+    // ---- AUTH ----
+    async function doLogout() {
+      await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
+      window.location.href = "/account";
+    }
+
+    // close modals on backdrop click
+    document.getElementById("new-file-modal").addEventListener("click", e => { if (e.target === e.currentTarget) closeNewFile(); });
+    document.getElementById("del-file-confirm").addEventListener("click", e => { if (e.target === e.currentTarget) closeDelFile(); });
+
+    // keyboard shortcut: ctrl+s to save
+    document.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s" && selectedFileId) {
+        e.preventDefault();
+        saveFile();
+      }
+    });
+  </script>
+
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
