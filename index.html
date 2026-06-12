@@ -88,13 +88,11 @@
       color: #ffffff;
       transition: color 0.2s ease-in-out, border-radius 0.2s ease-in-out;
       cursor: pointer;
-      text-shadow: 0 0 0px #ffffff;
   }
 
   button:hover {
       color: #05ee93;
       border-radius: 10px;
-      text-shadow: 0 0 10px rgba(5, 238, 147, 0.5);
   }
 
   
@@ -408,7 +406,20 @@
   transform: rotate(180deg);
 }
 
-
+#placepanel {
+    display: none;
+    background-color: #0c0c0c;
+    border: 1px solid #bebebe;
+    padding: 8px;
+    margin: auto;
+    z-index: 99999999;
+    text-align: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    font-size: 24px;
+    max-width: 80%;
+}
 </style>
 </head>
 <body>
@@ -443,14 +454,23 @@
   <div style="user-select: none;">
     <div class="top-btn-wrapper">
       <div class="top-navi">
-          <a href="https://mcbcode.com/editor"><button id="tryitout">To Editor</button></a>
+          <button id="tryitout">To Editor</button>
+          <div id="placepanel">
+            <br>
+            Which tool would you like to use?
+            <br><br><br>
+            <a href="https://mcbcode.com/editor/mcfunction"><button>.mcfunction</button>
+            <a href="https://mcbcode.com/editor/manifest"><button>manifest.json</button>
+            <a href="https://mcbcode.com/pixel"><button>Pixel (<c>Beta</c>)</button>
+          <br><br>
+          </div>
           <a href="https://mcbcode.com/dashboard"><button>Dashboard</button></a>
           <a href="https://mcbcode.com/docs/"><button>Documentation</button></a>
       </div>
       </div>
   </div>
 
-  <div class="divider"></div>
+<br><br><br><br><br>
   <h2>Try it <g>Right Here</g></h2>
   <p>Type some commands below — syntax highlighting works live, just like the real editor.</p>
 
@@ -491,6 +511,20 @@ say Hello from mcbCode!</textarea>
   </div>
 
   <script>
+
+// Wait for the DOM to fully load
+document.addEventListener('DOMContentLoaded', () => {
+    // Select the button and the panel
+    const tryItOutBtn = document.getElementById('tryitout');
+    const placePanel = document.getElementById('placepanel');
+
+    // Add a click event listener to the button
+    tryItOutBtn.addEventListener('click', () => {
+        // Change the display style to 'block' (or 'flex', 'grid', etc.) to make it visible
+        placePanel.style.display = 'block';
+    });
+});
+
   (function() {
       const area      = document.getElementById('demoArea');
       const highlight = document.getElementById('demoHighlight');
