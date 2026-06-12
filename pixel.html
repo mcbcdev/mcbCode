@@ -538,8 +538,11 @@
     <button class="tool-btn"        id="tool-eraser" data-tip="Eraser (E)"       onclick="setTool('eraser')">
       <img src="https://mcbcode.com/img/pixel/eraser.png" alt="eraser">
     </button>
-    <button class="tool-btn"        id="tool-bucket" data-tip="Fill (F)"         onclick="setTool('bucket')">
-      <img src="https://mcbcode.com/img/pixel/bucket.png" alt="bucket">
+    <button class="tool-btn"        id="tool-bucket"  data-tip="Fill (F)"          onclick="setTool('bucket')">
+      <img src="https://mcbcode.com/img/pixel/bucket.png"  alt="bucket">
+    </button>
+    <button class="tool-btn"        id="tool-fillall" data-tip="Fill All (A)"      onclick="setTool('fillall')">
+      <img src="https://mcbcode.com/img/pixel/fillall.png" alt="fillall">
     </button>
     <button class="tool-btn"        id="tool-picker" data-tip="Color Picker (K)" onclick="setTool('picker')">
       <img src="https://mcbcode.com/img/pixel/picker.png" alt="picker">
@@ -695,6 +698,7 @@
       <div class="sc-row"><span class="sc-label">brush tool</span><kbd class="sc-key">B</kbd></div>
       <div class="sc-row"><span class="sc-label">eraser tool</span><kbd class="sc-key">E</kbd></div>
       <div class="sc-row"><span class="sc-label">fill tool</span><kbd class="sc-key">F</kbd></div>
+      <div class="sc-row"><span class="sc-label">fill all</span><kbd class="sc-key">A</kbd></div>
       <div class="sc-row"><span class="sc-label">color picker</span><kbd class="sc-key">K</kbd></div>
       <div class="sc-row"><span class="sc-label">pan tool</span><kbd class="sc-key">M</kbd></div>
       <div class="sc-row"><span class="sc-label">undo</span><kbd class="sc-key">Ctrl+Z</kbd></div>
@@ -856,6 +860,10 @@ wrap.addEventListener('mousedown', e => {
     if(!inBounds(px,py)) return;
     pushUndo(); floodFill(px,py,currentColor); render(); return;
   }
+  if(tool==='fillall'){
+    if(!inBounds(px,py)) return;
+    pushUndo(); fillAll(pixels[py*W+px], currentColor); render(); return;
+  }
   pushUndo(); painting=true; lastPx=-1; lastPy=-1;
   applyTool(px,py); lastPx=px; lastPy=py;
 });
@@ -900,6 +908,14 @@ function floodFill(sx,sy,newColor){
     if(visited[i]||pixels[i]!==target) continue;
     visited[i]=1; pixels[i]=newColor;
     stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+  }
+}
+
+// FILL ALL — replaces every pixel matching target color across whole canvas
+function fillAll(target, newColor){
+  if(target===newColor) return;
+  for(let i=0;i<pixels.length;i++){
+    if(pixels[i]===target) pixels[i]=newColor;
   }
 }
 
@@ -1135,6 +1151,7 @@ document.addEventListener('keydown',e=>{
     case 'b':case 'B': setTool('brush'); break;
     case 'e':case 'E': setTool('eraser'); break;
     case 'f':case 'F': setTool('bucket'); break;
+    case 'a':case 'A': setTool('fillall'); break;
     case 'k':case 'K': setTool('picker'); break;
     case 'm':case 'M': setTool('move'); break;
     case 'g':case 'G': toggleGrid(); break;
