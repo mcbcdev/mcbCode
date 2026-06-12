@@ -542,6 +542,9 @@
     <button class="tool-btn active" id="tool-brush"  data-tip="Brush (B)"        onclick="setTool('brush')">
       <img src="https://mcbcode.com/img/pixel/brush.png"  alt="brush">
     </button>
+    <button class="tool-btn"        id="tool-smoothbrush" data-tip="Smooth Brush (N)" onclick="setTool('smoothbrush')">
+      <img src="https://mcbcode.com/img/pixel/smoothbrush.png" alt="smoothbrush">
+    </button>
     <button class="tool-btn"        id="tool-eraser" data-tip="Eraser (E)"       onclick="setTool('eraser')">
       <img src="https://mcbcode.com/img/pixel/eraser.png" alt="eraser">
     </button>
@@ -704,6 +707,7 @@
     <h3>keyboard shortcuts</h3>
     <div class="shortcut-grid">
       <div class="sc-row"><span class="sc-label">brush tool</span><kbd class="sc-key">B</kbd></div>
+      <div class="sc-row"><span class="sc-label">smooth brush</span><kbd class="sc-key">N</kbd></div>
       <div class="sc-row"><span class="sc-label">eraser tool</span><kbd class="sc-key">E</kbd></div>
       <div class="sc-row"><span class="sc-label">fill tool</span><kbd class="sc-key">F</kbd></div>
       <div class="sc-row"><span class="sc-label">fill all</span><kbd class="sc-key">A</kbd></div>
@@ -842,6 +846,7 @@ function inBounds(px,py){ return px>=0&&px<W&&py>=0&&py<H; }
 function applyTool(px,py){
   if(!inBounds(px,py)) return;
   if(tool==='brush') paintBrush(px,py,currentColor);
+  else if(tool==='smoothbrush') paintSmoothBrush(px,py);
   else if(tool==='eraser') paintBrush(px,py,null);
   else if(tool==='picker'){ const c=pixels[py*W+px]; if(c){setColor(c);showToast('color picked');} }
 }
@@ -854,6 +859,29 @@ function paintBrush(cx,cy,color){
   }
   render();
 }
+
+function paintSmoothBrush(cx,cy){
+  const half=Math.floor(brushSize/2);
+  const [br,bg,bb] = hexToRgb(currentColor.slice(0,7));
+  for(let dy=-half;dy<=half;dy++){
+    for(let dx=-half;dx<=half;dx++){
+      const nx=cx+dx, ny=cy+dy;
+      if(!inBounds(nx,ny)) continue;
+      // distance from center — pixels further out get more variation
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      const maxDist = half > 0 ? half : 1;
+      // variation range: 0 at center, up to 28 at edge of brush
+      const range = Math.round((dist/Math.max(maxDist,1))*28);
+      const r = Math.max(0,Math.min(255, br + randInt(-range, range)));
+      const g = Math.max(0,Math.min(255, bg + randInt(-range, range)));
+      const b = Math.max(0,Math.min(255, bb + randInt(-range, range)));
+      pixels[ny*W+nx] = rgbToHex(r,g,b);
+    }
+  }
+  render();
+}
+
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
 // MOUSE EVENTS — listen on wrap, detect if inside stage
 wrap.addEventListener('mousedown', e => {
@@ -1182,6 +1210,7 @@ document.addEventListener('keydown',e=>{
   if(document.activeElement.tagName.toLowerCase()==='input') return;
   switch(e.key){
     case 'b':case 'B': setTool('brush'); break;
+    case 'n':case 'N': setTool('smoothbrush'); break;
     case 'e':case 'E': setTool('eraser'); break;
     case 'f':case 'F': setTool('bucket'); break;
     case 'a':case 'A': setTool('fillall'); break;
