@@ -1247,8 +1247,22 @@ function closeImportModal(){
 }
 
 const PALETTE_KEY = 'mcbcode-pixel-palette';
-function savePalette(){ try{ localStorage.setItem(PALETTE_KEY, JSON.stringify(palette)); }catch(e){} }
+const paletteBroadcast = new BroadcastChannel('mcbcode-palette-sync');
+
+function savePalette(){
+  try{
+    localStorage.setItem(PALETTE_KEY, JSON.stringify(palette));
+    paletteBroadcast.postMessage({ type: 'palette-update', palette });
+  }catch(e){}
+}
 function loadPalette(){ try{ const d=localStorage.getItem(PALETTE_KEY); if(d){ const p=JSON.parse(d); if(Array.isArray(p)&&p.length) palette=p; } }catch(e){} }
+
+paletteBroadcast.onmessage = e => {
+  if(e.data?.type === 'palette-update' && Array.isArray(e.data.palette)){
+    palette = e.data.palette;
+    renderPalette();
+  }
+};
 
 // BOOT
 loadPalette();
