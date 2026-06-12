@@ -406,6 +406,13 @@
     transition: border-color 0.15s, color 0.15s;
   }
   #palette-add-btn:hover { border-color: var(--green); color: var(--green); }
+  #palette-clear-btn {
+    width: 100%; margin-top: 6px; background: none;
+    border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-muted); font-size: 10px; padding: 4px;
+    cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  #palette-clear-btn:hover { border-color: var(--danger); color: var(--danger); }
 
   /* ─── ZOOM / BRUSH ─── */
   .ctrl-row { display: flex; align-items: center; gap: 6px; }
@@ -606,9 +613,10 @@
       <button id="palette-expand-btn" onclick="togglePaletteOverflow()">▾ show older colors</button>
       <div id="palette-hex-row">
         <div id="palette-hex-swatch" onclick="applyPaletteHex()" title="click to set as active color"></div>
-        <input id="palette-hex-input" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false">
+        <input id="palette-hex-input" type="text" maxlength="9" placeholder="#rrggbbaa" spellcheck="false">
         <button id="palette-add-btn" title="add to palette">+</button>
       </div>
+      <button id="palette-clear-btn" onclick="clearPalette()">clear custom colors</button>
     </div>
 
     <div class="panel-section">
@@ -738,6 +746,7 @@ let pixels=[], undoStack=[], redoStack=[];
 let painting=false, lastPx=-1, lastPy=-1;
 let panning=false, panStartX=0, panStartY=0, panOffX=0, panOffY=0;
 let palette=['#05ee93','#00b2ff','#ff4d4d','#ffcc00','#ffffff','#343434','#1a1a1a','#ff6ec7','#a855f7','#f97316'];
+const DEFAULT_PALETTE = palette.slice();
 
 function initCanvas(){
   pixels = new Array(W*H).fill(null);
@@ -1085,12 +1094,32 @@ function renderPalette(){
     const s = document.createElement('div');
     s.className = 'pal-swatch' + (currentColor === c ? ' selected' : '');
     s.style.background = c; s.title = c;
+
+    // click = set color
     s.addEventListener('click', () => setColor(c));
+
+    // right-click = instant remove
     s.addEventListener('contextmenu', e => {
       e.preventDefault();
       const idx = palette.lastIndexOf(c);
       if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
     });
+
+    // hold 0.75s = confirm delete
+    let holdTimer = null;
+    s.addEventListener('mousedown', e => {
+      if(e.button !== 0) return;
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        if(confirm('delete ' + c + ' from palette?')){
+          const idx = palette.lastIndexOf(c);
+          if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
+        }
+      }, 750);
+    });
+    s.addEventListener('mouseup',    () => { clearTimeout(holdTimer); holdTimer = null; });
+    s.addEventListener('mouseleave', () => { clearTimeout(holdTimer); holdTimer = null; });
+
     return s;
   }
 
@@ -1109,11 +1138,16 @@ function addCurrentToPalette(hex){
   if(!hex) hex=currentColor;
   if(!palette.includes(hex)){ palette.push(hex); savePalette(); renderPalette(); showToast('added to palette'); }
 }
+function clearPalette(){
+  if(!confirm('clear all custom colors? default colors will be kept.')) return;
+  palette = DEFAULT_PALETTE.slice();
+  savePalette(); renderPalette(); showToast('palette cleared');
+}
 function applyPaletteHex(){
   const val=document.getElementById('palette-hex-input').value.trim();
   if(isValidHex(val)){ setColor(val); showToast('color set'); }
 }
-function isValidHex(v){ return /^#[0-9a-fA-F]{6}$/.test(v); }
+function isValidHex(v){ return /^#[0-9a-fA-F]{6}$/.test(v) || /^#[0-9a-fA-F]{8}$/.test(v); }
 
 // palette hex input live preview
 document.addEventListener('DOMContentLoaded', () => {
@@ -1134,13 +1168,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   addBtn.addEventListener('click', () => {
     const v = inp.value.trim();
-    if(isValidHex(v)){ addCurrentToPalette(v); setColor(v); inp.value=''; swatch.style.background='transparent'; }
+    if(isValidHex(v)){ addCurrentToPalette(v); setColor(v); inp.value=''; swatch.style.background='transparent'; inp.classList.remove('invalid'); }
     else { showToast('invalid hex'); inp.classList.add('invalid'); }
   });
   inp.addEventListener('keydown', e => {
     if(e.key==='Enter'){ addBtn.click(); }
   });
-  // init swatch to transparent
   swatch.style.background = 'transparent';
 });
 
