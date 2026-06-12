@@ -349,7 +349,7 @@
     transition: max-height 0.25s ease, opacity 0.2s ease;
     opacity: 0;
   }
-  #palette-overflow.open { max-height: 600px; overflow-y: auto; opacity: 1; }
+  #palette-overflow.open { max-height: 9999px; overflow: visible; opacity: 1; }
   #palette-expand-btn {
     width: 100%; margin-top: 5px; background: none;
     border: 1px solid var(--border); border-radius: 4px;
@@ -662,7 +662,7 @@
 <!-- DOWNLOAD MODAL -->
 <div class="modal-bg" id="dl-modal">
   <div class="modal">
-    <h3>// download as png</h3>
+    <h3>download as png</h3>
     <input id="dl-filename" type="text" placeholder="filename" value="pixel-art">
     <div class="modal-btns">
       <button class="btn-secondary" onclick="closeDlModal()">cancel</button>
@@ -674,7 +674,7 @@
 <!-- IMPORT MODAL -->
 <div class="modal-bg" id="import-modal">
   <div class="modal">
-    <h3>// import image</h3>
+    <h3>import image</h3>
     <div id="import-preview-wrap" style="width:100%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;background:var(--surface3);border-radius:6px;border:1px solid var(--border);min-height:80px;overflow:hidden;">
       <img id="import-preview-img" src="" alt="" style="max-width:100%;max-height:160px;image-rendering:pixelated;display:none;">
       <span id="import-preview-placeholder" style="font-size:11px;color:var(--text-muted)">no image loaded</span>
@@ -690,7 +690,7 @@
 <!-- SHORTCUTS MODAL -->
 <div class="modal-bg" id="sc-modal">
   <div class="modal">
-    <h3>// keyboard shortcuts</h3>
+    <h3>keyboard shortcuts</h3>
     <div class="shortcut-grid">
       <div class="sc-row"><span class="sc-label">brush tool</span><kbd class="sc-key">B</kbd></div>
       <div class="sc-row"><span class="sc-label">eraser tool</span><kbd class="sc-key">E</kbd></div>
@@ -980,6 +980,7 @@ function setColor(hex){
   const idx=palette.indexOf(currentColor);
   if(idx!==-1) palette.splice(idx,1);
   palette.push(currentColor);
+  savePalette();
   updateColorUI();
   renderPalette();
 }
@@ -1004,20 +1005,22 @@ function updateColorUI(){
 let svDragging=false;
 document.getElementById('sv-box').addEventListener('mousedown',e=>{svDragging=true;moveSV(e);});
 document.addEventListener('mousemove',e=>{if(svDragging)moveSV(e);});
-document.addEventListener('mouseup',()=>svDragging=false);
+document.addEventListener('mouseup',()=>{ if(svDragging){ svDragging=false; addToPaletteIfNew(currentColor); savePalette(); } });
 function moveSV(e){ const r=document.getElementById('sv-box').getBoundingClientRect(); cpS=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); cpV=Math.max(0,Math.min(1,1-(e.clientY-r.top)/r.height)); updateColorUI(); }
 
 let hueDragging=false;
 document.getElementById('hue-bar').addEventListener('mousedown',e=>{hueDragging=true;moveHue(e);});
 document.addEventListener('mousemove',e=>{if(hueDragging)moveHue(e);});
-document.addEventListener('mouseup',()=>hueDragging=false);
+document.addEventListener('mouseup',()=>{ if(hueDragging){ hueDragging=false; addToPaletteIfNew(currentColor); savePalette(); } });
 function moveHue(e){ const r=document.getElementById('hue-bar').getBoundingClientRect(); cpH=Math.max(0,Math.min(0.9999,(e.clientX-r.left)/r.width)); updateColorUI(); }
 
 let alphaDragging=false;
 document.getElementById('alpha-bar').addEventListener('mousedown',e=>{alphaDragging=true;moveAlpha(e);});
 document.addEventListener('mousemove',e=>{if(alphaDragging)moveAlpha(e);});
-document.addEventListener('mouseup',()=>alphaDragging=false);
+document.addEventListener('mouseup',()=>{ if(alphaDragging){ alphaDragging=false; addToPaletteIfNew(currentColor); savePalette(); } });
 function moveAlpha(e){ const r=document.getElementById('alpha-bar').getBoundingClientRect(); cpA=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); updateColorUI(); }
+
+function addToPaletteIfNew(hex){ if(!palette.includes(hex)){ palette.push(hex); renderPalette(); } }
 
 document.getElementById('cp-hex-input').addEventListener('input',e=>{
   const v=e.target.value.trim();
@@ -1070,7 +1073,7 @@ function renderPalette(){
     s.addEventListener('contextmenu', e => {
       e.preventDefault();
       const idx = palette.lastIndexOf(c);
-      if(idx !== -1){ palette.splice(idx, 1); renderPalette(); }
+      if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
     });
     return s;
   }
@@ -1088,7 +1091,7 @@ function renderPalette(){
 }
 function addCurrentToPalette(hex){
   if(!hex) hex=currentColor;
-  if(!palette.includes(hex)){ palette.push(hex); renderPalette(); showToast('added to palette'); }
+  if(!palette.includes(hex)){ palette.push(hex); savePalette(); renderPalette(); showToast('added to palette'); }
 }
 function applyPaletteHex(){
   const val=document.getElementById('palette-hex-input').value.trim();
@@ -1243,7 +1246,12 @@ function closeImportModal(){
   confirmBtn.disabled=true; confirmBtn.style.opacity='0.4'; confirmBtn.style.cursor='not-allowed';
 }
 
+const PALETTE_KEY = 'mcbcode-pixel-palette';
+function savePalette(){ try{ localStorage.setItem(PALETTE_KEY, JSON.stringify(palette)); }catch(e){} }
+function loadPalette(){ try{ const d=localStorage.getItem(PALETTE_KEY); if(d){ const p=JSON.parse(d); if(Array.isArray(p)&&p.length) palette=p; } }catch(e){} }
+
 // BOOT
+loadPalette();
 initCanvas();
 setColor('#05ee93');
 </script>
