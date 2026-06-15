@@ -518,9 +518,110 @@
   }
   #toast.show { opacity: 1; transform: none; }
 
+  body.mobile-layout #shortcuts-btn { bottom: 70px; }
+  body.mobile-layout #toast { bottom: 110px; right: 14px; }
+
   #panel::-webkit-scrollbar { width: 4px; }
   #panel::-webkit-scrollbar-track { background: var(--surface); }
   #panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ═══════════════════════════════════════════════
+     MOBILE / TOUCH LAYOUT
+     applied via JS adding .mobile-layout to <body>
+     ═══════════════════════════════════════════════ */
+  body.mobile-layout #topbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.mobile-layout #topbar::-webkit-scrollbar { height: 0; }
+
+  /* main area becomes column: canvas on top, toolbar bar at bottom */
+  body.mobile-layout #app {
+    flex-direction: column;
+  }
+
+  /* toolbar becomes a horizontal scrollable bottom bar */
+  body.mobile-layout #toolbar {
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 8px;
+    order: 2;
+    flex-shrink: 0;
+  }
+  body.mobile-layout #toolbar::-webkit-scrollbar { height: 0; }
+  body.mobile-layout .tool-btn {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+  }
+  body.mobile-layout .tool-btn img { width: 26px; height: 26px; }
+  body.mobile-layout .tool-sep {
+    width: 1px;
+    height: 28px;
+    flex-shrink: 0;
+    margin: 0 4px;
+  }
+  /* tooltips are useless on touch, hide them */
+  body.mobile-layout .tool-btn::after { display: none; }
+
+  body.mobile-layout #canvas-wrap {
+    order: 1;
+    flex: 1;
+    touch-action: none; /* we handle pan/zoom/draw ourselves */
+  }
+
+  /* ─── SLIDE-OUT PANEL DRAWER ─── */
+  body.mobile-layout #panel {
+    position: fixed;
+    top: 44px;
+    right: 0;
+    bottom: 56px;
+    width: 240px;
+    max-width: 80vw;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 150;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+  }
+  body.mobile-layout #panel.open {
+    transform: translateX(0);
+  }
+
+  /* edge tab to open/close the drawer */
+  #panel-tab {
+    display: none;
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 64px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    color: var(--green);
+    font-size: 16px;
+    z-index: 151;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: right 0.25s ease;
+  }
+  body.mobile-layout #panel-tab { display: flex; }
+  body.mobile-layout #panel.open ~ #panel-tab,
+  body.mobile-layout #panel-tab.open {
+    right: 240px;
+  }
+  @media (max-width: 320px) {
+    body.mobile-layout #panel-tab.open { right: 80vw; }
+  }
 </style>
 </head>
 <body>
@@ -665,6 +766,8 @@
   </div>
 </div>
 
+<button id="panel-tab" onclick="togglePanelDrawer()">◂</button>
+
 <!-- DIMENSION MODAL -->
 <div class="modal-bg" id="dim-modal">
   <div class="modal">
@@ -787,7 +890,7 @@ function initCanvas(){
   updateColorUI();
 }
 
-window.addEventListener('resize', () => { renderGrid(); });
+// resize handling consolidated below in applyLayoutMode
 
 // UNDO/REDO
 // stack entries: { pixels, overlayPixels, overlayActive }
@@ -1021,6 +1124,156 @@ wrap.addEventListener('wheel', e => {
   stage.style.left=offsetX+'px'; stage.style.top=offsetY+'px';
   positionStage();
 }, {passive:false});
+
+// ============================================================
+// TOUCH — one-finger draw, two-finger pan, pinch zoom
+// ============================================================
+function setZoomRaw(z, anchorX, anchorY){
+  // continuous zoom (no step snapping) around an anchor point in wrap-local coords
+  const oldZ=zoom;
+  zoom=Math.max(0.5, Math.min(64, z));
+  offsetX=anchorX-(anchorX-offsetX)*zoom/oldZ;
+  offsetY=anchorY-(anchorY-offsetY)*zoom/oldZ;
+  positionStage();
+  updateZoomLabel();
+}
+
+function touchPoint(t){
+  const r=wrap.getBoundingClientRect();
+  return { x:t.clientX-r.left, y:t.clientY-r.top, raw:t };
+}
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+function mid(a,b){ return { x:(a.x+b.x)/2, y:(a.y+b.y)/2 }; }
+function canvasCoordsFromPoint(p){
+  const r=stage.getBoundingClientRect();
+  return { px:Math.floor((p.raw.clientX-r.left)/zoom), py:Math.floor((p.raw.clientY-r.top)/zoom) };
+}
+
+let touchMode = null; // 'draw' | 'pan' | 'pinch'
+let touchLastPx=-1, touchLastPy=-1;
+let pinchStartDist=0, pinchStartZoom=1;
+let twoFingerStart=null; // {x,y} midpoint at gesture start
+let twoFingerOffStart=null; // {offsetX,offsetY} at gesture start
+
+wrap.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const touches=e.touches;
+
+  if(touches.length===1){
+    const p=touchPoint(touches[0]);
+    const {px,py}=canvasCoordsFromPoint(p);
+    touchMode='draw';
+    if(tool==='bucket'){
+      if(inBounds(px,py)){ pushUndo(); floodFill(px,py,currentColor); render(); }
+      touchMode=null; return;
+    }
+    if(tool==='fillall'){
+      if(inBounds(px,py)){ pushUndo(); fillAll(pixels[py*W+px], currentColor); render(); }
+      touchMode=null; return;
+    }
+    if(tool==='move'){
+      touchMode='pan';
+      twoFingerStart=p;
+      twoFingerOffStart={x:offsetX,y:offsetY};
+      return;
+    }
+    pushUndo(); painting=true; touchLastPx=-1; touchLastPy=-1;
+    applyTool(px,py); touchLastPx=px; touchLastPy=py;
+  } else if(touches.length===2){
+    // two-finger = pan + pinch zoom
+    painting=false; touchMode='pinch';
+    const p1=touchPoint(touches[0]), p2=touchPoint(touches[1]);
+    pinchStartDist=dist(p1,p2);
+    pinchStartZoom=zoom;
+    twoFingerStart=mid(p1,p2);
+    twoFingerOffStart={x:offsetX,y:offsetY};
+  }
+}, {passive:false});
+
+wrap.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const touches=e.touches;
+
+  if(touchMode==='draw' && touches.length===1){
+    const p=touchPoint(touches[0]);
+    const {px,py}=canvasCoordsFromPoint(p);
+    if(!painting) return;
+    if(px===touchLastPx&&py===touchLastPy) return;
+    applyTool(px,py); touchLastPx=px; touchLastPy=py;
+  } else if(touchMode==='pan' && touches.length===1){
+    const p=touchPoint(touches[0]);
+    offsetX=twoFingerOffStart.x+(p.x-twoFingerStart.x);
+    offsetY=twoFingerOffStart.y+(p.y-twoFingerStart.y);
+    stage.style.left=offsetX+'px'; stage.style.top=offsetY+'px';
+  } else if(touchMode==='pinch' && touches.length===2){
+    const p1=touchPoint(touches[0]), p2=touchPoint(touches[1]);
+    const newDist=dist(p1,p2);
+    const newMid=mid(p1,p2);
+    // pan based on midpoint movement
+    offsetX=twoFingerOffStart.x+(newMid.x-twoFingerStart.x);
+    offsetY=twoFingerOffStart.y+(newMid.y-twoFingerStart.y);
+    // zoom based on pinch distance ratio, anchored at current midpoint
+    if(pinchStartDist>0){
+      const ratio=newDist/pinchStartDist;
+      setZoomRaw(pinchStartZoom*ratio, newMid.x, newMid.y);
+    } else {
+      stage.style.left=offsetX+'px'; stage.style.top=offsetY+'px';
+    }
+  }
+}, {passive:false});
+
+wrap.addEventListener('touchend', e => {
+  if(e.touches.length===0){
+    painting=false;
+    touchMode=null;
+    // snap zoom to nearest step on release for crisp rendering
+    const steps=[1,2,3,4,6,8,10,12,16,20,24,32,48,64];
+    let nearest=steps[0], diff=Infinity;
+    for(const s of steps){ const d=Math.abs(s-zoom); if(d<diff){diff=d;nearest=s;} }
+    if(Math.abs(nearest-zoom)>0.01){
+      const cx=wrap.clientWidth/2, cy=wrap.clientHeight/2;
+      setZoomRaw(nearest, cx, cy);
+    }
+    renderGrid();
+  } else if(e.touches.length===1){
+    // lifted one finger during a pinch — switch to single-finger pan
+    const p=touchPoint(e.touches[0]);
+    touchMode='pan';
+    twoFingerStart=p;
+    twoFingerOffStart={x:offsetX,y:offsetY};
+  }
+}, {passive:false});
+
+// ============================================================
+// MOBILE / TOUCH LAYOUT DETECTION
+// ============================================================
+function isMobileLayout(){
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const narrow = window.innerWidth <= 768;
+  return coarse && narrow;
+}
+
+function applyLayoutMode(){
+  const mobile = isMobileLayout();
+  document.body.classList.toggle('mobile-layout', mobile);
+  if(!mobile){
+    document.getElementById('panel').classList.remove('open');
+    document.getElementById('panel-tab').classList.remove('open');
+  }
+  // re-fit canvas since available space changed
+  fitToScreen();
+}
+
+function togglePanelDrawer(){
+  const panel=document.getElementById('panel');
+  const tab=document.getElementById('panel-tab');
+  const open=panel.classList.toggle('open');
+  tab.classList.toggle('open', open);
+  tab.textContent = open ? '▸' : '◂';
+}
+
+window.addEventListener('resize', applyLayoutMode);
+window.addEventListener('orientationchange', applyLayoutMode);
 
 // FLOOD FILL
 function floodFill(sx,sy,newColor){
@@ -1450,6 +1703,7 @@ paletteBroadcast.onmessage = e => {
 
 // BOOT
 loadPalette();
+applyLayoutMode();
 initCanvas();
 setColor('#05ee93');
 </script>
