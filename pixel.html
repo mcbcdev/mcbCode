@@ -213,6 +213,20 @@
     border-radius: 1px;
   }
 
+  /* overlay-pending border glow — color set via JS inline style */
+  #canvas-stage.overlay-active {
+    box-shadow:
+      0 0 0 2px var(--overlay-glow-color, var(--green)),
+      0 0 16px 2px var(--overlay-glow-color, var(--green)),
+      0 4px 32px rgba(0,0,0,0.6);
+  }
+
+  /* overlay tool icon border indicator */
+  .tool-btn.overlay-pending {
+    border-color: var(--overlay-glow-color, var(--green));
+    box-shadow: 0 0 6px var(--overlay-glow-color, var(--green));
+  }
+
   /* ─── RIGHT PANEL ─── */
   #panel {
     width: 200px;
@@ -542,8 +556,8 @@
     <button class="tool-btn active" id="tool-brush"  data-tip="Brush (B)"        onclick="setTool('brush')">
       <img src="https://mcbcode.com/img/pixel/brush.png"  alt="brush">
     </button>
-    <button class="tool-btn"        id="tool-smoothbrush" data-tip="Smooth Brush (N)" onclick="setTool('smoothbrush')">
-      <img src="https://mcbcode.com/img/pixel/smoothbrush.png" alt="smoothbrush">
+    <button class="tool-btn"        id="tool-overlaybrush" data-tip="Overlay Brush (N)" onclick="setTool('overlaybrush')">
+      <img src="https://mcbcode.com/img/pixel/overlaybrush.png" alt="overlaybrush">
     </button>
     <button class="tool-btn"        id="tool-eraser" data-tip="Eraser (E)"       onclick="setTool('eraser')">
       <img src="https://mcbcode.com/img/pixel/eraser.png" alt="eraser">
@@ -707,7 +721,7 @@
     <h3>keyboard shortcuts</h3>
     <div class="shortcut-grid">
       <div class="sc-row"><span class="sc-label">brush tool</span><kbd class="sc-key">B</kbd></div>
-      <div class="sc-row"><span class="sc-label">smooth brush</span><kbd class="sc-key">N</kbd></div>
+      <div class="sc-row"><span class="sc-label">overlay brush</span><kbd class="sc-key">N</kbd></div>
       <div class="sc-row"><span class="sc-label">eraser tool</span><kbd class="sc-key">E</kbd></div>
       <div class="sc-row"><span class="sc-label">fill tool</span><kbd class="sc-key">F</kbd></div>
       <div class="sc-row"><span class="sc-label">fill all</span><kbd class="sc-key">A</kbd></div>
@@ -752,8 +766,17 @@ let panning=false, panStartX=0, panStartY=0, panOffX=0, panOffY=0;
 let palette=['#05ee93','#00b2ff','#ff4d4d','#ffcc00','#ffffff','#343434','#1a1a1a','#ff6ec7','#a855f7','#f97316'];
 const DEFAULT_PALETTE = palette.slice();
 
+// overlay brush state — separate temporary layer, composited on tool switch
+let overlayPixels = [];        // same length as pixels, holds hex (incl alpha) or null
+let overlayActive = false;      // true while overlay has any non-null pixels
+let preOverlayPixels = null;    // snapshot of pixels before overlay started (for undo separation)
+
 function initCanvas(){
   pixels = new Array(W*H).fill(null);
+  overlayPixels = new Array(W*H).fill(null);
+  overlayActive = false;
+  preOverlayPixels = null;
+  updateOverlayIndicator();
   canvas.width  = W;
   canvas.height = H;
   document.getElementById('info-w').textContent = W+'px';
@@ -767,9 +790,32 @@ function initCanvas(){
 window.addEventListener('resize', () => { renderGrid(); });
 
 // UNDO/REDO
-function pushUndo(){ undoStack.push(pixels.slice()); if(undoStack.length>80) undoStack.shift(); redoStack=[]; }
-function undo(){ if(!undoStack.length) return; redoStack.push(pixels.slice()); pixels=undoStack.pop(); render(); }
-function redo(){ if(!redoStack.length) return; undoStack.push(pixels.slice()); pixels=redoStack.pop(); render(); }
+// stack entries: { pixels, overlayPixels, overlayActive }
+function pushUndo(){
+  undoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
+  if(undoStack.length>80) undoStack.shift();
+  redoStack=[];
+}
+function undo(){
+  if(!undoStack.length) return;
+  redoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
+  const state=undoStack.pop();
+  pixels=state.pixels;
+  overlayPixels=state.overlayPixels;
+  overlayActive=state.overlayActive;
+  updateOverlayIndicator();
+  render();
+}
+function redo(){
+  if(!redoStack.length) return;
+  undoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
+  const state=redoStack.pop();
+  pixels=state.pixels;
+  overlayPixels=state.overlayPixels;
+  overlayActive=state.overlayActive;
+  updateOverlayIndicator();
+  render();
+}
 
 // RENDER
 function render(){
@@ -777,6 +823,13 @@ function render(){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     const c=pixels[y*W+x];
     if(c){ ctx.fillStyle=c; ctx.fillRect(x,y,1,1); }
+  }
+  // draw overlay layer on top, unblended
+  if(overlayActive){
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+      const oc=overlayPixels[y*W+x];
+      if(oc){ ctx.fillStyle=oc; ctx.fillRect(x,y,1,1); }
+    }
   }
   positionStage();
 }
@@ -846,7 +899,7 @@ function inBounds(px,py){ return px>=0&&px<W&&py>=0&&py<H; }
 function applyTool(px,py){
   if(!inBounds(px,py)) return;
   if(tool==='brush') paintBrush(px,py,currentColor);
-  else if(tool==='smoothbrush') paintSmoothBrush(px,py);
+  else if(tool==='overlaybrush') paintOverlayBrush(px,py);
   else if(tool==='eraser') paintBrush(px,py,null);
   else if(tool==='picker'){ const c=pixels[py*W+px]; if(c){setColor(c);showToast('color picked');} }
 }
@@ -860,28 +913,64 @@ function paintBrush(cx,cy,color){
   render();
 }
 
-function paintSmoothBrush(cx,cy){
+function paintOverlayBrush(cx,cy){
+  // snapshot real pixels the first time overlay starts (for undo separation)
+  if(!overlayActive) preOverlayPixels = pixels.slice();
   const half=Math.floor(brushSize/2);
-  const [br,bg,bb] = hexToRgb(currentColor.slice(0,7));
-  for(let dy=-half;dy<=half;dy++){
-    for(let dx=-half;dx<=half;dx++){
-      const nx=cx+dx, ny=cy+dy;
-      if(!inBounds(nx,ny)) continue;
-      // distance from center — pixels further out get more variation
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      const maxDist = half > 0 ? half : 1;
-      // variation range: 0 at center, up to 28 at edge of brush
-      const range = Math.round((dist/Math.max(maxDist,1))*28);
-      const r = Math.max(0,Math.min(255, br + randInt(-range, range)));
-      const g = Math.max(0,Math.min(255, bg + randInt(-range, range)));
-      const b = Math.max(0,Math.min(255, bb + randInt(-range, range)));
-      pixels[ny*W+nx] = rgbToHex(r,g,b);
-    }
+  for(let dy=-half;dy<=half;dy++) for(let dx=-half;dx<=half;dx++){
+    const nx=cx+dx, ny=cy+dy;
+    if(!inBounds(nx,ny)) continue;
+    overlayPixels[ny*W+nx]=currentColor;
   }
+  overlayActive=true;
+  updateOverlayIndicator();
   render();
 }
 
-function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+// alpha-composite a foreground hex (may include alpha) over a background hex (may be null)
+function compositeColor(fg, bg){
+  let fr,fg_,fb,fa=1;
+  if(fg.length===9){ fr=parseInt(fg.slice(1,3),16); fg_=parseInt(fg.slice(3,5),16); fb=parseInt(fg.slice(5,7),16); fa=parseInt(fg.slice(7,9),16)/255; }
+  else { [fr,fg_,fb]=hexToRgb(fg); fa=1; }
+  if(fa>=1) return fg.slice(0,7); // fully opaque — overlay just replaces
+
+  let br,bgc,bb,ba=1;
+  if(!bg){ br=0;bgc=0;bb=0;ba=0; }
+  else if(bg.length===9){ br=parseInt(bg.slice(1,3),16); bgc=parseInt(bg.slice(3,5),16); bb=parseInt(bg.slice(5,7),16); ba=parseInt(bg.slice(7,9),16)/255; }
+  else { [br,bgc,bb]=hexToRgb(bg); ba=1; }
+
+  const outA = fa + ba*(1-fa);
+  if(outA<=0) return null;
+  const outR = Math.round((fr*fa + br*ba*(1-fa))/outA);
+  const outG = Math.round((fg_*fa + bgc*ba*(1-fa))/outA);
+  const outB = Math.round((fb*fa + bb*ba*(1-fa))/outA);
+  const base = rgbToHex(outR,outG,outB);
+  return outA>=1 ? base : base+alphaHex(outA);
+}
+
+// composite overlay onto real pixels and clear overlay
+function commitOverlay(){
+  if(!overlayActive) return;
+  for(let i=0;i<pixels.length;i++){
+    const oc=overlayPixels[i];
+    if(oc!=null) pixels[i]=compositeColor(oc, pixels[i]);
+  }
+  overlayPixels=new Array(W*H).fill(null);
+  overlayActive=false;
+  preOverlayPixels=null;
+  updateOverlayIndicator();
+}
+
+function updateOverlayIndicator(){
+  stage.classList.toggle('overlay-active', overlayActive);
+  const tbtn=document.getElementById('tool-overlaybrush');
+  if(tbtn) tbtn.classList.toggle('overlay-pending', overlayActive);
+  if(overlayActive){
+    const glow = currentColor.slice(0,7);
+    stage.style.setProperty('--overlay-glow-color', glow);
+    if(tbtn) tbtn.style.setProperty('--overlay-glow-color', glow);
+  }
+}
 
 // MOUSE EVENTS — listen on wrap, detect if inside stage
 wrap.addEventListener('mousedown', e => {
@@ -958,6 +1047,12 @@ function fillAll(target, newColor){
 
 // TOOL / GRID / BRUSH
 function setTool(t){
+  // switching away from overlaybrush commits the overlay
+  if(tool==='overlaybrush' && t!=='overlaybrush' && overlayActive){
+    pushUndo(); // record pre-blend state so undo can separate
+    commitOverlay();
+    render();
+  }
   tool=t;
   document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('tool-'+t); if(el) el.classList.add('active');
@@ -984,7 +1079,14 @@ function toggleChecker(){
 }
 
 function changeBrush(d){ brushSize=Math.max(1,Math.min(16,brushSize+d)); document.getElementById('brush-label').textContent=brushSize; }
-function clearCanvas(){ pushUndo(); pixels=new Array(W*H).fill(null); render(); showToast('canvas cleared'); }
+function clearCanvas(){
+  pushUndo();
+  pixels=new Array(W*H).fill(null);
+  overlayPixels=new Array(W*H).fill(null);
+  overlayActive=false; preOverlayPixels=null;
+  updateOverlayIndicator();
+  render(); showToast('canvas cleared');
+}
 
 // MODALS
 function openDimModal()  { document.getElementById('dim-modal').classList.add('open'); }
@@ -1306,6 +1408,9 @@ function confirmImport(){
     }
   }
   canvas.width=W; canvas.height=H;
+  overlayPixels=new Array(W*H).fill(null);
+  overlayActive=false; preOverlayPixels=null;
+  updateOverlayIndicator();
   document.getElementById('info-w').textContent=W+'px';
   document.getElementById('info-h').textContent=H+'px';
   undoStack=[]; redoStack=[];
