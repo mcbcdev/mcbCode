@@ -802,6 +802,18 @@
   </div>
 </div>
 
+<!-- CONFIRM MODAL (reusable) -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">are you sure?</h3>
+    <p class="modal-note" id="confirm-message"></p>
+    <div class="modal-btns">
+      <button class="btn-secondary" id="confirm-cancel-btn">cancel</button>
+      <button class="btn-primary" id="confirm-ok-btn">confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
 <div class="modal-bg" id="import-modal">
   <div class="modal">
@@ -1488,20 +1500,30 @@ function renderPalette(){
       if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
     });
 
-    // hold 0.75s = confirm delete
+    // hold 0.75s = confirm delete (mouse + touch)
     let holdTimer = null;
-    s.addEventListener('mousedown', e => {
-      if(e.button !== 0) return;
+    let holdFired = false;
+    function startHold(){
+      holdFired = false;
       holdTimer = setTimeout(() => {
+        holdFired = true;
         holdTimer = null;
-        if(confirm('delete ' + c + ' from palette?')){
-          const idx = palette.lastIndexOf(c);
-          if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
-        }
+        customConfirm('delete ' + c + ' from palette?', {title:'delete color', okText:'delete'}).then(ok => {
+          if(ok){
+            const idx = palette.lastIndexOf(c);
+            if(idx !== -1){ palette.splice(idx, 1); savePalette(); renderPalette(); }
+          }
+        });
       }, 750);
-    });
-    s.addEventListener('mouseup',    () => { clearTimeout(holdTimer); holdTimer = null; });
-    s.addEventListener('mouseleave', () => { clearTimeout(holdTimer); holdTimer = null; });
+    }
+    function cancelHold(){ clearTimeout(holdTimer); holdTimer = null; }
+
+    s.addEventListener('mousedown', e => { if(e.button === 0) startHold(); });
+    s.addEventListener('mouseup',    cancelHold);
+    s.addEventListener('mouseleave', cancelHold);
+    s.addEventListener('touchstart', () => startHold(), {passive:true});
+    s.addEventListener('touchend',   e => { cancelHold(); if(holdFired) e.preventDefault(); }, {passive:false});
+    s.addEventListener('touchmove',  cancelHold, {passive:true});
 
     return s;
   }
@@ -1521,8 +1543,9 @@ function addCurrentToPalette(hex){
   if(!hex) hex=currentColor;
   if(!palette.includes(hex)){ palette.push(hex); savePalette(); renderPalette(); showToast('added to palette'); }
 }
-function clearPalette(){
-  if(!confirm('clear all custom colors? default colors will be kept.')) return;
+async function clearPalette(){
+  const ok = await customConfirm('clear all custom colors? default colors will be kept.', {title:'clear palette', okText:'clear'});
+  if(!ok) return;
   palette = DEFAULT_PALETTE.slice();
   savePalette(); renderPalette(); showToast('palette cleared');
 }
@@ -1586,6 +1609,38 @@ document.addEventListener('keydown',e=>{
 
 let toastTimer;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2000); }
+
+// ============================================================
+// CUSTOM CONFIRM MODAL — replaces window.confirm()
+// ============================================================
+function customConfirm(message, opts){
+  opts = opts || {};
+  return new Promise(resolve => {
+    const modal   = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl   = document.getElementById('confirm-message');
+    const okBtn   = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+    titleEl.textContent = opts.title || 'are you sure?';
+    msgEl.textContent = message;
+    okBtn.textContent = opts.okText || 'confirm';
+    cancelBtn.textContent = opts.cancelText || 'cancel';
+
+    function cleanup(result){
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    modal.classList.add('open');
+  });
+}
 
 // ============================================================
 // IMPORT
