@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex">
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <title>mcbCode | Project</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +15,6 @@
     a:hover { color: #05ee93; }
     g { color: #05ee93; }
 
-    /* topnav */
     .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; backdrop-filter: blur(8px); border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 10px; flex-shrink: 0; }
     .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
     .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; overflow: hidden; }
@@ -26,24 +26,24 @@
     .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
     .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
 
-    /* full-height layout below topnav */
     .shell { display: flex; flex-direction: column; height: 100vh; padding-top: 48px; }
 
-    /* project header bar */
     .proj-header { border-bottom: 1px solid #2a2a2e; padding: 14px 20px 0; flex-shrink: 0; background: #161719; }
     .proj-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .proj-title { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; }
     .proj-badge { font-size: 10px; padding: 2px 7px; border: 1px solid #343438; color: #777; }
     .proj-badge.public { border-color: #05ee93; color: #05ee93; }
+    .proj-header-actions { margin-left: auto; display: flex; gap: 8px; }
+    .export-btn { background: #00b2ff; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .export-btn:hover { background: #33c5ff; }
+    .export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .proj-tabs { display: flex; gap: 0; }
     .tab { padding: 6px 14px; font-size: 12px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
     .tab:hover { color: #ccc; }
     .tab.active { color: #fff; border-bottom-color: #05ee93; }
 
-    /* main panels area */
     .panels { display: flex; flex: 1; overflow: hidden; }
 
-    /* left meta panel */
     .meta-panel { width: 260px; min-width: 260px; border-right: 1px solid #2a2a2e; overflow-y: auto; display: flex; flex-direction: column; background: #161719; }
     .meta-section { padding: 14px 16px; border-bottom: 1px solid #1e1e22; }
     .meta-label { font-size: 10px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
@@ -64,10 +64,8 @@
     .stat-val { font-size: 20px; color: #05ee93; font-family: 'mcfontb', sans-serif; }
     .stat-lbl { font-size: 10px; color: #555; }
 
-    /* right file panel */
     .file-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #111214; }
 
-    /* path bar */
     .path-bar { display: flex; align-items: center; gap: 0; padding: 0 16px; height: 38px; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; font-size: 12px; }
     .path-crumb { color: #00b2ff; cursor: pointer; transition: color 0.15s; padding: 0 2px; }
     .path-crumb:hover { color: #66d4ff; }
@@ -75,9 +73,7 @@
     .path-toolbar { margin-left: auto; display: flex; gap: 6px; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
-    .sm-btn.danger:hover { color: #ff5555; border-color: #ff5555; }
 
-    /* file list */
     .file-list { flex: 1; overflow-y: auto; }
     .file-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid #1a1a1e; cursor: pointer; transition: background 0.12s; font-size: 13px; }
     .file-row:hover { background: #1a1c1f; }
@@ -91,7 +87,6 @@
     .file-del:hover { color: #ff5555; }
     .file-list-empty { padding: 48px 20px; text-align: center; color: #333; font-size: 13px; }
 
-    /* settings panel */
     .settings-panel { flex: 1; overflow-y: auto; padding: 28px 32px; display: none; background: #111214; }
     .settings-panel.active { display: block; }
     .set-field { margin-bottom: 18px; }
@@ -108,7 +103,6 @@
     .inline-msg.ok  { color: #05ee93; }
     .inline-msg.err { color: #ff5555; }
 
-    /* modals */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
     .overlay.open { display: flex; }
     .modal { background: #1a1c1f; border: 1px solid #343438; padding: 24px 28px; min-width: 320px; }
@@ -130,16 +124,23 @@
     .del-btn { background: #ff5555; border: none; color: #fff; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 16px; cursor: pointer; }
     .del-btn:hover { background: #cc0000; }
 
+    /* export warning modal */
+    .warn-modal { background: #1a1c1f; border: 1px solid #343438; padding: 24px 28px; min-width: 340px; max-width: 480px; }
+    .warn-modal h3 { color: #ffaa00; font-size: 14px; margin-bottom: 12px; }
+    .warn-modal p { font-size: 13px; color: #aaa; margin-bottom: 8px; line-height: 1.5; }
+    .warn-modal ul { font-size: 12px; color: #ff5555; padding-left: 16px; margin-bottom: 12px; }
+    .warn-modal ul li { margin-bottom: 4px; }
+
     .loading-msg { padding: 48px; text-align: center; color: #444; font-size: 13px; }
     .err-msg { padding: 48px; text-align: center; color: #ff5555; font-size: 13px; }
   </style>
 </head>
 <body>
 
-  <!-- new file/folder modal -->
+  <!-- new folder modal (root only allows folders) -->
   <div class="overlay" id="new-file-overlay">
     <div class="modal">
-      <h3 id="nf-title">New File</h3>
+      <h3 id="nf-title">New Folder</h3>
       <div class="modal-field">
         <label>Name</label>
         <input type="text" id="nf-name" maxlength="128">
@@ -164,6 +165,20 @@
     </div>
   </div>
 
+  <!-- export warning modal -->
+  <div class="overlay" id="export-warn-overlay">
+    <div class="warn-modal">
+      <h3>Export Warning</h3>
+      <p>The following root-level files were skipped. Files must be inside BP/ or RP/ folders to be included in the export:</p>
+      <ul id="export-warn-list"></ul>
+      <p>Continue exporting without these files?</p>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('export-warn-overlay')">Cancel</button>
+        <button class="primary-btn" id="export-warn-confirm" onclick="doExport()">Export Anyway</button>
+      </div>
+    </div>
+  </div>
+
   <!-- topnav -->
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
@@ -174,18 +189,20 @@
       <span class="breadcrumb-current" id="bc-project">...</span>
     </div>
     <div class="topnav-right">
-      <span style="font-size:11px; color:#333;" id="nav-user"></span>
+      <span style="font-size:11px; color:#444;" id="nav-user"></span>
       <button class="nav-btn" onclick="doLogout()">Sign Out</button>
     </div>
   </div>
 
   <div class="shell">
 
-    <!-- project header -->
     <div class="proj-header">
       <div class="proj-header-top">
         <span class="proj-title" id="proj-title">Loading...</span>
-        <span class="proj-badge" id="proj-badge">private</span>
+        <span class="proj-badge" id="proj-badge">public</span>
+        <div class="proj-header-actions">
+          <button class="export-btn" id="export-btn" onclick="startExport()" style="display:none;">Export</button>
+        </div>
       </div>
       <div class="proj-tabs">
         <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)">Files</div>
@@ -193,10 +210,8 @@
       </div>
     </div>
 
-    <!-- panels -->
     <div class="panels" id="tab-files">
 
-      <!-- left meta panel -->
       <div class="meta-panel">
         <div class="meta-section">
           <div class="meta-label">About</div>
@@ -226,28 +241,20 @@
         </div>
       </div>
 
-      <!-- right file panel -->
       <div class="file-panel">
-
-        <!-- path breadcrumb bar -->
         <div class="path-bar">
-          <span class="path-crumb" id="path-root" onclick="navToRoot()">root</span>
+          <span class="path-crumb" onclick="navToRoot()">root</span>
           <span id="path-segments"></span>
           <div class="path-toolbar" id="owner-toolbar" style="display:none;">
-            <button class="sm-btn" onclick="openNewFile('file')">+ File</button>
-            <button class="sm-btn" onclick="openNewFile('folder')">+ Folder</button>
+            <!-- populated dynamically: root = folder only, inside folder = file + folder -->
           </div>
         </div>
-
-        <!-- file list -->
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
-
       </div>
     </div>
 
-    <!-- settings tab -->
     <div class="settings-panel" id="tab-settings">
       <h3 style="color:#fff; font-size:15px; margin-bottom:22px;">Project Settings</h3>
       <div class="set-field">
@@ -257,13 +264,6 @@
       <div class="set-field">
         <label>Description</label>
         <textarea id="set-desc" rows="3" maxlength="256"></textarea>
-      </div>
-      <div class="set-field">
-        <label>Visibility</label>
-        <div class="vis-row">
-          <input type="checkbox" class="toggle" id="set-public">
-          <label for="set-public" style="cursor:pointer; font-size:13px; color:#888;">Make project public</label>
-        </div>
       </div>
       <div class="save-row">
         <button class="primary-btn" onclick="saveSettings()">Save Changes</button>
@@ -277,14 +277,15 @@
     const AUTH = "https://auth.mcbcode.com";
     const shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
 
-    let project     = null;
-    let allFiles    = [];
-    let isOwner     = false;
-    let currentPath = []; // array of {id, name} folder nodes
-    let tags        = [];
+    let project      = null;
+    let allFiles     = [];
+    let isOwner      = false;
+    let currentPath  = [];
+    let tags         = [];
     let pendingDelId = null;
-    let newFileType  = "file";
+    let newFileType  = "folder";
     let newFileParentId = null;
+    let exportFileData  = null; // cached export payload
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     function fmtDate(s) {
@@ -292,11 +293,10 @@
       const d = new Date(s.endsWith("Z") ? s : s + "Z");
       return d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
     }
-
     function editorUrl(file) {
-      const name = file.name.toLowerCase();
-      if (name === "manifest.json") return `/editor/manifest?save=${file.save_id}`;
-      if (name.endsWith(".mcfunction")) return `/editor/mcfunction?save=${file.save_id}`;
+      const n = file.name.toLowerCase();
+      if (n === "manifest.json")     return `/editor/manifest?save=${file.save_id}`;
+      if (n.endsWith(".mcfunction")) return `/editor/mcfunction?save=${file.save_id}`;
       return `/editor/json?save=${file.save_id}`;
     }
 
@@ -305,13 +305,8 @@
       if (!shareCode) return showErr("No project ID in URL.");
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
-        if (r.ok) {
-          const d = await r.json();
-          document.getElementById("nav-user").textContent = d.email;
-          window._myId = d.id;
-        }
+        if (r.ok) { const d = await r.json(); document.getElementById("nav-user").textContent = d.email; window._myId = d.id; }
       } catch {}
-
       try {
         const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
         if (!r.ok) { const d = await r.json(); return showErr(d.error || "Not found."); }
@@ -330,33 +325,31 @@
 
     function render() {
       document.title = `mcbCode | ${project.name}`;
-      document.getElementById("proj-title").textContent  = project.name;
-      document.getElementById("bc-project").textContent  = project.name;
+      document.getElementById("proj-title").textContent = project.name;
+      document.getElementById("bc-project").textContent = project.name;
       const isPublic = project.is_public === 1 || project.is_public === true;
       const badge = document.getElementById("proj-badge");
       badge.textContent = isPublic ? "public" : "private";
       badge.classList.toggle("public", isPublic);
-
       document.getElementById("m-desc").textContent    = project.description || "No description.";
       document.getElementById("m-owner").textContent   = isOwner ? "you" : `#${project.owner_id}`;
       document.getElementById("m-updated").textContent = fmtDate(project.updated_at);
       document.getElementById("m-code").textContent    = project.share_code;
-
       updateStats();
       renderTags();
-
       if (isOwner) {
         document.getElementById("owner-toolbar").style.display = "flex";
         document.getElementById("tab-settings-btn").style.display = "";
-        document.getElementById("set-name").value    = project.name;
-        document.getElementById("set-desc").value    = project.description || "";
-        document.getElementById("set-public").checked = isPublic;
+        document.getElementById("export-btn").style.display = "";
+        document.getElementById("set-name").value = project.name;
+        document.getElementById("set-desc").value = project.description || "";
+      } else {
+        // non-owners can still export public projects
+        document.getElementById("export-btn").style.display = "";
       }
-
       renderFileList();
     }
 
-    // ---- STATS ----
     function updateStats() {
       document.getElementById("s-files").textContent   = allFiles.filter(f => f.type === "file").length;
       document.getElementById("s-folders").textContent = allFiles.filter(f => f.type === "folder").length;
@@ -394,12 +387,36 @@
     function currentFolderId() {
       return currentPath.length ? currentPath[currentPath.length - 1].id : null;
     }
+    function isAtRoot() { return currentPath.length === 0; }
+
+    function renderToolbar() {
+      const toolbar = document.getElementById("owner-toolbar");
+      toolbar.innerHTML = "";
+      if (!isOwner) return;
+      if (isAtRoot()) {
+        // root: folders only
+        const bf = document.createElement("button");
+        bf.className = "sm-btn"; bf.textContent = "+ Folder";
+        bf.onclick = () => openNewFile("folder");
+        toolbar.appendChild(bf);
+      } else {
+        // inside a folder: files and folders
+        const bf = document.createElement("button");
+        bf.className = "sm-btn"; bf.textContent = "+ File";
+        bf.onclick = () => openNewFile("file");
+        const bfo = document.createElement("button");
+        bfo.className = "sm-btn"; bfo.textContent = "+ Folder";
+        bfo.onclick = () => openNewFile("folder");
+        toolbar.appendChild(bf);
+        toolbar.appendChild(bfo);
+      }
+    }
 
     function renderFileList() {
       renderPathBar();
+      renderToolbar();
       const list = document.getElementById("file-list");
       list.innerHTML = "";
-
       const parentId = currentFolderId();
       const children = allFiles
         .filter(f => f.parent_id === parentId || (parentId === null && f.parent_id === null))
@@ -407,8 +424,6 @@
           if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
           return a.name.localeCompare(b.name);
         });
-
-      // if inside a folder, show ".." row to go up
       if (currentPath.length > 0) {
         const up = document.createElement("div");
         up.className = "file-row";
@@ -416,71 +431,43 @@
         up.onclick = () => { currentPath.pop(); renderFileList(); };
         list.appendChild(up);
       }
-
       if (children.length === 0) {
-        list.innerHTML += `<div class="file-list-empty">${isOwner ? 'Empty folder. Use the buttons above to add files.' : 'Nothing here.'}</div>`;
+        list.innerHTML += `<div class="file-list-empty">${isOwner ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the buttons above to add files.') : 'Nothing here.'}</div>`;
         return;
       }
-
       children.forEach(f => {
         const row = document.createElement("div");
         row.className = "file-row";
-
         const icon = f.type === "folder" ? "+" : ">";
         const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
-
         row.innerHTML = `
           <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
           <span class="${nameClass}">${esc(f.name)}</span>
           <span class="file-updated">${fmtDate(f.updated_at)}</span>
-          ${isOwner ? `<button class="file-del" onclick="askDelete(event, ${f.id}, '${esc(f.name)}')">del</button>` : ""}
+          ${isOwner ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
         `;
-
         if (f.type === "folder") {
-          row.onclick = (e) => {
-            if (e.target.classList.contains("file-del")) return;
-            currentPath.push({ id: f.id, name: f.name });
-            renderFileList();
-          };
+          row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); renderFileList(); };
         } else {
-          row.onclick = (e) => {
-            if (e.target.classList.contains("file-del")) return;
-            if (!f.save_id) return;
-            window.location.href = editorUrl(f);
-          };
-          // grey out files with no save_id (shouldn't happen but just in case)
-          if (!f.save_id) {
-            row.style.opacity = "0.4";
-            row.style.cursor = "default";
-          }
+          row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
+          if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
         }
-
         list.appendChild(row);
       });
     }
 
-    // ---- PATH BAR ----
     function renderPathBar() {
       const seg = document.getElementById("path-segments");
       seg.innerHTML = "";
       currentPath.forEach((crumb, i) => {
-        const sep = document.createElement("span");
-        sep.className = "path-sep";
-        sep.textContent = "/";
-        seg.appendChild(sep);
-
-        const el = document.createElement("span");
-        el.className = "path-crumb";
-        el.textContent = crumb.name;
+        const sep = document.createElement("span"); sep.className = "path-sep"; sep.textContent = "/"; seg.appendChild(sep);
+        const el = document.createElement("span"); el.className = "path-crumb"; el.textContent = crumb.name;
         el.onclick = () => { currentPath = currentPath.slice(0, i + 1); renderFileList(); };
         seg.appendChild(el);
       });
     }
 
-    function navToRoot() {
-      currentPath = [];
-      renderFileList();
-    }
+    function navToRoot() { currentPath = []; renderFileList(); }
 
     // ---- NEW FILE/FOLDER ----
     function openNewFile(type) {
@@ -508,7 +495,7 @@
           body: JSON.stringify({ project_code: shareCode, parent_id: newFileParentId, name, type: newFileType })
         });
         const d = await res.json();
-        if (!res.ok) { err.textContent = d.error || "Failed."; err.classList.add("show"); return; }
+        if (!res.ok) { err.textContent = d.error || "Failed."; err.classList.add("show"); btn.disabled = false; return; }
         allFiles.push({ id: d.file_id, project_id: project.id, parent_id: newFileParentId, name, type: newFileType, save_id: d.save_id || null, updated_at: new Date().toISOString() });
         closeModal("new-file-overlay");
         updateStats();
@@ -530,9 +517,7 @@
       const id = pendingDelId;
       closeModal("del-overlay");
       try {
-        const res = await fetch(`${AUTH}/project/file?file_id=${encodeURIComponent(id)}&project_code=${encodeURIComponent(shareCode)}`, {
-          method: "DELETE", credentials: "include"
-        });
+        const res = await fetch(`${AUTH}/project/file?file_id=${encodeURIComponent(id)}&project_code=${encodeURIComponent(shareCode)}`, { method: "DELETE", credentials: "include" });
         if (res.ok) { removeFromCache(id); updateStats(); renderFileList(); }
       } catch {}
     }
@@ -543,27 +528,163 @@
       if (i !== -1) allFiles.splice(i, 1);
     }
 
+    // ---- EXPORT ----
+    async function startExport() {
+      const btn = document.getElementById("export-btn");
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+      try {
+        const res = await fetch(`${AUTH}/project/export?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+        if (!res.ok) { alert("Failed to fetch project data."); return; }
+        exportFileData = await res.json();
+
+        // check for root-level files (not folders)
+        const rootFiles = exportFileData.files.filter(f => f.parent_id === null && f.type === "file");
+        if (rootFiles.length > 0) {
+          const warnList = document.getElementById("export-warn-list");
+          warnList.innerHTML = rootFiles.map(f => `<li>${esc(f.name)}</li>`).join("");
+          document.getElementById("export-warn-overlay").classList.add("open");
+        } else {
+          await doExport();
+        }
+      } catch { alert("Export failed."); }
+      btn.disabled = false;
+      btn.textContent = "Export";
+    }
+
+    async function doExport() {
+      closeModal("export-warn-overlay");
+      const btn = document.getElementById("export-btn");
+      btn.disabled = true;
+      btn.textContent = "Zipping...";
+
+      try {
+        const files = exportFileData.files;
+        const projectName = exportFileData.project_name.replace(/[^a-zA-Z0-9_\- ]/g, "").trim() || "project";
+
+        // find root folders
+        const rootFolders = files.filter(f => f.parent_id === null && f.type === "folder");
+        const hasBP = rootFolders.some(f => f.name.toUpperCase() === "BP");
+        const hasRP = rootFolders.some(f => f.name.toUpperCase() === "RP");
+
+        // helper: build path string for a file by walking up parent chain
+        const fileMap = {};
+        files.forEach(f => fileMap[f.id] = f);
+
+        function getPath(file) {
+          const parts = [file.name];
+          let cur = file;
+          while (cur.parent_id !== null) {
+            cur = fileMap[cur.parent_id];
+            if (!cur) break;
+            parts.unshift(cur.name);
+          }
+          return parts.join("/");
+        }
+
+        if (hasBP && hasRP) {
+          // .mcaddon = zip of two zips
+          const addon = new JSZip();
+
+          for (const packName of ["BP", "RP"]) {
+            const packFolder = rootFolders.find(f => f.name.toUpperCase() === packName);
+            if (!packFolder) continue;
+            const packZip = new JSZip();
+            const packFiles = files.filter(f => {
+              // walk up to see if this file is under packFolder
+              let cur = f;
+              while (cur.parent_id !== null) {
+                cur = fileMap[cur.parent_id];
+                if (!cur) return false;
+              }
+              return cur.id === packFolder.id;
+            });
+            packFiles.filter(f => f.type === "file").forEach(f => {
+              // path relative to packFolder
+              const parts = [f.name];
+              let cur = f;
+              while (cur.parent_id !== packFolder.id) {
+                cur = fileMap[cur.parent_id];
+                if (!cur) break;
+                parts.unshift(cur.name);
+              }
+              packZip.file(parts.join("/"), f.content || "");
+            });
+            const packBlob = await packZip.generateAsync({ type: "blob" });
+            addon.file(`${projectName}_${packName}.mcpack`, packBlob);
+          }
+
+          const blob = await addon.generateAsync({ type: "blob" });
+          triggerDownload(blob, `${projectName}.mcaddon`);
+
+        } else {
+          // single .mcpack
+          const zip = new JSZip();
+          const onlyPack = hasBP
+            ? rootFolders.find(f => f.name.toUpperCase() === "BP")
+            : rootFolders.find(f => f.name.toUpperCase() === "RP");
+
+          if (!onlyPack) {
+            // no BP or RP folders at all, just zip everything non-root
+            files.filter(f => f.type === "file" && f.parent_id !== null).forEach(f => {
+              zip.file(getPath(f), f.content || "");
+            });
+          } else {
+            const packFiles = files.filter(f => {
+              if (f.type !== "file") return false;
+              let cur = f;
+              while (cur.parent_id !== null) {
+                cur = fileMap[cur.parent_id];
+                if (!cur) return false;
+              }
+              return cur.id === onlyPack.id;
+            });
+            packFiles.forEach(f => {
+              const parts = [f.name];
+              let cur = f;
+              while (cur.parent_id !== onlyPack.id) {
+                cur = fileMap[cur.parent_id];
+                if (!cur) break;
+                parts.unshift(cur.name);
+              }
+              zip.file(parts.join("/"), f.content || "");
+            });
+          }
+
+          const blob = await zip.generateAsync({ type: "blob" });
+          triggerDownload(blob, `${projectName}.mcpack`);
+        }
+
+      } catch(e) { alert("Export failed: " + e.message); }
+
+      btn.disabled = false;
+      btn.textContent = "Export";
+    }
+
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
     // ---- SETTINGS ----
     async function saveSettings() {
       const name = document.getElementById("set-name").value.trim();
       const desc = document.getElementById("set-desc").value.trim();
-      const pub  = document.getElementById("set-public").checked;
       const msg  = document.getElementById("set-msg");
       if (!name) return;
       try {
         const res = await fetch(`${AUTH}/project/settings`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project_code: shareCode, name, description: desc, is_public: pub })
+          body: JSON.stringify({ project_code: shareCode, name, description: desc, is_public: true })
         });
         if (res.ok) {
-          project.name = name; project.description = desc; project.is_public = pub;
+          project.name = name; project.description = desc;
           document.getElementById("proj-title").textContent = name;
           document.getElementById("bc-project").textContent = name;
           document.getElementById("m-desc").textContent = desc || "No description.";
-          const badge = document.getElementById("proj-badge");
-          badge.textContent = pub ? "public" : "private";
-          badge.classList.toggle("public", pub);
           msg.textContent = "Saved!"; msg.className = "inline-msg ok";
         } else {
           const d = await res.json();
@@ -577,17 +698,18 @@
     function switchTab(tab, el) {
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       el.classList.add("active");
-      document.getElementById("tab-files").style.display    = tab === "files" ? "flex" : "none";
+      document.getElementById("tab-files").style.display = tab === "files" ? "flex" : "none";
       document.getElementById("tab-settings").classList.toggle("active", tab === "settings");
     }
 
     // ---- UTILS ----
     function closeModal(id) {
       document.getElementById(id).classList.remove("open");
-      pendingDelId = null;
+      if (id === "del-overlay") pendingDelId = null;
     }
     document.getElementById("new-file-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("new-file-overlay"); });
     document.getElementById("del-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("del-overlay"); });
+    document.getElementById("export-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("export-warn-overlay"); });
 
     async function doLogout() {
       await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
