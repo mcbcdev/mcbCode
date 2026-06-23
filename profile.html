@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <title>mcbCode | Profile</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; overflow-x: hidden; }
+    a { text-decoration: none; color: #fff; transition: color 0.2s; }
+    a:hover { color: #05ee93; }
+    g { color: #05ee93; }
+
+    /* topnav */
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 12px; }
+    .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
+
+    /* search bar — two states */
+    .search-wrap {
+      transition: all 0.35s ease;
+    }
+
+    /* STATE: centered (no user in url) */
+    .search-wrap.centered {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .search-wrap.centered .search-logo {
+      display: block;
+    }
+    .search-wrap.centered .search-input-row {
+      width: 100%;
+    }
+
+    /* STATE: topnav (user in url) */
+    .search-wrap.in-nav {
+      position: static;
+      transform: none;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .search-wrap.in-nav .search-logo { display: none; }
+    .search-wrap.in-nav .search-input-row { width: 100%; }
+
+    .search-logo { display: none; font-size: 28px; color: #fff; font-family: 'mcfontb', sans-serif; text-align: center; }
+    .search-logo g { color: #05ee93; }
+    .search-logo small { display: block; font-size: 13px; color: #555; margin-top: 4px; font-family: 'mcfont', sans-serif; }
+
+    .search-input-row { position: relative; width: 100%; }
+    .search-input { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+    .search-wrap.in-nav .search-input { font-size: 12px; padding: 6px 10px; }
+    .search-input:focus { border-color: #00b2ff; }
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #1a1c1f; border: 1px solid #343438; border-top: none; z-index: 300; display: none; }
+    .autocomplete-list.open { display: block; }
+    .ac-item { padding: 8px 14px; font-size: 13px; color: #aaa; cursor: pointer; transition: background 0.12s, color 0.12s; }
+    .search-wrap.in-nav .ac-item { padding: 6px 10px; font-size: 12px; }
+    .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
+
+    /* page layout when profile is loaded */
+    .page { margin-top: 48px; display: none; }
+    .page.visible { display: flex; }
+
+    /* left sidebar */
+    .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; background: #161719; }
+    .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; }
+    .profile-username { font-size: 22px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .profile-joined { font-size: 11px; color: #444; }
+    .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
+    .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
+
+    /* bio edit */
+    .bio-edit-area { display: none; flex-direction: column; gap: 6px; }
+    .bio-edit-area.open { display: flex; }
+    .bio-textarea { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+    .bio-textarea:focus { border-color: #05ee93; }
+    .bio-save-row { display: flex; gap: 6px; align-items: center; }
+    .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 4px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
+    .sm-btn.primary { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
+    .sm-btn.primary:hover { background: #78e3a6; }
+    .inline-msg { font-size: 11px; }
+    .inline-msg.ok { color: #05ee93; }
+    .inline-msg.err { color: #ff5555; }
+    .edit-bio-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
+    .edit-bio-btn:hover { color: #00b2ff; }
+
+    /* right projects panel */
+    .projects-panel { flex: 1; padding: 32px 36px; }
+    .projects-panel h2 { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #1e1e22; padding-bottom: 10px; }
+    .project-grid { display: flex; flex-direction: column; gap: 10px; }
+    .project-card { background: #161719; border: 1px solid #2a2a2e; padding: 16px 20px; cursor: pointer; transition: border-color 0.2s; }
+    .project-card:hover { border-color: #05ee93; }
+    .project-card-name { font-size: 15px; color: #fff; font-family: 'mcfontb', sans-serif; margin-bottom: 4px; }
+    .project-card-desc { font-size: 12px; color: #555; line-height: 1.5; }
+    .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
+    .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
+
+    /* centered loading/error states */
+    .center-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #444; }
+    .center-msg.err { color: #ff5555; }
+  </style>
+</head>
+<body>
+
+  <div class="topnav">
+    <a href="/" class="topnav-logo">mcb<g>Code</g></a>
+    <!-- search moves here when profile is loaded -->
+    <div id="nav-search-slot"></div>
+    <div class="topnav-right">
+      <a href="/dashboard" class="nav-btn">Dashboard</a>
+    </div>
+  </div>
+
+  <!-- centered search (default state) -->
+  <div class="search-wrap centered" id="search-wrap">
+    <div class="search-logo">
+      mcb<g>Code</g>
+      <small>search for a user</small>
+    </div>
+    <div class="search-input-row">
+      <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
+      <div class="autocomplete-list" id="ac-list"></div>
+    </div>
+  </div>
+
+  <!-- profile page (hidden until loaded) -->
+  <div class="page" id="profile-page">
+    <div class="profile-sidebar">
+      <div class="profile-avatar" id="prof-avatar">?</div>
+      <div>
+        <div class="profile-username" id="prof-username"></div>
+        <div class="profile-joined" id="prof-joined"></div>
+      </div>
+      <div>
+        <div class="profile-bio" id="prof-bio"></div>
+        <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
+        <button class="edit-bio-btn" id="edit-bio-btn" style="display:none; margin-top:8px;" onclick="toggleBioEdit()">edit bio</button>
+        <div class="bio-edit-area" id="bio-edit-area">
+          <textarea class="bio-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
+          <div class="bio-save-row">
+            <button class="sm-btn primary" onclick="saveBio()">Save</button>
+            <button class="sm-btn" onclick="toggleBioEdit()">Cancel</button>
+            <span class="inline-msg" id="bio-msg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="projects-panel">
+      <h2>Projects</h2>
+      <div class="project-grid" id="project-grid"></div>
+    </div>
+  </div>
+
+  <div class="center-msg" id="center-msg" style="display:none;"></div>
+
+  <script>
+    const AUTH = "https://auth.mcbcode.com";
+    const params = new URLSearchParams(location.search);
+    const targetUser = params.get("u") || "";
+    let myUsername = null;
+    let acDebounce = null;
+    let acSelected = -1;
+    let acResults  = [];
+
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      return d.toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
+    }
+
+    // get current user silently
+    (async () => {
+      try {
+        const r = await fetch(`${AUTH}/me`, { credentials: "include" });
+        if (r.ok) { const d = await r.json(); myUsername = d.username; }
+      } catch {}
+
+      if (targetUser) {
+        await loadProfile(targetUser);
+      }
+    })();
+
+    // ---- SEARCH ----
+    const searchInput = document.getElementById("search-input");
+    const acList      = document.getElementById("ac-list");
+
+    searchInput.value = targetUser;
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(acDebounce);
+      const q = searchInput.value.trim();
+      if (!q) { closeAc(); return; }
+      acDebounce = setTimeout(() => fetchAc(q), 180);
+    });
+
+    searchInput.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown") { acSelected = Math.min(acSelected + 1, acResults.length - 1); renderAc(); e.preventDefault(); }
+      else if (e.key === "ArrowUp") { acSelected = Math.max(acSelected - 1, 0); renderAc(); e.preventDefault(); }
+      else if (e.key === "Enter") {
+        const val = acSelected >= 0 ? acResults[acSelected] : searchInput.value.trim();
+        if (val) goToProfile(val);
+      }
+      else if (e.key === "Escape") closeAc();
+    });
+
+    async function fetchAc(q) {
+      try {
+        const r = await fetch(`${AUTH}/profile/search?q=${encodeURIComponent(q)}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        acResults  = d.results || [];
+        acSelected = -1;
+        renderAc();
+      } catch {}
+    }
+
+    function renderAc() {
+      if (!acResults.length) { closeAc(); return; }
+      acList.innerHTML = acResults.map((u, i) =>
+        `<div class="ac-item${i === acSelected ? ' selected' : ''}" onclick="goToProfile('${esc(u)}')">${esc(u)}</div>`
+      ).join("");
+      acList.classList.add("open");
+    }
+
+    function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
+
+    function goToProfile(username) {
+      window.location.href = `/profile?u=${encodeURIComponent(username)}`;
+    }
+
+    // ---- LOAD PROFILE ----
+    async function loadProfile(username) {
+      const msg = document.getElementById("center-msg");
+      msg.textContent = "Loading..."; msg.style.display = ""; msg.className = "center-msg";
+
+      try {
+        const r = await fetch(`${AUTH}/profile?u=${encodeURIComponent(username)}`);
+        if (!r.ok) {
+          const d = await r.json();
+          msg.textContent = d.error || "User not found."; msg.className = "center-msg err"; return;
+        }
+        const d = await r.json();
+        msg.style.display = "none";
+        renderProfile(d);
+      } catch {
+        msg.textContent = "Failed to load profile."; msg.className = "center-msg err";
+      }
+    }
+
+    function renderProfile(data) {
+      const { user, projects } = data;
+
+      // move search to topnav
+      const wrap = document.getElementById("search-wrap");
+      wrap.classList.remove("centered");
+      wrap.classList.add("in-nav");
+      document.getElementById("nav-search-slot").appendChild(wrap);
+
+      // fill sidebar
+      document.getElementById("prof-avatar").textContent = user.username[0].toUpperCase();
+      document.getElementById("prof-username").textContent = user.username;
+      document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
+      document.title = `mcbCode | ${user.username}`;
+
+      if (user.bio) {
+        document.getElementById("prof-bio").textContent = user.bio;
+        document.getElementById("prof-bio-empty").style.display = "none";
+      } else {
+        document.getElementById("prof-bio").style.display = "none";
+        document.getElementById("prof-bio-empty").style.display = "";
+      }
+
+      // show edit bio button if viewing own profile
+      if (myUsername && myUsername === user.username) {
+        document.getElementById("edit-bio-btn").style.display = "";
+        document.getElementById("bio-textarea").value = user.bio || "";
+      }
+
+      // projects
+      const grid = document.getElementById("project-grid");
+      if (!projects.length) {
+        grid.innerHTML = `<div class="no-projects">no public projects yet.</div>`;
+      } else {
+        grid.innerHTML = projects.map(p => `
+          <div class="project-card" onclick="window.location.href='/project/${esc(p.share_code)}/'">
+            <div class="project-card-name">${esc(p.name)}</div>
+            ${p.description ? `<div class="project-card-desc">${esc(p.description)}</div>` : ""}
+            <div class="project-card-date">updated ${fmtDate(p.updated_at)}</div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("profile-page").classList.add("visible");
+    }
+
+    // ---- BIO EDIT ----
+    function toggleBioEdit() {
+      const area = document.getElementById("bio-edit-area");
+      const isOpen = area.classList.toggle("open");
+      document.getElementById("edit-bio-btn").textContent = isOpen ? "cancel" : "edit bio";
+    }
+
+    async function saveBio() {
+      const bio = document.getElementById("bio-textarea").value.trim();
+      const msg = document.getElementById("bio-msg");
+      try {
+        const res = await fetch(`${AUTH}/profile/bio`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bio })
+        });
+        if (res.ok) {
+          const bioEl      = document.getElementById("prof-bio");
+          const bioEmpty   = document.getElementById("prof-bio-empty");
+          bioEl.textContent = bio;
+          bioEl.style.display = bio ? "" : "none";
+          bioEmpty.style.display = bio ? "none" : "";
+          msg.textContent = "saved!"; msg.className = "inline-msg ok";
+          setTimeout(() => toggleBioEdit(), 800);
+        } else {
+          msg.textContent = "failed."; msg.className = "inline-msg err";
+        }
+      } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
+      setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
+    }
+
+    // close autocomplete on outside click
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".search-input-row")) closeAc();
+    });
+  </script>
+
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
