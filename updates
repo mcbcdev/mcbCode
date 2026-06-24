@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<title>mcbCode | Updates</title>
+
+<link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+
+<style>
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #0c0c0c;
+  font-family: 'mcfont', sans-serif;
+  color: #bebebe;
+}
+
+/* NAV */
+.navi {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 75px;
+  background-color: rgba(45, 45, 45, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-sizing: border-box;
+  z-index: 100;
+}
+
+.navi-brand h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.quick-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #05ee93;
+}
+
+.accent {
+  color: #05ee93;
+}
+
+/* PAGE */
+.content {
+  padding: 110px 20px 60px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* PANEL */
+.panel {
+  background: #161616;
+  border: 1px solid #2e2e2e;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.4);
+}
+
+.panel h2 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+/* CODE BLOCK */
+code {
+  display: block;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  padding: 10px;
+  color: #05ee93;
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+time {
+    color: #343434;
+    font-size: 14px;
+    line-height: 0.8em;
+}
+
+h3 {
+    color: #ffffff;
+}
+
+#latest {
+    border: 2px solid #05ee93;
+
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="navi">
+  <div class="navi-brand">
+    <a href="https://mcbcode.com">
+      <h2>mcb<span class="accent" style="font-family: mcfontb">Code</span> <c style="font-weight: normal;">Updates</c></h2>
+    </a>
+  </div>
+
+  <div class="quick-links">
+    <a href="https://mcbcode.com">Home</a>
+    <a href="https://mcbcode.com/editor">Editor</a>
+    <a href="https://mcbcode.com/account">Account</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="panel" id="latest">
+    <h2>Latest Update</h2><time>June 24th, 2026</time>
+    <h3>Added:</h3>
+    <p>Updates - This page</p>
+    <p>Projects - Users can add others to their projects to edit with them.</p>
+    <p>Tags - Admins and others can get tags or ranks added to their profile</p>
+    <p>Dashboard - Fixed bugs and added simple features</p>
+  </div>
+
+  <div class="panel">
+    <h2>First Update</h2><time>April 6th, 2026 - June 23th, 2026</time>
+    <h3>Added:</h3>
+    <p>mcbCode - The entire site</p>
+  </div>
+
+</div>
+
+</body>
+</html>
