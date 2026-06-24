@@ -76,7 +76,6 @@
     .save-msg.ok  { color: #05ee93; display: inline; }
     .save-msg.err { color: #ff5555; display: inline; }
 
-    /* projects */
     .project-toolbar { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 8px; }
     .project-list-header { font-size: 12px; color: #444; }
     .new-project-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 14px; cursor: pointer; transition: background 0.2s; }
@@ -97,7 +96,6 @@
     .proj-badge { font-size: 10px; padding: 2px 6px; border: 1px solid #2a2a2a; color: #444; margin-left: 6px; }
     .proj-badge.public { border-color: #05ee93; color: #05ee93; }
 
-    /* new project modal */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
     .modal-overlay.visible { display: flex; }
     .modal-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 28px 32px; min-width: 360px; max-width: 480px; width: 100%; }
@@ -110,7 +108,6 @@
     .modal-err { font-size: 12px; color: #ff5555; margin-top: 8px; display: none; }
     .modal-err.visible { display: block; }
 
-    /* confirm overlay */
     .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center; }
     .confirm-overlay.visible { display: flex; }
     .confirm-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 28px 32px; min-width: 320px; text-align: center; }
@@ -122,7 +119,6 @@
     .confirm-no { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 6px 18px; cursor: pointer; }
     .confirm-no:hover { color: #ffffff; }
 
-    /* account section */
     .account-field { margin-bottom: 24px; }
     .account-field label { display: block; font-size: 12px; color: #555; margin-bottom: 6px; }
     .account-badge { display: inline-block; background: #1a1a1a; border: 1px solid #2e2e2e; padding: 3px 8px; font-size: 12px; color: #888; margin-left: 8px; }
@@ -131,9 +127,38 @@
     .danger-zone h3 { color: #ff5555; font-size: 15px; margin-bottom: 12px; }
     .delete-account-btn { background: transparent; border: 1px solid #ff5555; color: #ff5555; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 7px 16px; cursor: pointer; transition: background 0.2s; }
     .delete-account-btn:hover { background: #ff5555; color: #ffffff; }
+
+    /* username gate modal — no close button, blocking */
+    .gate-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 999; align-items: center; justify-content: center; }
+    .gate-overlay.visible { display: flex; }
+    .gate-box { background: #1a1a1a; border: 1px solid #2e2e2e; padding: 36px 40px; min-width: 360px; max-width: 460px; width: 100%; }
+    .gate-box h3 { color: #fff; font-size: 18px; margin-bottom: 8px; font-family: 'mcfontb', sans-serif; }
+    .gate-box p { font-size: 13px; color: #555; margin-bottom: 24px; line-height: 1.5; }
+    .gate-box label { display: block; font-size: 11px; color: #555; margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .gate-input { width: 100%; background: #111; border: 1px solid #2e2e2e; color: #fff; font-family: 'mcfont', sans-serif; font-size: 15px; padding: 10px 12px; outline: none; transition: border-color 0.2s; }
+    .gate-input:focus { border-color: #05ee93; }
+    .gate-hint { font-size: 11px; color: #333; margin-top: 5px; }
+    .gate-err { font-size: 12px; color: #ff5555; margin-top: 8px; display: none; }
+    .gate-err.visible { display: block; }
+    .gate-btn { margin-top: 20px; width: 100%; padding: 10px; background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfontb', sans-serif; font-size: 15px; cursor: pointer; transition: background 0.2s; }
+    .gate-btn:hover { background: #78e3a6; }
+    .gate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
+
+  <!-- username gate — shown if user has no username, cannot be dismissed -->
+  <div class="gate-overlay" id="gate-overlay">
+    <div class="gate-box">
+      <h3>Welcome to mcb<g>Code</g></h3>
+      <p>Before you continue, you need to set a username. This is how others will find you on the platform.</p>
+      <label>USERNAME</label>
+      <input class="gate-input" type="text" id="gate-username" maxlength="32" placeholder="idktoast" autocomplete="off">
+      <div class="gate-hint">letters, numbers, _ and - only</div>
+      <div class="gate-err" id="gate-err"></div>
+      <button class="gate-btn" id="gate-btn" onclick="submitGateUsername()">Set Username</button>
+    </div>
+  </div>
 
   <!-- new project modal -->
   <div class="modal-overlay" id="new-project-modal">
@@ -340,7 +365,14 @@
         document.getElementById("user-email").textContent = data.email;
         document.getElementById("acct-email").textContent = data.email;
         if (data.is_github) document.getElementById("acct-github-badge").style.display = "";
-        if (data.username) document.getElementById("acct-username").value = data.username;
+        if (data.username) {
+          document.getElementById("acct-username").value = data.username;
+        } else {
+          // no username — show the gate, block everything
+          document.getElementById("gate-overlay").classList.add("visible");
+          setTimeout(() => document.getElementById("gate-username").focus(), 100);
+          return; // don't load anything else until they set one
+        }
       } catch { return window.location.href = "/account"; }
 
       try {
@@ -359,6 +391,54 @@
       await loadProjects();
     })();
 
+    // ---- USERNAME GATE ----
+    async function submitGateUsername() {
+      const val = document.getElementById("gate-username").value.trim().replace(/[^a-zA-Z0-9_\-]/g, "");
+      const err = document.getElementById("gate-err");
+      const btn = document.getElementById("gate-btn");
+      if (!val) { err.textContent = "Username can't be empty."; err.classList.add("visible"); return; }
+      if (val.length < 2) { err.textContent = "At least 2 characters please."; err.classList.add("visible"); return; }
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${AUTH}/profile`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: val })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("gate-overlay").classList.remove("visible");
+          document.getElementById("acct-username").value = val;
+          // now load the rest of the page
+          try {
+            const sr = await fetch(`${AUTH}/settings`, { credentials: "include" });
+            if (sr.ok) {
+              const { settings } = await sr.json();
+              document.getElementById("s-font").checked    = settings.use_mojangles_font;
+              document.getElementById("s-light").checked   = settings.use_light_mode;
+              document.getElementById("s-theme").value     = settings.editor_theme;
+              document.getElementById("customTheme").value = settings.custom_theme;
+              document.getElementById("s-tips").checked    = settings.show_editor_tips;
+              document.getElementById("s-defname").value   = settings.default_filename;
+            }
+          } catch {}
+          await loadProjects();
+        } else {
+          err.textContent = data.error || "Something went wrong.";
+          err.classList.add("visible");
+        }
+      } catch {
+        err.textContent = "Network error. Try again.";
+        err.classList.add("visible");
+      }
+      btn.disabled = false;
+    }
+
+    // allow enter key on gate input
+    document.getElementById("gate-username").addEventListener("keydown", e => {
+      if (e.key === "Enter") submitGateUsername();
+    });
+
     function escHtml(str) {
       return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     }
@@ -375,19 +455,15 @@
       const label = document.getElementById("projects-limit-label");
       const btn   = document.getElementById("new-proj-btn");
       Array.from(list.querySelectorAll(".project-row")).forEach(r => r.remove());
-
       try {
         const res = await fetch(`${AUTH}/projects`, { credentials: "include" });
         if (!res.ok) throw new Error();
         const { projects, max_saves } = await res.json();
-
         document.getElementById("stat-projects").textContent = projects.length;
         label.textContent = `${projects.length} / ${max_saves} projects used`;
         btn.disabled = projects.length >= max_saves;
-
         if (projects.length === 0) { empty.style.display = ""; return; }
         empty.style.display = "none";
-
         projects.forEach(proj => {
           const row = document.createElement("div");
           row.className = "project-row";
@@ -414,11 +490,8 @@
       }
     }
 
-    function openProject(shareCode) {
-      window.location.href = `/project/${shareCode}/`;
-    }
+    function openProject(shareCode) { window.location.href = `/project/${shareCode}/`; }
 
-    // ---- new project modal ----
     function openNewProject() {
       document.getElementById("np-name").value = "";
       document.getElementById("np-desc").value = "";
@@ -428,9 +501,7 @@
       setTimeout(() => document.getElementById("np-name").focus(), 50);
     }
 
-    function closeNewProject() {
-      document.getElementById("new-project-modal").classList.remove("visible");
-    }
+    function closeNewProject() { document.getElementById("new-project-modal").classList.remove("visible"); }
 
     async function submitNewProject() {
       const name = document.getElementById("np-name").value.trim();
@@ -441,8 +512,7 @@
       btn.disabled = true; btn.textContent = "Creating...";
       try {
         const res = await fetch(`${AUTH}/projects`, {
-          method: "POST",
-          credentials: "include",
+          method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, description: desc })
         });
@@ -450,16 +520,11 @@
         if (!res.ok) { err.textContent = data.error || "Failed to create project."; err.classList.add("visible"); return; }
         closeNewProject();
         window.location.href = `/project/${data.share_code}/`;
-      } catch {
-        err.textContent = "Something went wrong.";
-        err.classList.add("visible");
-      } finally {
-        btn.disabled = false; btn.textContent = "Create";
-      }
+      } catch { err.textContent = "Something went wrong."; err.classList.add("visible"); }
+      finally { btn.disabled = false; btn.textContent = "Create"; }
     }
 
-    // ---- delete project ----
-    function askDelete(shareCode, name, btn) {
+    function askDelete(shareCode, name) {
       pendingDeleteCode = shareCode;
       pendingDeleteRow  = document.getElementById(`row-${shareCode}`);
       document.getElementById("confirm-projname").textContent = name;
@@ -467,21 +532,16 @@
     }
 
     function closeConfirm() {
-      pendingDeleteCode = null;
-      pendingDeleteRow  = null;
+      pendingDeleteCode = null; pendingDeleteRow = null;
       document.getElementById("confirm-overlay").classList.remove("visible");
     }
 
     async function confirmDelete() {
       if (!pendingDeleteCode) return closeConfirm();
-      const code = pendingDeleteCode;
-      const row  = pendingDeleteRow;
+      const code = pendingDeleteCode; const row = pendingDeleteRow;
       closeConfirm();
       try {
-        const res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, {
-          method: "DELETE",
-          credentials: "include"
-        });
+        const res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
         if (res.ok) { row && row.remove(); await loadProjects(); }
       } catch {}
     }
@@ -489,7 +549,6 @@
     document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm(); });
     document.getElementById("new-project-modal").addEventListener("click", e => { if (e.target === e.currentTarget) closeNewProject(); });
 
-    // ---- account ----
     function askDeleteAccount() { document.getElementById("del-account-1").classList.add("visible"); }
     function delAccountStep2() {
       document.getElementById("del-account-1").classList.remove("visible");
