@@ -82,6 +82,16 @@
     .profile-joined { font-size: 11px; color: #444; }
     .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
     .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
+    .profile-rank {
+      display: none;
+      width: fit-content;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: 'mcfontb', sans-serif;
+      text-transform: lowercase;
+      margin-top: 10px;
+    }
 
     /* bio edit */
     .bio-edit-area { display: none; flex-direction: column; gap: 6px; }
@@ -149,6 +159,7 @@
       <div>
         <div class="profile-bio" id="prof-bio"></div>
         <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
+        <div class="profile-rank" id="prof-rank"></div>
         <button class="edit-bio-btn" id="edit-bio-btn" style="display:none; margin-top:8px;" onclick="toggleBioEdit()">edit bio</button>
         <div class="bio-edit-area" id="bio-edit-area">
           <textarea class="bio-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
@@ -285,7 +296,26 @@
         document.getElementById("prof-bio").style.display = "none";
         document.getElementById("prof-bio-empty").style.display = "";
       }
+      
+      const rankEl = document.getElementById("prof-rank");
 
+if (user.rank) {
+  rankEl.textContent = user.rank.toLowerCase();
+
+  rankEl.style.color = user.rankColor || "#888";
+
+  const color = user.rankColor || "#888";
+
+  if (color.startsWith("#") && color.length === 7) {
+    rankEl.style.backgroundColor = color + "40";
+  } else {
+    rankEl.style.backgroundColor = "rgba(136,136,136,.25)";
+  }
+
+  rankEl.style.display = "block";
+} else {
+  rankEl.style.display = "none";
+}
       // show edit bio button if viewing own profile
       if (myUsername && myUsername === user.username) {
         document.getElementById("edit-bio-btn").style.display = "";
