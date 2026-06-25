@@ -13,14 +13,12 @@
     a:hover { color: #05ee93; }
     g { color: #05ee93; }
 
-    /* topnav */
     .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
     .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
     .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
     .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
 
-    /* search */
     .search-wrap { transition: all 0.3s ease; }
     .search-wrap.centered { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .search-wrap.centered .search-logo { display: block; }
@@ -41,14 +39,11 @@
     .search-wrap.in-nav .ac-item { padding: 6px 10px; font-size: 12px; }
     .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
 
-    /* page */
     .page { margin-top: 48px; display: none; }
     .page.visible { display: flex; }
 
-    /* sidebar */
     .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 18px; background: #161719; flex-shrink: 0; }
 
-    /* avatar */
     .profile-avatar-wrap { position: relative; width: 80px; cursor: pointer; }
     .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; overflow: hidden; transition: border-color 0.2s; }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -61,12 +56,13 @@
     .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
     .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
 
-    /* edit buttons */
+    /* rank badge */
+    .profile-rank { display: none; width: fit-content; padding: 6px; font-size: 16px; font-family: 'mcfont', sans-serif; margin-top: 10px; }
+
     .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
     .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
     .edit-btn:hover { color: #00b2ff; }
 
-    /* edit areas */
     .edit-area { display: none; flex-direction: column; gap: 6px; margin-top: 6px; }
     .edit-area.open { display: flex; }
     .edit-input { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
@@ -82,7 +78,6 @@
     .inline-msg.ok { color: #05ee93; }
     .inline-msg.err { color: #ff5555; }
 
-    /* projects */
     .projects-panel { flex: 1; padding: 32px 36px; min-width: 0; }
     .projects-panel h2 { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #1e1e22; padding-bottom: 10px; }
     .project-grid { display: flex; flex-direction: column; gap: 10px; }
@@ -93,7 +88,6 @@
     .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
     .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
 
-    /* pfp upload modal */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
     .overlay.open { display: flex; }
     .pfp-modal { background: #1a1c1f; border: 1px solid #343438; padding: 28px 32px; min-width: 320px; max-width: 440px; width: calc(100vw - 32px); }
@@ -113,32 +107,25 @@
     .pfp-coming-soon { font-size: 11px; color: #444; margin-top: 8px; text-align: center; }
     .cancel-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; }
     .cancel-btn:hover { color: #fff; }
-    .primary-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; opacity: 0.4; cursor: not-allowed; }
+    .primary-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; opacity: 0.4; cursor: not-allowed; }
 
     .center-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #444; }
     .center-msg.err { color: #ff5555; }
 
-    /* ---- MOBILE ---- */
     @media (max-width: 640px) {
       .search-wrap.in-nav { width: 140px; }
       .search-wrap.in-nav .search-input { font-size: 11px; padding: 5px 8px; }
-
       .page.visible { flex-direction: column; }
-
       .profile-sidebar { width: 100%; min-width: unset; min-height: unset; border-right: none; border-bottom: 1px solid #2a2a2e; padding: 20px 16px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
-
       .profile-avatar-wrap { width: 64px; }
       .profile-avatar { width: 64px; height: 64px; font-size: 24px; }
-
       .profile-sidebar-text { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
       .profile-username { font-size: 18px; }
       .profile-bio-section { width: 100%; }
-
       .projects-panel { padding: 16px; }
       .projects-panel h2 { font-size: 13px; }
       .project-card { padding: 12px 14px; }
       .project-card-name { font-size: 14px; }
-
       .pfp-modal { padding: 20px 16px; }
       .search-wrap.centered { width: calc(100vw - 32px); }
     }
@@ -146,7 +133,6 @@
 </head>
 <body>
 
-  <!-- pfp upload modal (no r2 yet — ui only) -->
   <div class="overlay" id="pfp-overlay">
     <div class="pfp-modal">
       <h3>Profile Picture</h3>
@@ -187,18 +173,16 @@
   <div class="page" id="profile-page">
     <div class="profile-sidebar">
 
-      <!-- avatar -->
       <div class="profile-avatar-wrap" id="avatar-wrap" onclick="openPfpModal()" style="cursor:default;">
         <div class="profile-avatar" id="prof-avatar">?</div>
         <div class="avatar-hint" id="avatar-hint" style="display:none;">change photo</div>
       </div>
 
-      <!-- name + joined (wrapped for mobile row layout) -->
       <div class="profile-sidebar-text">
         <div class="profile-username" id="prof-username"></div>
         <div class="profile-joined" id="prof-joined"></div>
+        <div class="profile-rank" id="prof-rank"></div>
 
-        <!-- username edit (owner only) -->
         <div class="edit-row" id="username-edit-row" style="display:none;">
           <button class="edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()">edit username</button>
         </div>
@@ -212,7 +196,6 @@
         </div>
       </div>
 
-      <!-- bio section -->
       <div class="profile-bio-section">
         <div class="profile-bio" id="prof-bio"></div>
         <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
@@ -263,7 +246,6 @@
       if (targetUser) await loadProfile(targetUser);
     })();
 
-    // ---- SEARCH ----
     const searchInput = document.getElementById("search-input");
     const acList      = document.getElementById("ac-list");
     searchInput.value = targetUser;
@@ -300,7 +282,6 @@
     function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
     function goToProfile(u) { window.location.href = `/profile?u=${encodeURIComponent(u)}`; }
 
-    // ---- LOAD PROFILE ----
     async function loadProfile(username) {
       const msg = document.getElementById("center-msg");
       msg.textContent = "Loading..."; msg.style.display = ""; msg.className = "center-msg";
@@ -316,7 +297,6 @@
     function renderProfile(data) {
       const { user, projects } = data;
 
-      // move search to topnav
       const wrap = document.getElementById("search-wrap");
       wrap.classList.remove("centered"); wrap.classList.add("in-nav");
       document.getElementById("nav-search-slot").appendChild(wrap);
@@ -334,20 +314,28 @@
         document.getElementById("prof-bio-empty").style.display = "";
       }
 
+      // rank badge
+      const rankEl = document.getElementById("prof-rank");
+      if (user.rank) {
+        rankEl.textContent = user.rank.toLowerCase();
+        rankEl.style.color = user.rankColor || "#888";
+        const color = user.rankColor || "#888";
+        rankEl.style.backgroundColor = color.startsWith("#") && color.length === 7 ? color + "40" : "rgba(136,136,136,.25)";
+        rankEl.style.display = "block";
+      } else {
+        rankEl.style.display = "none";
+      }
+
       const isMe = myUsername && myUsername === user.username;
       if (isMe) {
-        // show avatar click + hint
         document.getElementById("avatar-wrap").style.cursor = "pointer";
         document.getElementById("avatar-hint").style.display = "";
-        // show username edit
         document.getElementById("username-edit-row").style.display = "";
         document.getElementById("username-input").value = user.username;
-        // show bio edit
         document.getElementById("bio-edit-row").style.display = "";
         document.getElementById("bio-textarea").value = user.bio || "";
       }
 
-      // projects
       const grid = document.getElementById("project-grid");
       if (!projects.length) {
         grid.innerHTML = `<div class="no-projects">no public projects yet.</div>`;
@@ -364,7 +352,6 @@
       document.getElementById("profile-page").classList.add("visible");
     }
 
-    // ---- USERNAME EDIT ----
     function toggleUsernameEdit() {
       const area = document.getElementById("username-edit-area");
       const isOpen = area.classList.toggle("open");
@@ -387,17 +374,12 @@
           msg.textContent = "saved!"; msg.className = "inline-msg ok";
           document.getElementById("prof-username").textContent = val;
           myUsername = val;
-          setTimeout(() => {
-            toggleUsernameEdit();
-            // update url so page reflects new username
-            window.history.replaceState({}, "", `/profile?u=${encodeURIComponent(val)}`);
-          }, 800);
+          setTimeout(() => { toggleUsernameEdit(); window.history.replaceState({}, "", `/profile?u=${encodeURIComponent(val)}`); }, 800);
         } else { msg.textContent = d.error || "failed."; msg.className = "inline-msg err"; }
       } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
-    // ---- BIO EDIT ----
     function toggleBioEdit() {
       const area = document.getElementById("bio-edit-area");
       const isOpen = area.classList.toggle("open");
@@ -424,13 +406,11 @@
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
-    // ---- PFP MODAL (ui only, no r2 yet) ----
     function openPfpModal() {
       document.getElementById("pfp-overlay").classList.add("open");
     }
     function closePfpModal() {
       document.getElementById("pfp-overlay").classList.remove("open");
-      // reset state
       document.getElementById("pfp-drop-zone").style.display = "";
       document.getElementById("pfp-preview-wrap").classList.remove("visible");
       document.getElementById("pfp-coming-soon").style.display = "none";
@@ -441,7 +421,6 @@
     const fileInput = document.getElementById("pfp-file-input");
 
     fileInput.addEventListener("change", e => { if (e.target.files[0]) handlePfpFile(e.target.files[0]); });
-
     dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
     dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
     dropZone.addEventListener("drop", e => {
@@ -454,8 +433,7 @@
       const reader = new FileReader();
       reader.onload = e => {
         document.getElementById("pfp-drop-zone").style.display = "none";
-        const wrap = document.getElementById("pfp-preview-wrap");
-        wrap.classList.add("visible");
+        document.getElementById("pfp-preview-wrap").classList.add("visible");
         document.getElementById("pfp-preview").src = e.target.result;
         document.getElementById("pfp-preview-name").textContent = file.name;
         document.getElementById("pfp-coming-soon").style.display = "";
