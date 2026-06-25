@@ -8,95 +8,72 @@
   <title>mcbCode | Profile</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; overflow-x: hidden; }
+    html, body { min-height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; overflow-x: hidden; }
     a { text-decoration: none; color: #fff; transition: color 0.2s; }
     a:hover { color: #05ee93; }
     g { color: #05ee93; }
 
     /* topnav */
-    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 12px; }
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
     .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
-    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
     .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
 
-    /* search bar — two states */
-    .search-wrap {
-      transition: all 0.35s ease;
-    }
-
-    /* STATE: centered (no user in url) */
-    .search-wrap.centered {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-    .search-wrap.centered .search-logo {
-      display: block;
-    }
-    .search-wrap.centered .search-input-row {
-      width: 100%;
-    }
-
-    /* STATE: topnav (user in url) */
-    .search-wrap.in-nav {
-      position: static;
-      transform: none;
-      width: 220px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0;
-    }
+    /* search */
+    .search-wrap { transition: all 0.3s ease; }
+    .search-wrap.centered { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .search-wrap.centered .search-logo { display: block; }
+    .search-wrap.centered .search-input-row { width: 100%; }
+    .search-wrap.in-nav { position: static; transform: none; width: 200px; display: flex; flex-direction: column; gap: 0; }
     .search-wrap.in-nav .search-logo { display: none; }
     .search-wrap.in-nav .search-input-row { width: 100%; }
-
-    .search-logo { display: none; font-size: 28px; color: #fff; font-family: 'mcfontb', sans-serif; text-align: center; }
+    .search-logo { display: none; font-size: 26px; color: #fff; font-family: 'mcfontb', sans-serif; text-align: center; }
     .search-logo g { color: #05ee93; }
     .search-logo small { display: block; font-size: 13px; color: #555; margin-top: 4px; font-family: 'mcfont', sans-serif; }
-
-    .search-input-row { position: relative; width: 100%; }
+    .search-input-row { position: relative; }
     .search-input { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
     .search-wrap.in-nav .search-input { font-size: 12px; padding: 6px 10px; }
     .search-input:focus { border-color: #00b2ff; }
     .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #1a1c1f; border: 1px solid #343438; border-top: none; z-index: 300; display: none; }
     .autocomplete-list.open { display: block; }
-    .ac-item { padding: 8px 14px; font-size: 13px; color: #aaa; cursor: pointer; transition: background 0.12s, color 0.12s; }
+    .ac-item { padding: 8px 14px; font-size: 13px; color: #aaa; cursor: pointer; transition: background 0.12s; }
     .search-wrap.in-nav .ac-item { padding: 6px 10px; font-size: 12px; }
     .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
 
-    /* page layout when profile is loaded */
+    /* page */
     .page { margin-top: 48px; display: none; }
     .page.visible { display: flex; }
 
-    /* left sidebar */
-    .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; background: #161719; }
-    .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; }
+    /* sidebar */
+    .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 18px; background: #161719; flex-shrink: 0; }
+
+    /* avatar */
+    .profile-avatar-wrap { position: relative; width: 80px; cursor: pointer; }
+    .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; overflow: hidden; transition: border-color 0.2s; }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-avatar-wrap:hover .profile-avatar { border-color: #00b2ff; }
+    .avatar-hint { font-size: 10px; color: #444; margin-top: 4px; transition: color 0.2s; }
+    .profile-avatar-wrap:hover .avatar-hint { color: #00b2ff; }
+
     .profile-username { font-size: 22px; color: #fff; font-family: 'mcfontb', sans-serif; }
     .profile-joined { font-size: 11px; color: #444; }
     .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
     .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
-    .profile-rank {
-      display: none;
-      width: fit-content;
-      padding: 6px;
-      font-size: 16px;
-      font-family: 'mcfont', sans-serif;
-      margin-top: 10px;
-    }
 
-    /* bio edit */
-    .bio-edit-area { display: none; flex-direction: column; gap: 6px; }
-    .bio-edit-area.open { display: flex; }
-    .bio-textarea { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
-    .bio-textarea:focus { border-color: #05ee93; }
-    .bio-save-row { display: flex; gap: 6px; align-items: center; }
+    /* edit buttons */
+    .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
+    .edit-btn:hover { color: #00b2ff; }
+
+    /* edit areas */
+    .edit-area { display: none; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .edit-area.open { display: flex; }
+    .edit-input { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
+    .edit-input:focus { border-color: #05ee93; }
+    .edit-textarea { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; resize: vertical; min-height: 72px; transition: border-color 0.2s; }
+    .edit-textarea:focus { border-color: #05ee93; }
+    .edit-save-row { display: flex; gap: 6px; align-items: center; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 4px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
     .sm-btn.primary { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
@@ -104,11 +81,9 @@
     .inline-msg { font-size: 11px; }
     .inline-msg.ok { color: #05ee93; }
     .inline-msg.err { color: #ff5555; }
-    .edit-bio-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
-    .edit-bio-btn:hover { color: #00b2ff; }
 
-    /* right projects panel */
-    .projects-panel { flex: 1; padding: 32px 36px; }
+    /* projects */
+    .projects-panel { flex: 1; padding: 32px 36px; min-width: 0; }
     .projects-panel h2 { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #1e1e22; padding-bottom: 10px; }
     .project-grid { display: flex; flex-direction: column; gap: 10px; }
     .project-card { background: #161719; border: 1px solid #2a2a2e; padding: 16px 20px; cursor: pointer; transition: border-color 0.2s; }
@@ -118,57 +93,144 @@
     .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
     .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
 
-    /* centered loading/error states */
+    /* pfp upload modal */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .pfp-modal { background: #1a1c1f; border: 1px solid #343438; padding: 28px 32px; min-width: 320px; max-width: 440px; width: calc(100vw - 32px); }
+    .pfp-modal h3 { color: #fff; font-size: 14px; margin-bottom: 6px; }
+    .pfp-modal p { font-size: 12px; color: #555; margin-bottom: 20px; }
+    .pfp-drop-zone { border: 2px dashed #343438; padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .pfp-drop-zone:hover, .pfp-drop-zone.drag-over { border-color: #00b2ff; background: #1e2024; }
+    .pfp-drop-zone input { display: none; }
+    .pfp-drop-icon { font-size: 32px; color: #343438; margin-bottom: 10px; }
+    .pfp-drop-text { font-size: 13px; color: #555; }
+    .pfp-drop-text span { color: #00b2ff; cursor: pointer; }
+    .pfp-preview-wrap { display: none; flex-direction: column; align-items: center; gap: 12px; }
+    .pfp-preview-wrap.visible { display: flex; }
+    .pfp-preview { width: 100px; height: 100px; object-fit: cover; border: 2px solid #343438; }
+    .pfp-preview-name { font-size: 12px; color: #555; }
+    .pfp-modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+    .pfp-coming-soon { font-size: 11px; color: #444; margin-top: 8px; text-align: center; }
+    .cancel-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; }
+    .cancel-btn:hover { color: #fff; }
+    .primary-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; opacity: 0.4; cursor: not-allowed; }
+
     .center-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #444; }
     .center-msg.err { color: #ff5555; }
+
+    /* ---- MOBILE ---- */
+    @media (max-width: 640px) {
+      .search-wrap.in-nav { width: 140px; }
+      .search-wrap.in-nav .search-input { font-size: 11px; padding: 5px 8px; }
+
+      .page.visible { flex-direction: column; }
+
+      .profile-sidebar { width: 100%; min-width: unset; min-height: unset; border-right: none; border-bottom: 1px solid #2a2a2e; padding: 20px 16px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+
+      .profile-avatar-wrap { width: 64px; }
+      .profile-avatar { width: 64px; height: 64px; font-size: 24px; }
+
+      .profile-sidebar-text { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
+      .profile-username { font-size: 18px; }
+      .profile-bio-section { width: 100%; }
+
+      .projects-panel { padding: 16px; }
+      .projects-panel h2 { font-size: 13px; }
+      .project-card { padding: 12px 14px; }
+      .project-card-name { font-size: 14px; }
+
+      .pfp-modal { padding: 20px 16px; }
+      .search-wrap.centered { width: calc(100vw - 32px); }
+    }
   </style>
 </head>
 <body>
 
+  <!-- pfp upload modal (no r2 yet — ui only) -->
+  <div class="overlay" id="pfp-overlay">
+    <div class="pfp-modal">
+      <h3>Profile Picture</h3>
+      <p>r2 storage coming soon — this is a preview of the upload ui.</p>
+      <div class="pfp-drop-zone" id="pfp-drop-zone" onclick="document.getElementById('pfp-file-input').click()">
+        <input type="file" id="pfp-file-input" accept="image/*">
+        <div class="pfp-drop-icon">+</div>
+        <div class="pfp-drop-text">click or <span>drag a file</span> here</div>
+      </div>
+      <div class="pfp-preview-wrap" id="pfp-preview-wrap">
+        <img class="pfp-preview" id="pfp-preview" src="" alt="preview">
+        <span class="pfp-preview-name" id="pfp-preview-name"></span>
+      </div>
+      <p class="pfp-coming-soon" id="pfp-coming-soon" style="display:none;">looks good! saving will be available once r2 is set up.</p>
+      <div class="pfp-modal-actions">
+        <button class="cancel-btn" onclick="closePfpModal()">Close</button>
+        <button class="primary-btn" disabled>Save (coming soon)</button>
+      </div>
+    </div>
+  </div>
+
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
-    <!-- search moves here when profile is loaded -->
     <div id="nav-search-slot"></div>
     <div class="topnav-right">
       <a href="/dashboard" class="nav-btn">Dashboard</a>
     </div>
   </div>
 
-  <!-- centered search (default state) -->
   <div class="search-wrap centered" id="search-wrap">
-    <div class="search-logo">
-      mcb<g>Code</g>
-      <small>search for a user</small>
-    </div>
+    <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
     <div class="search-input-row">
       <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
       <div class="autocomplete-list" id="ac-list"></div>
     </div>
   </div>
 
-  <!-- profile page (hidden until loaded) -->
   <div class="page" id="profile-page">
     <div class="profile-sidebar">
-      <div class="profile-avatar" id="prof-avatar">?</div>
-      <div>
+
+      <!-- avatar -->
+      <div class="profile-avatar-wrap" id="avatar-wrap" onclick="openPfpModal()" style="cursor:default;">
+        <div class="profile-avatar" id="prof-avatar">?</div>
+        <div class="avatar-hint" id="avatar-hint" style="display:none;">change photo</div>
+      </div>
+
+      <!-- name + joined (wrapped for mobile row layout) -->
+      <div class="profile-sidebar-text">
         <div class="profile-username" id="prof-username"></div>
         <div class="profile-joined" id="prof-joined"></div>
+
+        <!-- username edit (owner only) -->
+        <div class="edit-row" id="username-edit-row" style="display:none;">
+          <button class="edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()">edit username</button>
+        </div>
+        <div class="edit-area" id="username-edit-area">
+          <input class="edit-input" type="text" id="username-input" maxlength="32" placeholder="new username">
+          <div class="edit-save-row">
+            <button class="sm-btn primary" onclick="saveUsername()">Save</button>
+            <button class="sm-btn" onclick="toggleUsernameEdit()">Cancel</button>
+            <span class="inline-msg" id="username-msg"></span>
+          </div>
+        </div>
       </div>
-      <div>
+
+      <!-- bio section -->
+      <div class="profile-bio-section">
         <div class="profile-bio" id="prof-bio"></div>
         <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
-        <div class="profile-rank" id="prof-rank"></div>
-        <button class="edit-bio-btn" id="edit-bio-btn" style="display:none; margin-top:8px;" onclick="toggleBioEdit()">edit bio</button>
-        <div class="bio-edit-area" id="bio-edit-area">
-          <textarea class="bio-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
-          <div class="bio-save-row">
+        <div class="edit-row" id="bio-edit-row" style="display:none; margin-top:8px;">
+          <button class="edit-btn" id="edit-bio-btn" onclick="toggleBioEdit()">edit bio</button>
+        </div>
+        <div class="edit-area" id="bio-edit-area">
+          <textarea class="edit-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
+          <div class="edit-save-row">
             <button class="sm-btn primary" onclick="saveBio()">Save</button>
             <button class="sm-btn" onclick="toggleBioEdit()">Cancel</button>
             <span class="inline-msg" id="bio-msg"></span>
           </div>
         </div>
       </div>
+
     </div>
+
     <div class="projects-panel">
       <h2>Projects</h2>
       <div class="project-grid" id="project-grid"></div>
@@ -193,22 +255,17 @@
       return d.toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
     }
 
-    // get current user silently
     (async () => {
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
         if (r.ok) { const d = await r.json(); myUsername = d.username; }
       } catch {}
-
-      if (targetUser) {
-        await loadProfile(targetUser);
-      }
+      if (targetUser) await loadProfile(targetUser);
     })();
 
     // ---- SEARCH ----
     const searchInput = document.getElementById("search-input");
     const acList      = document.getElementById("ac-list");
-
     searchInput.value = targetUser;
 
     searchInput.addEventListener("input", () => {
@@ -221,10 +278,7 @@
     searchInput.addEventListener("keydown", e => {
       if (e.key === "ArrowDown") { acSelected = Math.min(acSelected + 1, acResults.length - 1); renderAc(); e.preventDefault(); }
       else if (e.key === "ArrowUp") { acSelected = Math.max(acSelected - 1, 0); renderAc(); e.preventDefault(); }
-      else if (e.key === "Enter") {
-        const val = acSelected >= 0 ? acResults[acSelected] : searchInput.value.trim();
-        if (val) goToProfile(val);
-      }
+      else if (e.key === "Enter") { const val = acSelected >= 0 ? acResults[acSelected] : searchInput.value.trim(); if (val) goToProfile(val); }
       else if (e.key === "Escape") closeAc();
     });
 
@@ -233,43 +287,30 @@
         const r = await fetch(`${AUTH}/profile/search?q=${encodeURIComponent(q)}`);
         if (!r.ok) return;
         const d = await r.json();
-        acResults  = d.results || [];
-        acSelected = -1;
-        renderAc();
+        acResults = d.results || []; acSelected = -1; renderAc();
       } catch {}
     }
 
     function renderAc() {
       if (!acResults.length) { closeAc(); return; }
-      acList.innerHTML = acResults.map((u, i) =>
-        `<div class="ac-item${i === acSelected ? ' selected' : ''}" onclick="goToProfile('${esc(u)}')">${esc(u)}</div>`
-      ).join("");
+      acList.innerHTML = acResults.map((u, i) => `<div class="ac-item${i === acSelected ? ' selected' : ''}" onclick="goToProfile('${esc(u)}')">${esc(u)}</div>`).join("");
       acList.classList.add("open");
     }
 
     function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
-
-    function goToProfile(username) {
-      window.location.href = `/profile?u=${encodeURIComponent(username)}`;
-    }
+    function goToProfile(u) { window.location.href = `/profile?u=${encodeURIComponent(u)}`; }
 
     // ---- LOAD PROFILE ----
     async function loadProfile(username) {
       const msg = document.getElementById("center-msg");
       msg.textContent = "Loading..."; msg.style.display = ""; msg.className = "center-msg";
-
       try {
         const r = await fetch(`${AUTH}/profile?u=${encodeURIComponent(username)}`);
-        if (!r.ok) {
-          const d = await r.json();
-          msg.textContent = d.error || "User not found."; msg.className = "center-msg err"; return;
-        }
+        if (!r.ok) { const d = await r.json(); msg.textContent = d.error || "User not found."; msg.className = "center-msg err"; return; }
         const d = await r.json();
         msg.style.display = "none";
         renderProfile(d);
-      } catch {
-        msg.textContent = "Failed to load profile."; msg.className = "center-msg err";
-      }
+      } catch { msg.textContent = "Failed to load profile."; msg.className = "center-msg err"; }
     }
 
     function renderProfile(data) {
@@ -277,11 +318,9 @@
 
       // move search to topnav
       const wrap = document.getElementById("search-wrap");
-      wrap.classList.remove("centered");
-      wrap.classList.add("in-nav");
+      wrap.classList.remove("centered"); wrap.classList.add("in-nav");
       document.getElementById("nav-search-slot").appendChild(wrap);
 
-      // fill sidebar
       document.getElementById("prof-avatar").textContent = user.username[0].toUpperCase();
       document.getElementById("prof-username").textContent = user.username;
       document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
@@ -294,29 +333,17 @@
         document.getElementById("prof-bio").style.display = "none";
         document.getElementById("prof-bio-empty").style.display = "";
       }
-      
-      const rankEl = document.getElementById("prof-rank");
 
-if (user.rank) {
-  rankEl.textContent = user.rank.toLowerCase();
-
-  rankEl.style.color = user.rankColor || "#888";
-
-  const color = user.rankColor || "#888";
-
-  if (color.startsWith("#") && color.length === 7) {
-    rankEl.style.backgroundColor = color + "40";
-  } else {
-    rankEl.style.backgroundColor = "rgba(136,136,136,.25)";
-  }
-
-  rankEl.style.display = "block";
-} else {
-  rankEl.style.display = "none";
-}
-      // show edit bio button if viewing own profile
-      if (myUsername && myUsername === user.username) {
-        document.getElementById("edit-bio-btn").style.display = "";
+      const isMe = myUsername && myUsername === user.username;
+      if (isMe) {
+        // show avatar click + hint
+        document.getElementById("avatar-wrap").style.cursor = "pointer";
+        document.getElementById("avatar-hint").style.display = "";
+        // show username edit
+        document.getElementById("username-edit-row").style.display = "";
+        document.getElementById("username-input").value = user.username;
+        // show bio edit
+        document.getElementById("bio-edit-row").style.display = "";
         document.getElementById("bio-textarea").value = user.bio || "";
       }
 
@@ -337,6 +364,39 @@ if (user.rank) {
       document.getElementById("profile-page").classList.add("visible");
     }
 
+    // ---- USERNAME EDIT ----
+    function toggleUsernameEdit() {
+      const area = document.getElementById("username-edit-area");
+      const isOpen = area.classList.toggle("open");
+      document.getElementById("edit-username-btn").textContent = isOpen ? "cancel" : "edit username";
+      if (isOpen) setTimeout(() => document.getElementById("username-input").focus(), 50);
+    }
+
+    async function saveUsername() {
+      const val = document.getElementById("username-input").value.trim().replace(/[^a-zA-Z0-9_\-]/g, "");
+      const msg = document.getElementById("username-msg");
+      if (!val || val.length < 2) { msg.textContent = "too short."; msg.className = "inline-msg err"; return; }
+      try {
+        const res = await fetch(`${AUTH}/profile`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: val })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          msg.textContent = "saved!"; msg.className = "inline-msg ok";
+          document.getElementById("prof-username").textContent = val;
+          myUsername = val;
+          setTimeout(() => {
+            toggleUsernameEdit();
+            // update url so page reflects new username
+            window.history.replaceState({}, "", `/profile?u=${encodeURIComponent(val)}`);
+          }, 800);
+        } else { msg.textContent = d.error || "failed."; msg.className = "inline-msg err"; }
+      } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
+      setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
+    }
+
     // ---- BIO EDIT ----
     function toggleBioEdit() {
       const area = document.getElementById("bio-edit-area");
@@ -354,24 +414,57 @@ if (user.rank) {
           body: JSON.stringify({ bio })
         });
         if (res.ok) {
-          const bioEl      = document.getElementById("prof-bio");
-          const bioEmpty   = document.getElementById("prof-bio-empty");
-          bioEl.textContent = bio;
-          bioEl.style.display = bio ? "" : "none";
-          bioEmpty.style.display = bio ? "none" : "";
+          const bioEl = document.getElementById("prof-bio");
+          bioEl.textContent = bio; bioEl.style.display = bio ? "" : "none";
+          document.getElementById("prof-bio-empty").style.display = bio ? "none" : "";
           msg.textContent = "saved!"; msg.className = "inline-msg ok";
           setTimeout(() => toggleBioEdit(), 800);
-        } else {
-          msg.textContent = "failed."; msg.className = "inline-msg err";
-        }
+        } else { msg.textContent = "failed."; msg.className = "inline-msg err"; }
       } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
-    // close autocomplete on outside click
-    document.addEventListener("click", e => {
-      if (!e.target.closest(".search-input-row")) closeAc();
+    // ---- PFP MODAL (ui only, no r2 yet) ----
+    function openPfpModal() {
+      document.getElementById("pfp-overlay").classList.add("open");
+    }
+    function closePfpModal() {
+      document.getElementById("pfp-overlay").classList.remove("open");
+      // reset state
+      document.getElementById("pfp-drop-zone").style.display = "";
+      document.getElementById("pfp-preview-wrap").classList.remove("visible");
+      document.getElementById("pfp-coming-soon").style.display = "none";
+      document.getElementById("pfp-file-input").value = "";
+    }
+
+    const dropZone = document.getElementById("pfp-drop-zone");
+    const fileInput = document.getElementById("pfp-file-input");
+
+    fileInput.addEventListener("change", e => { if (e.target.files[0]) handlePfpFile(e.target.files[0]); });
+
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault(); dropZone.classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) handlePfpFile(file);
     });
+
+    function handlePfpFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById("pfp-drop-zone").style.display = "none";
+        const wrap = document.getElementById("pfp-preview-wrap");
+        wrap.classList.add("visible");
+        document.getElementById("pfp-preview").src = e.target.result;
+        document.getElementById("pfp-preview-name").textContent = file.name;
+        document.getElementById("pfp-coming-soon").style.display = "";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById("pfp-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePfpModal(); });
+    document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
   </script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
