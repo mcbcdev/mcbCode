@@ -13,25 +13,62 @@
     a:hover { color: #05ee93; }
     g { color: #05ee93; }
 
+    /* ---- TOPNAV ---- */
     .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
     .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
     .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; }
+    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; }
     .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
 
+    /* ---- SEARCH ---- */
     .search-wrap { transition: all 0.3s ease; }
-    .search-wrap.centered { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+    /* centered state */
+    .search-wrap.centered {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(440px, calc(100vw - 32px));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      z-index: 10;
+    }
     .search-wrap.centered .search-logo { display: block; }
     .search-wrap.centered .search-input-row { width: 100%; }
+
+    /* sticky-top state (scrolled past search) */
+    .search-wrap.sticky-top {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      padding: 10px 16px;
+      background: #161719;
+      border-bottom: 1px solid #2a2a2e;
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .search-wrap.sticky-top .search-logo { display: none; }
+    .search-wrap.sticky-top .search-input-row { width: 100%; max-width: 400px; }
+
+    /* in-nav state (profile loaded, search in topnav) */
     .search-wrap.in-nav { position: static; transform: none; width: 200px; display: flex; flex-direction: column; gap: 0; }
     .search-wrap.in-nav .search-logo { display: none; }
     .search-wrap.in-nav .search-input-row { width: 100%; }
+
     .search-logo { display: none; font-size: 26px; color: #fff; font-family: 'mcfontb', sans-serif; text-align: center; }
     .search-logo g { color: #05ee93; }
     .search-logo small { display: block; font-size: 13px; color: #555; margin-top: 4px; font-family: 'mcfont', sans-serif; }
+
     .search-input-row { position: relative; }
     .search-input { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
     .search-wrap.in-nav .search-input { font-size: 12px; padding: 6px 10px; }
+    .search-wrap.sticky-top .search-input { font-size: 13px; padding: 7px 12px; }
     .search-input:focus { border-color: #00b2ff; }
     .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #1a1c1f; border: 1px solid #343438; border-top: none; z-index: 300; display: none; }
     .autocomplete-list.open { display: block; }
@@ -39,27 +76,55 @@
     .search-wrap.in-nav .ac-item { padding: 6px 10px; font-size: 12px; }
     .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
 
+    /* ---- LANDING (before search) ---- */
+    .landing { margin-top: 48px; padding-top: 220px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+    .landing.hidden { display: none; }
+
+    .recent-section { margin-top: 60px; width: min(640px, calc(100vw - 32px)); }
+    .recent-label { font-size: 11px; color: #444; font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; text-align: center; }
+    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .recent-card { background: #161719; border: 1px solid #1e1e22; padding: 14px 16px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; gap: 6px; }
+    .recent-card:hover { border-color: #343438; background: #1a1c1f; }
+    .recent-avatar { width: 36px; height: 36px; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 16px; font-family: 'mcfontb', sans-serif; color: #555; flex-shrink: 0; }
+    .recent-name { font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-rank-badge { font-size: 10px; padding: 2px 6px; width: fit-content; }
+
+    /* ---- PROFILE PAGE ---- */
     .page { margin-top: 48px; display: none; }
     .page.visible { display: flex; }
 
+    /* sidebar */
     .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 18px; background: #161719; flex-shrink: 0; }
 
-    .profile-avatar-wrap { position: relative; width: 80px; cursor: pointer; }
+    /* avatar */
+    .profile-avatar-wrap { position: relative; width: 80px; }
     .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; overflow: hidden; transition: border-color 0.2s; }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-avatar-wrap:hover .profile-avatar { border-color: #00b2ff; }
-    .avatar-hint { font-size: 10px; color: #444; margin-top: 4px; transition: color 0.2s; }
-    .profile-avatar-wrap:hover .avatar-hint { color: #00b2ff; }
+    .avatar-hint { font-size: 10px; color: #444; margin-top: 4px; transition: color 0.2s; display: none; }
 
-    .profile-username { font-size: 22px; color: #fff; font-family: 'mcfontb', sans-serif; }
-    .profile-joined { font-size: 11px; color: #444; }
+    /* clickable avatar (owner only) */
+    .profile-avatar-wrap.clickable { cursor: pointer; }
+    .profile-avatar-wrap.clickable:hover .profile-avatar { border-color: #00b2ff; }
+    .profile-avatar-wrap.clickable:hover .avatar-hint { color: #00b2ff; }
+    .profile-avatar-wrap.clickable .avatar-hint { display: block; }
+
+    /* username + rank */
+    .profile-username { font-size: 22px; color: #fff; font-family: 'mcfontb', sans-serif; line-height: 1.1; }
+    .profile-joined { font-size: 11px; color: #444; margin-top: 2px; }
+    .profile-rank { display: none; width: fit-content; padding: 4px 8px; font-size: 13px; font-family: 'mcfont', sans-serif; margin-top: 8px; }
+
+    /* rank-specific username styling */
+    .username-owner    { color: #05ee93; text-shadow: 0 0 20px #05ee9366; }
+    .username-admin    { color: #00b2ff; text-shadow: 0 0 20px #00b2ff55; }
+    .username-developer,
+    .username-dev      { color: #ff9900; text-shadow: 0 0 20px #ff990044; }
+    .username-obsidian { background: linear-gradient(90deg, #ff00d0, #9b18ed, #00b2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px #ff00d066); }
+    .username-verified { color: #9b18ed; text-shadow: 0 0 20px #9b18ed55; }
+
     .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
     .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
 
-    /* rank badge */
-    .profile-rank { display: none; width: fit-content; padding: 6px; font-size: 16px; font-family: 'mcfont', sans-serif; margin-top: 10px; }
-
-    .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
     .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
     .edit-btn:hover { color: #00b2ff; }
 
@@ -78,6 +143,7 @@
     .inline-msg.ok { color: #05ee93; }
     .inline-msg.err { color: #ff5555; }
 
+    /* projects panel */
     .projects-panel { flex: 1; padding: 32px 36px; min-width: 0; }
     .projects-panel h2 { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #1e1e22; padding-bottom: 10px; }
     .project-grid { display: flex; flex-direction: column; gap: 10px; }
@@ -88,72 +154,74 @@
     .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
     .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
 
+    /* pfp modal */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
     .overlay.open { display: flex; }
     .pfp-modal { background: #1a1c1f; border: 1px solid #343438; padding: 28px 32px; min-width: 320px; max-width: 440px; width: calc(100vw - 32px); }
-    .pfp-modal h3 { color: #fff; font-size: 14px; margin-bottom: 6px; }
-    .pfp-modal p { font-size: 12px; color: #555; margin-bottom: 20px; }
+    .pfp-modal h3 { color: #fff; font-size: 14px; margin-bottom: 4px; }
+    .pfp-modal-sub { font-size: 11px; color: #444; margin-bottom: 20px; }
     .pfp-drop-zone { border: 2px dashed #343438; padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
     .pfp-drop-zone:hover, .pfp-drop-zone.drag-over { border-color: #00b2ff; background: #1e2024; }
     .pfp-drop-zone input { display: none; }
-    .pfp-drop-icon { font-size: 32px; color: #343438; margin-bottom: 10px; }
+    .pfp-drop-icon { font-size: 28px; color: #343438; margin-bottom: 8px; }
     .pfp-drop-text { font-size: 13px; color: #555; }
-    .pfp-drop-text span { color: #00b2ff; cursor: pointer; }
-    .pfp-preview-wrap { display: none; flex-direction: column; align-items: center; gap: 12px; }
+    .pfp-drop-text span { color: #00b2ff; }
+    .pfp-preview-wrap { display: none; flex-direction: column; align-items: center; gap: 10px; }
     .pfp-preview-wrap.visible { display: flex; }
-    .pfp-preview { width: 100px; height: 100px; object-fit: cover; border: 2px solid #343438; }
-    .pfp-preview-name { font-size: 12px; color: #555; }
+    .pfp-preview { width: 96px; height: 96px; object-fit: cover; border: 2px solid #343438; }
+    .pfp-preview-name { font-size: 11px; color: #444; }
+    .pfp-soon { font-size: 11px; color: #444; margin-top: 10px; text-align: center; display: none; }
     .pfp-modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
-    .pfp-coming-soon { font-size: 11px; color: #444; margin-top: 8px; text-align: center; }
     .cancel-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; }
     .cancel-btn:hover { color: #fff; }
-    .primary-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; opacity: 0.4; cursor: not-allowed; }
+    .soon-btn { background: #1a1c1f; border: 1px solid #343438; color: #444; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: not-allowed; }
 
     .center-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #444; }
     .center-msg.err { color: #ff5555; }
 
+    /* ---- MOBILE ---- */
     @media (max-width: 640px) {
-      .search-wrap.in-nav { width: 140px; }
+      .search-wrap.in-nav { width: 130px; }
       .search-wrap.in-nav .search-input { font-size: 11px; padding: 5px 8px; }
       .page.visible { flex-direction: column; }
       .profile-sidebar { width: 100%; min-width: unset; min-height: unset; border-right: none; border-bottom: 1px solid #2a2a2e; padding: 20px 16px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
       .profile-avatar-wrap { width: 64px; }
       .profile-avatar { width: 64px; height: 64px; font-size: 24px; }
-      .profile-sidebar-text { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
+      .profile-sidebar-text { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 4px; }
       .profile-username { font-size: 18px; }
       .profile-bio-section { width: 100%; }
       .projects-panel { padding: 16px; }
-      .projects-panel h2 { font-size: 13px; }
       .project-card { padding: 12px 14px; }
-      .project-card-name { font-size: 14px; }
+      .recent-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
       .pfp-modal { padding: 20px 16px; }
-      .search-wrap.centered { width: calc(100vw - 32px); }
     }
   </style>
 </head>
 <body>
 
+  <!-- pfp modal (ui preview only) -->
   <div class="overlay" id="pfp-overlay">
     <div class="pfp-modal">
       <h3>Profile Picture</h3>
-      <p>r2 storage coming soon — this is a preview of the upload ui.</p>
+      <div class="pfp-modal-sub">ui preview — profile pictures coming soon</div>
       <div class="pfp-drop-zone" id="pfp-drop-zone" onclick="document.getElementById('pfp-file-input').click()">
         <input type="file" id="pfp-file-input" accept="image/*">
         <div class="pfp-drop-icon">+</div>
         <div class="pfp-drop-text">click or <span>drag a file</span> here</div>
       </div>
       <div class="pfp-preview-wrap" id="pfp-preview-wrap">
-        <img class="pfp-preview" id="pfp-preview" src="" alt="preview">
+        <img class="pfp-preview" id="pfp-preview" src="" alt="">
         <span class="pfp-preview-name" id="pfp-preview-name"></span>
       </div>
-      <p class="pfp-coming-soon" id="pfp-coming-soon" style="display:none;">looks good! saving will be available once r2 is set up.</p>
+      <div class="pfp-soon" id="pfp-soon">looking good! saving is coming soon.</div>
       <div class="pfp-modal-actions">
         <button class="cancel-btn" onclick="closePfpModal()">Close</button>
-        <button class="primary-btn" disabled>Save (coming soon)</button>
+        <button class="soon-btn" disabled>Save (coming soon)</button>
       </div>
     </div>
   </div>
 
+  <!-- topnav -->
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
     <div id="nav-search-slot"></div>
@@ -162,20 +230,31 @@
     </div>
   </div>
 
-  <div class="search-wrap centered" id="search-wrap">
-    <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
-    <div class="search-input-row">
-      <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
-      <div class="autocomplete-list" id="ac-list"></div>
+  <!-- centered search + landing -->
+  <div class="landing" id="landing">
+    <div class="search-wrap centered" id="search-wrap">
+      <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
+      <div class="search-input-row">
+        <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
+        <div class="autocomplete-list" id="ac-list"></div>
+      </div>
+    </div>
+
+    <div class="recent-section" id="recent-section">
+      <div class="recent-label">Recent Users</div>
+      <div class="recent-grid" id="recent-grid">
+        <!-- populated by js -->
+      </div>
     </div>
   </div>
 
+  <!-- profile page -->
   <div class="page" id="profile-page">
     <div class="profile-sidebar">
 
-      <div class="profile-avatar-wrap" id="avatar-wrap" onclick="openPfpModal()" style="cursor:default;">
+      <div class="profile-avatar-wrap" id="avatar-wrap">
         <div class="profile-avatar" id="prof-avatar">?</div>
-        <div class="avatar-hint" id="avatar-hint" style="display:none;">change photo</div>
+        <div class="avatar-hint">change photo</div>
       </div>
 
       <div class="profile-sidebar-text">
@@ -230,6 +309,7 @@
     let acDebounce = null;
     let acSelected = -1;
     let acResults  = [];
+    let searchInLanding = true; // track if search is still in landing vs topnav
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
     function fmtDate(s) {
@@ -238,17 +318,79 @@
       return d.toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
     }
 
+    // rank → username css class
+    function rankClass(rank) {
+      if (!rank) return "";
+      return "username-" + rank.toLowerCase().replace(/[^a-z]/g, "");
+    }
+
+    // rank badge bg from color
+    function rankBg(color) {
+      if (!color) return "rgba(136,136,136,.2)";
+      return color.startsWith("#") && color.length === 7 ? color + "40" : "rgba(136,136,136,.2)";
+    }
+
+    // ---- INIT ----
     (async () => {
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
         if (r.ok) { const d = await r.json(); myUsername = d.username; }
       } catch {}
-      if (targetUser) await loadProfile(targetUser);
+
+      if (targetUser) {
+        // profile url — hide landing, load profile
+        document.getElementById("landing").classList.add("hidden");
+        await loadProfile(targetUser);
+      } else {
+        // landing — load recent users
+        loadRecentUsers();
+        initScrollSticky();
+      }
     })();
 
+    // ---- RECENT USERS ----
+    async function loadRecentUsers() {
+      const grid = document.getElementById("recent-grid");
+      try {
+        const r = await fetch(`${AUTH}/users/recent`);
+        if (!r.ok) { grid.innerHTML = ""; return; }
+        const d = await r.json();
+        if (!d.users.length) { grid.innerHTML = ""; return; }
+        grid.innerHTML = d.users.map(u => {
+          const cls = rankClass(u.rank);
+          const badgeStyle = u.rank ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || '#888'}"` : "";
+          return `
+            <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
+              <div class="recent-avatar" style="${cls ? `color:${u.rankColor}` : ''}">${u.username[0].toUpperCase()}</div>
+              <div class="recent-name ${cls}">${esc(u.username)}</div>
+              ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
+            </div>
+          `;
+        }).join("");
+      } catch { grid.innerHTML = ""; }
+    }
+
+    // ---- STICKY SEARCH ON SCROLL (landing only) ----
+    function initScrollSticky() {
+      const wrap = document.getElementById("search-wrap");
+      // the search starts centered at ~50vh, so we go sticky once scrolled past ~(50vh - 48px - 10px)
+      window.addEventListener("scroll", () => {
+        if (!searchInLanding) return;
+        const threshold = window.innerHeight * 0.5 - 80;
+        if (window.scrollY > threshold) {
+          wrap.classList.remove("centered");
+          wrap.classList.add("sticky-top");
+        } else {
+          wrap.classList.remove("sticky-top");
+          wrap.classList.add("centered");
+        }
+      }, { passive: true });
+    }
+
+    // ---- SEARCH ----
     const searchInput = document.getElementById("search-input");
     const acList      = document.getElementById("ac-list");
-    searchInput.value = targetUser;
+    if (targetUser) searchInput.value = targetUser;
 
     searchInput.addEventListener("input", () => {
       clearTimeout(acDebounce);
@@ -282,6 +424,7 @@
     function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
     function goToProfile(u) { window.location.href = `/profile?u=${encodeURIComponent(u)}`; }
 
+    // ---- LOAD PROFILE ----
     async function loadProfile(username) {
       const msg = document.getElementById("center-msg");
       msg.textContent = "Loading..."; msg.style.display = ""; msg.className = "center-msg";
@@ -297,15 +440,36 @@
     function renderProfile(data) {
       const { user, projects } = data;
 
+      // move search to topnav
+      searchInLanding = false;
       const wrap = document.getElementById("search-wrap");
-      wrap.classList.remove("centered"); wrap.classList.add("in-nav");
+      wrap.classList.remove("centered", "sticky-top");
+      wrap.classList.add("in-nav");
       document.getElementById("nav-search-slot").appendChild(wrap);
 
+      // avatar
       document.getElementById("prof-avatar").textContent = user.username[0].toUpperCase();
-      document.getElementById("prof-username").textContent = user.username;
+
+      // username with rank styling
+      const unEl = document.getElementById("prof-username");
+      unEl.textContent = user.username;
+      if (user.rank) unEl.classList.add(rankClass(user.rank));
+
       document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
       document.title = `mcbCode | ${user.username}`;
 
+      // rank badge
+      const rankEl = document.getElementById("prof-rank");
+      if (user.rank) {
+        rankEl.textContent = user.rank.toLowerCase();
+        rankEl.style.color = user.rankColor || "#888";
+        rankEl.style.backgroundColor = rankBg(user.rankColor);
+        rankEl.style.display = "block";
+      } else {
+        rankEl.style.display = "none";
+      }
+
+      // bio
       if (user.bio) {
         document.getElementById("prof-bio").textContent = user.bio;
         document.getElementById("prof-bio-empty").style.display = "none";
@@ -314,28 +478,21 @@
         document.getElementById("prof-bio-empty").style.display = "";
       }
 
-      // rank badge
-      const rankEl = document.getElementById("prof-rank");
-      if (user.rank) {
-        rankEl.textContent = user.rank.toLowerCase();
-        rankEl.style.color = user.rankColor || "#888";
-        const color = user.rankColor || "#888";
-        rankEl.style.backgroundColor = color.startsWith("#") && color.length === 7 ? color + "40" : "rgba(136,136,136,.25)";
-        rankEl.style.display = "block";
-      } else {
-        rankEl.style.display = "none";
-      }
-
       const isMe = myUsername && myUsername === user.username;
       if (isMe) {
-        document.getElementById("avatar-wrap").style.cursor = "pointer";
-        document.getElementById("avatar-hint").style.display = "";
+        // avatar clickable only for owner
+        const avatarWrap = document.getElementById("avatar-wrap");
+        avatarWrap.classList.add("clickable");
+        avatarWrap.onclick = openPfpModal;
+        // username edit
         document.getElementById("username-edit-row").style.display = "";
         document.getElementById("username-input").value = user.username;
+        // bio edit
         document.getElementById("bio-edit-row").style.display = "";
         document.getElementById("bio-textarea").value = user.bio || "";
       }
 
+      // projects
       const grid = document.getElementById("project-grid");
       if (!projects.length) {
         grid.innerHTML = `<div class="no-projects">no public projects yet.</div>`;
@@ -352,6 +509,7 @@
       document.getElementById("profile-page").classList.add("visible");
     }
 
+    // ---- USERNAME EDIT ----
     function toggleUsernameEdit() {
       const area = document.getElementById("username-edit-area");
       const isOpen = area.classList.toggle("open");
@@ -372,7 +530,8 @@
         const d = await res.json();
         if (res.ok) {
           msg.textContent = "saved!"; msg.className = "inline-msg ok";
-          document.getElementById("prof-username").textContent = val;
+          const unEl = document.getElementById("prof-username");
+          unEl.textContent = val;
           myUsername = val;
           setTimeout(() => { toggleUsernameEdit(); window.history.replaceState({}, "", `/profile?u=${encodeURIComponent(val)}`); }, 800);
         } else { msg.textContent = d.error || "failed."; msg.className = "inline-msg err"; }
@@ -380,6 +539,7 @@
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
+    // ---- BIO EDIT ----
     function toggleBioEdit() {
       const area = document.getElementById("bio-edit-area");
       const isOpen = area.classList.toggle("open");
@@ -406,6 +566,7 @@
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
+    // ---- PFP MODAL ----
     function openPfpModal() {
       document.getElementById("pfp-overlay").classList.add("open");
     }
@@ -413,13 +574,12 @@
       document.getElementById("pfp-overlay").classList.remove("open");
       document.getElementById("pfp-drop-zone").style.display = "";
       document.getElementById("pfp-preview-wrap").classList.remove("visible");
-      document.getElementById("pfp-coming-soon").style.display = "none";
+      document.getElementById("pfp-soon").style.display = "none";
       document.getElementById("pfp-file-input").value = "";
     }
 
     const dropZone = document.getElementById("pfp-drop-zone");
     const fileInput = document.getElementById("pfp-file-input");
-
     fileInput.addEventListener("change", e => { if (e.target.files[0]) handlePfpFile(e.target.files[0]); });
     dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
     dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
@@ -428,15 +588,14 @@
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) handlePfpFile(file);
     });
-
     function handlePfpFile(file) {
       const reader = new FileReader();
       reader.onload = e => {
-        document.getElementById("pfp-drop-zone").style.display = "none";
+        dropZone.style.display = "none";
         document.getElementById("pfp-preview-wrap").classList.add("visible");
         document.getElementById("pfp-preview").src = e.target.result;
         document.getElementById("pfp-preview-name").textContent = file.name;
-        document.getElementById("pfp-coming-soon").style.display = "";
+        document.getElementById("pfp-soon").style.display = "";
       };
       reader.readAsDataURL(file);
     }
