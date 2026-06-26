@@ -296,8 +296,11 @@
     </div>
 
     <div class="projects-panel">
-      <h2>Projects</h2>
+      <h2>Owned by me</h2>
       <div class="project-grid" id="project-grid"></div>
+
+      <h2 style="margin-top:40px;">Collaborating with</h2>
+      <div class="project-grid" id="collab-grid"></div>
     </div>
   </div>
 
@@ -441,8 +444,11 @@
     }
 
     function renderProfile(data) {
-      const { user, projects } = data;
-
+      const {
+        user,
+        projects,
+        collaborating = []
+      } = data;
       // move search to topnav
       searchInLanding = false;
       const wrap = document.getElementById("search-wrap");
@@ -666,6 +672,27 @@ async function uploadPfp() {
     document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
   </script>
 
+  <script>
+    const collabGrid = document.getElementById("collab-grid");
+
+if (!collaborating.length) {
+    collabGrid.innerHTML = `
+        <div class="no-projects">
+            not collaborating on any public projects.
+        </div>
+    `;
+} else {
+    collabGrid.innerHTML = collaborating.map(p => `
+        <div class="project-card">
+            <div class="project-card-name">${esc(p.name)}</div>
+            <div class="project-card-desc">${esc(p.description || "")}</div>
+            <div class="project-card-date">
+                Owner: ${esc(p.owner)}
+            </div>
+        </div>
+    `).join("");
+}
+  </script>
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
