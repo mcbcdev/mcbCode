@@ -443,91 +443,114 @@
       } catch { msg.textContent = "Failed to load profile."; msg.className = "center-msg err"; }
     }
 
-    function renderProfile(data) {
-      const {
-        user,
-        projects,
-        collaborating = []
-      } = data;
-      // move search to topnav
-      searchInLanding = false;
-      const wrap = document.getElementById("search-wrap");
-      wrap.classList.remove("centered", "sticky-top");
-      wrap.classList.add("in-nav");
-      document.getElementById("nav-search-slot").appendChild(wrap);
+function renderProfile(data) {
+  const {
+    user,
+    projects,
+    collaborating = []
+  } = data;
 
-      // avatar
-const avatarEl = document.getElementById("prof-avatar");
+  // move search to topnav
+  searchInLanding = false;
+  const wrap = document.getElementById("search-wrap");
+  wrap.classList.remove("centered", "sticky-top");
+  wrap.classList.add("in-nav");
+  document.getElementById("nav-search-slot").appendChild(wrap);
 
-if (user.pfp_url) {
-  avatarEl.innerHTML = `
-    <img
-      src="${user.pfp_url}?t=${Date.now()}"
-      alt="Profile Picture"
-    >
-  `;
-} else {
-  avatarEl.textContent = user.username[0].toUpperCase();
+  // avatar
+  const avatarEl = document.getElementById("prof-avatar");
+
+  if (user.pfp_url) {
+    avatarEl.innerHTML = `
+      <img
+        src="${user.pfp_url}?t=${Date.now()}"
+        alt="Profile Picture"
+      >
+    `;
+  } else {
+    avatarEl.textContent = user.username[0].toUpperCase();
+  }
+
+  // username with rank styling
+  const unEl = document.getElementById("prof-username");
+  unEl.textContent = user.username;
+  if (user.rank) unEl.classList.add(rankClass(user.rank));
+
+  document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
+  document.title = `mcbCode | ${user.username}`;
+
+  // rank badge
+  const rankEl = document.getElementById("prof-rank");
+  if (user.rank) {
+    rankEl.textContent = user.rank.toLowerCase();
+    rankEl.style.color = user.rankColor || "#888";
+    rankEl.style.backgroundColor = rankBg(user.rankColor);
+    rankEl.style.display = "block";
+  } else {
+    rankEl.style.display = "none";
+  }
+
+  // bio
+  if (user.bio) {
+    document.getElementById("prof-bio").textContent = user.bio;
+    document.getElementById("prof-bio").style.display = "";
+    document.getElementById("prof-bio-empty").style.display = "none";
+  } else {
+    document.getElementById("prof-bio").style.display = "none";
+    document.getElementById("prof-bio-empty").style.display = "";
+  }
+
+  const isMe = myUsername && myUsername === user.username;
+
+  if (isMe) {
+    // avatar clickable only for owner
+    const avatarWrap = document.getElementById("avatar-wrap");
+    avatarWrap.classList.add("clickable");
+    avatarWrap.onclick = openPfpModal;
+
+    // username edit
+    document.getElementById("username-edit-row").style.display = "";
+    document.getElementById("username-input").value = user.username;
+
+    // bio edit
+    document.getElementById("bio-edit-row").style.display = "";
+    document.getElementById("bio-textarea").value = user.bio || "";
+  }
+
+  // owned projects
+  const grid = document.getElementById("project-grid");
+
+  if (!projects.length) {
+    grid.innerHTML = `<div class="no-projects">no public projects yet.</div>`;
+  } else {
+    grid.innerHTML = projects.map(p => `
+      <div class="project-card" onclick="window.location.href='/project/${esc(p.share_code)}/'">
+        <div class="project-card-name">${esc(p.name)}</div>
+        ${p.description ? `<div class="project-card-desc">${esc(p.description)}</div>` : ""}
+        <div class="project-card-date">updated ${fmtDate(p.updated_at)}</div>
+      </div>
+    `).join("");
+  }
+
+  // collaborated projects
+  const collabGrid = document.getElementById("collab-grid");
+
+  if (!collaborating.length) {
+    collabGrid.innerHTML = `<div class="no-projects">not collaborating on any public projects.</div>`;
+  } else {
+    collabGrid.innerHTML = collaborating.map(p => `
+      <div class="project-card" onclick="window.location.href='/project/${esc(p.share_code)}/'">
+        <div class="project-card-name">${esc(p.name)}</div>
+        ${p.description ? `<div class="project-card-desc">${esc(p.description)}</div>` : ""}
+        <div class="project-card-date">
+          owner: ${esc(p.owner)} • updated ${fmtDate(p.updated_at)}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("profile-page").classList.add("visible");
 }
-
-      // username with rank styling
-      const unEl = document.getElementById("prof-username");
-      unEl.textContent = user.username;
-      if (user.rank) unEl.classList.add(rankClass(user.rank));
-
-      document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
-      document.title = `mcbCode | ${user.username}`;
-
-      // rank badge
-      const rankEl = document.getElementById("prof-rank");
-      if (user.rank) {
-        rankEl.textContent = user.rank.toLowerCase();
-        rankEl.style.color = user.rankColor || "#888";
-        rankEl.style.backgroundColor = rankBg(user.rankColor);
-        rankEl.style.display = "block";
-      } else {
-        rankEl.style.display = "none";
-      }
-
-      // bio
-      if (user.bio) {
-        document.getElementById("prof-bio").textContent = user.bio;
-        document.getElementById("prof-bio-empty").style.display = "none";
-      } else {
-        document.getElementById("prof-bio").style.display = "none";
-        document.getElementById("prof-bio-empty").style.display = "";
-      }
-
-      const isMe = myUsername && myUsername === user.username;
-      if (isMe) {
-        // avatar clickable only for owner
-        const avatarWrap = document.getElementById("avatar-wrap");
-        avatarWrap.classList.add("clickable");
-        avatarWrap.onclick = openPfpModal;
-        // username edit
-        document.getElementById("username-edit-row").style.display = "";
-        document.getElementById("username-input").value = user.username;
-        // bio edit
-        document.getElementById("bio-edit-row").style.display = "";
-        document.getElementById("bio-textarea").value = user.bio || "";
-      }
-
-      // projects
-      const grid = document.getElementById("project-grid");
-      if (!projects.length) {
-        grid.innerHTML = `<div class="no-projects">no public projects yet.</div>`;
-      } else {
-        grid.innerHTML = projects.map(p => `
-          <div class="project-card" onclick="window.location.href='/project/${esc(p.share_code)}/'">
-            <div class="project-card-name">${esc(p.name)}</div>
-            ${p.description ? `<div class="project-card-desc">${esc(p.description)}</div>` : ""}
-            <div class="project-card-date">updated ${fmtDate(p.updated_at)}</div>
-          </div>
-        `).join("");
-      }
-
-      document.getElementById("profile-page").classList.add("visible");
-    }
 
     // ---- USERNAME EDIT ----
     function toggleUsernameEdit() {
@@ -672,27 +695,7 @@ async function uploadPfp() {
     document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
   </script>
 
-  <script>
-    const collabGrid = document.getElementById("collab-grid");
 
-if (!collaborating.length) {
-    collabGrid.innerHTML = `
-        <div class="no-projects">
-            not collaborating on any public projects.
-        </div>
-    `;
-} else {
-    collabGrid.innerHTML = collaborating.map(p => `
-        <div class="project-card">
-            <div class="project-card-name">${esc(p.name)}</div>
-            <div class="project-card-desc">${esc(p.description || "")}</div>
-            <div class="project-card-date">
-                Owner: ${esc(p.owner)}
-            </div>
-        </div>
-    `).join("");
-}
-  </script>
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
