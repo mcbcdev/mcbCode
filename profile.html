@@ -216,7 +216,9 @@
       <div class="pfp-soon" id="pfp-soon">looking good! saving is coming soon.</div>
       <div class="pfp-modal-actions">
         <button class="cancel-btn" onclick="closePfpModal()">Close</button>
-        <button class="soon-btn" disabled>Save (coming soon)</button>
+<button class="sm-btn primary" id="pfp-save-btn" onclick="uploadPfp()" style="display:none;">
+  Save
+</button>
       </div>
     </div>
   </div>
@@ -310,6 +312,7 @@
     let acSelected = -1;
     let acResults  = [];
     let searchInLanding = true; // track if search is still in landing vs topnav
+    let selectedPfpFile = null;
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
     function fmtDate(s) {
@@ -448,7 +451,18 @@
       document.getElementById("nav-search-slot").appendChild(wrap);
 
       // avatar
-      document.getElementById("prof-avatar").textContent = user.username[0].toUpperCase();
+const avatarEl = document.getElementById("prof-avatar");
+
+if (user.pfp_url) {
+  avatarEl.innerHTML = `
+    <img
+      src="${user.pfp_url}?t=${Date.now()}"
+      alt="Profile Picture"
+    >
+  `;
+} else {
+  avatarEl.textContent = user.username[0].toUpperCase();
+}
 
       // username with rank styling
       const unEl = document.getElementById("prof-username");
@@ -588,17 +602,65 @@
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith("image/")) handlePfpFile(file);
     });
-    function handlePfpFile(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        dropZone.style.display = "none";
-        document.getElementById("pfp-preview-wrap").classList.add("visible");
-        document.getElementById("pfp-preview").src = e.target.result;
-        document.getElementById("pfp-preview-name").textContent = file.name;
-        document.getElementById("pfp-soon").style.display = "";
-      };
-      reader.readAsDataURL(file);
+function handlePfpFile(file) {
+  selectedPfpFile = file;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    dropZone.style.display = "none";
+
+    document.getElementById("pfp-preview-wrap").classList.add("visible");
+    document.getElementById("pfp-preview").src = e.target.result;
+    document.getElementById("pfp-preview-name").textContent = file.name;
+
+    document.getElementById("pfp-save-btn").style.display = "";
+  };
+
+  reader.readAsDataURL(file);
+}
+
+async function uploadPfp() {
+  if (!selectedPfpFile) return;
+
+  const btn = document.getElementById("pfp-save-btn");
+
+  try {
+    btn.disabled = true;
+    btn.textContent = "Uploading...";
+
+    const res = await fetch(`${AUTH}/pfp`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": selectedPfpFile.type
+      },
+      body: selectedPfpFile
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Upload failed");
     }
+
+    const avatar = document.getElementById("prof-avatar");
+
+    avatar.innerHTML = `
+      <img
+        src="${data.pfp_url}?t=${Date.now()}"
+        alt="Profile Picture"
+      >
+    `;
+
+    closePfpModal();
+
+  } catch (err) {
+    alert(err.message || "Failed to upload image");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save";
+  }
+}
 
     document.getElementById("pfp-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePfpModal(); });
     document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
