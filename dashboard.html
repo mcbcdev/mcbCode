@@ -8,853 +8,186 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <title>mcbCode | Dashboard</title>
   <style>
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
-}
-
-html,
-body {
-	height: 100%;
-	background: #0c0c0c;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	overflow-x: hidden;
-}
-
-a {
-	text-decoration: none;
-	color: #ffffff;
-	transition: color 0.2s;
-}
-
-a:hover {
-	color: #05ee93;
-}
-
-g {
-	color: #05ee93;
-}
-
-c {
-	color: #e7007b;
-}
-
-.topnav {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 56px;
-	background: rgba(20, 20, 20, 0.85);
-	backdrop-filter: blur(8px);
-	border-bottom: 1px solid #1f1f1f;
-	display: flex;
-	align-items: center;
-	padding: 0 16px;
-	z-index: 200;
-	gap: 16px;
-}
-
-.topnav-title {
-	font-size: 20px;
-	color: #ffffff;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.topnav-right {
-	margin-left: auto;
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	font-size: 14px;
-}
-
-#user-email {
-	color: #888;
-	font-size: 13px;
-}
-
-.logout-btn {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 13px;
-	padding: 6px 12px;
-	cursor: pointer;
-	transition: color 0.2s, border-color 0.2s;
-}
-
-.logout-btn:hover {
-	color: #ff5555;
-	border-color: #ff5555;
-}
-
-.sidebar-toggle {
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 6px;
-	color: #888;
-	font-size: 20px;
-	line-height: 1;
-	transition: color 0.2s;
-	flex-shrink: 0;
-}
-
-.sidebar-toggle:hover {
-	color: #05ee93;
-}
-
-.layout {
-	display: flex;
-	margin-top: 56px;
-	min-height: calc(100vh - 56px);
-}
-
-.sidebar {
-	width: 220px;
-	min-width: 220px;
-	background: #0c0c0cbf;
-    backdrop-filter: blur(6px);
-	border-right: 1px solid #1f1f1f;
-	display: flex;
-	flex-direction: column;
-	position: fixed;
-	top: 56px;
-	bottom: 0;
-	left: 0;
-	transition: width 0.2s ease, min-width 0.2s ease;
-	overflow: hidden;
-	z-index: 100;
-}
-
-.sidebar.collapsed {
-	width: 52px;
-	min-width: 52px;
-}
-
-.sidebar-nav {
-	display: flex;
-	flex-direction: column;
-	padding: 12px 0;
-	gap: 2px;
-	flex: 1;
-	overflow-y: auto;
-}
-
-.sidebar-item {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 10px 14px;
-	cursor: pointer;
-	color: #888;
-	font-size: 14px;
-	white-space: nowrap;
-	transition: background 0.2s, color 0.2s;
-	border-left: 3px solid transparent;
-}
-
-.sidebar-item:hover {
-	background: #1a1a1a;
-	color: #ffffff;
-}
-
-.sidebar-item.active {
-	background: #1a1a1a;
-	color: #05ee93;
-	border-left-color: #05ee93;
-}
-
-.sidebar-item img {
-	width: 24px;
-	height: 24px;
-	flex-shrink: 0;
-	image-rendering: pixelated;
-	opacity: 0.7;
-	transition: opacity 0.2s;
-}
-
-.sidebar-item:hover img,
-.sidebar-item.active img {
-	opacity: 1;
-}
-
-.sidebar-item span {
-	transition: opacity 0.2s;
-	overflow: hidden;
-}
-
-.sidebar.collapsed .sidebar-item span {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.sidebar.collapsed .sidebar-item {
-	padding: 10px 14px;
-	justify-content: center;
-}
-
-.sidebar-label {
-	font-size: 12px;
-	color: #444;
-	line-height: 0.4em;
-	font-family: mcfontb;
-	padding: 16px 14px 4px;
-	white-space: nowrap;
-	overflow: hidden;
-	transition: opacity 0.2s;
-}
-
-.sidebar.collapsed .sidebar-label {
-	opacity: 0;
-}
-
-.sidebar-bottom {
-	border-top: 1px solid #1f1f1f;
-	padding: 8px 0;
-}
-
-.main {
-    flex: 1;
-    padding: 40px 48px;
-    max-width: 100%;
-
-    margin-left: 36px;
-}
-
-
-.dash-section {
-	margin-bottom: 64px;
-	scroll-margin-top: 80px;
-}
-
-.dash-section h2 {
-	font-size: 22px;
-	color: #ffffff;
-	margin-bottom: 6px;
-	border-bottom: 1px solid #1f1f1f;
-	padding-bottom: 10px;
-}
-
-.dash-section p {
-	font-size: 14px;
-	color: #666;
-	margin-top: 8px;
-}
-
-.card-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 16px;
-	margin-top: 20px;
-}
-
-.card {
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 20px;
-	transition: border-color 0.2s;
-}
-
-.card:hover {
-	border-color: #05ee93;
-}
-
-.card h3 {
-	color: #ffffff;
-	font-size: 15px;
-	margin-bottom: 8px;
-}
-
-.card p {
-	font-size: 13px;
-	color: #555;
-	margin: 0;
-}
-
-.stat-row {
-	display: flex;
-	gap: 16px;
-	margin-top: 20px;
-	flex-wrap: wrap;
-}
-
-.stat {
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 20px 28px;
-	flex: 1;
-	min-width: 120px;
-}
-
-.stat-value {
-	font-size: 28px;
-	color: #05ee93;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.stat-label {
-	font-size: 12px;
-	color: #555;
-	margin-top: 4px;
-}
-
-.empty {
-	margin-top: 20px;
-	padding: 40px;
-	background: #111;
-	border: 1px dashed #2a2a2a;
-	text-align: center;
-	color: #bebebe;
-	font-size: 14px;
-}
-
-select {
-	padding: 4px;
-	width: 120px;
-	background-color: #111;
-	border: 1px dashed #2a2a2a;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	transition: all 0.2s ease-in-out;
-}
-
-select:hover {
-	border: 1px dashed #05ee93;
-	color: #05ee93;
-}
-
-input[type="checkbox"] {
-	appearance: none;
-	-webkit-appearance: none;
-	background-color: #323232;
-	width: 1.5em;
-	height: 1.5em;
-	cursor: pointer;
-	display: inline-block;
-	vertical-align: middle;
-	transition: all 0.2s ease-in-out;
-	flex-shrink: 0;
-}
-
-input[type="checkbox"]:checked {
-	background-color: #05ee93;
-}
-
-.text-input {
-	background-color: #111;
-	border: 1px solid #2e2e2e;
-	outline: none;
-	padding: 6px 10px;
-	color: #ffffff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	transition: border-color 0.2s;
-}
-
-.text-input:focus {
-	border-color: #05ee93;
-}
-
-#customTheme {
-	background-color: #323232;
-	border: none;
-	outline: none;
-	padding: 4px;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-}
-
-.save-btn {
-	padding: 6px 8px;
-	background-color: #05ee93;
-	border: none;
-	outline: none;
-	font-size: 18px;
-	font-family: 'mcfont', sans-serif;
-	cursor: pointer;
-	transition: all 0.2s ease-in-out;
-}
-
-.save-btn:hover {
-	background-color: #78e3a6;
-}
-
-.save-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.settings-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 16px;
-	font-size: 14px;
-}
-
-.save-msg {
-	font-size: 13px;
-	margin-left: 10px;
-	display: none;
-}
-
-.save-msg.ok {
-	color: #05ee93;
-	display: inline;
-}
-
-.save-msg.err {
-	color: #ff5555;
-	display: inline;
-}
-
-.project-toolbar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-top: 16px;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.project-list-header {
-	font-size: 12px;
-	color: #444;
-}
-
-.new-project-btn {
-	background: #05ee93;
-	border: none;
-	color: #0c0c0c;
-	font-family: 'mcfont', sans-serif;
-	font-size: 13px;
-	padding: 6px 14px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.new-project-btn:hover {
-	background: #78e3a6;
-}
-
-.new-project-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.project-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	margin-top: 12px;
-}
-
-.project-row {
-	display: flex;
-	align-items: center;
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 12px 16px;
-	gap: 16px;
-	transition: border-color 0.2s;
-}
-
-.project-row:hover {
-	border-color: #2a2a2a;
-}
-
-.project-info {
-	flex: 1;
-	min-width: 0;
-}
-
-.project-name {
-	color: #ffffff;
-	font-size: 14px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.project-name span {
-	color: #444;
-	font-size: 12px;
-	margin-left: 6px;
-}
-
-.project-desc {
-	font-size: 12px;
-	color: #444;
-	margin-top: 2px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.project-date {
-	font-size: 12px;
-	color: #444;
-	white-space: nowrap;
-	flex-shrink: 0;
-}
-
-.project-actions {
-	display: flex;
-	gap: 8px;
-	flex-shrink: 0;
-}
-
-.proj-btn {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 12px;
-	padding: 4px 10px;
-	cursor: pointer;
-	transition: color 0.2s, border-color 0.2s;
-}
-
-.proj-btn:hover {
-	color: #05ee93;
-	border-color: #05ee93;
-}
-
-.proj-btn.danger:hover {
-	color: #ff5555;
-	border-color: #ff5555;
-}
-
-.proj-badge {
-	font-size: 10px;
-	padding: 2px 6px;
-	border: 1px solid #2a2a2a;
-	color: #444;
-	margin-left: 6px;
-}
-
-.proj-badge.public {
-	border-color: #05ee93;
-	color: #05ee93;
-}
-
-.modal-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.75);
-	z-index: 500;
-	align-items: center;
-	justify-content: center;
-}
-
-.modal-overlay.visible {
-	display: flex;
-}
-
-.modal-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 28px 32px;
-	min-width: 360px;
-	max-width: 480px;
-	width: 100%;
-}
-
-.modal-box h3 {
-	color: #fff;
-	font-size: 16px;
-	margin-bottom: 20px;
-}
-
-.modal-field {
-	margin-bottom: 16px;
-}
-
-.modal-field label {
-	display: block;
-	font-size: 12px;
-	color: #555;
-	margin-bottom: 6px;
-}
-
-.modal-field input,
-.modal-field textarea {
-	width: 100%;
-	background: #111;
-	border: 1px solid #2e2e2e;
-	color: #fff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 8px 10px;
-	outline: none;
-	transition: border-color 0.2s;
-	resize: none;
-}
-
-.modal-field input:focus,
-.modal-field textarea:focus {
-	border-color: #05ee93;
-}
-
-.modal-actions {
-	display: flex;
-	gap: 10px;
-	margin-top: 20px;
-	justify-content: flex-end;
-}
-
-.modal-err {
-	font-size: 12px;
-	color: #ff5555;
-	margin-top: 8px;
-	display: none;
-}
-
-.modal-err.visible {
-	display: block;
-}
-
-.confirm-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.75);
-	z-index: 500;
-	align-items: center;
-	justify-content: center;
-}
-
-.confirm-overlay.visible {
-	display: flex;
-}
-
-.confirm-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 28px 32px;
-	min-width: 320px;
-	text-align: center;
-}
-
-.confirm-box p {
-	font-size: 15px;
-	color: #ffffff;
-	margin-bottom: 8px;
-}
-
-.confirm-box small {
-	font-size: 12px;
-	color: #555;
-}
-
-.confirm-actions {
-	display: flex;
-	gap: 10px;
-	margin-top: 20px;
-	justify-content: center;
-}
-
-.confirm-yes {
-	background: #ff5555;
-	border: none;
-	color: #ffffff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 6px 18px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.confirm-yes:hover {
-	background: #cc0000;
-}
-
-.confirm-no {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 6px 18px;
-	cursor: pointer;
-}
-
-.confirm-no:hover {
-	color: #ffffff;
-}
-
-.account-field {
-	margin-bottom: 24px;
-}
-
-.account-field label {
-	display: block;
-	font-size: 12px;
-	color: #555;
-	margin-bottom: 6px;
-}
-
-.account-badge {
-	display: inline-block;
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 3px 8px;
-	font-size: 12px;
-	color: #888;
-	margin-left: 8px;
-}
-
-.account-badge.github {
-	border-color: #444;
-	color: #aaa;
-}
-
-.danger-zone {
-	margin-top: 40px;
-	border-top: 1px solid #1f1f1f;
-	padding-top: 24px;
-}
-
-.danger-zone h3 {
-	color: #ff5555;
-	font-size: 15px;
-	margin-bottom: 12px;
-}
-
-.delete-account-btn {
-	background: transparent;
-	border: 1px solid #ff5555;
-	color: #ff5555;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 7px 16px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.delete-account-btn:hover {
-	background: #ff5555;
-	color: #ffffff;
-}
-
-/* username gate modal — no close button, blocking */
-.gate-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.92);
-	z-index: 999;
-	align-items: center;
-	justify-content: center;
-}
-
-.gate-overlay.visible {
-	display: flex;
-}
-
-.gate-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 36px 40px;
-	min-width: 360px;
-	max-width: 460px;
-	width: 100%;
-}
-
-.gate-box h3 {
-	color: #fff;
-	font-size: 18px;
-	margin-bottom: 8px;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.gate-box p {
-	font-size: 13px;
-	color: #555;
-	margin-bottom: 24px;
-	line-height: 1.5;
-}
-
-.gate-box label {
-	display: block;
-	font-size: 11px;
-	color: #555;
-	margin-bottom: 6px;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-}
-
-.gate-input {
-	width: 100%;
-	background: #111;
-	border: 1px solid #2e2e2e;
-	color: #fff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 15px;
-	padding: 10px 12px;
-	outline: none;
-	transition: border-color 0.2s;
-}
-
-.gate-input:focus {
-	border-color: #05ee93;
-}
-
-.gate-hint {
-	font-size: 11px;
-	color: #333;
-	margin-top: 5px;
-}
-
-.gate-err {
-	font-size: 12px;
-	color: #ff5555;
-	margin-top: 8px;
-	display: none;
-}
-
-.gate-err.visible {
-	display: block;
-}
-
-.gate-btn {
-	margin-top: 20px;
-	width: 100%;
-	padding: 10px;
-	background: #05ee93;
-	border: none;
-	color: #0c0c0c;
-	font-family: 'mcfontb', sans-serif;
-	font-size: 15px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.gate-btn:hover {
-	background: #78e3a6;
-}
-
-.gate-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.hidden {
-    display: none !important;
-}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;background:#0c0c0c;color:#bebebe;font-family:'mcfont',sans-serif;overflow-x:hidden;}
+    a{text-decoration:none;color:#ffffff;transition:color 0.2s;}
+    a:hover{color:#05ee93;}
+    g{color:#05ee93;}
+    c{color:#e7007b;}
+
+    .topnav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(20,20,20,0.85);backdrop-filter:blur(8px);border-bottom:1px solid #1f1f1f;display:flex;align-items:center;padding:0 16px;z-index:200;gap:16px;}
+    .topnav-title{font-size:20px;color:#ffffff;font-family:'mcfontb',sans-serif;}
+    .topnav-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:14px;}
+    #user-email{color:#888;font-size:13px;}
+    .logout-btn{background:#1e1e1e;border:1px solid #2e2e2e;color:#bebebe;font-family:'mcfont',sans-serif;font-size:13px;padding:6px 12px;cursor:pointer;transition:color 0.2s,border-color 0.2s;}
+    .logout-btn:hover{color:#ff5555;border-color:#ff5555;}
+    .sidebar-toggle{background:none;border:none;cursor:pointer;padding:6px;color:#888;font-size:20px;line-height:1;transition:color 0.2s;flex-shrink:0;}
+    .sidebar-toggle:hover{color:#05ee93;}
+
+    .layout{display:flex;margin-top:56px;min-height:calc(100vh - 56px);}
+
+    .sidebar{width:220px;min-width:220px;background:#0c0c0cbf;backdrop-filter:blur(6px);border-right:1px solid #1f1f1f;display:flex;flex-direction:column;position:fixed;top:56px;bottom:0;left:0;transition:width 0.2s ease,min-width 0.2s ease;overflow:hidden;z-index:100;}
+    .sidebar.collapsed{width:52px;min-width:52px;}
+    .sidebar-nav{display:flex;flex-direction:column;padding:12px 0;gap:2px;flex:1;overflow-y:auto;}
+    .sidebar-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;color:#888;font-size:14px;white-space:nowrap;transition:background 0.2s,color 0.2s;border-left:3px solid transparent;}
+    .sidebar-item:hover{background:#1a1a1a;color:#ffffff;}
+    .sidebar-item.active{background:#1a1a1a;color:#05ee93;border-left-color:#05ee93;}
+    .sidebar-item img{width:24px;height:24px;flex-shrink:0;image-rendering:pixelated;opacity:0.7;transition:opacity 0.2s;}
+    .sidebar-item:hover img,.sidebar-item.active img{opacity:1;}
+    .sidebar-item span{transition:opacity 0.2s;overflow:hidden;}
+    .sidebar.collapsed .sidebar-item span{opacity:0;pointer-events:none;}
+    .sidebar.collapsed .sidebar-item{padding:10px 14px;justify-content:center;}
+    .sidebar-label{font-size:12px;color:#444;line-height:0.4em;font-family:mcfontb;padding:16px 14px 4px;white-space:nowrap;overflow:hidden;transition:opacity 0.2s;}
+    .sidebar.collapsed .sidebar-label{opacity:0;}
+    .sidebar-bottom{border-top:1px solid #1f1f1f;padding:8px 0;}
+
+    .main{flex:1;padding:40px 48px;max-width:100%;margin-left:36px;}
+
+    .dash-section{margin-bottom:64px;scroll-margin-top:80px;}
+    .dash-section h2{font-size:22px;color:#ffffff;margin-bottom:6px;border-bottom:1px solid #1f1f1f;padding-bottom:10px;}
+    .dash-section p{font-size:14px;color:#666;margin-top:8px;}
+
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:20px;}
+    .card{background:#141414;border:1px solid #1f1f1f;padding:20px;transition:border-color 0.2s;}
+    .card:hover{border-color:#05ee93;}
+    .card h3{color:#ffffff;font-size:15px;margin-bottom:8px;}
+    .card p{font-size:13px;color:#555;margin:0;}
+
+    .stat-row{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;}
+    .stat{background:#141414;border:1px solid #1f1f1f;padding:20px 28px;flex:1;min-width:120px;}
+    .stat-value{font-size:28px;color:#05ee93;font-family:'mcfontb',sans-serif;}
+    .stat-label{font-size:12px;color:#555;margin-top:4px;}
+
+    .empty{margin-top:20px;padding:40px;background:#111;border:1px dashed #2a2a2a;text-align:center;color:#bebebe;font-size:14px;}
+
+    select{padding:4px;width:120px;background-color:#111;border:1px dashed #2a2a2a;color:#bebebe;font-family:'mcfont',sans-serif;transition:all 0.2s ease-in-out;}
+    select:hover{border:1px dashed #05ee93;color:#05ee93;}
+    input[type="checkbox"]{appearance:none;-webkit-appearance:none;background-color:#323232;width:1.5em;height:1.5em;cursor:pointer;display:inline-block;vertical-align:middle;transition:all 0.2s ease-in-out;flex-shrink:0;}
+    input[type="checkbox"]:checked{background-color:#05ee93;}
+    .text-input{background-color:#111;border:1px solid #2e2e2e;outline:none;padding:6px 10px;color:#ffffff;font-family:'mcfont',sans-serif;font-size:14px;transition:border-color 0.2s;}
+    .text-input:focus{border-color:#05ee93;}
+    #customTheme{background-color:#323232;border:none;outline:none;padding:4px;color:#bebebe;font-family:'mcfont',sans-serif;}
+    .save-btn{padding:6px 8px;background-color:#05ee93;border:none;outline:none;font-size:18px;font-family:'mcfont',sans-serif;cursor:pointer;transition:all 0.2s ease-in-out;}
+    .save-btn:hover{background-color:#78e3a6;}
+    .save-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .settings-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:14px;}
+    .save-msg{font-size:13px;margin-left:10px;display:none;}
+    .save-msg.ok{color:#05ee93;display:inline;}
+    .save-msg.err{color:#ff5555;display:inline;}
+
+    .project-toolbar{display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:8px;}
+    .project-list-header{font-size:12px;color:#444;}
+    .new-project-btn{background:#05ee93;border:none;color:#0c0c0c;font-family:'mcfont',sans-serif;font-size:13px;padding:6px 14px;cursor:pointer;transition:background 0.2s;}
+    .new-project-btn:hover{background:#78e3a6;}
+    .new-project-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .project-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+    .project-row{display:flex;align-items:center;background:#141414;border:1px solid #1f1f1f;padding:12px 16px;gap:16px;transition:border-color 0.2s;}
+    .project-row:hover{border-color:#2a2a2a;}
+    .project-info{flex:1;min-width:0;}
+    .project-name{color:#ffffff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .project-name span{color:#444;font-size:12px;margin-left:6px;}
+    .project-desc{font-size:12px;color:#444;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .project-date{font-size:12px;color:#444;white-space:nowrap;flex-shrink:0;}
+    .project-actions{display:flex;gap:8px;flex-shrink:0;}
+    .proj-btn{background:#1e1e1e;border:1px solid #2e2e2e;color:#bebebe;font-family:'mcfont',sans-serif;font-size:12px;padding:4px 10px;cursor:pointer;transition:color 0.2s,border-color 0.2s;}
+    .proj-btn:hover{color:#05ee93;border-color:#05ee93;}
+    .proj-btn.danger:hover{color:#ff5555;border-color:#ff5555;}
+    .proj-badge{font-size:10px;padding:2px 6px;border:1px solid #2a2a2a;color:#444;margin-left:6px;}
+    .proj-badge.public{border-color:#05ee93;color:#05ee93;}
+
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;}
+    .modal-overlay.visible{display:flex;}
+    .modal-box{background:#1a1a1a;border:1px solid #2e2e2e;padding:28px 32px;min-width:360px;max-width:480px;width:100%;}
+    .modal-box h3{color:#fff;font-size:16px;margin-bottom:20px;}
+    .modal-field{margin-bottom:16px;}
+    .modal-field label{display:block;font-size:12px;color:#555;margin-bottom:6px;}
+    .modal-field input,.modal-field textarea{width:100%;background:#111;border:1px solid #2e2e2e;color:#fff;font-family:'mcfont',sans-serif;font-size:14px;padding:8px 10px;outline:none;transition:border-color 0.2s;resize:none;}
+    .modal-field input:focus,.modal-field textarea:focus{border-color:#05ee93;}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+    .modal-err{font-size:12px;color:#ff5555;margin-top:8px;display:none;}
+    .modal-err.visible{display:block;}
+
+    .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;}
+    .confirm-overlay.visible{display:flex;}
+    .confirm-box{background:#1a1a1a;border:1px solid #2e2e2e;padding:28px 32px;min-width:320px;text-align:center;}
+    .confirm-box p{font-size:15px;color:#ffffff;margin-bottom:8px;}
+    .confirm-box small{font-size:12px;color:#555;}
+    .confirm-actions{display:flex;gap:10px;margin-top:20px;justify-content:center;}
+    .confirm-yes{background:#ff5555;border:none;color:#ffffff;font-family:'mcfont',sans-serif;font-size:14px;padding:6px 18px;cursor:pointer;transition:background 0.2s;}
+    .confirm-yes:hover{background:#cc0000;}
+    .confirm-no{background:#1e1e1e;border:1px solid #2e2e2e;color:#bebebe;font-family:'mcfont',sans-serif;font-size:14px;padding:6px 18px;cursor:pointer;}
+    .confirm-no:hover{color:#ffffff;}
+
+    .account-field{margin-bottom:24px;}
+    .account-field label{display:block;font-size:12px;color:#555;margin-bottom:6px;}
+    .account-badge{display:inline-block;background:#1a1a1a;border:1px solid #2e2e2e;padding:3px 8px;font-size:12px;color:#888;margin-left:8px;}
+    .account-badge.github{border-color:#444;color:#aaa;}
+    .danger-zone{margin-top:40px;border-top:1px solid #1f1f1f;padding-top:24px;}
+    .danger-zone h3{color:#ff5555;font-size:15px;margin-bottom:12px;}
+    .delete-account-btn{background:transparent;border:1px solid #ff5555;color:#ff5555;font-family:'mcfont',sans-serif;font-size:14px;padding:7px 16px;cursor:pointer;transition:background 0.2s;}
+    .delete-account-btn:hover{background:#ff5555;color:#ffffff;}
+
+    /* username gate */
+    .gate-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;align-items:center;justify-content:center;}
+    .gate-overlay.visible{display:flex;}
+    .gate-box{background:#1a1a1a;border:1px solid #2e2e2e;padding:36px 40px;min-width:360px;max-width:460px;width:100%;}
+    .gate-box h3{color:#fff;font-size:18px;margin-bottom:8px;font-family:'mcfontb',sans-serif;}
+    .gate-box p{font-size:13px;color:#555;margin-bottom:24px;line-height:1.5;}
+    .gate-box label{display:block;font-size:11px;color:#555;margin-bottom:6px;letter-spacing:0.06em;text-transform:uppercase;}
+    .gate-input{width:100%;background:#111;border:1px solid #2e2e2e;color:#fff;font-family:'mcfont',sans-serif;font-size:15px;padding:10px 12px;outline:none;transition:border-color 0.2s;}
+    .gate-input:focus{border-color:#05ee93;}
+    .gate-hint{font-size:11px;color:#333;margin-top:5px;}
+    .gate-err{font-size:12px;color:#ff5555;margin-top:8px;display:none;}
+    .gate-err.visible{display:block;}
+    .gate-btn{margin-top:20px;width:100%;padding:10px;background:#05ee93;border:none;color:#0c0c0c;font-family:'mcfontb',sans-serif;font-size:15px;cursor:pointer;transition:background 0.2s;}
+    .gate-btn:hover{background:#78e3a6;}
+    .gate-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+    /* email verify banner */
+    .verify-banner{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:998;align-items:center;justify-content:center;}
+    .verify-banner.visible{display:flex;}
+    .verify-box{background:#1a1a1a;border:1px solid #2e2e2e;padding:36px 40px;min-width:360px;max-width:480px;width:100%;}
+    .verify-box h3{color:#fff;font-size:18px;margin-bottom:10px;font-family:'mcfontb',sans-serif;}
+    .verify-box p{font-size:13px;color:#666;margin-bottom:6px;line-height:1.6;}
+    .verify-email-addr{color:#00b2ff;font-size:13px;margin-bottom:20px;display:block;}
+    .verify-actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;}
+    .verify-resend-btn{background:#1e1e1e;border:1px solid #2e2e2e;color:#bebebe;font-family:'mcfont',sans-serif;font-size:13px;padding:8px 16px;cursor:pointer;transition:color 0.2s,border-color 0.2s;}
+    .verify-resend-btn:hover{color:#00b2ff;border-color:#00b2ff;}
+    .verify-resend-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .verify-dismiss-btn{background:none;border:none;color:#444;font-family:'mcfont',sans-serif;font-size:12px;cursor:pointer;padding:8px 4px;transition:color 0.2s;}
+    .verify-dismiss-btn:hover{color:#888;}
+    .verify-msg{font-size:12px;margin-top:10px;}
+    .verify-msg.ok{color:#05ee93;}
+    .verify-msg.err{color:#ff5555;}
+
+    /* verify success toast */
+    .verify-toast{display:none;position:fixed;bottom:24px;right:24px;background:#1a1a1a;border:1px solid #05ee93;color:#05ee93;font-family:'mcfont',sans-serif;font-size:13px;padding:12px 20px;z-index:600;}
+    .verify-toast.visible{display:block;}
+
+    .hidden{display:none !important;}
   </style>
 </head>
 <body>
 
-  <!-- username gate — shown if user has no username, cannot be dismissed -->
+  <!-- email verify banner -->
+  <div class="verify-banner" id="verify-banner">
+    <div class="verify-box">
+      <h3>verify your email</h3>
+      <p>we sent a confirmation link to:</p>
+      <span class="verify-email-addr" id="verify-email-addr"></span>
+      <p>you need to verify your email before you can create projects, edit files, or collaborate. check your inbox and click the link.</p>
+      <div class="verify-actions">
+        <button class="verify-resend-btn" id="verify-resend-btn" onclick="resendVerify()">Resend Email</button>
+        <button class="verify-dismiss-btn" onclick="dismissVerifyBanner()">remind me later</button>
+      </div>
+      <div class="verify-msg" id="verify-msg"></div>
+    </div>
+  </div>
+
+  <!-- verify success toast -->
+  <div class="verify-toast" id="verify-toast">email verified!</div>
+
+  <!-- username gate -->
   <div class="gate-overlay" id="gate-overlay">
     <div class="gate-box">
       <h3>Welcome to mcb<g>Code</g></h3>
@@ -962,9 +295,8 @@ input[type="checkbox"]:checked {
       </nav>
     </div>
 
-    <div class="main shifted" id="main">
+    <div class="main" id="main">
 
-      <!-- HOME -->
       <div class="dash-section" id="section-home">
         <h2>Home</h2>
         <p>Welcome back to mcb<g>Code</g>.</p>
@@ -980,7 +312,6 @@ input[type="checkbox"]:checked {
         </div>
       </div>
 
-      <!-- PROJECTS -->
       <div class="dash-section" id="section-projects">
         <h2>Projects</h2>
         <p>Your Minecraft addon projects.</p>
@@ -993,7 +324,6 @@ input[type="checkbox"]:checked {
         </div>
       </div>
 
-      <!-- EDITOR -->
       <div class="dash-section" id="section-editor">
         <h2>Editor</h2>
         <p>Quick access to the mcbCode editors.</p>
@@ -1002,61 +332,31 @@ input[type="checkbox"]:checked {
             <h3>mcfunction</h3>
             <p>Launch the mcfunction code editor</p>
           </div>
-
           <div class="card" onclick="window.location.href='/editor/manifest'" style="cursor:pointer">
             <h3>manifest.json</h3>
             <p>Launch the manifest code editor</p>
           </div>
-
           <div class="card" onclick="window.location.href='/pixel'" style="cursor:pointer">
             <h3>pixel</h3>
             <p>Launch the pixel editor <c>beta</c></p>
           </div>
-
-
         </div>
       </div>
 
-      <!-- SETTINGS -->
       <div class="dash-section" id="section-settings">
         <h2>Settings</h2>
         <p>Configure settings. Saved to your account.</p>
         <br><br><br>
-        <h3><c style="font-family: mcfontb">Coming Soon</c></h3>
-        <div class="hidden">
-            
-            <br>
-        <h3 style="color:#fff; margin-bottom:16px;">Personalization</h3>
-        <div class="settings-row"><input type="checkbox" id="s-font"><label for="s-font">Use Mojangles Font</label></div>
-        <div class="settings-row"><input type="checkbox" id="s-light"><label for="s-light">Use Light Mode</label></div>
-        <div class="settings-row"><label for="s-theme">Preferred Theme:</label>
-          <select id="s-theme">
-            <option value="default">Default</option>
-            <option value="neon">Neon</option>
-            <option value="blue">Blue</option>
-            <option value="grayscale">Grayscale</option>
-            <option value="solid">Solid</option>
-          </select>
-        </div>
-        <div class="settings-row"><label for="customTheme">Custom Theme</label><input id="customTheme" class="text-input" style="width:200px;"></div>
-        <div class="settings-row"><input type="checkbox" id="s-tips"><label for="s-tips">Show Editor Tips</label></div>
-        <div class="settings-row"><label for="s-defname">Default Filename:</label><input type="text" id="s-defname" class="text-input" style="width:160px;" maxlength="72" placeholder="untitled"></div>
-        <br>
-        <button class="save-btn" id="save-btn" onclick="saveSettings()">Save</button>
-        <span class="save-msg" id="save-msg"></span>
+        <h3><c style="font-family:mcfontb">Coming Soon</c></h3>
       </div>
 
-
-      </div>
-
-      <!-- ACCOUNT -->
       <div class="dash-section" id="section-account">
         <h2>Account</h2>
         <p>Manage your mcbCode account.</p>
         <br>
         <div class="account-field">
           <label>Email</label>
-          <span id="acct-email" style="color:#fff; font-size:14px;"></span>
+          <span id="acct-email" style="color:#fff;font-size:14px;"></span>
           <span class="account-badge github" id="acct-github-badge" style="display:none;">GitHub</span>
         </div>
         <div class="account-field">
@@ -1066,11 +366,11 @@ input[type="checkbox"]:checked {
             <button class="save-btn" onclick="saveUsername()">Save</button>
             <span class="save-msg" id="username-msg"></span>
           </div>
-          <small style="color:#444; font-size:11px; display:block; margin-top:4px;">letters, numbers, _ and - only</small>
+          <small style="color:#444;font-size:11px;display:block;margin-top:4px;">letters, numbers, _ and - only</small>
         </div>
         <div class="danger-zone">
           <h3>Danger Zone</h3>
-          <p style="font-size:13px; margin-bottom:14px;">Deleting your account removes all your projects and settings permanently.</p>
+          <p style="font-size:13px;margin-bottom:14px;">Deleting your account removes all your projects and settings permanently.</p>
           <button class="delete-account-btn" onclick="askDeleteAccount()">Delete Account</button>
         </div>
       </div>
@@ -1082,40 +382,81 @@ input[type="checkbox"]:checked {
     const AUTH = "https://auth.mcbcode.com";
     let pendingDeleteCode = null;
     let pendingDeleteRow  = null;
+    let currentUserEmail  = "";
 
     (async () => {
       try {
         const res = await fetch(`${AUTH}/me`, { credentials: "include" });
         if (!res.ok) return window.location.href = "/account";
         const data = await res.json();
+        currentUserEmail = data.email;
         document.getElementById("user-email").textContent = data.email;
         document.getElementById("acct-email").textContent = data.email;
         if (data.is_github) document.getElementById("acct-github-badge").style.display = "";
         if (data.username) {
           document.getElementById("acct-username").value = data.username;
         } else {
-          // no username — show the gate, block everything
           document.getElementById("gate-overlay").classList.add("visible");
           setTimeout(() => document.getElementById("gate-username").focus(), 100);
-          return; // don't load anything else until they set one
+          return;
         }
+
+        // check email confirmation — skip banner if already confirmed
+        if (!data.email_confirmed) {
+          document.getElementById("verify-email-addr").textContent = data.email;
+          document.getElementById("verify-banner").classList.add("visible");
+        }
+
+        // show toast if redirected back after verification
+        const params = new URLSearchParams(location.search);
+        if (params.get("verify") === "ok") {
+          const toast = document.getElementById("verify-toast");
+          toast.classList.add("visible");
+          setTimeout(() => toast.classList.remove("visible"), 4000);
+          // clean url
+          history.replaceState({}, "", "/dashboard");
+        }
+
       } catch { return window.location.href = "/account"; }
 
       try {
         const res = await fetch(`${AUTH}/settings`, { credentials: "include" });
         if (res.ok) {
           const { settings } = await res.json();
-          document.getElementById("s-font").checked    = settings.use_mojangles_font;
-          document.getElementById("s-light").checked   = settings.use_light_mode;
-          document.getElementById("s-theme").value     = settings.editor_theme;
-          document.getElementById("customTheme").value = settings.custom_theme;
-          document.getElementById("s-tips").checked    = settings.show_editor_tips;
-          document.getElementById("s-defname").value   = settings.default_filename;
+          // settings applied here when settings section is re-enabled
         }
       } catch {}
 
       await loadProjects();
     })();
+
+    // ---- EMAIL VERIFY ----
+    function dismissVerifyBanner() {
+      document.getElementById("verify-banner").classList.remove("visible");
+    }
+
+    async function resendVerify() {
+      const btn = document.getElementById("verify-resend-btn");
+      const msg = document.getElementById("verify-msg");
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${AUTH}/resend-verify`, { method: "POST", credentials: "include" });
+        const d = await res.json();
+        if (res.ok) {
+          msg.textContent = "email sent! check your inbox.";
+          msg.className = "verify-msg ok";
+        } else {
+          msg.textContent = d.error || "failed to send.";
+          msg.className = "verify-msg err";
+          btn.disabled = false;
+        }
+      } catch {
+        msg.textContent = "network error. try again.";
+        msg.className = "verify-msg err";
+        btn.disabled = false;
+      }
+      setTimeout(() => { msg.textContent = ""; msg.className = "verify-msg"; }, 5000);
+    }
 
     // ---- USERNAME GATE ----
     async function submitGateUsername() {
@@ -1135,19 +476,9 @@ input[type="checkbox"]:checked {
         if (res.ok) {
           document.getElementById("gate-overlay").classList.remove("visible");
           document.getElementById("acct-username").value = val;
-          // now load the rest of the page
-          try {
-            const sr = await fetch(`${AUTH}/settings`, { credentials: "include" });
-            if (sr.ok) {
-              const { settings } = await sr.json();
-              document.getElementById("s-font").checked    = settings.use_mojangles_font;
-              document.getElementById("s-light").checked   = settings.use_light_mode;
-              document.getElementById("s-theme").value     = settings.editor_theme;
-              document.getElementById("customTheme").value = settings.custom_theme;
-              document.getElementById("s-tips").checked    = settings.show_editor_tips;
-              document.getElementById("s-defname").value   = settings.default_filename;
-            }
-          } catch {}
+          // show verify banner after gate clears (new user, not confirmed yet)
+          document.getElementById("verify-email-addr").textContent = currentUserEmail;
+          document.getElementById("verify-banner").classList.add("visible");
           await loadProjects();
         } else {
           err.textContent = data.error || "Something went wrong.";
@@ -1160,7 +491,6 @@ input[type="checkbox"]:checked {
       btn.disabled = false;
     }
 
-    // allow enter key on gate input
     document.getElementById("gate-username").addEventListener("keydown", e => {
       if (e.key === "Enter") submitGateUsername();
     });
@@ -1206,7 +536,7 @@ input[type="checkbox"]:checked {
             <div class="project-date">${escHtml(formatDate(proj.updated_at))}</div>
             <div class="project-actions">
               <button class="proj-btn" onclick="openProject('${escHtml(proj.share_code)}')">Open</button>
-              <button class="proj-btn danger" onclick="askDelete('${escHtml(proj.share_code)}', '${escHtml(proj.name)}', this)">Delete</button>
+              <button class="proj-btn danger" onclick="askDelete('${escHtml(proj.share_code)}', '${escHtml(proj.name)}')">Delete</button>
             </div>`;
           list.appendChild(row);
         });
@@ -1296,31 +626,6 @@ input[type="checkbox"]:checked {
         if (res.ok) { msg.textContent = "Saved!"; msg.className = "save-msg ok"; }
         else { msg.textContent = data.error || "Error"; msg.className = "save-msg err"; }
       } catch { msg.textContent = "Error"; msg.className = "save-msg err"; }
-      setTimeout(() => { msg.className = "save-msg"; msg.textContent = ""; }, 3000);
-    }
-
-    async function saveSettings() {
-      const btn = document.getElementById("save-btn");
-      const msg = document.getElementById("save-msg");
-      btn.disabled = true; btn.textContent = "Saving...";
-      msg.className = "save-msg"; msg.textContent = "";
-      try {
-        const res = await fetch(`${AUTH}/settings`, {
-          method: "POST", credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            use_mojangles_font: document.getElementById("s-font").checked,
-            use_light_mode:     document.getElementById("s-light").checked,
-            editor_theme:       document.getElementById("s-theme").value,
-            custom_theme:       document.getElementById("customTheme").value,
-            show_editor_tips:   document.getElementById("s-tips").checked,
-            default_filename:   document.getElementById("s-defname").value,
-          })
-        });
-        if (res.ok) { msg.textContent = "Saved!"; msg.className = "save-msg ok"; }
-        else { msg.textContent = "Failed."; msg.className = "save-msg err"; }
-      } catch { msg.textContent = "Error"; msg.className = "save-msg err"; }
-      btn.disabled = false; btn.textContent = "Save";
       setTimeout(() => { msg.className = "save-msg"; msg.textContent = ""; }, 3000);
     }
 
