@@ -294,13 +294,15 @@ footer g {
     })();
 
     function doGoogle() {
-      window.location.href =
-        "https://accounts.google.com/o/oauth2/v2/auth" +
-        "?client_id=494331876591-r860t073hcar5in4hm15usj30jd1lfrm.apps.googleusercontent.com" +
-        "&redirect_uri=https://auth.mcbcode.com/auth/google/callback" +
-        "&response_type=code" +
-        "&scope=openid%20email%20profile";
-    }
+  window.location.href =
+    "https://accounts.google.com/o/oauth2/v2/auth" +
+    "?client_id=494331876591-r860t073hcar5in4hm15usj30jd1lfrm.apps.googleusercontent.com" +
+    "&redirect_uri=https://auth.mcbcode.com/auth/google/callback" +
+    "&response_type=code" +
+    "&scope=openid%20email%20profile" +
+    "&access_type=offline" +
+    "&prompt=consent";
+}
 
     function switchTab(tab) {
       const isLogin = tab === "login";
