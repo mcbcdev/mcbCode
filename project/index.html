@@ -250,6 +250,8 @@
           <span id="path-segments"></span>
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
         </div>
+        <input type="file" id="png-upload-input" accept="image/png" style="display:none;">
+        <div style="font-size:11px; color:#555; padding:6px 16px; border-bottom:1px solid #2a2a2e;">only .png images are allowed for image uploads.</div>
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
@@ -389,7 +391,7 @@
     function isAtRoot() { return currentPath.length === 0; }
     const canEdit = () => isOwner || isCollab;
 
-    function renderToolbar() {
+function renderToolbar() {
       const toolbar = document.getElementById("owner-toolbar");
       toolbar.innerHTML = "";
       if (!canEdit()) return;
@@ -405,8 +407,12 @@
         const bfo = document.createElement("button");
         bfo.className = "sm-btn"; bfo.textContent = "+ Folder";
         bfo.onclick = () => openNewFile("folder");
+        const bpng = document.createElement("button");
+        bpng.className = "sm-btn"; bpng.textContent = "+ PNG";
+        bpng.onclick = () => document.getElementById("png-upload-input").click();
         toolbar.appendChild(bf);
         toolbar.appendChild(bfo);
+        toolbar.appendChild(bpng);
       }
     }
 
@@ -443,6 +449,8 @@
         `;
         if (f.type === "folder") {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); renderFileList(); };
+        } else if (f.r2_key || f.name.toLowerCase().endsWith(".png")) {
+          row.onclick = e => { if (e.target.classList.contains("file-del")) return; window.open(`${AUTH}/project/asset?file_id=${f.id}`, "_blank"); };
         } else {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
           if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
@@ -496,6 +504,38 @@
       btn.disabled = false;
     }
 
+    document.addEventListener("DOMContentLoaded", () => {
+      const pngInput = document.getElementById("png-upload-input");
+      if (pngInput) pngInput.addEventListener("change", handlePngUpload);
+    });
+
+    async function handlePngUpload(e) {
+      const file = e.target.files[0];
+      e.target.value = ""; // reset so same file can be picked again
+      if (!file) return;
+      if (file.type !== "image/png") { alert("Only PNG files are allowed."); return; }
+
+      const parentId = currentFolderId();
+      const params = new URLSearchParams({ project_code: shareCode, name: file.name });
+      if (parentId) params.set("parent_id", parentId);
+
+      try {
+        const res = await fetch(`${AUTH}/project/file/upload?${params.toString()}`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "image/png" },
+          body: file
+        });
+        const d = await res.json();
+        if (!res.ok) { alert(d.error || "Upload failed."); return; }
+        allFiles.push({
+          id: d.file_id, project_id: project.id, parent_id: parentId,
+          name: file.name.toLowerCase().endsWith(".png") ? file.name : file.name + ".png",
+          type: "file", save_id: null, r2_key: d.r2_key, updated_at: new Date().toISOString()
+        });
+        updateStats(); renderFileList();
+      } catch { alert("Something went wrong uploading the image."); }
+    }
     // ---- DELETE FILE ----
     function askDelete(e, id, name) {
       e.stopPropagation(); pendingDelId = id;
