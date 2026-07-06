@@ -160,6 +160,20 @@
     </div>
   </div>
 
+  <div class="overlay" id="rename-overlay">
+    <div class="modal">
+      <h3>Rename</h3>
+      <div class="modal-field">
+        <label>Name</label>
+        <input type="text" id="rn-name" maxlength="128">
+      </div>
+      <div class="modal-err" id="rn-err"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('rename-overlay')">Cancel</button>
+        <button class="primary-btn" id="rn-submit" onclick="submitRename()">Rename</button>
+      </div>
+    </div>
+  </div>
   <div class="overlay" id="del-overlay">
     <div class="confirm-modal">
       <p>Delete this item?</p>
@@ -445,8 +459,8 @@ function renderToolbar() {
           <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
           <span class="${nameClass}">${esc(f.name)}</span>
           <span class="file-updated">${fmtDate(f.updated_at)}</span>
-          ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
-        `;
+          ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
+          ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}        `;
         if (f.type === "folder") {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); renderFileList(); };
         } else if (f.r2_key || f.name.toLowerCase().endsWith(".png")) {
@@ -551,7 +565,47 @@ function renderToolbar() {
         if (res.ok) { removeFromCache(id); updateStats(); renderFileList(); }
       } catch {}
     }
+    let pendingRenameId   = null;
+    let pendingRenameType = null;
 
+    function askRename(e, id, name, type) {
+      e.stopPropagation();
+      pendingRenameId = id;
+      pendingRenameType = type;
+      document.getElementById("rn-name").value = name;
+      document.getElementById("rn-err").textContent = "";
+      document.getElementById("rn-err").classList.remove("show");
+      document.getElementById("rename-overlay").classList.add("open");
+      setTimeout(() => {
+        const inp = document.getElementById("rn-name");
+        inp.focus();
+        const dot = name.lastIndexOf(".");
+        if (dot > 0) inp.setSelectionRange(0, dot); else inp.select();
+      }, 50);
+    }
+
+    async function submitRename() {
+      const name = document.getElementById("rn-name").value.trim();
+      const err  = document.getElementById("rn-err");
+      const btn  = document.getElementById("rn-submit");
+      if (!name) { err.textContent = "name is required."; err.classList.add("show"); return; }
+      if (!pendingRenameId) return closeModal("rename-overlay");
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${AUTH}/project/file`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, file_id: pendingRenameId, name, type: pendingRenameType })
+        });
+        const d = await res.json();
+        if (!res.ok) { err.textContent = d.error || "failed."; err.classList.add("show"); btn.disabled = false; return; }
+        const f = allFiles.find(x => x.id === pendingRenameId);
+        if (f) f.name = name;
+        closeModal("rename-overlay");
+        renderFileList();
+      } catch { err.textContent = "something went wrong."; err.classList.add("show"); }
+      btn.disabled = false;
+    }
     function removeFromCache(id) {
       allFiles.filter(f => f.parent_id === id).forEach(c => removeFromCache(c.id));
       const i = allFiles.findIndex(f => f.id === id);
@@ -750,9 +804,11 @@ function renderToolbar() {
     function closeModal(id) {
       document.getElementById(id).classList.remove("open");
       if (id === "del-overlay") pendingDelId = null;
+      if (id === "rename-overlay") { pendingRenameId = null; pendingRenameType = null; }
     }
     document.getElementById("new-file-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("new-file-overlay"); });
     document.getElementById("del-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("del-overlay"); });
+    document.getElementById("rename-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("rename-overlay"); });
     document.getElementById("export-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("export-warn-overlay"); });
 
     async function doLogout() {
