@@ -1,659 +1,566 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta name="google-adsense-account" content="ca-pub-2825557346768110">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mcbcode.com">
+  <meta property="og:title" content="mcfunction bedrock code editor + pixelart editor | mcbCode">
+  <meta property="og:description" content="Write and edit .mcfunction files online for Minecraft Bedrock Edition. A beginner-friendly alternative for addon creators.">
+  <meta property="og:image" content="https://mcbcode.com/theme/favicon.png">
+  <meta property="og:site_name" content="mcfunction bedrock code editor + pixelart editor | mcbCode">
+  <meta name="keywords" content="minecraft bedrock mcfunction code editor minecraft bedrock beginner">
+  <meta name="description" content="Write and edit .mcfunction files online for Minecraft Bedrock Edition. A beginner-friendly alternative for addon creators.">
+  <meta name="robots" content="index, follow">
 
-<meta name="google-adsense-account" content="ca-pub-2825557346768110">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://mcbcode.com">
-<meta property="og:title" content="mcfunction bedrock code editor + pixelart editor | mcbCode">
-<meta property="og:description" content="Write and edit .mcfunction files online for Minecraft Bedrock Edition. Syntax highlighting, formatting, and tools for addon creators. Updated for modern Minecraft Bedrock versions.">
-<meta property="og:image" content="https://mcbcode.com/theme/favicon.png">
-<meta property="og:site_name" content="mcfunction bedrock code editor + pixelart editor | mcbCode">
-<meta name="keywords" content="minecraft bedrock mcfunction code editor minecraft bedrock">
-<meta name="description" content="Write and edit .mcfunction files online for Minecraft Bedrock Edition. Syntax highlighting, formatting, and tools for addon creators. Updated for modern Minecraft Bedrock versions.">
-<meta name="robots" content="index, follow">
-
-<link rel="stylesheet" href="https://mcbcode.com/tools/search.css">
-<script src="https://mcbcode.com/tools/search.js" defer></script>
+  <link rel="stylesheet" href="https://mcbcode.com/tools/search.css">
+  <script src="https://mcbcode.com/tools/search.js" defer></script>
 
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>mcbCode | the best mcfunction code editor + pixelart editor</title>
+  <title>mcbCode | The Beginner-Friendly Bedrock Editor</title>
+  
   <style>
-    html,body{
-      min-height:100%;
-      margin:0;
-      font-family:'mcfont', sans-serif;
-      background:#0c0c0c;
-      font-weight: 0;
-      color: #bebebe;
-      justify-content: center;
-      margin: auto;
+    :root {
+      --hero-width: 10vh;
+      --accent-color: #05ee93;
+      --accent-dark: #00a459;
+      --bg-color: #0c0c0c;
+      --text-main: #ffffff;
+      --text-muted: #bebebe;
+      --code-bg: #141414;
+    }
+
+    /* --- Global & Animations --- */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      font-family: 'mcfont', sans-serif;
+      background-color: var(--bg-color);
+      /* Background Grid that fades out into solid dark background */
+      background-image: 
+        linear-gradient(to bottom, rgba(12, 12, 12, 0) 600px, var(--bg-color) 1200px),
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
+      color: var(--text-muted);
       text-align: center;
+      font-weight: normal;
+      overflow-x: hidden;
     }
 
-    h1{
-      font-family: "mcfontb", sans-serif;
-      font-size: 40px;
-      margin-top: 20vh;
-      color: #ffffff;
-      text-align: center;
-    }
-
-    #mcb {
-      text-shadow: 0 0 75px #ffffff;
-    }
-
-    #Code {
-      text-shadow: 0 0 75px #05ee93;
-    }
-
-
-    h2 {
-     font-size: 25px;
-     color: #ffffff;
+    h1, h2, h3 {
+      color: var(--text-main);
+      margin: 0;
     }
 
     a {
-        text-decoration: none;
-        color: #ffffff;
-        transition: color 0.2s ease-in-out;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: color 0.3s ease-in-out, text-shadow 0.3s ease;
     }
 
     a:hover {
-        text-decoration: none;
-        color: #05ee93;
+      color: var(--accent-color);
+      text-shadow: 0 0 8px rgba(5, 238, 147, 0.4);
     }
 
-  .mcbc {
-    position: fixed;
-    left: 5px;
-    top: 10px;
-    height: 50px;
-    max-width: 50px;
-  }
+    c { color: #e7007b; }
+    g { color: #008e4c; }
 
-  c {
-      color: #e7007b;
-  }
-
-  button {
-      text-align: center;
-      background-color: #313131;
-      border: none;
-      font-size: 18px;
-      padding: 8px 12px;
-      color: #ffffff;
-      transition: color 0.2s ease-in-out, border-radius 0.2s ease-in-out;
-      cursor: pointer;
-  }
-
-  button:hover {
-      color: #05ee93;
-      border-radius: 10px;
-  }
-
-  
-  #tryitout {
-      color: #ffffff;
-      background-color: #00a459;
-      box-shadow: 0 0 20px #00a459;
-      transition: color 0.3s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.4s ease-in-out, border-radius 0.2s ease-in-out;
-  }
-
-  #tryitout:hover {
-      color: #0c0c0c;
-      background-color: #05ee93;
-      box-shadow: 0 0 0px #05ee93;
-      border-radius: 10px;
-  }
-
-
-  .top-btn-wrapper {
-    margin: auto;
-  }
-
-  .navi {
+    /* --- Navigation Bar --- */
+    .navi {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       height: 75px;
-      background-color: rgba(45, 45, 45, 0.6);
-      backdrop-filter: blur(6px);
+      background-color: rgba(12, 12, 12, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
       justify-content: space-between;
       box-sizing: border-box;
-      padding: 0 24px;
-      z-index: 100;
-  }
+      padding: 0 5%;
+      z-index: 1000;
+    }
 
-  .navi-brand {
-    display: flex;
-    background-color: #9adbb31a;
-    padding: 4px 8px;
-  }
+    .navi-brand a {
+      display: flex;
+      align-items: center;
+    }
 
-  .navi-brand h2 {
-      margin: 0;
-  }
+    .navi-logo {
+      height: 35px;
+      margin-right: 12px;
+      filter: drop-shadow(0 0 5px rgba(5, 238, 147, 0.2));
+    }
 
-  .quick-links {
+    .navi-brand h2 {
+      font-size: 24px;
+    }
+
+    .quick-links {
       display: flex;
       align-items: center;
       gap: 30px;
-  }
-
-  .divider {
-      border-top: 2px solid #bebebe;
-      max-width: 30%;
-      opacity: 0.5;
-      margin: auto;
-      margin-top: 50px;
-  }
-
-  footer {
-    color: #bebebe;
-    background-color: #232323;
-    padding: 8px;
     }
 
-  footer g {
-    color: #008e4c;
+    /* --- Dropdown --- */
+    .dropdown-btn {
+      width: 18px;
+      height: 18px;
+      background-image: url('https://mcbcode.com/img/icons/dropdown.png');
+      background-size: cover;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      cursor: pointer;
     }
 
-  .pages-list {
-    display: flex;
-    padding: 4px 8px;
-    margin-left: 5%;
-    margin-right: 5%;
-    justify-content: space-between;
+    .dropdown-btn:hover, .dropdown-btn.active {
+      background-image: url('https://mcbcode.com/img/icons/dropdown-selected.png');
+      filter: drop-shadow(0 0 5px var(--accent-color));
+    }
 
-  }
+    .dropdown-btn.active {
+      transform: rotate(180deg);
+    }
 
-  /* demo editor */
-  .demo-section {
+    .dropdown {
+      position: fixed;
+      width: 90%;
+      max-width: 600px;
+      background-color: rgba(20, 20, 20, 0.85);
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 999;
+      top: 85px;
+      left: 50% !important;
+      transform: translateX(-50%) translateY(-10px);
+      padding: 20px;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      visibility: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .dropdown-btn.active ~ .dropdown, .dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .dropdown-content {
       display: flex;
-      align-items: center;
-      gap: 40px;
-      max-width: 900px;
-      margin: 40px auto 0 auto;
-      padding: 0 20px;
-      text-align: left;
-      font-family: monospace !important;
-  }
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px 30px;
+      width: 100%;
+    }
 
-  .demo-desc {
-      flex: 0 0 210px;
-      color: #bebebe;
-  }
-
-  .demo-desc h2 {
-      margin-top: 0;
-      font-size: 21px;
-  }
-
-  .demo-desc p {
-      font-size: 14px;
-      line-height: 1.7;
-      margin: 10px 0 18px 0;
-  }
-
-  .demo-open-link {
-      display: inline-block;
-      color: #0c0c0c;
-      background-color: #05ee93;
-      border: 3px solid #00a459;
-      padding: 6px 14px;
-      font-size: 14px;
-      font-family: mcfont;
+    .dropdown-content a {
+      flex: 1 1 auto;
+      min-width: 100px;
+      padding: 10px;
       transition: background-color 0.2s ease, color 0.2s ease;
-  }
+    }
+    
+    .dropdown-content a:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
 
-  .demo-open-link:hover {
-      background-color: #00a95c;
+    /* --- Buttons --- */
+    button {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1.2rem;
+      padding: 12px 24px;
+      color: var(--text-main);
+      font-family: 'mcfont', sans-serif;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    button:hover {
+      border-color: var(--text-muted);
+      transform: translateY(-2px);
+    }
+
+    #tryitout {
+      background-color: var(--accent-dark);
+      border: 1px solid var(--accent-color);
       color: #ffffff;
-  }
+      box-shadow: 0 0 15px rgba(5, 238, 147, 0.2);
+    }
 
-  .demo-editor-shell {
-      flex: 1;
-      background-color: #1a1a1a;
-      border: 1px solid #2e2e2e;
-      overflow: hidden;
-      box-shadow: 0 0 40px rgba(5, 238, 147, 0.05);
-      min-width: 0;
-      font-family: monospace !important;
-  }
+    #tryitout:hover {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      box-shadow: 0 0 25px rgba(5, 238, 147, 0.5);
+      transform: translateY(-2px);
+    }
 
-  .demo-editor-topbar {
-      background-color: #212121;
+    /* --- Hero Section --- */
+    .hero-container {
+      margin-top: 18vh;
+      padding: 0 5%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 1s ease-out forwards;
+    }
+
+    #tagline {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-family: 'mcfont', sans-serif;
+      background: linear-gradient(90deg, #0066ff, var(--accent-color), #0066ff);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientBG 5s linear infinite;
+      margin-bottom: 20px;
+      line-height: 1.2;
+      max-width: 900px;
+    }
+
+    .hero-subtext {
+      font-size: 1.2rem;
+      max-width: 800px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      color: var(--text-muted);
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* --- Tools Grid Section --- */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 80px auto 40px auto;
+      padding: 0 5%;
+      animation: fadeIn 1.5s ease-out forwards;
+    }
+
+    .tool-card {
+      display: block;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 35px 25px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+      color: inherit;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(5, 238, 147, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(5, 238, 147, 0.05);
+      color: var(--text-muted);
+    }
+
+    .tool-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .tool-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      color: var(--accent-color);
+      transition: text-shadow 0.3s ease;
+    }
+
+    .tool-card:hover h3 {
+      text-shadow: 0 0 8px rgba(5, 238, 147, 0.4);
+    }
+
+    .tool-card p {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    /* --- Content / Showcase Blocks --- */
+    .showcase-container {
+      max-width: 1100px;
+      margin: 100px auto;
+      padding: 0 5%;
+      display: flex;
+      flex-direction: column;
+      gap: 120px;
+    }
+
+    .showcase-block {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-bottom: 1px solid #2e2e2e;
-      user-select: none;
-      font-size: 12px;
-      color: #7a7a7a;
-  }
+      justify-content: space-between;
+      gap: 50px;
+      text-align: left;
+    }
 
-  .demo-editor-topbar img {
-      width: 16px;
-      height: 16px;
-  }
+    .showcase-block:nth-child(even) {
+      flex-direction: row-reverse;
+    }
 
-  .demo-editor-body {
-      display: flex;
-      height: 200px;
-      overflow: hidden;
-      font-family: monospace !important;
-  }
-
-  .demo-line-numbers {
-      background-color: #161616;
-      padding: 10px 10px 10px 12px;
-      text-align: right;
-      color: #444;
-      font-size: 13px;
-      line-height: 1.5;
-      user-select: none;
-      border-right: 1px solid #2a2a2a;
-      min-width: 28px;
-      overflow: hidden;
-      white-space: pre;
-      font-family: monospace;
-  }
-
-  .demo-code-wrap {
-      position: relative;
+    .showcase-info {
       flex: 1;
+    }
+
+    .showcase-info h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: var(--accent-color);
+    }
+
+    .showcase-info p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    .showcase-code {
+      flex: 1.2;
+      background-color: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      text-align: left;
+      overflow-x: auto;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      white-space: pre;
+    }
+
+    .showcase-image-wrapper {
+      flex: 1.2;
       overflow: hidden;
-  }
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease;
+    }
 
-  .demo-highlight {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      padding: 10px 12px;
-      box-sizing: border-box;
-      white-space: pre;
-      overflow: auto;
-      pointer-events: none;
-      color: #ffffff;
-      background-color: #161616;
-      font-family: monospace !important;
-      font-size: 14px;
-      line-height: 1.5;
-  }
+    .showcase-image-wrapper:hover {
+      transform: scale(1.02);
+    }
 
-  .demo-textarea {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      padding: 10px 12px;
-      box-sizing: border-box;
-      background: transparent;
-      color: transparent;
-      caret-color: #05ee93;
-      border: none;
-      outline: none;
-      resize: none;
-      font-family: monospace !important;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre;
-      word-wrap: normal;
-      tab-size: 4;
-      overflow: auto;
-      z-index: 2;
-  }
+    .showcase-image-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
 
-  .hl-cmd     { color: #ffff55; font-family: monospace !important; }
-  .hl-sel     { color: #ff5555; font-family: monospace !important; }
-  .hl-block   { color: #55ff55; font-family: monospace !important; }
-  .hl-coord   { color: #55ffff; font-family: monospace !important; }
-  .hl-key     { color: #ffaa00; font-family: monospace !important; }
-  .hl-comment { color: #4a4a4a; font-family: monospace !important; }
+    /* Simple Syntax Highlight Simulation */
+    .sc-cmd { color: #e7007b; }
+    .sc-sel { color: #00ffcc; }
+    .sc-str { color: #f1c40f; }
+    .sc-num { color: #3498db; }
+    .sc-key { color: #9b59b6; }
 
-  @media (max-width: 650px) {
-      .demo-section { flex-direction: column; }
-      .demo-desc { flex: unset; text-align: center; }
-  }
+    /* --- Footer --- */
+    footer {
+      color: var(--text-muted);
+      background-color: rgba(10, 10, 10, 0.95);
+      padding: 60px 20px 30px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.9rem;
+    }
 
-  .h1thing {
-    color: #05ee93;
-    font-family: mcfontb;
-    font-weight: 0;
-  }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
 
-/* --- Dropdown Button --- */
-.dropdown-btn {
-  top: 25px;
-  right: 25px;
-  z-index: 1000;
-  color: #ffffff;
-  text-align: center;
-  user-select: none;
-  transition: all 0.2s ease-in-out;
-}
+    .footer-links a {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
 
-.dropdown-btn:hover {
-  color: #05ee93;
-}
+    .footer-links a:hover {
+      color: var(--accent-color);
+    }
 
-.dropdown {
-  position: fixed;
-  width: 90%;
-  background-color: rgba(45, 45, 45, 0.6);
-  -webkit-backdrop-filter: blur(6px) !important;
-  backdrop-filter: blur(6px) !important;
-  
-  /* ADD THESE TWO LINES */
-  z-index: 9999 !important; 
-  
-  top: 75px;
-  padding: 5px;
-  transition: all 0.2s ease-in-out;
-  opacity: 0;
-  margin: auto;
-  visibility: hidden;
-  left: 0 !important;
-  right: 0 !important;
-}
-
-
-/* Changed + to ~ to find the dropdown within the same parent */
-.dropdown-btn.active ~ .dropdown,
-.dropdown.active {
-  opacity: 1;
-  visibility: visible;
-  -webkit-backdrop-filter: blur(6px) !important; /* Added for compatibility */
-  backdrop-filter: blur(6px) !important;
-}
-
-.dropdown-content {
-  width: 80%;
-  justify-content: space-between;
-  display: flex;
-  margin: auto;
-  color: #ffffff;
-}
-
-.dropdown-content a:hover {
-  color: #05ee93;
-}
-
-#dd {
-  width: 18px;
-  height: 18px;
-  background-image: url(https://mcbcode.com/img/icons/dropdown.png);
-  background-size: cover;
-  transition: background-image 0.2s ease-in-out, transform 0.3s ease-in-out;
-}
-
-/* Swaps the image on hover OR when the 'active' class is present */
-#dd:hover,
-#dd.active {
-  background-image: url(https://mcbcode.com/img/icons/dropdown-selected.png);
-  cursor: pointer;
-}
-
-#dd.active {
-  transition: transform 0.2s ease-in-out;
-  transform: rotate(180deg);
-}
-
-#placepanel {
-    display: none;
-    background-color: #0c0c0c;
-    border: 1px solid #bebebe;
-    padding: 8px;
-    margin: auto;
-    z-index: 99999999;
-    text-align: center;
-    position: fixed;
-    left: 0;
-    right: 0;
-    font-size: 24px;
-    max-width: 80%;
-}
-</style>
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .showcase-block, .showcase-block:nth-child(even) { flex-direction: column; text-align: center; }
+      .showcase-code, .showcase-image-wrapper { width: 100%; box-sizing: border-box; }
+    }
+    @media (max-width: 768px) {
+      .quick-links { gap: 15px; }
+      #tagline { font-size: 2.5rem; }
+      .footer-links { gap: 15px; flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
 
+  <div class="navi">
+    <div class="navi-brand">
+      <a href="https://mcbcode.com">
+        <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="mcbCode Logo" class="navi-logo">
+        <h2><span style="color: #fff; font-family: 'mcfontb', sans-serif;">mcb</span><g>Code</g></h2>
+      </a>
+    </div>
+    <div class="quick-links">
+      <a href="https://github.com/xyztoast/mcbCode">Source Code</a>
+      <a href="https://mcbcode.com/account">Account</a>
+      <div class="dropdown-btn" id="dd"></div>
+      <div class="dropdown">
+        <div class="dropdown-content">
+          <a href="https://mcbcode.com/terms-of-use">Terms</a>
+          <a href="https://roadmap.mcbcode.com">Roadmap</a>
+          <a href="https://mcbcode.com/about">About</a>
+          <a href="https://mcbcode.com/profile">Profiles</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="navi">
-        <div class="navi-brand">
-            <a href="https://mcbcode.com">
-                <h2><ee style="color: #fff; font-family: mcfontb;">mcb</ee><g>Code</g></h2>
-            </a>
-        </div>
-        <div class="quick-links">
-            <a href="https://mcbcode.com/editor">Editor</a>
-            <a href="https://mcbcode.com/account">Account</a>
-            <div class="dropdown-btn" id="dd"></div>
-            <div class="dropdown">
-                <br>
-                <div class="dropdown-content">
-                    <a href="https://roadmap.mcbcode.com/terms-of-use">Terms</a>
-                    <a href="https://roadmap.mcbcode.com">Roadmap</a>
-                    <a href="https://github.com/xyztoast/mcbCode">Source</a>
-                    <a href="https://mcbcode.com/about">About</a>
-                    <a href="https://mcbcode.com/profile">Profiles</a>
-                </div>
-                <br>
-            </div>
-        </div>
+  <div class="hero-container">
+    <h2 id="tagline">Build Bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h2>
+    <p class="hero-subtext">
+      The beginner-friendly alternative for Minecraft creators. Stop getting lost in outdated guides. Get the tools that make building addons actually fun, not frustrating.
+    </p>
+    <div class="hero-buttons">
+      <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">Start Building</button>
+      <button onclick="window.location.href='https://mcbcode.com/dashboard'">Dashboard</button>
+    </div>
+  </div>
+
+  <div class="tools-grid">
+    <a href="https://mcbcode.com/editor/manifest" class="tool-card">
+      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/wrench.png" style="width: 64px; image-rendering: pixelated"></div>
+      <h3>Pack Setup</h3>
+      <p>Only a few clicks and your mod is ready for the game.</p>
+    </a>
+    
+    <a href="https://mcbcode.com/editor/mcfunction" class="tool-card">
+      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/slashdot.png" style="width: 64px; image-rendering: pixelated"></div>
+      <h3>Command Editor</h3>
+      <p>One of the first fully functional, up-to-date command editors for Bedrock edition.</p>
+    </a>
+    
+    <a href="https://mcbcode.com/account" class="tool-card">
+      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/search.png" style="width: 64px; image-rendering: pixelated"></div>
+      <h3>Easy Cloud Saving</h3>
+      <p>Keeping your code safe is easy. Just click the button and done.</p>
+    </a>
+  </div>
+
+  <div class="showcase-container">
+    
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <h2>A Friendlier Way to Mod</h2>
+        <p>Looking for an alternative to massive, complex modding tools like <a href="https://bridge-core.app">bridge.</a>? You shouldn't need a computer science degree to make a custom sword or a new mob.</p>
+      </div>
+      <div class="showcase-image-wrapper">
+        <img src="https://mcbcode.com/img/project-preview.png" alt="mcbCode Editor Preview">
+      </div>
     </div>
 
-
-  <h1><span id="mcb" style="font-family: 'mcfontb">mcb<span class="h1thing" id="Code">Code</span></h1>
-<h2 style="color: #fff; font-size: 20px; font-family: mcfont !important; font-weight: normal;">The Best Free Minecraft Bedrock <c>.mcfunction</c> Code Editor Online</h2>
-  <div style="user-select: none;">
-    <div class="top-btn-wrapper">
-      <div class="top-navi">
-          <button id="tryitout">View Tools</button>
-          <div id="placepanel">
-            <br>
-            Which tool would you like to use?
-            <br><br><br>
-            <a href="https://mcbcode.com/editor/mcfunction"><button>.mcfunction</button>
-            <a href="https://mcbcode.com/editor/manifest"><button>manifest.json</button>
-            <a href="https://mcbcode.com/pixel"><button>Pixel (<c>Beta</c>)</button>
-          <br><br>
-          </div>
-          <a href="https://mcbcode.com/dashboard"><button>Dashboard</button></a>
-          <a href="https://mcbcode.com/docs/"><button>Documentation</button></a>
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <h2>Skip the Boring Stuff</h2>
+        <p>Setting up your addon's basic files is usually a chore. Just state the name of your pack, and mcbC handles the rest.</p>
       </div>
+      <div class="showcase-code"><span>{</span>
+  <span class="sc-key">"format_version"</span>: <span class="sc-num">2</span>,
+  <span class="sc-key">"header"</span>: {
+    <span class="sc-key">"name"</span>: <span class="sc-str">"My Awesome Addon"</span>,
+    <span class="sc-key">"description"</span>: <span class="sc-str">"Made super easily with mcbCode"</span>,
+    <span class="sc-key">"uuid"</span>: <span class="sc-str">"f81d4fae-7dec-11d0-a765-00a0c91e6bf6"</span>,
+    <span class="sc-key">"version"</span>: [<span class="sc-num">1</span>, <span class="sc-num">0</span>, <span class="sc-num">0</span>]
+  }
+<span>}</span></div>
+    </div>
+
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <h2>Pixel Art Editor</h2>
+        <p>Textures, ever heard of them? No need to open up a separate drawing app. Design and export your pixel art directly within mcbC, perfectly sized and ready for the game.</p>
       </div>
-  </div>
-
-<br><br><br><br><br>
-  <h2>Try it <g>Right Here</g></h2>
-  <p>Type some commands below — syntax highlighting works live, just like the real editor.</p>
-
-  <div class="demo-section">
-
-      <div class="demo-desc">
-          <h2>Live <g>Syntax Highlighting</g></h2>
-          <p>mcbCode colors commands as you type. Commands, selectors, block names, and coordinates each get their own color so bad syntax stands out.</p>
-          <button style="font-size: 14px">
-            <a href="https://mcbcode.com/editor">Open Full Editor</a>
-            </button>
+      <div class="showcase-image-wrapper">
+        <img src="https://mcbcode.com/img/pixel-preview.png" alt="Pixel Art Tool Preview">
       </div>
+    </div>
 
-      <div class="demo-editor-shell">
-          <div class="demo-editor-topbar">
-              <img src="https://mcbcode.com/theme/favicon.png" alt="mcbCode">
-              <span style="color:#bebebe;">mcb<span style="color:#05ee93">Code</span></span>
-              <span>— demo.mcfunction</span>
-          </div>
-          <div class="demo-editor-body">
-              <div class="demo-code-wrap">
-                  <div class="demo-highlight" id="demoHighlight"></div>
-                  <textarea
-                      class="demo-textarea"
-                      id="demoArea"
-                      spellcheck="false"
-                      placeholder="# type your commands here..."
-                      style="font-family: monospace !important;"
-                  ># welcome to mcbCode
-give @a diamond_sword 1
-tp @e[type=zombie] ~ ~10 ~
-fill ~-5 ~-1 ~-5 ~5 ~-1 ~5 grass
-say Hello from mcbCode!</textarea>
-              </div>
-          </div>
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <h2>Write Commands Faster</h2>
+        <p>No more back and forth importing and exporting. The script editor color-codes your commands and targets, so you can clearly see what's happening and catch typos immediately.</p>
       </div>
+      <div class="showcase-code"><span class="sc-cmd">execute</span> as <span class="sc-sel">@a</span> at <span class="sc-sel">@s</span> run particle minecraft:basic_smoke_particle ~ ~1 ~
+<span class="sc-cmd">give</span> <span class="sc-sel">@s</span> diamond_sword <span class="sc-num">1</span> <span class="sc-num">0</span> {<span class="sc-str">"minecraft:item_lock"</span>: {<span class="sc-str">"mode"</span>: <span class="sc-str">"lock_in_slot"</span>}}
+<span class="sc-cmd">playsound</span> random.levelup <span class="sc-sel">@s</span> ~ ~ ~</div>
+    </div>
 
   </div>
-
-  <script>
-
-// Wait for the DOM to fully load
-document.addEventListener('DOMContentLoaded', () => {
-    // Select the button and the panel
-    const tryItOutBtn = document.getElementById('tryitout');
-    const placePanel = document.getElementById('placepanel');
-
-    // Add a click event listener to the button
-    tryItOutBtn.addEventListener('click', () => {
-        // Change the display style to 'block' (or 'flex', 'grid', etc.) to make it visible
-        placePanel.style.display = 'block';
-    });
-});
-
-  (function() {
-      const area      = document.getElementById('demoArea');
-      const highlight = document.getElementById('demoHighlight');
-
-      function highlightMCF(text) {
-          return text.split('\n').map(line => {
-              let s = line
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;');
-
-              if (/^\s*#/.test(s)) {
-                  return '<span class="hl-comment">' + s + '</span>';
-              }
-
-              // selectors with optional brackets
-              s = s.replace(/(@[asepAr])(\[([^\]]*)\])?/g, function(match, sel, bracket, inner) {
-                  if (!bracket) return '<span class="hl-sel">' + sel + '</span>';
-                  let inside = inner.replace(/(\w+)(=)([^,\]]+)/g,
-                      '<span class="hl-key">$1</span>$2<span class="hl-block">$3</span>');
-                  return '<span class="hl-sel">' + sel + '</span>[' + inside + ']';
-              });
-
-              // relative coords and plain numbers
-              s = s.replace(/(~-?\d*\.?\d*|(?<!\w)-?\d+\.?\d*(?!\w))/g,
-                  '<span class="hl-coord">$1</span>');
-
-              // snake_case block/item names
-              s = s.replace(/\b([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/g,
-                  '<span class="hl-block">$1</span>');
-
-              // known commands at start of line
-              const cmds = ['give','tp','teleport','fill','say','tellraw','title',
-                  'effect','summon','kill','clear','gamemode','gamerule','function','setblock',
-                  ];
-              s = s.replace(
-                  new RegExp('^(\\s*)(' + cmds.join('|') + ')\\b'),
-                  '$1<span class="hl-cmd">$2</span>'
-              );
-
-              return s;
-          }).join('\n');
-      }
-
-      function updateLineNums(text) {
-          const count = text.split('\n').length;
-          let out = '';
-          for (let i = 1; i <= count; i++) out += i + '\n';
-          lineNums.textContent = out;
-      }
-
-      function syncScroll() {
-          highlight.scrollTop  = area.scrollTop;
-          highlight.scrollLeft = area.scrollLeft;
-          lineNums.scrollTop   = area.scrollTop;
-      }
-
-      function updateAll() {
-          highlight.innerHTML = highlightMCF(area.value);
-          updateLineNums(area.value);
-          syncScroll();
-      }
-
-      area.addEventListener('input', updateAll);
-      area.addEventListener('scroll', syncScroll);
-
-      area.addEventListener('keydown', function(e) {
-          if (e.key === 'Tab') {
-              e.preventDefault();
-              const s = area.selectionStart;
-              const end = area.selectionEnd;
-              area.value = area.value.substring(0, s) + '    ' + area.value.substring(end);
-              area.selectionStart = area.selectionEnd = s + 4;
-              updateAll();
-          }
-      });
-
-      updateAll();
-  })();
-  </script>
-
-  <div class="divider"></div>
-  <h2>View the <g>Site Roadmap</g></h2>
-  <p>Site Roadmap is <c>publicly</c> available. <a href="https://roadmap.mcbcode.com" style="text-decoration: underline">Click here</a> if you want to view it now.</p>
- <br><br><br>
-    <div class="divider"></div>
-  <h2><g>Support</g> the Project</h2>
-  <p>Every mention helps mcb<g>Code</g>. If you find this useful, spread the word or give us a <a href="https://roadmap.mcbcode.com" style="text-decoration: underline">star on GitHub</a>.</p>
-
-  <br><br><br><br><br>
 
   <footer>
-  <br>
-Not affiliated with Microsoft or Mojang AB.<br><br>
-© Copyright 2026 mcb<g>Code</g>
-  <br><br>
+    <div class="footer-links">
+      <a href="https://mcbcode.com/">Home</a>
+      <a href="https://mcbcode.com/dashboard">Dashboard</a>
+      <a href="https://mcbcode.com/about">About</a>
+      <a href="https://roadmap.mcbcode.com">Roadmap</a>
+      <a href="https://mcbcode.com/terms-of-use">Terms</a>
+    </div>
+    
+    Not affiliated with Microsoft or Mojang AB.<br><br>
+    © Copyright 2026 mcb<g>Code</g>
   </footer>
 
-<script>
+  <textarea id="search-tabs" rows="1" placeholder="Search..." style="display:none;"></textarea>
+  <div id="search-results" class="results-panel" style="display:none;"></div>
+
+  <script>
     const dropdownBtn = document.getElementById('dd');
     const dropdownMenu = document.querySelector('.dropdown');
 
     dropdownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // Toggle active on BOTH elements
-        dropdownBtn.classList.toggle('active');
-        dropdownMenu.classList.toggle('active');
+      e.stopPropagation();
+      dropdownBtn.classList.toggle('active');
+      dropdownMenu.classList.toggle('active');
     });
 
     document.addEventListener('click', (e) => {
-        if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
-            // Remove active from BOTH when clicking away
-            dropdownBtn.classList.remove('active');
-            dropdownMenu.classList.remove('active');
-        }
+      if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
+        dropdownBtn.classList.remove('active');
+        dropdownMenu.classList.remove('active');
+      }
     });
-</script>
+  </script>
 
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
-
-
-
-    <textarea id="search-tabs" rows="1" placeholder="Search..."></textarea>
-    <div id="search-results" class="results-panel"></div>
-
-
-  
-  <script data-goatcounter="https://mcbcode.goatcounter.com/count"
-          async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
