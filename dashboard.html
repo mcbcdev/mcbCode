@@ -1183,46 +1183,105 @@ input[type="checkbox"]:checked {
       return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
     }
 
-    async function loadProjects() {
-      const list  = document.getElementById("project-list");
-      const empty = document.getElementById("projects-empty");
-      const label = document.getElementById("projects-limit-label");
-      const btn   = document.getElementById("new-proj-btn");
-      Array.from(list.querySelectorAll(".project-row")).forEach(r => r.remove());
-      try {
-        const res = await fetch(`${AUTH}/projects`, { credentials: "include" });
-        if (!res.ok) throw new Error();
-        const { projects, max_saves } = await res.json();
-        document.getElementById("stat-projects").textContent = projects.length;
-        label.textContent = `${projects.length} / ${max_saves} projects used`;
-        btn.disabled = projects.length >= max_saves;
-        if (projects.length === 0) { empty.style.display = ""; return; }
-        empty.style.display = "none";
-        projects.forEach(proj => {
-          const row = document.createElement("div");
-          row.className = "project-row";
-          row.id = `row-${escHtml(proj.share_code)}`;
-          const isPublic = proj.is_public === 1 || proj.is_public === true;
-          row.innerHTML = `
-            <div class="project-info">
-              <div class="project-name">
-                ${escHtml(proj.name)}
-                <span class="proj-badge${isPublic ? ' public' : ''}">${isPublic ? 'public' : 'private'}</span>
-              </div>
-              ${proj.description ? `<div class="project-desc">${escHtml(proj.description)}</div>` : ''}
-            </div>
-            <div class="project-date">${escHtml(formatDate(proj.updated_at))}</div>
-            <div class="project-actions">
-              <button class="proj-btn" onclick="openProject('${escHtml(proj.share_code)}')">Open</button>
-              <button class="proj-btn danger" onclick="askDelete('${escHtml(proj.share_code)}', '${escHtml(proj.name)}', this)">Delete</button>
-            </div>`;
-          list.appendChild(row);
-        });
-      } catch {
-        empty.textContent = "Could not load projects.";
-        empty.style.display = "";
-      }
+async function loadProjects() {
+  const list  = document.getElementById("project-list");
+  const empty = document.getElementById("projects-empty");
+  const label = document.getElementById("projects-limit-label");
+  const btn   = document.getElementById("new-proj-btn");
+
+  list.innerHTML = "";
+
+  try {
+    const res = await fetch(`${AUTH}/projects`, { credentials: "include" });
+    if (!res.ok) throw new Error();
+
+    const {
+      projects,
+      collab_projects,
+      max_saves
+    } = await res.json();
+
+    document.getElementById("stat-projects").textContent = projects.length;
+    label.textContent = `${projects.length} / ${max_saves} projects used`;
+    btn.disabled = projects.length >= max_saves;
+
+    if (projects.length === 0 && collab_projects.length === 0) {
+      empty.style.display = "";
+      return;
     }
+
+    empty.style.display = "none";
+
+    function addHeading(text) {
+      const h = document.createElement("h3");
+      h.textContent = text;
+      h.style.margin = "18px 0 10px";
+      h.style.color = "#fff";
+      list.appendChild(h);
+    }
+
+    function addProject(proj, collaborator = false) {
+      const row = document.createElement("div");
+      row.className = "project-row";
+      row.id = `row-${escHtml(proj.share_code)}`;
+
+      const isPublic = proj.is_public === 1 || proj.is_public === true;
+
+      row.innerHTML = `
+        <div class="project-info">
+          <div class="project-name">
+            ${escHtml(proj.name)}
+            <span class="proj-badge${isPublic ? " public" : ""}">
+              ${isPublic ? "public" : "private"}
+            </span>
+          </div>
+
+          ${
+            collaborator
+              ? `<div class="project-desc">Owner: ${escHtml(proj.owner_username)}</div>`
+              : (proj.description
+                  ? `<div class="project-desc">${escHtml(proj.description)}</div>`
+                  : "")
+          }
+        </div>
+
+        <div class="project-date">
+          ${escHtml(formatDate(proj.updated_at))}
+        </div>
+
+        <div class="project-actions">
+          <button class="proj-btn" onclick="openProject('${escHtml(proj.share_code)}')">
+            Open
+          </button>
+
+          ${
+            collaborator
+              ? ""
+              : `<button class="proj-btn danger" onclick="askDelete('${escHtml(proj.share_code)}', '${escHtml(proj.name)}', this)">
+                  Delete
+                </button>`
+          }
+        </div>
+      `;
+
+      list.appendChild(row);
+    }
+
+    if (projects.length) {
+      addHeading("Owned Projects");
+      projects.forEach(p => addProject(p));
+    }
+
+    if (collab_projects.length) {
+      addHeading("Collaborating On");
+      collab_projects.forEach(p => addProject(p, true));
+    }
+
+  } catch {
+    empty.textContent = "Could not load projects.";
+    empty.style.display = "";
+  }
+}
 
     function openProject(shareCode) { window.location.href = `/project/${shareCode}/`; }
 
