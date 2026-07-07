@@ -500,13 +500,21 @@
       renderFileList();
     }
 
-    function renderContributors() {
-      const ownerName = project.owner_username || (isOwner ? "you" : `#${project.owner_id}`);
-      document.getElementById("m-owner").textContent = `[${ownerName}]`;
-      const collabs = project.collaborator_usernames || [];
-      const collabText = collabs.map(c => `[${c}]`).join(", ");
-      document.getElementById("m-collaborators").textContent = collabs.length ? `, ${collabText}` : "";
-    }
+function renderContributors() {
+  const ownerName = project.owner_username || (isOwner ? "you" : `#${project.owner_id}`);
+  document.getElementById("m-owner").textContent = `[${ownerName}]`;
+
+  const collabs = project.collaborator_usernames || [];
+
+  const collabHTML = collabs
+    .map(username =>
+      `<a href="https://mcbcode.com/profile?user=${encodeURIComponent(username)}">${username}</a>`
+    )
+    .join(", ");
+
+  document.getElementById("m-collaborators").innerHTML =
+    collabs.length ? `, ${collabHTML}` : "";
+}
 
     async function copyProjectLink() {
       const url = `https://mcbcode.com/project/${project.share_code}/`;
