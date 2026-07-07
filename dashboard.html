@@ -1097,6 +1097,7 @@ input[type="checkbox"]:checked {
         const data = await res.json();
         document.getElementById("user-email").textContent = data.email;
         document.getElementById("acct-email").textContent = data.email;
+        document.getElementById("stat-points").textContent = data.points ?? 0;
         if (data.is_github) document.getElementById("acct-github-badge").style.display = "";
         if (data.username) {
           document.getElementById("acct-username").value = data.username;
