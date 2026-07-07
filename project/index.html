@@ -319,7 +319,6 @@
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
         </div>
         <input type="file" id="png-upload-input" accept="image/png" style="display:none;">
-        <div class="upload-note">only .png images are allowed for image uploads.</div>
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
@@ -556,7 +555,7 @@ function renderContributors() {
         bfo.className = "sm-btn"; bfo.textContent = "+ Folder";
         bfo.onclick = () => openNewFile("folder");
         const bpng = document.createElement("button");
-        bpng.className = "sm-btn"; bpng.textContent = "+ PNG";
+        bpng.className = "sm-btn"; bpng.textContent = "Image";
         bpng.onclick = () => document.getElementById("png-upload-input").click();
         toolbar.appendChild(bf);
         toolbar.appendChild(bfo);
@@ -589,7 +588,7 @@ function renderContributors() {
         row.className = "file-row";
         const icon = f.type === "folder" ? "+" : ">";
         const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
-        const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">img</span>` : "";
+        const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
         row.innerHTML = `
           <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
           <span class="${nameClass}">${esc(f.name)}</span>
