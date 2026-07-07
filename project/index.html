@@ -502,7 +502,9 @@
 
 function renderContributors() {
   const ownerName = project.owner_username || (isOwner ? "you" : `#${project.owner_id}`);
-  document.getElementById("m-owner").textContent = `[${ownerName}]`;
+
+  document.getElementById("m-owner").innerHTML =
+    `[<a href="https://mcbcode.com/profile?u=${encodeURIComponent(ownerName)}">${ownerName}</a>]`;
 
   const collabs = project.collaborator_usernames || [];
 
