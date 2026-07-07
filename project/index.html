@@ -29,7 +29,7 @@
     .shell { display: flex; flex-direction: column; height: 100vh; padding-top: 48px; }
 
     .proj-header { border-bottom: 1px solid #2a2a2e; padding: 14px 20px 0; flex-shrink: 0; background: #161719; }
-    .proj-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .proj-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
     .proj-title { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; }
     .proj-badge { font-size: 10px; padding: 2px 7px; border: 1px solid #343438; color: #777; }
     .proj-badge.public { border-color: #05ee93; color: #05ee93; }
@@ -57,13 +57,15 @@
 
     .file-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #111214; }
 
-    .path-bar { display: flex; align-items: center; gap: 0; padding: 0 16px; height: 38px; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; font-size: 12px; }
+    .path-bar { display: flex; align-items: center; gap: 0; padding: 0 16px; height: 38px; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; font-size: 12px; flex-wrap: wrap; }
     .path-crumb { color: #00b2ff; cursor: pointer; transition: color 0.15s; padding: 0 2px; }
     .path-crumb:hover { color: #66d4ff; }
     .path-sep { color: #343438; padding: 0 4px; }
-    .path-toolbar { margin-left: auto; display: flex; gap: 6px; }
+    .path-toolbar { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
+
+    .upload-note { font-size: 11px; color: #555; padding: 6px 16px; border-bottom: 1px solid #2a2a2e; flex-shrink: 0; }
 
     .file-list { flex: 1; overflow-y: auto; }
     .file-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid #1a1a1e; cursor: pointer; transition: background 0.12s; font-size: 13px; }
@@ -73,6 +75,7 @@
     .file-icon.folder { color: #00b2ff; }
     .file-name { flex: 1; color: #c8c8c8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-name.folder { color: #fff; font-family: 'mcfontb', sans-serif; }
+    .file-badge { font-size: 9px; color: #ff9900; border: 1px solid #3a2e18; padding: 1px 5px; flex-shrink: 0; }
     .file-updated { font-size: 11px; color: #444; white-space: nowrap; flex-shrink: 0; }
     .file-del { opacity: 0; background: none; border: none; color: #555; font-size: 11px; padding: 2px 6px; cursor: pointer; font-family: 'mcfont', sans-serif; transition: color 0.15s; flex-shrink: 0; }
     .file-del:hover { color: #ff5555; }
@@ -141,6 +144,25 @@
 
     .loading-msg { padding: 48px; text-align: center; color: #444; font-size: 13px; }
     .err-msg { padding: 48px; text-align: center; color: #ff5555; font-size: 13px; }
+
+    /* ---- portrait / mobile layout ---- */
+    @media (max-width: 720px), (orientation: portrait) {
+      .panels { flex-direction: column; }
+      .meta-panel {
+        width: 100%; min-width: 0; height: auto; max-height: 96px;
+        flex-direction: row; overflow-x: auto; overflow-y: hidden;
+        border-right: none; border-bottom: 1px solid #2a2a2e;
+      }
+      .meta-section { border-bottom: none; border-right: 1px solid #1e1e22; flex-shrink: 0; white-space: nowrap; }
+      .stat-row { gap: 12px; }
+      .proj-title { font-size: 15px; }
+      .proj-header-actions { margin-left: 0; }
+      .proj-header-top { gap: 6px; }
+      .path-bar { flex-direction: column; align-items: stretch; height: auto; padding: 8px 12px; gap: 6px; }
+      .path-toolbar { justify-content: flex-start; }
+      .file-updated { display: none; }
+      .modal, .confirm-modal, .warn-modal { min-width: 0; width: 90vw; max-width: 360px; padding: 18px; }
+    }
   </style>
 </head>
 <body>
@@ -174,6 +196,7 @@
       </div>
     </div>
   </div>
+
   <div class="overlay" id="del-overlay">
     <div class="confirm-modal">
       <p>Delete this item?</p>
@@ -235,13 +258,13 @@
           <div class="meta-label">About</div>
           <div class="meta-value" id="m-desc">—</div>
         </div>
-    <div class="meta-section">
-        <div class="meta-label">Contributors</div>
-        <div class="meta-value">
-        <span class="green" id="m-owner">—</span>
-        <span id="m-collaborators"></span>
-    </div>
-</div>
+        <div class="meta-section">
+          <div class="meta-label">Contributors</div>
+          <div class="meta-value">
+            <span class="green" id="m-owner">—</span>
+            <span id="m-collaborators"></span>
+          </div>
+        </div>
         <div class="meta-section">
           <div class="meta-label">Updated</div>
           <div class="meta-value" id="m-updated">—</div>
@@ -265,7 +288,7 @@
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
         </div>
         <input type="file" id="png-upload-input" accept="image/png" style="display:none;">
-        <div style="font-size:11px; color:#555; padding:6px 16px; border-bottom:1px solid #2a2a2e;">only .png images are allowed for image uploads.</div>
+        <div class="upload-note">only .png images are allowed for image uploads.</div>
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
@@ -319,6 +342,8 @@
     let newFileParentId = null;
     let exportFileData  = null;
     let collabAcDebounce = null;
+    let pendingRenameId   = null;
+    let pendingRenameType = null;
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     function fmtDate(s) {
@@ -332,6 +357,7 @@
       if (n.endsWith(".mcfunction")) return `/editor/mcfunction?save=${file.save_id}`;
       return `/editor/json?save=${file.save_id}`;
     }
+    function isPng(f) { return !!f.r2_key || f.name.toLowerCase().endsWith(".png"); }
 
     // ---- INIT ----
     (async () => {
@@ -371,8 +397,8 @@
       document.getElementById("m-code").textContent    = project.share_code;
       updateStats();
 
-      const canEdit = isOwner || isCollab;
-      if (canEdit) document.getElementById("owner-toolbar").style.display = "flex";
+      const canEditNow = isOwner || isCollab;
+      if (canEditNow) document.getElementById("owner-toolbar").style.display = "flex";
       if (isOwner) {
         document.getElementById("tab-settings-btn").style.display = "";
         document.getElementById("set-name").value = project.name;
@@ -380,6 +406,9 @@
         loadCollaborators();
       }
       document.getElementById("export-btn").style.display = "";
+
+      const pngInput = document.getElementById("png-upload-input");
+      if (pngInput) pngInput.addEventListener("change", handlePngUpload);
 
       // collab autocomplete
       const ci = document.getElementById("collab-input");
@@ -405,7 +434,7 @@
     function isAtRoot() { return currentPath.length === 0; }
     const canEdit = () => isOwner || isCollab;
 
-function renderToolbar() {
+    function renderToolbar() {
       const toolbar = document.getElementById("owner-toolbar");
       toolbar.innerHTML = "";
       if (!canEdit()) return;
@@ -455,15 +484,18 @@ function renderToolbar() {
         row.className = "file-row";
         const icon = f.type === "folder" ? "+" : ">";
         const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
+        const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">img</span>` : "";
         row.innerHTML = `
           <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
           <span class="${nameClass}">${esc(f.name)}</span>
+          ${pngBadge}
           <span class="file-updated">${fmtDate(f.updated_at)}</span>
           ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
-          ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}        `;
+          ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
+        `;
         if (f.type === "folder") {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); renderFileList(); };
-        } else if (f.r2_key || f.name.toLowerCase().endsWith(".png")) {
+        } else if (isPng(f)) {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; window.open(`${AUTH}/project/asset?file_id=${f.id}`, "_blank"); };
         } else {
           row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
@@ -518,11 +550,7 @@ function renderToolbar() {
       btn.disabled = false;
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const pngInput = document.getElementById("png-upload-input");
-      if (pngInput) pngInput.addEventListener("change", handlePngUpload);
-    });
-
+    // ---- PNG UPLOAD ----
     async function handlePngUpload(e) {
       const file = e.target.files[0];
       e.target.value = ""; // reset so same file can be picked again
@@ -550,6 +578,7 @@ function renderToolbar() {
         updateStats(); renderFileList();
       } catch { alert("Something went wrong uploading the image."); }
     }
+
     // ---- DELETE FILE ----
     function askDelete(e, id, name) {
       e.stopPropagation(); pendingDelId = id;
@@ -565,9 +594,8 @@ function renderToolbar() {
         if (res.ok) { removeFromCache(id); updateStats(); renderFileList(); }
       } catch {}
     }
-    let pendingRenameId   = null;
-    let pendingRenameType = null;
 
+    // ---- RENAME FILE ----
     function askRename(e, id, name, type) {
       e.stopPropagation();
       pendingRenameId = id;
@@ -606,6 +634,7 @@ function renderToolbar() {
       } catch { err.textContent = "something went wrong."; err.classList.add("show"); }
       btn.disabled = false;
     }
+
     function removeFromCache(id) {
       allFiles.filter(f => f.parent_id === id).forEach(c => removeFromCache(c.id));
       const i = allFiles.findIndex(f => f.id === id);
@@ -701,6 +730,15 @@ function renderToolbar() {
       btn.disabled = false; btn.textContent = "Export";
     }
 
+    // writes a file into a zip, handling base64 (png) vs plain text content
+    function addFileToZip(zip, path, f) {
+      if (f.is_base64) {
+        zip.file(path, f.content || "", { base64: true });
+      } else {
+        zip.file(path, f.content || "");
+      }
+    }
+
     async function doExport() {
       closeModal("export-warn-overlay");
       const btn = document.getElementById("export-btn");
@@ -741,7 +779,7 @@ function renderToolbar() {
             if (!packFolder) continue;
             const packZip = new JSZip();
             files.filter(f => f.type === "file" && isUnderFolder(f, packFolder.id))
-                 .forEach(f => packZip.file(getRelativeParts(f, packFolder.id).join("/"), f.content || ""));
+                 .forEach(f => addFileToZip(packZip, getRelativeParts(f, packFolder.id).join("/"), f));
             addon.file(`${projectName}_${packName}.mcpack`, await packZip.generateAsync({ type: "blob" }));
           }
           triggerDownload(await addon.generateAsync({ type: "blob" }), `${projectName}.mcaddon`);
@@ -749,10 +787,10 @@ function renderToolbar() {
           const zip = new JSZip();
           const onlyPack = hasBP ? rootFolders.find(f => f.name.toUpperCase() === "BP") : rootFolders.find(f => f.name.toUpperCase() === "RP");
           if (!onlyPack) {
-            files.filter(f => f.type === "file" && f.parent_id !== null).forEach(f => zip.file(getRelativeParts(f, null).join("/"), f.content || ""));
+            files.filter(f => f.type === "file" && f.parent_id !== null).forEach(f => addFileToZip(zip, getRelativeParts(f, null).join("/"), f));
           } else {
             files.filter(f => f.type === "file" && isUnderFolder(f, onlyPack.id))
-                 .forEach(f => zip.file(getRelativeParts(f, onlyPack.id).join("/"), f.content || ""));
+                 .forEach(f => addFileToZip(zip, getRelativeParts(f, onlyPack.id).join("/"), f));
           }
           triggerDownload(await zip.generateAsync({ type: "blob" }), `${projectName}.mcpack`);
         }
