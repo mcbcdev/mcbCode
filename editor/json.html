@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<meta charset="UTF-8">
+<link rel="icon" href="/theme/favicon.png">
+<title>mcbCode | JSON Editor</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #323232;
+    color: #fff;
+    overflow: hidden;
+    font-family: mcfont;
+  }
+
+  header.top-thing {
+    background-color: #323232;
+    display: flex;
+    align-items: center;
+    height: 50px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1001;
+  }
+
+  .navi {
+    font-size: 14px;
+    padding: 3px 3px;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 50px; left: 0; right: 0;
+    background-color: #323232;
+    z-index: 1001;
+    border-bottom: 1px solid #444;
+  }
+
+  .editor {
+    display: flex;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    align-items: flex-start;
+    position: relative;
+    background-color: #0c0c0c;
+    margin-top: 80px;
+  }
+
+  .code-container {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #codeArea {
+    font-family: 'Fira Code', monospace !important;
+    font-variant-ligatures: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.4 !important;
+    font-size: 16px !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    tab-size: 2 !important;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 8px;
+    margin: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    overflow: auto;
+    background-color: #0c0c0c;
+    color: #e0e0e0;
+    resize: none;
+  }
+
+  .nav-item { position: relative; display: inline-block; }
+
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0;
+    background-color: #323232;
+    border: 1px solid #bebebe;
+    min-width: 220px;
+    z-index: 1002;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    flex-direction: column;
+  }
+
+  .nav-dropdown div {
+    cursor: pointer;
+    font-size: 12px;
+    background-color: #323232;
+    padding: 6px 12px;
+  }
+
+  .nav-dropdown div:hover { background-color: #454545; }
+  .nav-item:hover .nav-dropdown { display: flex; }
+
+  button {
+    background-color: transparent;
+    border: none;
+    color: #f0f0f0;
+    user-select: none;
+    cursor: pointer;
+    font-family: mcfont;
+  }
+
+  .file-name {
+    background-color: #0c0c0c;
+    color: #ffffff;
+    white-space: nowrap;
+    height: 18px;
+    font-size: 16px;
+    outline: none;
+    border: none;
+    padding: 6px 2px;
+    resize: none;
+    min-width: 10%;
+    line-height: 18px;
+    overflow-y: hidden;
+  }
+
+  .filename-txt { background-color: #454545; padding: 6px 6px; padding-right: 12px; }
+  .filename-ext { background-color: #1f1f1f; padding: 6px 6px; }
+
+  .copyshortcut {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #1f1f1f;
+    padding: 6px 6px; margin-left: 8px;
+  }
+
+  .copyshortcut:hover { background-color: #454545; cursor: pointer; }
+
+  #saveBtn { cursor: pointer; }
+  #saveBtn.saving { color: #888; cursor: not-allowed; }
+  #saveBtn.saved  { color: #05ee93; }
+  #saveBtn.error  { color: #ff5555; }
+
+  #validateMsg {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    padding: 6px 10px;
+    font-size: 12px;
+    z-index: 1050;
+    display: none;
+  }
+  #validateMsg.ok  { background: #0f3d2e; color: #05ee93; display: block; }
+  #validateMsg.bad { background: #3d0f0f; color: #ff5555; display: block; }
+</style>
+</head>
+<body>
+
+  <header class="top-thing">
+      <a href="https://mcbcode.com" style="padding-left: 12px;"><img src="https://mcbcode.com/theme/favicon.png" alt="icon" style="width: 36px"></a>
+      <h2 style="padding: 0px 12px;">mcb<g>Code</g></h2>
+      <div class="filename-txt">Filename:</div>
+      <textarea id="autoWidth" class="file-name" maxlength="72">untitled</textarea>
+      <div class="filename-ext">.json</div>
+      <a href="https://mcbcode.com/account" style="color: #ffffff; text-decoration: none;"><div class="copyshortcut">Account</div></a>
+      <div class="copyshortcut" id="saveBtn" style="display:none;" onclick="doSave()">Save</div>
+  </header>
+
+  <div class="navi">
+    <div class="nav-item">
+      <button>File</button>
+      <div class="nav-dropdown">
+        <div id="copyCodeMenu">Copy JSON</div>
+        <div id="exportCode">Download as .json</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <button>Edit</button>
+      <div class="nav-dropdown">
+        <div id="formatCode">Format / Prettify</div>
+        <div id="validateCode">Validate JSON</div>
+        <div id="deleteCode" style="color:#ff4d4d;">Clear</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor" id="editor">
+    <div class="code-container">
+      <textarea id="codeArea" spellcheck="false" placeholder="{}">{
+  "hello": "world"
+}</textarea>
+    </div>
+  </div>
+
+  <div id="validateMsg"></div>
+
+<script>
+const codeArea = document.getElementById('codeArea');
+const autoWidthTextarea = document.getElementById('autoWidth');
+const validateMsg = document.getElementById('validateMsg');
+
+const measurer = document.createElement('span');
+measurer.style.visibility = 'hidden';
+measurer.style.whiteSpace = 'pre';
+measurer.style.position = 'absolute';
+document.body.appendChild(measurer);
+
+function adjustFilenameWidth() {
+  measurer.style.font = window.getComputedStyle(autoWidthTextarea).font;
+  measurer.textContent = autoWidthTextarea.value || autoWidthTextarea.placeholder;
+  autoWidthTextarea.style.width = (measurer.offsetWidth + 10) + 'px';
+}
+autoWidthTextarea.addEventListener('input', adjustFilenameWidth);
+adjustFilenameWidth();
+
+function showValidateMsg(ok, text) {
+  validateMsg.textContent = text;
+  validateMsg.className = ok ? 'ok' : 'bad';
+  setTimeout(() => { validateMsg.className = ''; }, 3000);
+}
+
+function validateJSON() {
+  try {
+    JSON.parse(codeArea.value);
+    showValidateMsg(true, 'valid json');
+    return true;
+  } catch (e) {
+    showValidateMsg(false, 'invalid: ' + e.message);
+    return false;
+  }
+}
+
+function formatJSON() {
+  try {
+    const parsed = JSON.parse(codeArea.value);
+    codeArea.value = JSON.stringify(parsed, null, 2);
+    showValidateMsg(true, 'formatted');
+  } catch (e) {
+    showValidateMsg(false, 'cant format, invalid: ' + e.message);
+  }
+}
+
+document.getElementById('validateCode').addEventListener('click', validateJSON);
+document.getElementById('formatCode').addEventListener('click', formatJSON);
+
+document.getElementById('deleteCode').addEventListener('click', () => {
+  codeArea.value = '';
+});
+
+// download
+document.getElementById('exportCode').addEventListener('click', () => {
+  const code = codeArea.value;
+  if (!code) return;
+  const fileName = (autoWidthTextarea.value || 'untitled').replace(/[^a-z0-9_\-]/gi, '_') + '.json';
+  const blob = new Blob([code], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// copy
+document.getElementById('copyCodeMenu').addEventListener('click', () => {
+  const text = codeArea.value;
+  if (!text) return;
+  const dummy = document.createElement("textarea");
+  document.body.appendChild(dummy);
+  dummy.value = text;
+  dummy.select();
+  document.execCommand("copy");
+  document.body.removeChild(dummy);
+});
+
+// ctrl+s downloads, ctrl+shift+f formats
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  if (e.ctrlKey && key === 's') {
+    e.preventDefault();
+    document.getElementById('exportCode').click();
+  }
+  if (e.ctrlKey && e.shiftKey && key === 'f') {
+    e.preventDefault();
+    formatJSON();
+  }
+});
+</script>
+
+<!-- =====================
+     SAVE / SHARE SYSTEM
+     same logic as the mcfunction editor, just pointed at this codeArea/filename
+===================== -->
+<script>
+const AUTH = "https://auth.mcbcode.com";
+const saveBtn = document.getElementById('saveBtn');
+
+let currentSaveId = null;
+let currentUserId = null;
+
+function setSaveBtnState(state, label) {
+    saveBtn.textContent = label || 'Save';
+    saveBtn.className = 'copyshortcut' + (state ? ' ' + state : '');
+}
+
+function setSaveParam(id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('save', id);
+    window.history.replaceState({}, '', url.toString());
+}
+
+function updateSaveBtnVisibility(ownerId) {
+    if (currentUserId !== null && currentUserId === ownerId) {
+        saveBtn.style.display = '';
+    } else if (currentUserId !== null && ownerId === null) {
+        saveBtn.style.display = '';
+    } else {
+        saveBtn.style.display = 'none';
+    }
+}
+
+async function doSave() {
+    if (saveBtn.classList.contains('saving')) return;
+    setSaveBtnState('saving', 'Saving...');
+
+    try {
+        const res = await fetch(`${AUTH}/save`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                save_id: currentSaveId,
+                content: codeArea.value,
+                filename: (autoWidthTextarea.value || 'untitled') + '.json',
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.save_id) {
+            currentSaveId = data.save_id;
+            setSaveParam(currentSaveId);
+            setSaveBtnState('saved', 'Saved!');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        } else {
+            setSaveBtnState('error', 'Error');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        }
+    } catch {
+        setSaveBtnState('error', 'Error');
+        setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const saveParam = params.get('save');
+
+    try {
+        const meRes = await fetch(`${AUTH}/me`, { credentials: 'include' });
+        if (meRes.ok) {
+            const me = await meRes.json();
+            currentUserId = me.id;
+        }
+    } catch {}
+
+    if (saveParam) {
+        try {
+            const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(saveParam)}`, {
+                credentials: 'include'
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                currentSaveId = data.save_id;
+
+                codeArea.value = data.content;
+                if (data.filename) {
+                    // strip .json ext for the filename box since we show it separately
+                    autoWidthTextarea.value = data.filename.replace(/\.json$/i, '');
+                    adjustFilenameWidth();
+                }
+
+                updateSaveBtnVisibility(data.owner_id);
+            } else {
+                codeArea.value = '// this share code does not exist';
+                saveBtn.style.display = 'none';
+            }
+        } catch {
+            codeArea.value = '// this share code does not exist';
+            saveBtn.style.display = 'none';
+        }
+    } else {
+        updateSaveBtnVisibility(null);
+    }
+});
+</script>
+
+</body>
+</html>
