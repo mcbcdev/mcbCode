@@ -29,12 +29,9 @@
 /* inconsolota import */
     @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap');
 
-* {
-  font-family: 'mcfont', sans-serif;
-}
-
 body {
   background-color: #0c0c0c;
+  font-family: 'mcfont', sans-serif;
 }
 
 body::selection {     
@@ -80,5 +77,9 @@ button {
 }
 
 .code-area, .highlight-layer {
+  font-family: monospace !important;
+}
+
+#codeArea, #highlightLayer {
   font-family: monospace !important;
 }
