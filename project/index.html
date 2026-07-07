@@ -117,6 +117,25 @@
     .collab-err { font-size: 11px; color: #ff5555; margin-top: 4px; display: none; }
     .collab-err.show { display: block; }
 
+    /* tags */
+    .tag-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .tag-chip { display: flex; align-items: center; gap: 6px; background: #1a1c1f; border: 1px solid #343438; color: #05ee93; font-size: 12px; padding: 4px 8px; }
+    .tag-chip button { background: none; border: none; color: #666; cursor: pointer; font-size: 11px; padding: 0; line-height: 1; }
+    .tag-chip button:hover { color: #ff5555; }
+    .tag-count { font-size: 11px; color: #555; }
+    .tag-err { font-size: 11px; color: #ff5555; margin-top: 4px; display: none; }
+    .tag-err.show { display: block; }
+
+    /* danger zone */
+    .danger-title { font-size: 13px; color: #ff5555; font-family: 'mcfontb', sans-serif; margin-bottom: 6px; }
+    .danger-sub { font-size: 11px; color: #666; margin-bottom: 16px; }
+    .danger-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #2a1414; background: #1a1414; padding: 12px 14px; margin-bottom: 10px; }
+    .danger-row-label { font-size: 13px; color: #eee; }
+    .danger-row-desc { font-size: 11px; color: #777; margin-top: 2px; }
+    .danger-btn { background: transparent; border: 1px solid #ff5555; color: #ff5555; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    .danger-btn:hover { background: #ff5555; color: #0c0c0c; }
+
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
     .overlay.open { display: flex; }
     .modal { background: #1a1c1f; border: 1px solid #343438; padding: 24px 28px; min-width: 320px; }
@@ -204,6 +223,17 @@
       <div class="modal-actions">
         <button class="del-btn" onclick="confirmDelete()">Delete</button>
         <button class="cancel-btn" onclick="closeModal('del-overlay')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="danger-confirm-overlay">
+    <div class="confirm-modal">
+      <p id="danger-confirm-title">Are you sure?</p>
+      <small id="danger-confirm-sub"></small>
+      <div class="modal-actions">
+        <button class="del-btn" id="danger-confirm-btn" onclick="runDangerAction()">Confirm</button>
+        <button class="cancel-btn" onclick="closeModal('danger-confirm-overlay')">Cancel</button>
       </div>
     </div>
   </div>
@@ -312,6 +342,16 @@
 
       <hr class="set-divider">
 
+      <div class="set-section-title">Tags <span class="tag-count" id="tag-count">(0/10)</span></div>
+      <div class="tag-list" id="tag-list"></div>
+      <div class="tag-input-row">
+        <input class="collab-input" type="text" id="tag-input" placeholder="e.g. survival, addon, redstone" maxlength="24" autocomplete="off">
+        <button class="primary-btn" onclick="addTag()">Add</button>
+      </div>
+      <div class="tag-err" id="tag-err"></div>
+
+      <hr class="set-divider">
+
       <div class="set-section-title">Collaborators</div>
       <div class="collab-search-row">
         <div class="collab-input-wrap">
@@ -323,6 +363,35 @@
       <div class="collab-err" id="collab-err"></div>
       <div class="collab-list" id="collab-list">
         <div class="collab-empty">Loading...</div>
+      </div>
+
+      <hr class="set-divider">
+
+      <div class="danger-title">Danger Zone</div>
+      <div class="danger-sub">these actions can't be undone. be careful.</div>
+
+      <div class="danger-row">
+        <div>
+          <div class="danger-row-label">Remove all collaborators</div>
+          <div class="danger-row-desc">removes every collaborator from this project. it stays yours.</div>
+        </div>
+        <button class="danger-btn" onclick="confirmDangerAction('remove_collabs')">Remove All</button>
+      </div>
+
+      <div class="danger-row">
+        <div>
+          <div class="danger-row-label">Reset all files</div>
+          <div class="danger-row-desc">deletes every file and folder (including uploaded pngs) and recreates empty BP/RP folders.</div>
+        </div>
+        <button class="danger-btn" onclick="confirmDangerAction('reset_files')">Reset Files</button>
+      </div>
+
+      <div class="danger-row">
+        <div>
+          <div class="danger-row-label">Delete project</div>
+          <div class="danger-row-desc">permanently deletes this project, its files, and its share link.</div>
+        </div>
+        <button class="danger-btn" onclick="confirmDangerAction('delete_project')">Delete Project</button>
       </div>
     </div>
 
@@ -344,6 +413,8 @@
     let collabAcDebounce = null;
     let pendingRenameId   = null;
     let pendingRenameType = null;
+    let currentTags       = [];
+    let pendingDangerAction = null;
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     function fmtDate(s) {
@@ -403,6 +474,8 @@
         document.getElementById("tab-settings-btn").style.display = "";
         document.getElementById("set-name").value = project.name;
         document.getElementById("set-desc").value = project.description || "";
+        currentTags = Array.isArray(project.tags) ? project.tags.slice(0, 10) : [];
+        renderTags();
         loadCollaborators();
       }
       document.getElementById("export-btn").style.display = "";
@@ -831,6 +904,87 @@
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
+    // ---- TAGS ----
+    function renderTags() {
+      document.getElementById("tag-count").textContent = `(${currentTags.length}/10)`;
+      const list = document.getElementById("tag-list");
+      if (!currentTags.length) { list.innerHTML = `<span style="font-size:12px; color:#444;">no tags yet.</span>`; return; }
+      list.innerHTML = currentTags.map((t, i) => `
+        <span class="tag-chip">${esc(t)}<button onclick="removeTag(${i})">x</button></span>
+      `).join("");
+    }
+
+    function addTag() {
+      const input = document.getElementById("tag-input");
+      const err = document.getElementById("tag-err");
+      err.classList.remove("show");
+      let val = input.value.trim().toLowerCase().replace(/[^a-z0-9\- ]/g, "").slice(0, 24);
+      if (!val) { err.textContent = "enter a tag."; err.classList.add("show"); return; }
+      if (currentTags.includes(val)) { err.textContent = "already added."; err.classList.add("show"); return; }
+      if (currentTags.length >= 10) { err.textContent = "10 tag max."; err.classList.add("show"); return; }
+      currentTags.push(val);
+      input.value = "";
+      renderTags();
+      saveTags();
+    }
+
+    function removeTag(i) {
+      currentTags.splice(i, 1);
+      renderTags();
+      saveTags();
+    }
+
+    async function saveTags() {
+      const err = document.getElementById("tag-err");
+      try {
+        const res = await fetch(`${AUTH}/project/settings`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, tags: currentTags })
+        });
+        if (!res.ok) { const d = await res.json(); err.textContent = d.error || "failed to save tags."; err.classList.add("show"); }
+      } catch { err.textContent = "something went wrong saving tags."; err.classList.add("show"); }
+    }
+
+    document.getElementById("tag-input")?.addEventListener("keydown", e => { if (e.key === "Enter") addTag(); });
+
+    // ---- DANGER ZONE ----
+    function confirmDangerAction(action) {
+      pendingDangerAction = action;
+      const title = document.getElementById("danger-confirm-title");
+      const sub   = document.getElementById("danger-confirm-sub");
+      if (action === "remove_collabs") {
+        title.textContent = "Remove all collaborators?";
+        sub.textContent = "they'll lose access to this project immediately.";
+      } else if (action === "reset_files") {
+        title.textContent = "Reset all files?";
+        sub.textContent = "every file and folder (including pngs) will be deleted. this can't be undone.";
+      } else if (action === "delete_project") {
+        title.textContent = "Delete this project?";
+        sub.textContent = "this permanently deletes the project, its files, and its share link.";
+      }
+      document.getElementById("danger-confirm-overlay").classList.add("open");
+    }
+
+    async function runDangerAction() {
+      const action = pendingDangerAction;
+      closeModal("danger-confirm-overlay");
+      if (!action) return;
+      try {
+        if (action === "remove_collabs") {
+          const res = await fetch(`${AUTH}/project/collaborators/all?code=${encodeURIComponent(shareCode)}`, { method: "DELETE", credentials: "include" });
+          if (res.ok) loadCollaborators(); else alert("Failed to remove collaborators.");
+        } else if (action === "reset_files") {
+          const res = await fetch(`${AUTH}/project/files/all?code=${encodeURIComponent(shareCode)}`, { method: "DELETE", credentials: "include" });
+          if (res.ok) { location.reload(); } else alert("Failed to reset files.");
+        } else if (action === "delete_project") {
+          const res = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { method: "DELETE", credentials: "include" });
+          if (res.ok) { window.location.href = "/dashboard"; } else alert("Failed to delete project.");
+        }
+      } catch { alert("Something went wrong."); }
+      pendingDangerAction = null;
+    }
+
     // ---- TABS ----
     function switchTab(tab, el) {
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -848,6 +1002,7 @@
     document.getElementById("del-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("del-overlay"); });
     document.getElementById("rename-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("rename-overlay"); });
     document.getElementById("export-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("export-warn-overlay"); });
+    document.getElementById("danger-confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("danger-confirm-overlay"); });
 
     async function doLogout() {
       await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
