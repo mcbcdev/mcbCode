@@ -30,13 +30,18 @@
     padding: 3px 3px;
     user-select: none;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     position: fixed;
     top: 50px; left: 0; right: 0;
     background-color: #323232;
     z-index: 1001;
     border-bottom: 1px solid #444;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0px;
   }
 
   .editor {
@@ -56,7 +61,7 @@
     overflow: hidden;
   }
 
-  #codeArea {
+  #codeArea, #highlightLayer {
     font-family: 'Fira Code', monospace !important;
     font-variant-ligatures: none !important;
     letter-spacing: normal !important;
@@ -74,10 +79,29 @@
     outline: none;
     box-sizing: border-box;
     overflow: auto;
+  }
+
+  #highlightLayer {
     background-color: #0c0c0c;
     color: #e0e0e0;
-    resize: none;
+    pointer-events: none;
+    z-index: 1;
   }
+
+  #codeArea {
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #05ee93 !important;
+    resize: none;
+    z-index: 2;
+  }
+
+  .tok-key    { color: #7ec4ff; }
+  .tok-string { color: #05ee93; }
+  .tok-number { color: #ff9900; }
+  .tok-bool   { color: #ff00d0; }
+  .tok-null   { color: #ff00d0; }
+  .tok-punct  { color: #bebebe; }
 
   .nav-item { position: relative; display: inline-block; }
 
@@ -169,25 +193,28 @@
   </header>
 
   <div class="navi">
-    <div class="nav-item">
-      <button>File</button>
-      <div class="nav-dropdown">
-        <div id="copyCodeMenu">Copy JSON</div>
-        <div id="exportCode">Download as .json</div>
+    <div class="nav-left">
+      <div class="nav-item">
+        <button>File</button>
+        <div class="nav-dropdown">
+          <div id="copyCodeMenu">Copy JSON</div>
+          <div id="exportCode">Download as .json</div>
+        </div>
       </div>
-    </div>
-    <div class="nav-item">
-      <button>Edit</button>
-      <div class="nav-dropdown">
-        <div id="formatCode">Format / Prettify</div>
-        <div id="validateCode">Validate JSON</div>
-        <div id="deleteCode" style="color:#ff4d4d;">Clear</div>
+      <div class="nav-item">
+        <button>Edit</button>
+        <div class="nav-dropdown">
+          <div id="formatCode">Format / Prettify</div>
+          <div id="validateCode">Validate JSON</div>
+          <div id="deleteCode" style="color:#ff4d4d;">Clear</div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="editor" id="editor">
     <div class="code-container">
+      <div id="highlightLayer"></div>
       <textarea id="codeArea" spellcheck="false" placeholder="{}">{
   "hello": "world"
 }</textarea>
@@ -198,8 +225,44 @@
 
 <script>
 const codeArea = document.getElementById('codeArea');
+const highlightLayer = document.getElementById('highlightLayer');
 const autoWidthTextarea = document.getElementById('autoWidth');
 const validateMsg = document.getElementById('validateMsg');
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// simple regex based json tokenizer for coloring only (not a real parser)
+const JSON_TOKEN_RE = /("(\\.|[^"\\])*"(\s*:)?)|(-?\d+(\.\d+)?([eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)|([{}\[\],:])/g;
+
+function highlightJSON(text) {
+  return escapeHtml(text).replace(JSON_TOKEN_RE, (match, strWithColon, _q, colonPart, num, _d, _e, bool, nul, punct) => {
+    if (strWithColon !== undefined) {
+      // string, possibly followed by a colon (meaning it's a key)
+      const isKey = !!colonPart;
+      return `<span class="${isKey ? 'tok-key' : 'tok-string'}">${match}</span>`;
+    }
+    if (num !== undefined) return `<span class="tok-number">${match}</span>`;
+    if (bool !== undefined) return `<span class="tok-bool">${match}</span>`;
+    if (nul !== undefined) return `<span class="tok-null">${match}</span>`;
+    if (punct !== undefined) return `<span class="tok-punct">${match}</span>`;
+    return match;
+  });
+}
+
+function updateHighlighting() {
+  highlightLayer.innerHTML = highlightJSON(codeArea.value) + '\n';
+  syncScroll();
+}
+
+function syncScroll() {
+  highlightLayer.scrollTop = codeArea.scrollTop;
+  highlightLayer.scrollLeft = codeArea.scrollLeft;
+}
+
+codeArea.addEventListener('scroll', syncScroll);
+codeArea.addEventListener('input', updateHighlighting);
 
 const measurer = document.createElement('span');
 measurer.style.visibility = 'hidden';
@@ -236,6 +299,7 @@ function formatJSON() {
   try {
     const parsed = JSON.parse(codeArea.value);
     codeArea.value = JSON.stringify(parsed, null, 2);
+    updateHighlighting();
     showValidateMsg(true, 'formatted');
   } catch (e) {
     showValidateMsg(false, 'cant format, invalid: ' + e.message);
@@ -247,6 +311,7 @@ document.getElementById('formatCode').addEventListener('click', formatJSON);
 
 document.getElementById('deleteCode').addEventListener('click', () => {
   codeArea.value = '';
+  updateHighlighting();
 });
 
 // download
@@ -286,6 +351,8 @@ document.addEventListener('keydown', (e) => {
     formatJSON();
   }
 });
+
+window.addEventListener('DOMContentLoaded', () => updateHighlighting());
 </script>
 
 <!-- =====================
@@ -382,13 +449,16 @@ window.addEventListener('DOMContentLoaded', async () => {
                     adjustFilenameWidth();
                 }
 
+                updateHighlighting();
                 updateSaveBtnVisibility(data.owner_id);
             } else {
                 codeArea.value = '// this share code does not exist';
+                updateHighlighting();
                 saveBtn.style.display = 'none';
             }
         } catch {
             codeArea.value = '// this share code does not exist';
+            updateHighlighting();
             saveBtn.style.display = 'none';
         }
     } else {
