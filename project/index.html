@@ -81,8 +81,9 @@
     .file-del:hover { color: #ff5555; }
     .file-list-empty { padding: 48px 20px; text-align: center; color: #333; font-size: 13px; }
 
-    .settings-panel { flex: 1; overflow-y: auto; padding: 28px 32px; display: none; background: #111214; max-width: 640px; }
+    .settings-panel { flex: 1; overflow-y: auto; padding: 28px 32px; display: none; background: #111214; }
     .settings-panel.active { display: block; }
+    .settings-inner { max-width: 640px; }
     .set-field { margin-bottom: 18px; }
     .set-field label { display: block; font-size: 10px; color: #00b2ff; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-family: 'mcfontb', sans-serif; }
     .set-field input, .set-field textarea { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; transition: border-color 0.2s; resize: vertical; }
@@ -301,7 +302,7 @@
         </div>
         <div class="meta-section">
           <div class="meta-label">Project ID</div>
-          <div class="meta-value" id="m-code">—</div>
+          <div class="meta-value mono" id="m-code" style="cursor:pointer;" onclick="copyProjectLink()" title="click to copy project link">—</div>
         </div>
         <div class="meta-section">
           <div class="stat-row">
@@ -326,6 +327,7 @@
     </div>
 
     <div class="settings-panel" id="tab-settings">
+      <div class="settings-inner">
       <h3 style="color:#fff; font-size:15px; margin-bottom:22px;">Project Settings</h3>
       <div class="set-field">
         <label>Project Name</label>
@@ -392,6 +394,7 @@
           <div class="danger-row-desc">permanently deletes this project, its files, and its share link.</div>
         </div>
         <button class="danger-btn" onclick="confirmDangerAction('delete_project')">Delete Project</button>
+      </div>
       </div>
     </div>
 
@@ -463,7 +466,7 @@
       badge.textContent = isPublic ? "public" : "private";
       badge.classList.toggle("public", isPublic);
       document.getElementById("m-desc").textContent    = project.description || "No description.";
-      document.getElementById("m-owner").textContent   = isOwner ? "you" : `#${project.owner_id}`;
+      renderContributors();
       document.getElementById("m-updated").textContent = fmtDate(project.updated_at);
       document.getElementById("m-code").textContent    = project.share_code;
       updateStats();
@@ -495,6 +498,25 @@
       document.addEventListener("click", e => { if (!e.target.closest(".collab-input-wrap")) closeCollabAc(); });
 
       renderFileList();
+    }
+
+    function renderContributors() {
+      const ownerName = project.owner_username || (isOwner ? "you" : `#${project.owner_id}`);
+      document.getElementById("m-owner").textContent = `[${ownerName}]`;
+      const collabs = project.collaborator_usernames || [];
+      const collabText = collabs.map(c => `[${c}]`).join(", ");
+      document.getElementById("m-collaborators").textContent = collabs.length ? `, ${collabText}` : "";
+    }
+
+    async function copyProjectLink() {
+      const url = `https://mcbcode.com/project/${project.share_code}/`;
+      const el = document.getElementById("m-code");
+      try {
+        await navigator.clipboard.writeText(url);
+        const original = el.textContent;
+        el.textContent = "copied!";
+        setTimeout(() => { el.textContent = original; }, 1200);
+      } catch { alert(url); }
     }
 
     function updateStats() {
