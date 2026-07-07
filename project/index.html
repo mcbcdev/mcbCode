@@ -508,7 +508,7 @@ function renderContributors() {
 
   const collabHTML = collabs
     .map(username =>
-      `<a href="https://mcbcode.com/profile?user=${encodeURIComponent(username)}">${username}</a>`
+      `<a href="https://mcbcode.com/profile?u=${encodeURIComponent(username)}">${username}</a>`
     )
     .join(", ");
 
