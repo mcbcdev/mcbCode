@@ -1,7 +1,32 @@
 /* how to use this in other files */
-/* put <link rel="stylesheet" href="https://xyztoast.github.io/theme/site.css"> into the <head> of the html file */
+/* put <link rel="stylesheet" href="https://mcbcode.com/theme/site.css"> into the <head> of the html file */
 
+/* scrollbar */
+html {
+  /* firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #121212 #05ee93; /* thumb track */
+}
 
+/* For Chrome, Edge, and Safari */
+html::-webkit-scrollbar {
+  width: 10px; /* Width of the vertical bar */
+  height: 10px; /* Height of the horizontal bar */
+}
+
+html::-webkit-scrollbar-track {
+  background: #121212; /* Light gray background */
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: #05ee93; /* Medium gray handle */
+  border-radius: 5px; /* Rounds the corners */
+  border: 2px solid #05ee93; /* Padding effect around the handle */
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: #04cf81; /* Darker gray when hovered */
+}
 
 /* mcfont */
     @font-face {
