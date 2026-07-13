@@ -819,11 +819,15 @@ c { color: #e7007b; }
           document.getElementById("hero-text").textContent = `welcome back${data.username ? ", " + data.username : ""}. here's what's going on.`;
           if (data.username) document.getElementById("profile-btn").style.display = "";
         } else {
-          window.location.href = "https://mcbcode.com";
+          if (location.pathname !== "/" && location.pathname !== "/index.html") {
+            window.location.href = "https://mcbcode.com";
+          }
           return;
         }
       } catch {
-        window.location.href = "https://mcbcode.com";
+        if (location.pathname !== "/" && location.pathname !== "/index.html") {
+          window.location.href = "https://mcbcode.com";
+        }
         return;
       }
       try {
