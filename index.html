@@ -420,7 +420,7 @@
       .footer-links { gap: 15px; flex-direction: column; }
     }
 
-    #startup-loading {
+#startup-loading {
   position: fixed;
   inset: 0;
   background: #0c0c0c;
@@ -428,6 +428,13 @@
   align-items: center;
   justify-content: center;
   z-index: 999999;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+#startup-loading.fade-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #startup-loading img {
