@@ -2,10 +2,10 @@
 /* put <link rel="stylesheet" href="https://mcbcode.com/theme/site.css"> into the <head> of the html file */
 
 /* scrollbar */
-html {
-  /* firefox */
-  scrollbar-width: thin;
-  scrollbar-color: #121212 #05ee93; /* thumb track */
+
+    html {
+  scrollbar-width: thin; /* firefox */
+  scrollbar-color: #05ee93 #0c0c0c; /* thumb track */
 }
 
 /* For Chrome, Edge, and Safari */
@@ -19,14 +19,15 @@ html::-webkit-scrollbar-track {
 }
 
 html::-webkit-scrollbar-thumb {
-  background-color: #05ee93; /* Medium gray handle */
+  background-color: #232323; /* Medium gray handle */
   border-radius: 5px; /* Rounds the corners */
-  border: 2px solid #05ee93; /* Padding effect around the handle */
+  border: 2px solid #232323; /* Padding effect around the handle */
 }
 
 html::-webkit-scrollbar-thumb:hover {
-  background-color: #04cf81; /* Darker gray when hovered */
+  background-color: #05ee93; /* Darker gray when hovered */
 }
+
 
 /* mcfont */
     @font-face {
