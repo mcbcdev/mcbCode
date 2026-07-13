@@ -419,10 +419,29 @@
       #tagline { font-size: 2.5rem; }
       .footer-links { gap: 15px; flex-direction: column; }
     }
+
+    #startup-loading {
+  position: fixed;
+  inset: 0;
+  background: #0c0c0c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+}
+
+#startup-loading img {
+  width: 96px;
+  height: 96px;
+  user-select: none;
+  pointer-events: none;
+}
   </style>
 </head>
 <body>
-
+<div id="startup-loading">
+  <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="Loading">
+</div>
   <div class="navi">
     <div class="navi-brand">
       <a href="https://mcbcode.com">
@@ -560,8 +579,10 @@
     });
   </script>
 
-  <script>
+<script>
 (async () => {
+  const loading = document.getElementById("startup-loading");
+
   try {
     const res = await fetch("https://auth.mcbcode.com/me", {
       credentials: "include"
@@ -573,8 +594,12 @@
       document.open();
       document.write(html);
       document.close();
+      return;
     }
   } catch {}
+
+  // not logged in (or request failed)
+  loading.remove();
 })();
 </script>
   
