@@ -606,8 +606,8 @@
   } catch {}
 
   // not logged in (or request failed)
-  loading.remove();
-})();
+loading.classList.add("fade-out");
+setTimeout(() => loading.remove(), 500);})();
 </script>
   
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
