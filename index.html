@@ -587,34 +587,33 @@
   </script>
 
 <script>
-(async () => {
-  const loading = document.getElementById("startup-loading");
+const loading = document.getElementById("startup-loading");
 
+// start auth check separately
+(async () => {
   try {
     const res = await fetch("https://auth.mcbcode.com/me", {
       credentials: "include"
     });
 
     if (res.ok) {
-      loading.classList.add("fade-out");
+      const html = await fetch("/home.html").then(r => r.text());
 
-      setTimeout(async () => {
-        const html = await fetch("/home.html").then(r => r.text());
-
-        document.open();
-        document.write(html);
-        document.close();
-      }, 500);
-
-      return;
+      document.open();
+      document.write(html);
+      document.close();
     }
   } catch {}
+})();
 
+// static loading screen duration
 setTimeout(() => {
   loading.classList.add("fade-out");
-  setTimeout(() => loading.remove(), 500);
-}, 7500);
-})();
+
+  setTimeout(() => {
+    loading.remove();
+  }, 500);
+}, 1000);
 </script>
   
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
