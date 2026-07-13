@@ -104,6 +104,7 @@
   .tok-bool   { color: #ff00d0; }
   .tok-null   { color: #ff00d0; }
   .tok-punct  { color: #bebebe; }
+  .tok-error  { color: #ff5555; text-decoration: underline wavy #ff5555; }
 
   .nav-item { position: relative; display: inline-block; }
 
@@ -254,7 +255,42 @@ function highlightJSON(text) {
 }
 
 function updateHighlighting() {
-  highlightLayer.innerHTML = highlightJSON(codeArea.value) + '\n';
+  let html = highlightJSON(codeArea.value);
+
+  try {
+    JSON.parse(codeArea.value);
+  } catch (e) {
+    const match = e.message.match(/position (\d+)/i);
+
+    if (match) {
+      const pos = Number(match[1]);
+
+      // convert character position into html position
+      let plainPos = 0;
+      let htmlPos = 0;
+
+      while (htmlPos < html.length && plainPos < pos) {
+        if (html[htmlPos] === "<") {
+          while (htmlPos < html.length && html[htmlPos] !== ">") htmlPos++;
+          htmlPos++;
+        } else {
+          htmlPos++;
+          plainPos++;
+        }
+      }
+
+      if (htmlPos < html.length) {
+        html =
+          html.slice(0, htmlPos) +
+          '<span class="tok-error">' +
+          html[htmlPos] +
+          "</span>" +
+          html.slice(htmlPos + 1);
+      }
+    }
+  }
+
+  highlightLayer.innerHTML = html + "\n";
   syncScroll();
 }
 
