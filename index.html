@@ -560,6 +560,24 @@
     });
   </script>
 
+  <script>
+(async () => {
+  try {
+    const res = await fetch("https://auth.mcbcode.com/me", {
+      credentials: "include"
+    });
+
+    if (res.ok) {
+      const html = await fetch("/home.html").then(r => r.text());
+
+      document.open();
+      document.write(html);
+      document.close();
+    }
+  } catch {}
+})();
+</script>
+  
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
