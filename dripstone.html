@@ -495,6 +495,8 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Scripts -->
   <script>
     // The worker endpoint DripstoneAI is served from
@@ -684,13 +686,10 @@
         conversationHistory.push({ role: "assistant", content: replyText });
 
         // Parse custom code strings inside the AI response, then wrap
-        // plain text lines in <p> tags so formatting matches the old UI.
-        const compiledMessageHTML = parseCustomCodeBlocks(replyText)
-          .split('\n\n')
-          .map(chunk => chunk.trim())
-          .filter(Boolean)
-          .map(chunk => chunk.startsWith('<div class="chat-code-block">') ? chunk : `<p>${chunk}</p>`)
-          .join('');
+        // markdown lines in <p> tags so formatting matches the old UI.
+        const parsedReply = parseCustomCodeBlocks(replyText);
+
+        const compiledMessageHTML = marked.parse(parsedReply);
 
         const aiMessageDiv = document.createElement('div');
         aiMessageDiv.className = 'chat-message assistant';
