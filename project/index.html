@@ -539,8 +539,7 @@ function renderContributors() {
     const canEdit = () => isOwner || isCollab;
 
     function renderToolbar() {
-      const toolbar = document.getElementById("owner-toolbar");
-      toolbar.innerHTML = "";
+      const toolbar = document.querySelector(".proj-header-actions");      toolbar.innerHTML = "";
       if (!canEdit()) return;
       if (isAtRoot()) {
         const bf = document.createElement("button");
@@ -555,7 +554,7 @@ function renderContributors() {
         bfo.className = "sm-btn"; bfo.textContent = "+ Folder";
         bfo.onclick = () => openNewFile("folder");
         const bpng = document.createElement("button");
-        bpng.className = "sm-btn"; bpng.textContent = "Image";
+        bpng.className = "sm-btn"; bpng.textContent = "+ Image";
         bpng.onclick = () => document.getElementById("png-upload-input").click();
         toolbar.appendChild(bf);
         toolbar.appendChild(bfo);
