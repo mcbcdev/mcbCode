@@ -433,6 +433,16 @@
   </div>
 
   <script>
+    // ---- restore real url after 404.html spa redirect ----
+    // this MUST run before shareCode/path parsing below
+    (function restoreSpaPath() {
+      const saved = sessionStorage.getItem("spa-redirect");
+      if (saved) {
+        sessionStorage.removeItem("spa-redirect");
+        history.replaceState(null, "", saved);
+      }
+    })();
+
     const AUTH = "https://auth.mcbcode.com";
     const shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
 
@@ -466,6 +476,50 @@
     }
     function isPng(f) { return !!f.r2_key || f.name.toLowerCase().endsWith(".png"); }
 
+    // ---- URL <-> folder path helpers ----
+    function buildPathUrl(pathArr) {
+      const base = `/project/${shareCode}`;
+      if (!pathArr.length) return base;
+      return base + "/" + pathArr.map(c => encodeURIComponent(c.name)).join("/");
+    }
+
+    // pushes a NEW history entry (use for user-initiated navigation: clicks)
+    function pushPath(pathArr) {
+      const url = buildPathUrl(pathArr);
+      if (location.pathname !== url) history.pushState({ path: pathArr.map(c => c.name) }, "", url);
+    }
+
+    // resolves a list of folder-name segments (from the url) into real folder
+    // objects using allFiles, following parent_id chain from root. stops at
+    // the first segment that doesn't match (handles bad/stale urls gracefully).
+    function resolveFolderNames(names) {
+      let parentId = null;
+      const resolved = [];
+      for (const name of names) {
+        const folder = allFiles.find(f => f.type === "folder" && f.parent_id === parentId && f.name === name);
+        if (!folder) break;
+        resolved.push({ id: folder.id, name: folder.name });
+        parentId = folder.id;
+      }
+      return resolved;
+    }
+
+    function getFolderNamesFromLocation() {
+      const parts = location.pathname.split("/").filter(Boolean); // ["project", code, ...folders]
+      return parts.slice(2).map(p => decodeURIComponent(p));
+    }
+
+    // used once on page load: resolves currentPath from the url, then
+    // normalizes the url via replaceState in case some segments didn't match
+    function resolveInitialPath() {
+      const names = getFolderNamesFromLocation();
+      currentPath = resolveFolderNames(names);
+      const normalizedUrl = buildPathUrl(currentPath);
+      if (location.pathname !== normalizedUrl) {
+        history.replaceState({ path: currentPath.map(c => c.name) }, "", normalizedUrl);
+      }
+    }
+
     // ---- INIT ----
     (async () => {
       if (!shareCode) return showErr("No project ID in URL.");
@@ -481,10 +535,18 @@
         allFiles = d.files || [];
         isOwner  = window._myId && project.owner_id === window._myId;
         isCollab = !!d.is_collaborator;
-        currentPath = [];
+        resolveInitialPath();
         render();
       } catch { showErr("Failed to load project."); }
     })();
+
+    // ---- back/forward support ----
+    window.addEventListener("popstate", () => {
+      if (!allFiles.length && !project) return; // nothing loaded yet, nothing to do
+      const names = getFolderNamesFromLocation();
+      currentPath = resolveFolderNames(names);
+      renderFileList();
+    });
 
     function showErr(msg) {
       document.getElementById("file-list").innerHTML = `<div class="err-msg">${esc(msg)}</div>`;
@@ -665,7 +727,7 @@ function renderToolbar() {
         const up = document.createElement("div");
         up.className = "file-row";
         up.innerHTML = `<span class="file-icon folder">^</span><span class="file-name folder">..</span>`;
-        up.onclick = () => { currentPath.pop(); renderFileList(); };
+        up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
         list.appendChild(up);
       }
       if (children.length === 0) {
@@ -687,7 +749,7 @@ function renderToolbar() {
           ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
         `;
         if (f.type === "folder") {
-          row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); renderFileList(); };
+          row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); };
         } else if (isPng(f)) {
         row.onclick = e => {
           if (e.target.classList.contains("file-del")) return;
@@ -707,12 +769,12 @@ function renderToolbar() {
       currentPath.forEach((crumb, i) => {
         const sep = document.createElement("span"); sep.className = "path-sep"; sep.textContent = "/"; seg.appendChild(sep);
         const el = document.createElement("span"); el.className = "path-crumb"; el.textContent = crumb.name;
-        el.onclick = () => { currentPath = currentPath.slice(0, i + 1); renderFileList(); };
+        el.onclick = () => { currentPath = currentPath.slice(0, i + 1); pushPath(currentPath); renderFileList(); };
         seg.appendChild(el);
       });
     }
 
-    function navToRoot() { currentPath = []; renderFileList(); }
+    function navToRoot() { currentPath = []; pushPath(currentPath); renderFileList(); }
 
     // ---- NEW FILE/FOLDER ----
     function openNewFile(type) {
@@ -826,6 +888,9 @@ function renderToolbar() {
         const f = allFiles.find(x => x.id === pendingRenameId);
         if (f) f.name = name;
         closeModal("rename-overlay");
+        // if a folder in currentPath was renamed, keep the path/url in sync
+        const idxInPath = currentPath.findIndex(c => c.id === pendingRenameId);
+        if (idxInPath !== -1) { currentPath[idxInPath].name = name; pushPath(currentPath); }
         renderFileList();
       } catch { err.textContent = "something went wrong."; err.classList.add("show"); }
       btn.disabled = false;
