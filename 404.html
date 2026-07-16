@@ -68,20 +68,13 @@
       coords.textContent = `XYZ: ${x} / -64 / ${z}`;
     }, 800);
 
-    // redirect logic for github pages dynamic routing
-    // if the path looks like /project/xxxxxxxx/, redirect to the project page handler
+// redirect logic for github pages dynamic routing (spa-style)
+    // if the path looks like /project/..., save it and bounce to /project/
+    // so project/index.html can restore it with history.replaceState
     const path = location.pathname;
-    const match = path.match(/^\/project\/([a-z0-9]{8})\/?$/i);
-    if (match) {
-      // load the project page instead of showing 404
-      fetch("/project/index.html")
-        .then(r => r.text())
-        .then(html => {
-          document.open();
-          document.write(html);
-          document.close();
-        })
-        .catch(() => {});
+    if (path.startsWith("/project/") && path !== "/project/") {
+      sessionStorage.setItem("spa-redirect", path);
+      location.replace("/project/");
     }
   </script>
 
