@@ -23,18 +23,14 @@
     /* ---- SEARCH ---- */
     .search-wrap { transition: all 0.3s ease; }
 
-    /* centered state */
+    /* centered state — normal flow (not fixed), so it scrolls away instead of floating over the grid */
     .search-wrap.centered {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      position: static;
       width: min(440px, calc(100vw - 32px));
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 16px;
-      z-index: 10;
     }
     .search-wrap.centered .search-logo { display: block; }
     .search-wrap.centered .search-input-row { width: 100%; }
@@ -77,17 +73,20 @@
     .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
 
     /* ---- LANDING (before search) ---- */
-    .landing { margin-top: 48px; padding-top: 220px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+    .landing { margin-top: 48px; min-height: calc(100vh - 48px); padding-top: 120px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
     .landing.hidden { display: none; }
 
-    .recent-section { margin-top: 60px; width: min(640px, calc(100vw - 32px)); }
-    .recent-label { font-size: 11px; color: #444; font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; text-align: center; }
-    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .recent-card { background: #161719; border: 1px solid #1e1e22; padding: 14px 16px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; gap: 6px; }
+    /* all-profiles section — bigger cards, section capped to ~80% of viewport width */
+    .recent-section { margin-top: 40px; width: min(1600px, 80vw); }
+    .recent-label { font-size: 13px; color: #444; font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; text-align: center; }
+    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+    .recent-card { background: #161719; border: 1px solid #1e1e22; padding: 22px 24px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
     .recent-card:hover { border-color: #343438; background: #1a1c1f; }
-    .recent-avatar { width: 36px; height: 36px; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 16px; font-family: 'mcfontb', sans-serif; color: #555; flex-shrink: 0; }
-    .recent-name { font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-rank-badge { font-size: 10px; padding: 2px 6px; width: fit-content; }
+    .recent-avatar { width: 64px; height: 64px; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 26px; font-family: 'mcfontb', sans-serif; color: #555; flex-shrink: 0; overflow: hidden; }
+    .recent-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .recent-name { font-size: 16px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .recent-rank-badge { font-size: 11px; padding: 3px 9px; width: fit-content; }
+    .recent-loading, .recent-empty { font-size: 13px; color: #444; text-align: center; padding: 30px 0; grid-column: 1 / -1; }
 
     /* ---- PROFILE PAGE ---- */
     .page { margin-top: 48px; display: none; }
@@ -192,7 +191,15 @@
       .profile-bio-section { width: 100%; }
       .projects-panel { padding: 16px; }
       .project-card { padding: 12px 14px; }
-      .recent-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+
+      /* all-profiles section on mobile */
+      .landing { padding-top: 100px; }
+      .recent-section { width: 100%; padding: 0 4px; }
+      .recent-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); max-height: 65vh; gap: 10px; }
+      .recent-card { padding: 16px 14px; }
+      .recent-avatar { width: 48px; height: 48px; font-size: 20px; }
+      .recent-name { font-size: 13px; }
+
       .pfp-modal { padding: 20px 16px; }
     }
   </style>
@@ -243,9 +250,9 @@
     </div>
 
     <div class="recent-section" id="recent-section">
-      <div class="recent-label">Recent Users</div>
+      <div class="recent-label">All Profiles</div>
       <div class="recent-grid" id="recent-grid">
-        <!-- populated by js -->
+        <div class="recent-loading">loading...</div>
       </div>
     </div>
   </div>
@@ -348,47 +355,61 @@
         document.getElementById("landing").classList.add("hidden");
         await loadProfile(targetUser);
       } else {
-        // landing — load recent users
+        // landing — load all profiles
         loadRecentUsers();
         initScrollSticky();
       }
     })();
 
-    // ---- RECENT USERS ----
+    // ---- ALL PROFILES ----
     async function loadRecentUsers() {
       const grid = document.getElementById("recent-grid");
       try {
-        const r = await fetch(`${AUTH}/users/recent`);
-        if (!r.ok) { grid.innerHTML = ""; return; }
+        const r = await fetch(`${AUTH}/users/recent?limit=200`);
+        if (!r.ok) { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; return; }
         const d = await r.json();
-        if (!d.users.length) { grid.innerHTML = ""; return; }
+        if (!d.users.length) { grid.innerHTML = `<div class="recent-empty">no profiles yet.</div>`; return; }
         grid.innerHTML = d.users.map(u => {
           const cls = rankClass(u.rank);
           const badgeStyle = u.rank ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || '#888'}"` : "";
+          const pfp = u.pfp_url || u.pfpUrl;
+          const avatarInner = pfp
+            ? `<img src="${esc(pfp)}" alt="">`
+            : u.username[0].toUpperCase();
           return `
             <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
-              <div class="recent-avatar" style="${cls ? `color:${u.rankColor}` : ''}">${u.username[0].toUpperCase()}</div>
+              <div class="recent-avatar" style="${!pfp && cls ? `color:${u.rankColor}` : ''}">${avatarInner}</div>
               <div class="recent-name ${cls}">${esc(u.username)}</div>
               ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
             </div>
           `;
         }).join("");
-      } catch { grid.innerHTML = ""; }
+      } catch { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; }
     }
 
     // ---- STICKY SEARCH ON SCROLL (landing only) ----
     function initScrollSticky() {
       const wrap = document.getElementById("search-wrap");
-      // the search starts centered at ~50vh, so we go sticky once scrolled past ~(50vh - 48px - 10px)
+      let restingTop = null;
+
+      const measure = () => {
+        // only measure while it's still in normal flow (not already pinned)
+        if (wrap.classList.contains("centered")) {
+          restingTop = wrap.getBoundingClientRect().top + window.scrollY;
+        }
+      };
+      measure();
+      window.addEventListener("resize", measure, { passive: true });
+
       window.addEventListener("scroll", () => {
-        if (!searchInLanding) return;
-        const threshold = window.innerHeight * 0.5 - 80;
-        if (window.scrollY > threshold) {
+        if (!searchInLanding || restingTop === null) return;
+        if (window.scrollY > restingTop - 58) {
           wrap.classList.remove("centered");
           wrap.classList.add("sticky-top");
         } else {
           wrap.classList.remove("sticky-top");
           wrap.classList.add("centered");
+          measure();
         }
       }, { passive: true });
     }
