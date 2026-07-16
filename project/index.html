@@ -480,6 +480,7 @@
         allFiles = d.files || [];
         isOwner  = window._myId && project.owner_id === window._myId;
         isCollab = !!d.is_collaborator;
+        currentPath = [];
         render();
       } catch { showErr("Failed to load project."); }
     })();
@@ -1141,6 +1142,13 @@ openImagePreview = null;
       await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
       window.location.href = "/account";
     }
+
+    // fix: force a real reload if page is restored from bfcache (back/forward),
+    // since the init script above won't re-run and currentPath / allFiles can
+    // be stale, showing a folder that no longer exists until "root" is clicked.
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) location.reload();
+    });
   </script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
