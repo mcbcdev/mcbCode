@@ -64,6 +64,9 @@
     .path-toolbar { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
+    .sm-btn.export-highlight { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
+    .sm-btn.export-highlight:hover { background: #78e3a6; border-color: #78e3a6; color: #0c0c0c; }
+    .sm-btn.export-highlight:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .upload-note { font-size: 11px; color: #555; padding: 6px 16px; border-bottom: 1px solid #2a2a2e; flex-shrink: 0; }
 
@@ -602,7 +605,8 @@ function renderToolbar() {
     bpng.onclick = () => document.getElementById("png-upload-input").click();
 
     const bexport = document.createElement("button");
-    bexport.className = "sm-btn";
+    bexport.id = "export-btn";
+    bexport.className = "sm-btn export-highlight";
     bexport.textContent = "Export";
     bexport.onclick = startExport;
 
@@ -614,54 +618,40 @@ function renderToolbar() {
 }
 
     function toggleImagePreview(file, row) {
+      const existing = document.querySelector(".image-preview-row");
+      const wasOpenForThisFile = openImagePreview === file.id;
 
-  const existing = document.querySelector(".image-preview-row");
+      // close whatever preview is currently open (if any)
+      if (existing) {
+        document.querySelectorAll(".file-icon").forEach(icon => {
+          if (icon.textContent === "v") icon.textContent = ">";
+        });
+        existing.classList.remove("open");
+        setTimeout(() => { existing.remove(); }, 180);
+        openImagePreview = null;
+      }
 
-// close currently open preview
-if (existing) {
-  if (openImagePreview === file.id) {
-row.querySelector(".file-icon").textContent = ">";
+      // if the click was on the image that was already open, just leave it closed
+      if (wasOpenForThisFile) return;
 
-existing.classList.remove("open");
+      const preview = document.createElement("div");
+      preview.className = "image-preview-row";
 
-setTimeout(() => {
-  existing.remove();
-}, 180);
+      preview.innerHTML = `
+        <div class="image-preview-inner">
+          <img src="${AUTH}/project/asset?file_id=${file.id}" alt="${esc(file.name)}">
+        </div>
+      `;
 
-openImagePreview = null;
-return;
-  }
+      row.after(preview);
 
-document.querySelectorAll(".file-icon").forEach(icon => {
-  if (icon.textContent === "v") icon.textContent = ">";
-});
+      requestAnimationFrame(() => {
+        preview.classList.add("open");
+      });
 
-existing.classList.remove("open");
-
-setTimeout(() => {
-  existing.remove();
-}, 180);
-
-openImagePreview = null;
-}
-
-  const preview = document.createElement("div");
-  preview.className = "image-preview-row";
-
-  preview.innerHTML = `
-    <div class="image-preview-inner">
-      <img src="${AUTH}/project/asset?file_id=${file.id}" alt="${esc(file.name)}">
-    </div>
-  `;
-
-  row.after(preview);
-
-  requestAnimationFrame(() => {
-    preview.classList.add("open");
-  });
-
-  row.querySelector(".file-icon").textContent = "v";
-}
+      row.querySelector(".file-icon").textContent = "v";
+      openImagePreview = file.id;
+    }
     
     function renderFileList() {
       renderPathBar();
