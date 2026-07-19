@@ -975,137 +975,95 @@ function renderToolbar() {
     }
 
     // ---- EXPORT ----
+async function startExport() {
+  const btn = document.getElementById("export-btn");
+  btn.disabled = true; btn.textContent = "Loading...";
+  try {
+    const res = await fetch(`${AUTH}/project/export?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+    if (!res.ok) { alert("Failed to fetch project data."); return; }
+    exportFileData = await res.json();
+    const rootFiles = exportFileData.files.filter(f => f.parent_id === null && f.type === "file");
+    if (rootFiles.length > 0) {
+      document.getElementById("export-warn-list").innerHTML = rootFiles.map(f => `<li>${esc(f.name)}</li>`).join("");
+      document.getElementById("export-warn-overlay").classList.add("open");
+    } else { await doExport(); }
+  } catch { alert("Export failed."); }
+  btn.disabled = false; btn.textContent = "Export";
+}
+
+// writes a file into a zip, handling base64 (png) vs plain text content
+function addFileToZip(zip, path, f) {
+  if (f.is_base64) {
+    zip.file(path, f.content || "", { base64: true });
+  } else {
+    zip.file(path, f.content || "");
+  }
+}
+
 async function doExport() {
-    closeModal("export-warn-overlay");
+  closeModal("export-warn-overlay");
+  const btn = document.getElementById("export-btn");
+  btn.disabled = true; btn.textContent = "Zipping...";
+  try {
+    const files = exportFileData.files;
+    const projectName = exportFileData.project_name.replace(/[^a-zA-Z0-9_\- ]/g, "").trim() || "project";
+    const rootFolders = files.filter(f => f.parent_id === null && f.type === "folder");
+    const hasBP = rootFolders.some(f => f.name.toUpperCase() === "BP");
+    const hasRP = rootFolders.some(f => f.name.toUpperCase() === "RP");
+    const fileMap = {};
+    files.forEach(f => fileMap[f.id] = f);
 
-    const btn = document.getElementById("export-btn");
-    btn.disabled = true;
-    btn.textContent = "Zipping...";
-
-    try {
-        const files = exportFileData.files;
-        const projectName =
-            exportFileData.project_name.replace(/[^a-zA-Z0-9_\- ]/g, "").trim() || "project";
-
-        const rootFolders = files.filter(
-            f => f.parent_id === null && f.type === "folder"
-        );
-
-        const hasBP = rootFolders.some(f => f.name.toUpperCase() === "BP");
-        const hasRP = rootFolders.some(f => f.name.toUpperCase() === "RP");
-
-        const fileMap = {};
-        files.forEach(f => (fileMap[f.id] = f));
-
-        function getRelativeParts(file, stopId) {
-            const parts = [file.name];
-            let cur = file;
-
-            while (cur.parent_id !== stopId) {
-                cur = fileMap[cur.parent_id];
-                if (!cur) break;
-                parts.unshift(cur.name);
-            }
-
-            return parts;
-        }
-
-        function isUnderFolder(file, folderId) {
-            let cur = file;
-
-            while (cur.parent_id !== null) {
-                cur = fileMap[cur.parent_id];
-                if (!cur) return false;
-            }
-
-            return cur.id === folderId;
-        }
-
-        // BP + RP -> one .mcaddon containing BP/ and RP/ folders
-        if (hasBP && hasRP) {
-            const addon = new JSZip();
-
-            for (const packName of ["BP", "RP"]) {
-                const packFolder = rootFolders.find(
-                    f => f.name.toUpperCase() === packName
-                );
-                if (!packFolder) continue;
-
-                files
-                    .filter(
-                        f =>
-                            f.type === "file" &&
-                            isUnderFolder(f, packFolder.id)
-                    )
-                    .forEach(f => {
-                        addFileToZip(
-                            addon,
-                            `${packName}/${getRelativeParts(f, packFolder.id).join("/")}`,
-                            f
-                        );
-                    });
-            }
-
-            triggerDownload(
-                await addon.generateAsync({ type: "blob" }),
-                `${projectName}.mcaddon`
-            );
-        }
-
-        // Single pack (or generic project)
-        else {
-            const zip = new JSZip();
-
-            const onlyPack = hasBP
-                ? rootFolders.find(f => f.name.toUpperCase() === "BP")
-                : rootFolders.find(f => f.name.toUpperCase() === "RP");
-
-            if (!onlyPack) {
-                files
-                    .filter(f => f.type === "file" && f.parent_id !== null)
-                    .forEach(f =>
-                        addFileToZip(
-                            zip,
-                            getRelativeParts(f, null).join("/"),
-                            f
-                        )
-                    );
-
-                triggerDownload(
-                    await zip.generateAsync({ type: "blob" }),
-                    `${projectName}.zip`
-                );
-            } else {
-                files
-                    .filter(
-                        f =>
-                            f.type === "file" &&
-                            isUnderFolder(f, onlyPack.id)
-                    )
-                    .forEach(f =>
-                        addFileToZip(
-                            zip,
-                            getRelativeParts(f, onlyPack.id).join("/"),
-                            f
-                        )
-                    );
-
-                const packName = hasBP ? "BP" : "RP";
-
-                triggerDownload(
-                    await zip.generateAsync({ type: "blob" }),
-                    `${projectName}_${packName}.mcpack`
-                );
-            }
-        }
-    } catch (e) {
-        alert("Export failed: " + e.message);
+    function getRelativeParts(file, stopId) {
+      const parts = [file.name];
+      let cur = file;
+      while (cur.parent_id !== stopId) {
+        cur = fileMap[cur.parent_id];
+        if (!cur) break;
+        parts.unshift(cur.name);
+      }
+      return parts;
     }
 
-    btn.disabled = false;
-    btn.textContent = "Export";
+    function isUnderFolder(file, folderId) {
+      let cur = file;
+      while (cur.parent_id !== null) {
+        cur = fileMap[cur.parent_id];
+        if (!cur) return false;
+      }
+      return cur.id === folderId;
+    }
+
+    if (hasBP && hasRP) {
+      const addon = new JSZip();
+      for (const packName of ["BP", "RP"]) {
+        const packFolder = rootFolders.find(f => f.name.toUpperCase() === packName);
+        if (!packFolder) continue;
+        files.filter(f => f.type === "file" && isUnderFolder(f, packFolder.id))
+             .forEach(f => addFileToZip(addon, `${packName}/${getRelativeParts(f, packFolder.id).join("/")}`, f));
+      }
+      triggerDownload(await addon.generateAsync({ type: "blob" }), `${projectName}.mcaddon`);
+    } else {
+      const zip = new JSZip();
+      const onlyPack = hasBP ? rootFolders.find(f => f.name.toUpperCase() === "BP") : rootFolders.find(f => f.name.toUpperCase() === "RP");
+      if (!onlyPack) {
+        files.filter(f => f.type === "file" && f.parent_id !== null).forEach(f => addFileToZip(zip, getRelativeParts(f, null).join("/"), f));
+      } else {
+        files.filter(f => f.type === "file" && isUnderFolder(f, onlyPack.id))
+             .forEach(f => addFileToZip(zip, getRelativeParts(f, onlyPack.id).join("/"), f));
+      }
+      triggerDownload(await zip.generateAsync({ type: "blob" }), `${projectName}.mcpack`);
+    }
+  } catch(e) { alert("Export failed: " + e.message); }
+  btn.disabled = false; btn.textContent = "Export";
 }
-    
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
     // ---- SETTINGS ----
     async function saveSettings() {
       const name = document.getElementById("set-name").value.trim();
