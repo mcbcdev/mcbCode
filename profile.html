@@ -147,6 +147,21 @@
     .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
     .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
 
+    /* settings stuff */
+    .settings-panel { display: none; flex-direction: column; gap: 18px; max-width: 480px; }
+    .settings-panel.visible { display: flex; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; background: #161719; border: 1px solid #2a2a2e; padding: 14px 18px; }
+    .setting-label { font-size: 13px; color: #ccc; }
+    .setting-desc { font-size: 11px; color: #555; margin-top: 3px; }
+    .toggle { position: relative; width: 40px; height: 22px; background: #222326; border: 1px solid #343438; cursor: pointer; flex-shrink: 0; margin-left: 16px; }
+    .toggle.on { background: #05ee93; border-color: #05ee93; }
+    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; transition: left 0.15s; }
+    .toggle.on .toggle-knob { left: 20px; }
+    .settings-msg { font-size: 12px; }
+    .settings-msg.ok { color: #05ee93; }
+    .settings-msg.err { color: #ff5555; }
+    .leave-collab-btn { align-self: flex-start; }
+    
     /* pfp modal */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
     .overlay.open { display: flex; }
@@ -274,6 +289,9 @@
         <div class="edit-row" id="username-edit-row" style="display:none;">
           <button class="edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()">edit username</button>
         </div>
+        <div class="edit-row" id="settings-btn-row" style="display:none; margin-top:6px;">
+          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
+        </div>
         <div class="edit-area" id="username-edit-area">
           <input class="edit-input" type="text" id="username-input" maxlength="32" placeholder="new username">
           <div class="edit-save-row">
@@ -308,6 +326,42 @@
 
       <h2 style="margin-top:40px;">Collaborating with</h2>
       <div class="project-grid" id="collab-grid"></div>
+      <div class="settings-panel" id="settings-panel">
+        <h2>Settings</h2>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Show points on profile</div>
+          </div>
+          <div class="toggle" id="toggle-show_points" onclick="toggleSetting('show_points')"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Allow collaborating</div>
+            <div class="setting-desc">let other users add you as a collaborator on their projects</div>
+          </div>
+          <div class="toggle" id="toggle-allow_collab" onclick="toggleSetting('allow_collab')"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Show email on profile</div>
+          </div>
+          <div class="toggle" id="toggle-show_email" onclick="toggleSetting('show_email')"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Use Mojangles Font</div>
+          </div>
+          <div class="toggle" id="toggle-use_mojangles_font" onclick="toggleSetting('use_mojangles_font')"><div class="toggle-knob"></div></div>
+        </div>
+
+        <span class="settings-msg" id="settings-msg"></span>
+
+        <button class="sm-btn leave-collab-btn" onclick="leaveAllCollaborations()">Remove me from all projects I'm collaborating on</button>
+      </div>
     </div>
   </div>
 
@@ -538,8 +592,13 @@ function renderProfile(data) {
     // bio edit
     document.getElementById("bio-edit-row").style.display = "";
     document.getElementById("bio-textarea").value = user.bio || "";
+
+    // settings edit
+    document.getElementById("settings-btn-row").style.display = "";
+    loadSettings();
   }
 
+  
   // owned projects
   const grid = document.getElementById("project-grid");
 
@@ -632,6 +691,73 @@ function renderProfile(data) {
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
+    let currentSettings = null;
+    let settingsLoaded = false;
+
+    async function loadSettings() {
+      try {
+        const r = await fetch(`${AUTH}/settings`, { credentials: "include" });
+        if (!r.ok) return;
+        const d = await r.json();
+        currentSettings = d.settings;
+        settingsLoaded = true;
+        renderSettingsToggles();
+      } catch {}
+    }
+
+    function renderSettingsToggles() {
+      if (!currentSettings) return;
+      const map = {
+        show_points: currentSettings.show_points,
+        allow_collab: currentSettings.allow_collab,
+        show_email: currentSettings.show_email,
+        use_mojangles_font: currentSettings.use_mojangles_font,
+      };
+      for (const key in map) {
+        const el = document.getElementById(`toggle-${key}`);
+        if (el) el.classList.toggle("on", !!map[key]);
+      }
+    }
+
+    function toggleSettingsView() {
+      const panel = document.getElementById("settings-panel");
+      const showing = !panel.classList.contains("visible");
+      panel.classList.toggle("visible", showing);
+      document.getElementById("project-grid").parentElement; // no-op, grids live in same panel
+      document.querySelectorAll(".projects-panel > h2, .projects-panel > .project-grid").forEach(el => {
+        el.style.display = showing ? "none" : "";
+      });
+      document.getElementById("settings-btn").textContent = showing ? "back to projects" : "settings";
+      if (showing && !settingsLoaded) loadSettings();
+    }
+
+    async function toggleSetting(key) {
+      if (!currentSettings) return;
+      currentSettings[key] = !currentSettings[key];
+      renderSettingsToggles();
+      const msg = document.getElementById("settings-msg");
+      try {
+        const res = await fetch(`${AUTH}/settings`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [key]: currentSettings[key] })
+        });
+        if (res.ok) { msg.textContent = "saved!"; msg.className = "settings-msg ok"; }
+        else { msg.textContent = "failed to save."; msg.className = "settings-msg err"; }
+      } catch { msg.textContent = "error saving."; msg.className = "settings-msg err"; }
+      setTimeout(() => { msg.textContent = ""; msg.className = "settings-msg"; }, 2500);
+    }
+
+    async function leaveAllCollaborations() {
+      if (!confirm("Remove yourself from every project you're currently collaborating on?")) return;
+      const msg = document.getElementById("settings-msg");
+      try {
+        const res = await fetch(`${AUTH}/me/collaborations`, { method: "DELETE", credentials: "include" });
+        if (res.ok) { msg.textContent = "you've been removed from all collaborations."; msg.className = "settings-msg ok"; }
+        else { msg.textContent = "failed."; msg.className = "settings-msg err"; }
+      } catch { msg.textContent = "error."; msg.className = "settings-msg err"; }
+    }
+    
     // ---- PFP MODAL ----
     function openPfpModal() {
       document.getElementById("pfp-overlay").classList.add("open");
