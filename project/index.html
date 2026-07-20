@@ -642,40 +642,32 @@ function renderToolbar() {
 
   if (!canEdit()) return;
 
-  if (isAtRoot()) {
-    const bfo = document.createElement("button");
-    bfo.className = "sm-btn";
-    bfo.textContent = "+ Folder";
-    bfo.onclick = () => openNewFile("folder");
+  const bfo = document.createElement("button");
+  bfo.className = "sm-btn";
+  bfo.textContent = "+ Folder";
+  bfo.onclick = () => openNewFile("folder");
+  toolbar.appendChild(bfo);
 
-    toolbar.appendChild(bfo);
-  } else {
+  if (!isAtRoot()) {
     const bf = document.createElement("button");
     bf.className = "sm-btn";
     bf.textContent = "+ File";
     bf.onclick = () => openNewFile("file");
-
-    const bfo = document.createElement("button");
-    bfo.className = "sm-btn";
-    bfo.textContent = "+ Folder";
-    bfo.onclick = () => openNewFile("folder");
+    toolbar.appendChild(bf);
 
     const bpng = document.createElement("button");
     bpng.className = "sm-btn";
     bpng.textContent = "+ Image";
     bpng.onclick = () => document.getElementById("png-upload-input").click();
-
-    const bexport = document.createElement("button");
-    bexport.id = "export-btn";
-    bexport.className = "sm-btn export-highlight";
-    bexport.textContent = "Export";
-    bexport.onclick = startExport;
-
-    toolbar.appendChild(bf);
-    toolbar.appendChild(bfo);
     toolbar.appendChild(bpng);
-    toolbar.appendChild(bexport);
   }
+
+  const bexport = document.createElement("button");
+  bexport.id = "export-btn";
+  bexport.className = "sm-btn export-highlight";
+  bexport.textContent = "Export";
+  bexport.onclick = startExport;
+  toolbar.appendChild(bexport);
 }
 
     function toggleImagePreview(file, row) {
@@ -714,54 +706,57 @@ function renderToolbar() {
       openImagePreview = file.id;
     }
     
-    function renderFileList() {
-      renderPathBar();
-      renderToolbar();
-      const list = document.getElementById("file-list");
-      list.innerHTML = "";
-      const parentId = currentFolderId();
-      const children = allFiles
-        .filter(f => f.parent_id === parentId || (parentId === null && f.parent_id === null))
-        .sort((a, b) => { if (a.type !== b.type) return a.type === "folder" ? -1 : 1; return a.name.localeCompare(b.name); });
-      if (currentPath.length > 0) {
-        const up = document.createElement("div");
-        up.className = "file-row";
-        up.innerHTML = `<span class="file-icon folder">^</span><span class="file-name folder">..</span>`;
-        up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
-        list.appendChild(up);
-      }
-      if (children.length === 0) {
-        list.innerHTML += `<div class="file-list-empty">${canEdit() ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the buttons above to add files.') : 'Nothing here.'}</div>`;
-        return;
-      }
-      children.forEach(f => {
-        const row = document.createElement("div");
-        row.className = "file-row";
-        const icon = f.type === "folder" ? "+" : ">";
-        const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
-        const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
-        row.innerHTML = `
-          <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
-          <span class="${nameClass}">${esc(f.name)}</span>
-          ${pngBadge}
-          <span class="file-updated">${fmtDate(f.updated_at)}</span>
-          ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
-          ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
-        `;
-        if (f.type === "folder") {
-          row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); };
-        } else if (isPng(f)) {
-        row.onclick = e => {
-          if (e.target.classList.contains("file-del")) return;
-          toggleImagePreview(f, row);
-          };
-        } else {
-          row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
-          if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
-        }
-        list.appendChild(row);
-      });
+function renderFileList() {
+  renderPathBar();
+  renderToolbar();
+  const list = document.getElementById("file-list");
+  list.innerHTML = "";
+  const parentId = currentFolderId();
+  // coerce to string for comparison — protects against id/parent_id
+  // being mixed number/string types from the API
+  const parentKey = parentId === null ? null : String(parentId);
+  const children = allFiles
+    .filter(f => (f.parent_id === null ? null : String(f.parent_id)) === parentKey)
+    .sort((a, b) => { if (a.type !== b.type) return a.type === "folder" ? -1 : 1; return a.name.localeCompare(b.name); });
+  if (currentPath.length > 0) {
+    const up = document.createElement("div");
+    up.className = "file-row";
+    up.innerHTML = `<span class="file-icon folder">^</span><span class="file-name folder">..</span>`;
+    up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
+    list.appendChild(up);
+  }
+  if (children.length === 0) {
+    list.innerHTML += `<div class="file-list-empty">${canEdit() ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the buttons above to add files.') : 'Nothing here.'}</div>`;
+    return;
+  }
+  children.forEach(f => {
+    const row = document.createElement("div");
+    row.className = "file-row";
+    const icon = f.type === "folder" ? "+" : ">";
+    const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
+    const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
+    row.innerHTML = `
+      <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
+      <span class="${nameClass}">${esc(f.name)}</span>
+      ${pngBadge}
+      <span class="file-updated">${fmtDate(f.updated_at)}</span>
+      ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
+      ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
+    `;
+    if (f.type === "folder") {
+      row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); };
+    } else if (isPng(f)) {
+      row.onclick = e => {
+        if (e.target.classList.contains("file-del")) return;
+        toggleImagePreview(f, row);
+      };
+    } else {
+      row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
+      if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
     }
+    list.appendChild(row);
+  });
+}
 
     function renderPathBar() {
       const seg = document.getElementById("path-segments");
