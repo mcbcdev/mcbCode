@@ -1,4 +1,7 @@
 User-agent: *
 Disallow: /docs/*
+Disallow: /profile/*
+Disallow: /dashboard
+Disallow: /account
 
 Sitemap: https://mcbcode.com/sitemap.xml
