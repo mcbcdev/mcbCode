@@ -92,7 +92,9 @@
     /* ---- PROFILE PAGE ---- */
     .page { margin-top: 48px; display: none; }
     .page.visible { display: flex; }
-
+    .profile-points { font-size: 11px; color: #05ee93; margin-top: 2px; }
+    .profile-email { font-size: 11px; color: #666; margin-top: 2px; }
+    
     /* sidebar */
     .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 18px; background: #161719; flex-shrink: 0; }
 
@@ -284,6 +286,8 @@
       <div class="profile-sidebar-text">
         <div class="profile-username" id="prof-username"></div>
         <div class="profile-joined" id="prof-joined"></div>
+        <div class="profile-points" id="prof-points" style="display:none;"></div>
+        <div class="profile-email" id="prof-email" style="display:none;"></div>
         <div class="profile-rank" id="prof-rank"></div>
 
         <div class="edit-row" id="username-edit-row" style="display:none;">
@@ -556,6 +560,24 @@ function renderProfile(data) {
   document.getElementById("prof-joined").textContent = "joined " + fmtDate(user.joined);
   document.title = `mcbCode | ${user.username}`;
 
+  // points
+  const pointsEl = document.getElementById("prof-points");
+  if (user.points !== null && user.points !== undefined) {
+    pointsEl.textContent = `${user.points} points`;
+    pointsEl.style.display = "";
+  } else {
+    pointsEl.style.display = "none";
+  }
+
+  // email
+  const emailEl = document.getElementById("prof-email");
+  if (user.email) {
+    emailEl.textContent = user.email;
+    emailEl.style.display = "";
+  } else {
+    emailEl.style.display = "none";
+  }
+  
   // rank badge
   const rankEl = document.getElementById("prof-rank");
   if (user.rank) {
