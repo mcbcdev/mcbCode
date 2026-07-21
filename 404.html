@@ -69,13 +69,19 @@
       coords.textContent = `XYZ: ${x} / -64 / ${z}`;
     }, 800);
 
-// redirect logic for github pages dynamic routing (spa-style)
-    // if the path looks like /project/..., save it and bounce to /project/
-    // so project/index.html can restore it with history.replaceState
+    // redirect logic for github pages dynamic routing (spa-style)
+    // if the path looks like /project/... or /profile/..., save the full
+    // path (+ hash, so #settings survives) and bounce to the real page
+    // so that page's script can restore it with history.replaceState
     const path = location.pathname;
+    const fullPath = path + location.hash;
+
     if (path.startsWith("/project/") && path !== "/project/") {
-      sessionStorage.setItem("spa-redirect", path);
+      sessionStorage.setItem("spa-redirect", fullPath);
       location.replace("/project/");
+    } else if (path.startsWith("/profile/") && path !== "/profile/") {
+      sessionStorage.setItem("spa-redirect", fullPath);
+      location.replace("/profile");
     }
   </script>
 
