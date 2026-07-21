@@ -122,8 +122,17 @@
     /* profile links (below bio) */
     .profile-links { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
     .profile-link { font-size: 12px; color: #00b2ff; display: flex; align-items: center; gap: 6px; overflow: hidden; }
-    .profile-link::before { content: "🔗"; font-size: 11px; flex-shrink: 0; }
+    .profile-link img { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.85; }
     .profile-link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .username-row { display: flex; align-items: center; gap: 8px; }
+    .bio-row { display: flex; align-items: flex-start; gap: 8px; }
+    .bio-row-text { flex: 1; min-width: 0; }
+
+    .icon-edit-btn { display: none; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; padding: 2px; flex-shrink: 0; opacity: 0.45; transition: opacity 0.15s, transform 0.15s; }
+    .icon-edit-btn:hover { opacity: 1; }
+    .icon-edit-btn.active { opacity: 1; transform: rotate(-8deg); }
+    .icon-edit-btn img { width: 13px; height: 13px; display: block; }
 
     .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
     .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
@@ -300,18 +309,16 @@
       </div>
 
       <div class="profile-sidebar-text">
-        <div class="profile-username" id="prof-username"></div>
+        <div class="username-row">
+          <button class="icon-edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()" title="edit username">
+            <img src="https://mcbcode.com/img/icons/pencil.png" alt="">
+          </button>
+          <div class="profile-username" id="prof-username"></div>
+        </div>
         <div class="profile-points" id="prof-points" style="display:none;"></div>
         <div class="profile-email" id="prof-email" style="display:none;"></div>
         <div class="profile-rank" id="prof-rank"></div>
-        <div class="profile-joined" id="prof-joined"></div>
 
-        <div class="edit-row" id="username-edit-row" style="display:none;">
-          <button class="edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()">edit username</button>
-        </div>
-        <div class="edit-row" id="settings-btn-row" style="display:none; margin-top:6px;">
-          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
-        </div>
         <div class="edit-area" id="username-edit-area">
           <input class="edit-input" type="text" id="username-input" maxlength="32" placeholder="new username">
           <div class="edit-save-row">
@@ -320,13 +327,21 @@
             <span class="inline-msg" id="username-msg"></span>
           </div>
         </div>
+
+        <div class="edit-row" id="settings-btn-row" style="display:none; margin-top:6px;">
+          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
+        </div>
       </div>
 
       <div class="profile-bio-section">
-        <div class="profile-bio" id="prof-bio"></div>
-        <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
-        <div class="edit-row" id="bio-edit-row" style="display:none; margin-top:8px;">
-          <button class="edit-btn" id="edit-bio-btn" onclick="toggleBioEdit()">edit bio</button>
+        <div class="bio-row">
+          <button class="icon-edit-btn" id="edit-bio-btn" onclick="toggleBioEdit()" title="edit bio">
+            <img src="https://mcbcode.com/img/icons/pencil.png" alt="">
+          </button>
+          <div class="bio-row-text">
+            <div class="profile-bio" id="prof-bio"></div>
+            <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
+          </div>
         </div>
         <div class="edit-area" id="bio-edit-area">
           <textarea class="edit-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
@@ -336,6 +351,9 @@
             <span class="inline-msg" id="bio-msg"></span>
           </div>
         </div>
+
+        <!-- joined date now lives below the bio -->
+        <div class="profile-joined" id="prof-joined" style="margin-top:10px;"></div>
 
         <!-- links show up below the bio -->
         <div class="profile-links" id="prof-links"></div>
@@ -673,11 +691,11 @@ function renderProfile(data) {
     avatarWrap.onclick = openPfpModal;
 
     // username edit
-    document.getElementById("username-edit-row").style.display = "";
+    document.getElementById("edit-username-btn").style.display = "flex";
     document.getElementById("username-input").value = user.username;
 
     // bio edit
-    document.getElementById("bio-edit-row").style.display = "";
+    document.getElementById("edit-bio-btn").style.display = "flex";
     document.getElementById("bio-textarea").value = user.bio || "";
 
     // settings edit
@@ -727,6 +745,7 @@ function renderProfile(data) {
       if (!links || !links.length) { wrap.innerHTML = ""; return; }
       wrap.innerHTML = links.map(l => `
         <a class="profile-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
+          <img src="https://mcbcode.com/img/icons/link.png" alt="">
           <span>${esc(l.label || l.url)}</span>
         </a>
       `).join("");
@@ -736,7 +755,7 @@ function renderProfile(data) {
     function toggleUsernameEdit() {
       const area = document.getElementById("username-edit-area");
       const isOpen = area.classList.toggle("open");
-      document.getElementById("edit-username-btn").textContent = isOpen ? "cancel" : "edit username";
+      document.getElementById("edit-username-btn").classList.toggle("active", isOpen);
       if (isOpen) setTimeout(() => document.getElementById("username-input").focus(), 50);
     }
 
@@ -766,7 +785,7 @@ function renderProfile(data) {
     function toggleBioEdit() {
       const area = document.getElementById("bio-edit-area");
       const isOpen = area.classList.toggle("open");
-      document.getElementById("edit-bio-btn").textContent = isOpen ? "cancel" : "edit bio";
+      document.getElementById("edit-bio-btn").classList.toggle("active", isOpen);
     }
 
     async function saveBio() {
