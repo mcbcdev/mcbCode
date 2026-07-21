@@ -119,6 +119,12 @@
     .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
     .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
 
+    /* profile links (below bio) */
+    .profile-links { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+    .profile-link { font-size: 12px; color: #00b2ff; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+    .profile-link::before { content: "🔗"; font-size: 11px; flex-shrink: 0; }
+    .profile-link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
     .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
     .edit-btn:hover { color: #00b2ff; }
@@ -163,6 +169,14 @@
     .settings-msg.ok { color: #05ee93; }
     .settings-msg.err { color: #ff5555; }
     .leave-collab-btn { align-self: flex-start; }
+
+    /* links settings block */
+    .links-settings-block { background: #161719; border: 1px solid #2a2a2e; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .links-settings-title { font-size: 13px; color: #ccc; }
+    .links-settings-desc { font-size: 11px; color: #555; margin-top: -6px; }
+    .link-edit-row { display: flex; gap: 6px; }
+    .link-edit-row .edit-input { flex: 1; }
+    .link-edit-row .edit-input.label-input { flex: 0 0 90px; }
     
     /* pfp modal */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
@@ -212,6 +226,8 @@
       .recent-name { font-size: 13px; }
 
       .pfp-modal { padding: 20px 16px; }
+      .link-edit-row { flex-wrap: wrap; }
+      .link-edit-row .edit-input.label-input { flex: 1 1 100%; }
     }
 
 
@@ -320,6 +336,9 @@
             <span class="inline-msg" id="bio-msg"></span>
           </div>
         </div>
+
+        <!-- links show up below the bio -->
+        <div class="profile-links" id="prof-links"></div>
       </div>
 
     </div>
@@ -362,6 +381,16 @@
           <div class="toggle" id="toggle-use_mojangles_font" onclick="toggleSetting('use_mojangles_font')"><div class="toggle-knob"></div></div>
         </div>
 
+        <div class="links-settings-block">
+          <div class="links-settings-title">Profile links</div>
+          <div class="links-settings-desc">up to 3 links, shown under your bio</div>
+          <div id="link-edit-rows"></div>
+          <div class="edit-save-row">
+            <button class="sm-btn primary" onclick="saveLinks()">Save Links</button>
+            <span class="inline-msg" id="links-msg"></span>
+          </div>
+        </div>
+
         <span class="settings-msg" id="settings-msg"></span>
 
         <button class="sm-btn leave-collab-btn" onclick="leaveAllCollaborations()">Remove me from all projects I'm collaborating on</button>
@@ -376,7 +405,35 @@
   <script>
     const AUTH = "https://auth.mcbcode.com";
     const params = new URLSearchParams(location.search);
-    const targetUser = params.get("u") || "";
+
+    // figure out which username this page should show. priority:
+    // 1. ?u=username (old style link)
+    // 2. /profile/username in the address bar (pretty url, already resolved)
+    // 3. a spa-redirect stashed by 404.html (pretty url that 404'd first)
+    let targetUser = params.get("u") || "";
+    let pendingHash = "";
+
+    if (!targetUser) {
+      const pathMatch = location.pathname.match(/^\/profile\/([^\/]+)\/?$/);
+      if (pathMatch) targetUser = decodeURIComponent(pathMatch[1]);
+    }
+
+    if (!targetUser) {
+      const spaRedirect = sessionStorage.getItem("spa-redirect");
+      if (spaRedirect) {
+        sessionStorage.removeItem("spa-redirect");
+        const m = spaRedirect.match(/^\/profile\/([^\/#]+)/);
+        if (m) {
+          targetUser = decodeURIComponent(m[1]);
+          const hashIdx = spaRedirect.indexOf("#");
+          pendingHash = hashIdx >= 0 ? spaRedirect.slice(hashIdx) : "";
+          history.replaceState({}, "", `/profile/${encodeURIComponent(targetUser)}${pendingHash}`);
+        }
+      }
+    }
+
+    if (!pendingHash) pendingHash = location.hash || "";
+
     let myUsername = null;
     let acDebounce = null;
     let acSelected = -1;
@@ -414,6 +471,11 @@
         // profile url — hide landing, load profile
         document.getElementById("landing").classList.add("hidden");
         await loadProfile(targetUser);
+
+        // if we came in via #settings and this is our own profile, open settings
+        if (pendingHash === "#settings" && myUsername && myUsername === targetUser) {
+          toggleSettingsView(true);
+        }
       } else {
         // landing — load all profiles
         loadRecentUsers();
@@ -509,7 +571,7 @@
     }
 
     function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
-    function goToProfile(u) { window.location.href = `/profile?u=${encodeURIComponent(u)}`; }
+    function goToProfile(u) { window.location.href = `/profile/${encodeURIComponent(u)}`; }
 
     // ---- LOAD PROFILE ----
     async function loadProfile(username) {
@@ -599,6 +661,9 @@ function renderProfile(data) {
     document.getElementById("prof-bio-empty").style.display = "";
   }
 
+  // links (below bio)
+  renderProfileLinks(user.links || []);
+
   const isMe = myUsername && myUsername === user.username;
 
   if (isMe) {
@@ -656,6 +721,17 @@ function renderProfile(data) {
   document.getElementById("profile-page").classList.add("visible");
 }
 
+    // ---- PROFILE LINKS (display, below bio) ----
+    function renderProfileLinks(links) {
+      const wrap = document.getElementById("prof-links");
+      if (!links || !links.length) { wrap.innerHTML = ""; return; }
+      wrap.innerHTML = links.map(l => `
+        <a class="profile-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
+          <span>${esc(l.label || l.url)}</span>
+        </a>
+      `).join("");
+    }
+
     // ---- USERNAME EDIT ----
     function toggleUsernameEdit() {
       const area = document.getElementById("username-edit-area");
@@ -680,7 +756,7 @@ function renderProfile(data) {
           const unEl = document.getElementById("prof-username");
           unEl.textContent = val;
           myUsername = val;
-          setTimeout(() => { toggleUsernameEdit(); window.history.replaceState({}, "", `/profile?u=${encodeURIComponent(val)}`); }, 800);
+          setTimeout(() => { toggleUsernameEdit(); window.history.replaceState({}, "", `/profile/${encodeURIComponent(val)}`); }, 800);
         } else { msg.textContent = d.error || "failed."; msg.className = "inline-msg err"; }
       } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
@@ -724,6 +800,7 @@ function renderProfile(data) {
         currentSettings = d.settings;
         settingsLoaded = true;
         renderSettingsToggles();
+        renderLinkEditRows();
       } catch {}
     }
 
@@ -741,16 +818,58 @@ function renderProfile(data) {
       }
     }
 
-    function toggleSettingsView() {
+    // ---- LINKS SETTINGS (up to 3 label+url rows) ----
+    function renderLinkEditRows() {
+      const container = document.getElementById("link-edit-rows");
+      const links = (currentSettings && currentSettings.links) || [];
+      const rows = [0, 1, 2].map(i => {
+        const l = links[i] || { label: "", url: "" };
+        return `
+          <div class="link-edit-row" style="margin-bottom:6px;">
+            <input class="edit-input label-input" type="text" maxlength="24" placeholder="label" value="${esc(l.label || "")}" id="link-label-${i}">
+            <input class="edit-input" type="text" maxlength="200" placeholder="https://..." value="${esc(l.url || "")}" id="link-url-${i}">
+          </div>
+        `;
+      }).join("");
+      container.innerHTML = rows;
+    }
+
+    async function saveLinks() {
+      const msg = document.getElementById("links-msg");
+      const links = [];
+      for (let i = 0; i < 3; i++) {
+        const url = document.getElementById(`link-url-${i}`).value.trim();
+        const label = document.getElementById(`link-label-${i}`).value.trim();
+        if (url) links.push({ label, url });
+      }
+      try {
+        const res = await fetch(`${AUTH}/settings`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ links })
+        });
+        if (res.ok) {
+          msg.textContent = "saved!"; msg.className = "inline-msg ok";
+          if (currentSettings) currentSettings.links = links;
+          renderProfileLinks(links);
+        } else { msg.textContent = "failed to save."; msg.className = "inline-msg err"; }
+      } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
+      setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
+    }
+
+    function toggleSettingsView(forceOpen) {
       const panel = document.getElementById("settings-panel");
-      const showing = !panel.classList.contains("visible");
+      const showing = forceOpen === true ? true : !panel.classList.contains("visible");
       panel.classList.toggle("visible", showing);
-      document.getElementById("project-grid").parentElement; // no-op, grids live in same panel
       document.querySelectorAll(".projects-panel > h2, .projects-panel > .project-grid").forEach(el => {
         el.style.display = showing ? "none" : "";
       });
       document.getElementById("settings-btn").textContent = showing ? "back to projects" : "settings";
       if (showing && !settingsLoaded) loadSettings();
+
+      // keep the url in sync so #settings can be shared/bookmarked/deep-linked
+      const base = `/profile/${encodeURIComponent(myUsername || "")}`;
+      history.replaceState({}, "", showing ? `${base}#settings` : base);
     }
 
     async function toggleSetting(key) {
