@@ -398,7 +398,14 @@
           </div>
           <div class="toggle" id="toggle-use_mojangles_font" onclick="toggleSetting('use_mojangles_font')"><div class="toggle-knob"></div></div>
         </div>
-
+       <div class="setting-row">
+        <div>
+          <div class="setting-label">Use inline code editor</div>
+            <div class="setting-desc">edit files right in the project page instead of a separate editor page</div>
+          </div>
+            <div class="toggle" id="toggle-editor_mode" onclick="toggleEditorMode()"><div class="toggle-knob"></div></div>
+          </div>
+        
         <div class="links-settings-block">
           <div class="links-settings-title">Profile links</div>
           <div class="links-settings-desc">up to 3 links, shown under your bio</div>
@@ -823,20 +830,22 @@ function renderProfile(data) {
       } catch {}
     }
 
-    function renderSettingsToggles() {
-      if (!currentSettings) return;
-      const map = {
-        show_points: currentSettings.show_points,
-        allow_collab: currentSettings.allow_collab,
-        show_email: currentSettings.show_email,
-        use_mojangles_font: currentSettings.use_mojangles_font,
-      };
-      for (const key in map) {
-        const el = document.getElementById(`toggle-${key}`);
-        if (el) el.classList.toggle("on", !!map[key]);
-      }
-    }
-
+function renderSettingsToggles() {
+  if (!currentSettings) return;
+  const map = {
+    show_points: currentSettings.show_points,
+    allow_collab: currentSettings.allow_collab,
+    show_email: currentSettings.show_email,
+    use_mojangles_font: currentSettings.use_mojangles_font,
+  };
+  for (const key in map) {
+    const el = document.getElementById(`toggle-${key}`);
+    if (el) el.classList.toggle("on", !!map[key]);
+  }
+  const editorEl = document.getElementById("toggle-editor_mode");
+  if (editorEl) editorEl.classList.toggle("on", currentSettings.editor_mode === "inline");
+}
+    
     // ---- LINKS SETTINGS (up to 3 label+url rows) ----
     function renderLinkEditRows() {
       const container = document.getElementById("link-edit-rows");
@@ -908,6 +917,24 @@ function renderProfile(data) {
       setTimeout(() => { msg.textContent = ""; msg.className = "settings-msg"; }, 2500);
     }
 
+    async function toggleEditorMode() {
+  if (!currentSettings) return;
+  const newMode = currentSettings.editor_mode === "inline" ? "legacy" : "inline";
+  currentSettings.editor_mode = newMode;
+  renderSettingsToggles();
+  const msg = document.getElementById("settings-msg");
+  try {
+    const res = await fetch(`${AUTH}/settings`, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ editor_mode: newMode })
+    });
+    if (res.ok) { msg.textContent = "saved!"; msg.className = "settings-msg ok"; }
+    else { msg.textContent = "failed to save."; msg.className = "settings-msg err"; }
+  } catch { msg.textContent = "error saving."; msg.className = "settings-msg err"; }
+  setTimeout(() => { msg.textContent = ""; msg.className = "settings-msg"; }, 2500);
+}
+    
     async function leaveAllCollaborations() {
       if (!confirm("Remove yourself from every project you're currently collaborating on?")) return;
       const msg = document.getElementById("settings-msg");
