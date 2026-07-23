@@ -1321,40 +1321,48 @@ function renderFileList() {
       return out;
     }
 
-    // highlight.js (the actual hljs core engine, self-hosted) has to load
-    // BEFORE grammar.js, since grammar.js calls hljs.registerLanguage(...)
-    // to teach it the "mcfunction" language. loading them in the wrong
-    // order means registerLanguage silently does nothing.
+    // this matches the legacy /editor/mcfunction page exactly: grammar.js
+    // loads first, then highlight.js, and the resulting global is an async
+    // function called applyHighlighting(code) that returns highlighted HTML.
     function loadMcfunctionHighlighter() {
       if (mcHighlighterReady || window._mcHighlightLoading) return;
       window._mcHighlightLoading = true;
-      const core = document.createElement("script");
-      core.src = "https://mcbcode.com/backend/highlight.js";
-      core.onload = () => {
-        const grammar = document.createElement("script");
-        grammar.src = "https://mcbcode.com/backend/grammar.js";
-        grammar.onload = () => {
+      const grammar = document.createElement("script");
+      grammar.src = "https://mcbcode.com/backend/grammar.js";
+      grammar.onload = () => {
+        const core = document.createElement("script");
+        core.src = "https://mcbcode.com/backend/highlight.js";
+        core.onload = () => {
           mcHighlighterReady = true;
           window._mcHighlightLoading = false;
           if (ieCurrentFile && getExt(ieCurrentFile.name) === "mcfunction") renderHighlight();
         };
-        grammar.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load grammar.js"); };
-        document.head.appendChild(grammar);
+        core.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load highlight.js"); };
+        document.head.appendChild(core);
       };
-      core.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load highlight.js"); };
-      document.head.appendChild(core);
+      grammar.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load grammar.js"); };
+      document.head.appendChild(grammar);
     }
 
+    // cache of the last-highlighted result per render cycle, since
+    // applyHighlighting is async and renderHighlight() itself is not.
+    let ieHighlightToken = 0;
+
     function highlightMcfunction(code) {
-      if (mcHighlighterReady && window.hljs && typeof window.hljs.highlight === "function") {
-        try {
-          // hljs already escapes and wraps tokens in <span class="hljs-...">,
-          // so don't run this through escHtml again.
-          return window.hljs.highlight(code, { language: "mcfunction" }).value;
-        } catch (err) {
-          console.error("mcfunction highlight failed, falling back:", err);
-          return highlightMcfunctionFallback(code);
-        }
+      if (mcHighlighterReady && typeof window.applyHighlighting === "function") {
+        const myToken = ++ieHighlightToken;
+        window.applyHighlighting(code).then(html => {
+          // only apply if nothing newer has come in since (avoids flicker/out-of-order writes on fast typing)
+          if (myToken === ieHighlightToken) {
+            document.getElementById("ie-highlight-code").innerHTML = html;
+          }
+        }).catch(err => {
+          console.error("mcfunction highlight failed:", err);
+          document.getElementById("ie-highlight-code").innerHTML = highlightMcfunctionFallback(code);
+        });
+        // return the fallback synchronously for the immediate paint; the
+        // async result above will replace it a moment later.
+        return highlightMcfunctionFallback(code);
       }
       loadMcfunctionHighlighter();
       return highlightMcfunctionFallback(code);
