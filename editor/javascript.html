@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<meta charset="UTF-8">
+<link rel="icon" href="/theme/favicon.png">
+<title>mcbCode | JS Editor</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #323232;
+    color: #fff;
+    overflow: hidden;
+    font-family: mcfont;
+  }
+
+  header.top-thing {
+    background-color: #323232;
+    display: flex;
+    align-items: center;
+    height: 50px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1001;
+  }
+
+  .navi {
+    font-size: 14px;
+    padding: 3px 3px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 50px; left: 0; right: 0;
+    background-color: #323232;
+    z-index: 1001;
+    border-bottom: 1px solid #444;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+  }
+
+  .editor {
+    display: flex;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    align-items: flex-start;
+    position: relative;
+    background-color: #0c0c0c;
+    margin-top: 80px;
+  }
+
+  .code-container {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #codeArea, #highlightLayer {
+    font-family: 'Fira Code', monospace !important;
+    font-variant-ligatures: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.4 !important;
+    font-size: 16px !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    tab-size: 2 !important;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    padding: 8px;
+    margin: 0;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  #highlightLayer {
+    background-color: #0c0c0c;
+    color: #e0e0e0;
+    pointer-events: none;
+    z-index: 1;
+    font-family: 'Fira Code', monospace !important;
+  }
+
+  #codeArea {
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #05ee93 !important;
+    resize: none;
+    font-family: 'Fira Code', monospace !important;
+    z-index: 2;
+  }
+
+  .tok-keyword  { color: #ff00d0; }
+  .tok-string   { color: #05ee93; }
+  .tok-template { color: #05c2ee; }
+  .tok-comment  { color: #7a7a7a; font-style: italic; }
+  .tok-number   { color: #ff9900; }
+  .tok-bool     { color: #ff9900; }
+  .tok-null     { color: #ff9900; }
+  .tok-punct    { color: #bebebe; }
+  .tok-func     { color: #ffd866; }
+  .tok-error    { color: #ff5555; text-decoration: underline wavy #ff5555; }
+
+  .nav-item { position: relative; display: inline-block; }
+
+  .nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0;
+    background-color: #323232;
+    border: 1px solid #bebebe;
+    min-width: 220px;
+    z-index: 1002;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    flex-direction: column;
+  }
+
+  .nav-dropdown div {
+    cursor: pointer;
+    font-size: 12px;
+    background-color: #323232;
+    padding: 6px 12px;
+  }
+
+  .nav-dropdown div:hover { background-color: #454545; }
+  .nav-item:hover .nav-dropdown { display: flex; }
+
+  button {
+    background-color: transparent;
+    border: none;
+    color: #f0f0f0;
+    user-select: none;
+    cursor: pointer;
+    font-family: mcfont;
+  }
+
+  .file-name {
+    background-color: #0c0c0c;
+    color: #ffffff;
+    white-space: nowrap;
+    height: 18px;
+    font-size: 16px;
+    outline: none;
+    border: none;
+    padding: 6px 2px;
+    resize: none;
+    min-width: 10%;
+    line-height: 18px;
+    overflow-y: hidden;
+  }
+
+  .filename-txt { background-color: #454545; padding: 6px 6px; padding-right: 12px; }
+  .filename-ext { background-color: #1f1f1f; padding: 6px 6px; }
+
+  .copyshortcut {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #1f1f1f;
+    padding: 6px 6px; margin-left: 8px;
+  }
+
+  .copyshortcut:hover { background-color: #454545; cursor: pointer; }
+
+  #saveBtn { cursor: pointer; }
+  #saveBtn.saving { color: #888; cursor: not-allowed; }
+  #saveBtn.saved  { color: #05ee93; }
+  #saveBtn.error  { color: #ff5555; }
+
+  #validateMsg {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    padding: 6px 10px;
+    font-size: 12px;
+    z-index: 1050;
+    display: none;
+  }
+  #validateMsg.ok  { background: #0f3d2e; color: #05ee93; display: block; }
+  #validateMsg.bad { background: #3d0f0f; color: #ff5555; display: block; }
+</style>
+</head>
+<body>
+
+  <header class="top-thing">
+      <a href="https://mcbcode.com" style="padding-left: 12px;"><img src="https://mcbcode.com/theme/favicon.png" alt="icon" style="width: 36px"></a>
+      <h2 style="padding: 0px 12px;">mcb<g>Code</g></h2>
+      <div class="filename-txt">Filename:</div>
+      <textarea id="autoWidth" class="file-name" maxlength="72">untitled</textarea>
+      <div class="filename-ext">.js</div>
+      <a href="https://mcbcode.com/account" style="color: #ffffff; text-decoration: none;"><div class="copyshortcut">Account</div></a>
+      <div class="copyshortcut" id="saveBtn" style="display:none;" onclick="doSave()">Save</div>
+  </header>
+
+  <div class="navi">
+    <div class="nav-left">
+      <div class="nav-item">
+        <button>File</button>
+        <div class="nav-dropdown">
+          <div id="copyCodeMenu">Copy JS</div>
+          <div id="exportCode">Download as .js</div>
+        </div>
+      </div>
+      <div class="nav-item">
+        <button>Edit</button>
+        <div class="nav-dropdown">
+          <div id="validateCode">Check Brackets</div>
+          <div id="deleteCode" style="color:#ff4d4d;">Clear</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor" id="editor">
+    <div class="code-container">
+      <div id="highlightLayer"></div>
+      <textarea id="codeArea" spellcheck="false" placeholder="// write js here">console.log("hello world");</textarea>
+    </div>
+  </div>
+
+  <div id="validateMsg"></div>
+
+<script>
+const codeArea = document.getElementById('codeArea');
+const highlightLayer = document.getElementById('highlightLayer');
+const autoWidthTextarea = document.getElementById('autoWidth');
+const validateMsg = document.getElementById('validateMsg');
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// js keyword list for coloring
+const JS_KEYWORDS = new Set([
+  'break','case','catch','class','const','continue','debugger','default','delete','do',
+  'else','export','extends','finally','for','function','if','import','in','instanceof',
+  'new','return','super','switch','this','throw','try','typeof','var','void','while',
+  'with','yield','let','async','await','static','get','set','of'
+]);
+
+// regex based js tokenizer for coloring only (not a real parser)
+// order matters: comments/strings first so keywords inside them arent matched
+const JS_TOKEN_RE = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(`(?:\\.|[^`\\])*`)|("(?:\\.|[^"\\])*")|('(?:\\.|[^'\\])*')|(\b\d+(?:\.\d+)?\b)|(\btrue\b|\bfalse\b)|(\bnull\b|\bundefined\b)|(\b[A-Za-z_$][\w$]*\b)|([{}\[\]().,;:+\-*/%=<>!&|?~^])/gm;
+
+function highlightJS(text) {
+  return escapeHtml(text).replace(JS_TOKEN_RE, (match, lineComment, blockComment, template, dstring, sstring, num, bool, nul, word, punct) => {
+    if (lineComment !== undefined || blockComment !== undefined) return `<span class="tok-comment">${match}</span>`;
+    if (template !== undefined) return `<span class="tok-template">${match}</span>`;
+    if (dstring !== undefined || sstring !== undefined) return `<span class="tok-string">${match}</span>`;
+    if (num !== undefined) return `<span class="tok-number">${match}</span>`;
+    if (bool !== undefined) return `<span class="tok-bool">${match}</span>`;
+    if (nul !== undefined) return `<span class="tok-null">${match}</span>`;
+    if (word !== undefined) {
+      if (JS_KEYWORDS.has(word)) return `<span class="tok-keyword">${match}</span>`;
+      return `<span class="tok-func">${match}</span>`;
+    }
+    if (punct !== undefined) return `<span class="tok-punct">${match}</span>`;
+    return match;
+  });
+}
+
+function updateHighlighting() {
+  const html = highlightJS(codeArea.value);
+  highlightLayer.innerHTML = html + "\n";
+  syncScroll();
+}
+
+function syncScroll() {
+  highlightLayer.scrollTop = codeArea.scrollTop;
+  highlightLayer.scrollLeft = codeArea.scrollLeft;
+}
+
+codeArea.addEventListener('scroll', syncScroll);
+codeArea.addEventListener('input', updateHighlighting);
+
+const measurer = document.createElement('span');
+measurer.style.visibility = 'hidden';
+measurer.style.whiteSpace = 'pre';
+measurer.style.position = 'absolute';
+document.body.appendChild(measurer);
+
+function adjustFilenameWidth() {
+  measurer.style.font = window.getComputedStyle(autoWidthTextarea).font;
+  measurer.textContent = autoWidthTextarea.value || autoWidthTextarea.placeholder;
+  autoWidthTextarea.style.width = (measurer.offsetWidth + 10) + 'px';
+}
+autoWidthTextarea.addEventListener('input', adjustFilenameWidth);
+adjustFilenameWidth();
+
+function showValidateMsg(ok, text) {
+  validateMsg.textContent = text;
+  validateMsg.className = ok ? 'ok' : 'bad';
+  setTimeout(() => { validateMsg.className = ''; }, 3000);
+}
+
+// simple bracket/paren balance checker (not a real js parser, just catches
+// mismatched/unclosed brackets, parens, braces, and strings)
+function checkBrackets() {
+  const pairs = { ')': '(', ']': '[', '}': '{' };
+  const stack = [];
+  const text = codeArea.value;
+  let inString = null;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+
+    if (inLineComment) {
+      if (c === '\n') inLineComment = false;
+      continue;
+    }
+    if (inBlockComment) {
+      if (c === '*' && next === '/') { inBlockComment = false; i++; }
+      continue;
+    }
+    if (inString) {
+      if (c === '\\') { i++; continue; }
+      if (c === inString) inString = null;
+      continue;
+    }
+
+    if (c === '/' && next === '/') { inLineComment = true; i++; continue; }
+    if (c === '/' && next === '*') { inBlockComment = true; i++; continue; }
+    if (c === '"' || c === "'" || c === '`') { inString = c; continue; }
+
+    if (c === '(' || c === '[' || c === '{') stack.push(c);
+    if (c === ')' || c === ']' || c === '}') {
+      const open = stack.pop();
+      if (open !== pairs[c]) {
+        showValidateMsg(false, `mismatched "${c}" at position ${i}`);
+        return false;
+      }
+    }
+  }
+
+  if (inString) {
+    showValidateMsg(false, 'unterminated string');
+    return false;
+  }
+  if (stack.length > 0) {
+    showValidateMsg(false, `unclosed "${stack[stack.length - 1]}"`);
+    return false;
+  }
+
+  showValidateMsg(true, 'brackets balanced');
+  return true;
+}
+
+document.getElementById('validateCode').addEventListener('click', checkBrackets);
+
+document.getElementById('deleteCode').addEventListener('click', () => {
+  codeArea.value = '';
+  updateHighlighting();
+});
+
+// download
+document.getElementById('exportCode').addEventListener('click', () => {
+  const code = codeArea.value;
+  if (!code) return;
+  const fileName = (autoWidthTextarea.value || 'untitled').replace(/[^a-z0-9_\-]/gi, '_') + '.js';
+  const blob = new Blob([code], { type: 'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// copy
+document.getElementById('copyCodeMenu').addEventListener('click', () => {
+  const text = codeArea.value;
+  if (!text) return;
+  const dummy = document.createElement("textarea");
+  document.body.appendChild(dummy);
+  dummy.value = text;
+  dummy.select();
+  document.execCommand("copy");
+  document.body.removeChild(dummy);
+});
+
+// ctrl+s downloads, ctrl+shift+b checks brackets
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  if (e.ctrlKey && key === 's') {
+    e.preventDefault();
+    document.getElementById('exportCode').click();
+  }
+  if (e.ctrlKey && e.shiftKey && key === 'b') {
+    e.preventDefault();
+    checkBrackets();
+  }
+});
+
+window.addEventListener('DOMContentLoaded', () => updateHighlighting());
+</script>
+
+<!-- =====================
+     SAVE / SHARE SYSTEM
+     same logic as the other mcbCode editors, just pointed at this codeArea/filename
+     (left untouched from the json editor)
+===================== -->
+<script>
+const AUTH = "https://auth.mcbcode.com";
+const saveBtn = document.getElementById('saveBtn');
+
+let currentSaveId = null;
+let currentUserId = null;
+
+function setSaveBtnState(state, label) {
+    saveBtn.textContent = label || 'Save';
+    saveBtn.className = 'copyshortcut' + (state ? ' ' + state : '');
+}
+
+function setSaveParam(id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('save', id);
+    window.history.replaceState({}, '', url.toString());
+}
+
+function updateSaveBtnVisibility(ownerId) {
+    if (currentUserId !== null && currentUserId === ownerId) {
+        saveBtn.style.display = '';
+    } else if (currentUserId !== null && ownerId === null) {
+        saveBtn.style.display = '';
+    } else {
+        saveBtn.style.display = 'none';
+    }
+}
+
+async function doSave() {
+    if (saveBtn.classList.contains('saving')) return;
+    setSaveBtnState('saving', 'Saving...');
+
+    try {
+        const res = await fetch(`${AUTH}/save`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                save_id: currentSaveId,
+                content: codeArea.value,
+                filename: (autoWidthTextarea.value || 'untitled') + '.js',
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.save_id) {
+            currentSaveId = data.save_id;
+            setSaveParam(currentSaveId);
+            setSaveBtnState('saved', 'Saved!');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        } else {
+            setSaveBtnState('error', 'Error');
+            setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+        }
+    } catch {
+        setSaveBtnState('error', 'Error');
+        setTimeout(() => setSaveBtnState('', 'Save'), 2000);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const saveParam = params.get('save');
+
+    try {
+        const meRes = await fetch(`${AUTH}/me`, { credentials: 'include' });
+        if (meRes.ok) {
+            const me = await meRes.json();
+            currentUserId = me.id;
+        }
+    } catch {}
+
+    if (saveParam) {
+        try {
+            const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(saveParam)}`, {
+                credentials: 'include'
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                currentSaveId = data.save_id;
+
+                codeArea.value = data.content;
+                if (data.filename) {
+                    // strip .js ext for the filename box since we show it separately
+                    autoWidthTextarea.value = data.filename.replace(/\.js$/i, '');
+                    adjustFilenameWidth();
+                }
+
+                updateHighlighting();
+                updateSaveBtnVisibility(data.owner_id);
+            } else {
+                codeArea.value = '// this share code does not exist';
+                updateHighlighting();
+                saveBtn.style.display = 'none';
+            }
+        } catch {
+            codeArea.value = '// this share code does not exist';
+            updateHighlighting();
+            saveBtn.style.display = 'none';
+        }
+    } else {
+        updateSaveBtnVisibility(null);
+    }
+});
+</script>
+
+<script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
