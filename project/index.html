@@ -470,12 +470,13 @@
     }
     function editorUrl(file) {
       const n = file.name.toLowerCase();
+    
       if (n === "manifest.json")     return `/editor/manifest?save=${file.save_id}`;
       if (n.endsWith(".mcfunction")) return `/editor/mcfunction?save=${file.save_id}`;
+      if (n.endsWith(".js"))         return `/editor/javascript?save=${file.save_id}`;
+
       return `/editor/json?save=${file.save_id}`;
     }
-    function isPng(f) { return !!f.r2_key || f.name.toLowerCase().endsWith(".png"); }
-
     // ---- URL <-> folder path helpers ----
     function buildPathUrl(pathArr) {
       const base = `/project/${shareCode}`;
