@@ -199,6 +199,30 @@
     .loading-msg { padding: 48px; text-align: center; color: #444; font-size: 13px; }
     .err-msg { padding: 48px; text-align: center; color: #ff5555; font-size: 13px; }
 
+    /* ---- inline editor ---- */
+    .inline-editor-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 600; align-items: center; justify-content: center; }
+    .inline-editor-overlay.open { display: flex; }
+    .inline-editor { width: min(1100px, 96vw); height: min(760px, 92vh); background: #161719; border: 1px solid #343438; display: flex; flex-direction: column; }
+    .ie-toolbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #2a2a2e; flex-shrink: 0; flex-wrap: wrap; }
+    .ie-filename { font-size: 13px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .ie-status { font-size: 11px; color: #05ee93; flex: 1; }
+    .ie-toolbar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ie-body { position: relative; flex: 1; overflow: hidden; background: #0d0e0f; }
+    .ie-highlight, .ie-textarea {
+      position: absolute; inset: 0; margin: 0; padding: 14px 16px;
+      font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.6;
+      white-space: pre; overflow: auto; box-sizing: border-box;
+    }
+    .ie-highlight { color: #ccc; pointer-events: none; }
+    .ie-textarea { background: transparent; color: transparent; caret-color: #fff; border: none; outline: none; resize: none; }
+    .ie-textarea::selection { background: rgba(0,178,255,0.35); }
+    .tok-key { color: #66d4ff; }
+    .tok-str { color: #78e3a6; }
+    .tok-kw  { color: #ff9900; }
+    .tok-num { color: #c2f66d; }
+    .tok-com { color: #555; font-style: italic; }
+    .tok-cmd { color: #ff9900; }
+
     /* ---- portrait / mobile layout ---- */
     @media (max-width: 720px), (orientation: portrait) {
       .panels { flex-direction: column; }
@@ -216,6 +240,11 @@
       .path-toolbar { justify-content: flex-start; }
       .file-updated { display: none; }
       .modal, .confirm-modal, .warn-modal { min-width: 0; width: 90vw; max-width: 360px; padding: 18px; }
+
+      .inline-editor { width: 100vw; height: 100vh; border: none; }
+      .ie-toolbar { padding: 8px; }
+      .ie-toolbar-actions { gap: 4px; }
+      .ie-highlight, .ie-textarea { font-size: 12px; padding: 10px 12px; }
     }
   </style>
 </head>
@@ -432,6 +461,26 @@
 
   </div>
 
+  <div class="inline-editor-overlay" id="inline-editor-overlay">
+    <div class="inline-editor">
+      <div class="ie-toolbar">
+        <span class="ie-filename" id="ie-filename"></span>
+        <span class="ie-status" id="ie-status"></span>
+        <div class="ie-toolbar-actions">
+          <button class="sm-btn" onclick="ieUndo()">Undo</button>
+          <button class="sm-btn" onclick="ieRedo()">Redo</button>
+          <button class="sm-btn" onclick="ieToggleWrap()">Wrap</button>
+          <button class="sm-btn export-highlight" onclick="saveInlineFile()">Save</button>
+          <button class="sm-btn" onclick="closeInlineEditor()">Close</button>
+        </div>
+      </div>
+      <div class="ie-body">
+        <pre class="ie-highlight" id="ie-highlight"><code id="ie-highlight-code"></code></pre>
+        <textarea class="ie-textarea" id="ie-textarea" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ---- restore real url after 404.html spa redirect ----
     // this MUST run before shareCode/path parsing below
@@ -477,6 +526,11 @@
 
       return `/editor/json?save=${file.save_id}`;
     }
+
+    function isPng(f) {
+      return typeof f.name === "string" && f.name.toLowerCase().endsWith(".png");
+    }
+
     // ---- URL <-> folder path helpers ----
     function buildPathUrl(pathArr) {
       const base = `/project/${shareCode}`;
@@ -526,8 +580,17 @@
       if (!shareCode) return showErr("No project ID in URL.");
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
-        if (r.ok) { const d = await r.json(); document.getElementById("nav-user").textContent = d.email; window._myId = d.id; }
+        if (r.ok) {
+          const d = await r.json();
+          document.getElementById("nav-user").textContent = d.email;
+          window._myId = d.id;
+          try {
+            const sres = await fetch(`${AUTH}/settings`, { credentials: "include" });
+            if (sres.ok) { const sd = await sres.json(); window._editorMode = sd.settings.editor_mode || "inline"; }
+          } catch {}
+        }
       } catch {}
+      if (!window._editorMode) window._editorMode = "inline"; // default, also covers logged-out viewers
       try {
         const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
         if (!r.ok) { const d = await r.json(); return showErr(d.error || "Not found."); }
@@ -578,8 +641,6 @@
         renderTags();
         loadCollaborators();
       }
-      const exportBtnEl = document.getElementById("export-btn");
-      if (exportBtnEl) exportBtnEl.style.display = "";
 
       const pngInput = document.getElementById("png-upload-input");
       if (pngInput) pngInput.addEventListener("change", handlePngUpload);
@@ -636,38 +697,45 @@ function renderContributors() {
     function currentFolderId() { return currentPath.length ? currentPath[currentPath.length - 1].id : null; }
     function isAtRoot() { return currentPath.length === 0; }
     const canEdit = () => isOwner || isCollab;
+    const isLoggedIn = () => !!window._myId;
 
 function renderToolbar() {
   const toolbar = document.querySelector(".proj-header-actions");
   toolbar.innerHTML = "";
 
-  if (!canEdit()) return;
+  if (canEdit()) {
+    const bfo = document.createElement("button");
+    bfo.className = "sm-btn";
+    bfo.textContent = "+ Folder";
+    bfo.onclick = () => openNewFile("folder");
+    toolbar.appendChild(bfo);
 
-  const bfo = document.createElement("button");
-  bfo.className = "sm-btn";
-  bfo.textContent = "+ Folder";
-  bfo.onclick = () => openNewFile("folder");
-  toolbar.appendChild(bfo);
+    if (!isAtRoot()) {
+      const bf = document.createElement("button");
+      bf.className = "sm-btn";
+      bf.textContent = "+ File";
+      bf.onclick = () => openNewFile("file");
+      toolbar.appendChild(bf);
 
-  if (!isAtRoot()) {
-    const bf = document.createElement("button");
-    bf.className = "sm-btn";
-    bf.textContent = "+ File";
-    bf.onclick = () => openNewFile("file");
-    toolbar.appendChild(bf);
-
-    const bpng = document.createElement("button");
-    bpng.className = "sm-btn";
-    bpng.textContent = "+ Image";
-    bpng.onclick = () => document.getElementById("png-upload-input").click();
-    toolbar.appendChild(bpng);
+      const bpng = document.createElement("button");
+      bpng.className = "sm-btn";
+      bpng.textContent = "+ Image";
+      bpng.onclick = () => document.getElementById("png-upload-input").click();
+      toolbar.appendChild(bpng);
+    }
   }
 
+  // export button: visible to everyone, but greyed out / disabled if not logged in
   const bexport = document.createElement("button");
   bexport.id = "export-btn";
   bexport.className = "sm-btn export-highlight";
   bexport.textContent = "Export";
-  bexport.onclick = startExport;
+  if (isLoggedIn()) {
+    bexport.onclick = startExport;
+  } else {
+    bexport.disabled = true;
+    bexport.title = "log in to export this project";
+  }
   toolbar.appendChild(bexport);
 }
 
@@ -706,10 +774,6 @@ function renderToolbar() {
       row.querySelector(".file-icon").textContent = "v";
       openImagePreview = file.id;
     }
-
-function isPng(f) {
-  return typeof f.name === "string" && f.name.toLowerCase().endsWith(".png");
-}
     
 function renderFileList() {
   renderPathBar();
@@ -756,7 +820,15 @@ function renderFileList() {
         toggleImagePreview(f, row);
       };
     } else {
-      row.onclick = e => { if (e.target.classList.contains("file-del")) return; if (!f.save_id) return; window.location.href = editorUrl(f); };
+      row.onclick = e => {
+        if (e.target.classList.contains("file-del")) return;
+        if (!f.save_id) return;
+        if (window._editorMode === "legacy") {
+          window.location.href = editorUrl(f);
+        } else {
+          openInlineEditor(f);
+        }
+      };
       if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
     }
     list.appendChild(row);
@@ -976,6 +1048,7 @@ function renderFileList() {
 
     // ---- EXPORT ----
     async function startExport() {
+      if (!isLoggedIn()) return;
       const btn = document.getElementById("export-btn");
       btn.disabled = true; btn.textContent = "Loading...";
       try {
@@ -1203,6 +1276,147 @@ function renderFileList() {
     window.addEventListener("pageshow", (e) => {
       if (e.persisted) location.reload();
     });
+
+    // ---- INLINE EDITOR ----
+    let ieCurrentFile = null;
+    let ieOriginalContent = "";
+    let ieWrap = false;
+    let mcHighlighterReady = false;
+
+    function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    function getExt(name) { const i = name.lastIndexOf("."); return i === -1 ? "" : name.slice(i + 1).toLowerCase(); }
+
+    function highlightPlain(code) { return escHtml(code); }
+
+    function highlightJSON(code) {
+      let out = escHtml(code);
+      out = out.replace(/(&quot;.*?&quot;)(\s*:)/g, '<span class="tok-key">$1</span>$2');
+      out = out.replace(/:(\s*)(&quot;.*?&quot;)/g, ':$1<span class="tok-str">$2</span>');
+      out = out.replace(/\b(true|false|null)\b/g, '<span class="tok-kw">$1</span>');
+      out = out.replace(/\b(-?\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
+      return out;
+    }
+
+    function highlightJS(code) {
+      let out = escHtml(code);
+      out = out.replace(/(\/\/[^\n]*)/g, '<span class="tok-com">$1</span>');
+      out = out.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`[^`]*`)/g, '<span class="tok-str">$1</span>');
+      out = out.replace(/\b(function|return|const|let|var|if|else|for|while|new|class|extends|import|export|default|async|await|try|catch|typeof|null|true|false|undefined|this)\b/g, '<span class="tok-kw">$1</span>');
+      out = out.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
+      return out;
+    }
+
+    // basic fallback in case grammar.js/highlight.js don't expose what we expect
+    function highlightMcfunctionFallback(code) {
+      let out = escHtml(code);
+      out = out.replace(/(#[^\n]*)/g, '<span class="tok-com">$1</span>');
+      out = out.replace(/^(\/?\w+)/gm, '<span class="tok-cmd">$1</span>');
+      return out;
+    }
+
+    function loadMcfunctionHighlighter() {
+      if (mcHighlighterReady || window._mcHighlightLoading) return;
+      window._mcHighlightLoading = true;
+      const s1 = document.createElement("script");
+      s1.src = "https://mcbcode.com/backend/grammar.js";
+      const s2 = document.createElement("script");
+      s2.src = "https://mcbcode.com/backend/highlight.js";
+      s2.onload = () => { mcHighlighterReady = true; if (ieCurrentFile && getExt(ieCurrentFile.name) === "mcfunction") renderHighlight(); };
+      s2.onerror = () => { mcHighlighterReady = false; };
+      document.head.appendChild(s1);
+      document.head.appendChild(s2);
+    }
+
+    function highlightMcfunction(code) {
+      if (mcHighlighterReady && typeof window.highlightMcfunction === "function") {
+        try { return window.highlightMcfunction(code, window.mcfunctionGrammar); } catch { return highlightMcfunctionFallback(code); }
+      }
+      loadMcfunctionHighlighter();
+      return highlightMcfunctionFallback(code);
+    }
+
+    function highlightForExt(ext) {
+      if (ext === "json") return highlightJSON;
+      if (ext === "js") return highlightJS;
+      if (ext === "mcfunction") return highlightMcfunction;
+      return highlightPlain;
+    }
+
+    function renderHighlight() {
+      if (!ieCurrentFile) return;
+      const code = document.getElementById("ie-textarea").value;
+      const ext = getExt(ieCurrentFile.name);
+      const fn = highlightForExt(ext);
+      document.getElementById("ie-highlight-code").innerHTML = fn(code) + "\n";
+    }
+
+    async function openInlineEditor(f) {
+      ieCurrentFile = f;
+      document.getElementById("ie-filename").textContent = f.name;
+      document.getElementById("ie-status").textContent = "loading...";
+      document.getElementById("ie-textarea").value = "";
+      document.getElementById("inline-editor-overlay").classList.add("open");
+      try {
+        const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(f.save_id)}`, { credentials: "include" });
+        const d = await res.json();
+        if (!res.ok) { document.getElementById("ie-status").textContent = d.error || "failed to load."; return; }
+        ieOriginalContent = d.content || "";
+        document.getElementById("ie-textarea").value = ieOriginalContent;
+        document.getElementById("ie-status").textContent = "";
+        renderHighlight();
+      } catch { document.getElementById("ie-status").textContent = "failed to load file."; }
+    }
+
+    function closeInlineEditor() {
+      if (ieCurrentFile && document.getElementById("ie-textarea").value !== ieOriginalContent) {
+        if (!confirm("you have unsaved changes. close anyway?")) return;
+      }
+      document.getElementById("inline-editor-overlay").classList.remove("open");
+      ieCurrentFile = null;
+    }
+
+    function ieToggleWrap() {
+      ieWrap = !ieWrap;
+      const ws = ieWrap ? "pre-wrap" : "pre";
+      document.getElementById("ie-textarea").style.whiteSpace = ws;
+      document.getElementById("ie-highlight").style.whiteSpace = ws;
+    }
+
+    function ieUndo() { document.execCommand("undo"); }
+    function ieRedo() { document.execCommand("redo"); }
+
+    async function saveInlineFile() {
+      if (!ieCurrentFile) return;
+      const status = document.getElementById("ie-status");
+      status.textContent = "saving...";
+      try {
+        const content = document.getElementById("ie-textarea").value;
+        const res = await fetch(`${AUTH}/save`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ save_id: ieCurrentFile.save_id, filename: ieCurrentFile.name, content })
+        });
+        if (res.ok) {
+          ieOriginalContent = content;
+          status.textContent = "saved!";
+          ieCurrentFile.updated_at = new Date().toISOString();
+          renderFileList();
+          setTimeout(() => { status.textContent = ""; }, 2000);
+        } else {
+          const d = await res.json();
+          status.textContent = d.error || "failed to save.";
+        }
+      } catch { status.textContent = "error saving."; }
+    }
+
+    document.getElementById("ie-textarea")?.addEventListener("input", renderHighlight);
+    document.getElementById("ie-textarea")?.addEventListener("scroll", () => {
+      const hl = document.getElementById("ie-highlight");
+      const ta = document.getElementById("ie-textarea");
+      hl.scrollTop = ta.scrollTop;
+      hl.scrollLeft = ta.scrollLeft;
+    });
+    document.getElementById("inline-editor-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeInlineEditor(); });
   </script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
