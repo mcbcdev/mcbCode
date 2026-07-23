@@ -223,6 +223,13 @@
     .tok-com { color: #555; font-style: italic; }
     .tok-cmd { color: #ff9900; }
 
+    /* generic hljs token colors, in case grammar.js uses standard hljs-* class names */
+    .hljs-comment, .hljs-quote { color: #555; font-style: italic; }
+    .hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #ff9900; }
+    .hljs-string, .hljs-literal { color: #78e3a6; }
+    .hljs-number { color: #c2f66d; }
+    .hljs-attr, .hljs-variable, .hljs-title { color: #66d4ff; }
+
     /* ---- portrait / mobile layout ---- */
     @media (max-width: 720px), (orientation: portrait) {
       .panels { flex-direction: column; }
@@ -1314,22 +1321,40 @@ function renderFileList() {
       return out;
     }
 
+    // highlight.js (the actual hljs core engine, self-hosted) has to load
+    // BEFORE grammar.js, since grammar.js calls hljs.registerLanguage(...)
+    // to teach it the "mcfunction" language. loading them in the wrong
+    // order means registerLanguage silently does nothing.
     function loadMcfunctionHighlighter() {
       if (mcHighlighterReady || window._mcHighlightLoading) return;
       window._mcHighlightLoading = true;
-      const s1 = document.createElement("script");
-      s1.src = "https://mcbcode.com/backend/grammar.js";
-      const s2 = document.createElement("script");
-      s2.src = "https://mcbcode.com/backend/highlight.js";
-      s2.onload = () => { mcHighlighterReady = true; if (ieCurrentFile && getExt(ieCurrentFile.name) === "mcfunction") renderHighlight(); };
-      s2.onerror = () => { mcHighlighterReady = false; };
-      document.head.appendChild(s1);
-      document.head.appendChild(s2);
+      const core = document.createElement("script");
+      core.src = "https://mcbcode.com/backend/highlight.js";
+      core.onload = () => {
+        const grammar = document.createElement("script");
+        grammar.src = "https://mcbcode.com/backend/grammar.js";
+        grammar.onload = () => {
+          mcHighlighterReady = true;
+          window._mcHighlightLoading = false;
+          if (ieCurrentFile && getExt(ieCurrentFile.name) === "mcfunction") renderHighlight();
+        };
+        grammar.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load grammar.js"); };
+        document.head.appendChild(grammar);
+      };
+      core.onerror = () => { window._mcHighlightLoading = false; console.error("failed to load highlight.js"); };
+      document.head.appendChild(core);
     }
 
     function highlightMcfunction(code) {
-      if (mcHighlighterReady && typeof window.highlightMcfunction === "function") {
-        try { return window.highlightMcfunction(code, window.mcfunctionGrammar); } catch { return highlightMcfunctionFallback(code); }
+      if (mcHighlighterReady && window.hljs && typeof window.hljs.highlight === "function") {
+        try {
+          // hljs already escapes and wraps tokens in <span class="hljs-...">,
+          // so don't run this through escHtml again.
+          return window.hljs.highlight(code, { language: "mcfunction" }).value;
+        } catch (err) {
+          console.error("mcfunction highlight failed, falling back:", err);
+          return highlightMcfunctionFallback(code);
+        }
       }
       loadMcfunctionHighlighter();
       return highlightMcfunctionFallback(code);
@@ -1350,21 +1375,44 @@ function renderFileList() {
       document.getElementById("ie-highlight-code").innerHTML = fn(code) + "\n";
     }
 
-    async function openInlineEditor(f) {
+    async function openInlineEditor(fileRef) {
+      // re-find the file in the live allFiles array by id, rather than trusting
+      // the object captured in the row's click closure — it's cheap and avoids
+      // ever binding the editor to a stale/renamed copy of the file.
+      const f = allFiles.find(x => x.id === fileRef.id) || fileRef;
+
+      if (!f.save_id) {
+        alert("This file doesn't have any save data yet.");
+        return;
+      }
+
       ieCurrentFile = f;
       document.getElementById("ie-filename").textContent = f.name;
       document.getElementById("ie-status").textContent = "loading...";
       document.getElementById("ie-textarea").value = "";
+      document.getElementById("ie-highlight-code").innerHTML = "";
       document.getElementById("inline-editor-overlay").classList.add("open");
+
       try {
         const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(f.save_id)}`, { credentials: "include" });
-        const d = await res.json();
-        if (!res.ok) { document.getElementById("ie-status").textContent = d.error || "failed to load."; return; }
-        ieOriginalContent = d.content || "";
+        let d = null;
+        try { d = await res.json(); } catch (parseErr) { console.error("save response wasn't JSON:", parseErr); }
+
+        if (!res.ok || !d) {
+          const errMsg = (d && d.error) ? d.error : `failed to load (status ${res.status}).`;
+          document.getElementById("ie-status").textContent = errMsg;
+          console.error("inline editor load failed:", res.status, d);
+          return;
+        }
+
+        ieOriginalContent = typeof d.content === "string" ? d.content : "";
         document.getElementById("ie-textarea").value = ieOriginalContent;
         document.getElementById("ie-status").textContent = "";
         renderHighlight();
-      } catch { document.getElementById("ie-status").textContent = "failed to load file."; }
+      } catch (err) {
+        console.error("inline editor load threw:", err);
+        document.getElementById("ie-status").textContent = "failed to load file.";
+      }
     }
 
     function closeInlineEditor() {
