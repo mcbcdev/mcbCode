@@ -706,6 +706,10 @@ function renderToolbar() {
       row.querySelector(".file-icon").textContent = "v";
       openImagePreview = file.id;
     }
+
+function isPng(f) {
+  return typeof f.name === "string" && f.name.toLowerCase().endsWith(".png");
+}
     
 function renderFileList() {
   renderPathBar();
