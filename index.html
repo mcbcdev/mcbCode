@@ -26,15 +26,24 @@
       --hero-width: 10vh;
       --accent-color: #05ee93;
       --accent-dark: #00a459;
+      --accent-glow: rgba(5, 238, 147, 0.25);
       --bg-color: #0c0c0c;
+      --card-bg: rgba(18, 18, 18, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
       --text-main: #ffffff;
       --text-muted: #bebebe;
-      --code-bg: #141414;
+      --code-bg: #111111;
     }
 
-    /* --- Global & Animations --- */
+    /* --- Strict Reset & Font Enforcement --- */
+    *, *::before, *::after {
+      font-weight: normal !important;
+      border-radius: 0px !important; /* Strictly no rounded corners */
+      box-sizing: border-box;
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
@@ -44,105 +53,145 @@
       100% { background-position: 0% 50%; }
     }
 
+    @keyframes auraPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(5, 238, 147, 0.2); }
+      50% { box-shadow: 0 0 35px rgba(5, 238, 147, 0.45); }
+    }
+
     html, body {
       min-height: 100%;
       margin: 0;
       font-family: 'mcfont', sans-serif;
       background-color: var(--bg-color);
-      /* Background Grid that fades out into solid dark background */
-      background-image: 
-        linear-gradient(to bottom, rgba(12, 12, 12, 0) 600px, var(--bg-color) 1200px),
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 30px 30px, 30px 30px;
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
       color: var(--text-muted);
       text-align: center;
-      font-weight: normal;
       overflow-x: hidden;
     }
 
-    h1, h2, h3 {
-      color: var(--text-main);
-      margin: 0;
+    h1, h2, h3, h4 { 
+      color: var(--text-main); 
+      margin: 0; 
+      font-family: 'mcfontb', 'mcfont', sans-serif;
     }
 
-    a {
-      text-decoration: none;
-      color: var(--text-main);
-      transition: color 0.3s ease-in-out, text-shadow 0.3s ease;
+    a { 
+      text-decoration: none; 
+      color: var(--text-main); 
+      transition: all 0.2s ease; 
+      font-family: 'mcfont', sans-serif;
     }
 
-    a:hover {
-      color: var(--accent-color);
-      text-shadow: 0 0 8px rgba(5, 238, 147, 0.4);
+    a:hover { 
+      color: var(--accent-color); 
+      text-shadow: 0 0 8px var(--accent-glow);
     }
 
     c { color: #e7007b; }
     g { color: #008e4c; }
 
-    /* --- Buttons --- */
-    button {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 1.2rem;
-      padding: 12px 24px;
+    /* --- Status Badges & CTAs --- */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(5, 238, 147, 0.08);
+      border: 1px solid rgba(5, 238, 147, 0.35);
+      color: var(--accent-color);
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      margin-bottom: 30px;
+      letter-spacing: 1.5px;
+      font-family: 'mcfontwide', 'mcfont', sans-serif;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-color);
+      box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    button, .btn {
+      display: inline-block;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      font-size: 1.1rem;
+      padding: 14px 32px;
       color: var(--text-main);
-      font-family: 'mcfont', sans-serif;
-      transition: all 0.3s ease;
+      font-family: 'mcfontb', sans-serif;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      box-sizing: border-box;
+      letter-spacing: 0.5px;
     }
 
-    button:hover {
-      border-color: var(--text-muted);
+    button:hover, .btn:hover {
+      border-color: rgba(255, 255, 255, 0.4);
       transform: translateY(-2px);
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
     }
 
-    #tryitout {
+    #tryitout, .btn-primary {
       background-color: var(--accent-dark);
       border: 1px solid var(--accent-color);
       color: #ffffff;
-      box-shadow: 0 0 15px rgba(5, 238, 147, 0.2);
+      animation: auraPulse 4s infinite ease-in-out;
     }
 
-    #tryitout:hover {
+    #tryitout:hover, .btn-primary:hover {
       background-color: var(--accent-color);
       color: var(--bg-color);
-      box-shadow: 0 0 25px rgba(5, 238, 147, 0.5);
       transform: translateY(-2px);
     }
 
-    /* --- Hero Section --- */
+    /* --- Hero Section with Minecraft Background --- */
+    .hero-wrapper {
+      position: relative;
+      width: 100%;
+      background-image: 
+        linear-gradient(180deg, rgba(12, 12, 12, 0.75) 0%, rgba(12, 12, 12, 0.85) 40%, rgba(12, 12, 12, 1) 100%),
+        url('https://mcbcode.com/img/mc-image1.png');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+    }
+
     .hero-container {
-      margin-top: 18vh;
-      padding: 0 5%;
+      padding: 10vh 5% 12vh 5%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      animation: fadeIn 1s ease-out forwards;
+      animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     #tagline {
-      font-size: clamp(2rem, 5vw, 4rem);
-      font-family: 'mcfont', sans-serif;
-      background: linear-gradient(90deg, #0066ff, var(--accent-color), #0066ff);
+      font-size: clamp(2.2rem, 5.5vw, 4rem);
+      font-family: 'mcfontb', sans-serif;
+      background: linear-gradient(90deg, #ffffff, var(--accent-color), #ffffff);
       background-size: 200% auto;
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
-      animation: gradientBG 5s linear infinite;
-      margin-bottom: 20px;
+      animation: gradientBG 8s ease infinite;
+      margin-bottom: 24px;
       line-height: 1.2;
-      max-width: 900px;
+      max-width: 980px;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
 
     .hero-subtext {
-      font-size: 1.2rem;
-      max-width: 800px;
-      line-height: 1.6;
+      font-size: 1.15rem;
+      font-family:, 'mcfont', sans-serif;
+      max-width: 780px;
+      line-height: 1.7;
       margin-bottom: 40px;
-      color: var(--text-muted);
+      color: #e0e0e0;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
 
     .hero-buttons {
@@ -152,74 +201,117 @@
       flex-wrap: wrap;
     }
 
-    /* --- Tools Grid Section --- */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 30px;
+    /* --- Editors Matrix (Suite Launcher) --- */
+    .section-header {
       max-width: 1200px;
-      margin: 80px auto 40px auto;
+      margin: 90px auto 35px auto;
       padding: 0 5%;
-      animation: fadeIn 1.5s ease-out forwards;
+      text-align: left;
     }
 
-    .tool-card {
-      display: block;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 35px 25px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-      text-align: center;
-      color: inherit;
+    .section-header h2 {
+      font-size: 1.9rem;
+      color: var(--text-main);
+      font-family: 'mcfontb', sans-serif;
     }
 
-    .tool-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(5, 238, 147, 0.3);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(5, 238, 147, 0.05);
+    .section-header p {
+      margin-top: 8px;
       color: var(--text-muted);
-    }
-
-    .tool-icon {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-    }
-
-    .tool-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 15px;
-      color: var(--accent-color);
-      transition: text-shadow 0.3s ease;
-    }
-
-    .tool-card:hover h3 {
-      text-shadow: 0 0 8px rgba(5, 238, 147, 0.4);
-    }
-
-    .tool-card p {
       font-size: 1rem;
+      font-family: 'mcfontwide', sans-serif;
+    }
+
+    .editor-matrix {
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 5%;
+    }
+
+    .editor-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 28px;
+      text-align: left;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .editor-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .editor-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(5, 238, 147, 0.45);
+      background: rgba(24, 24, 24, 0.9);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 0 25px rgba(5, 238, 147, 0.03);
+    }
+
+    .editor-card:hover::after { opacity: 1; }
+
+    .editor-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .editor-card-header img {
+      width: 40px;
+      height: 40px;
+      image-rendering: pixelated;
+    }
+
+    .editor-tag {
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.05);
+      padding: 4px 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--accent-color);
+      font-family: monospace;
+    }
+
+    .editor-card h3 {
+      font-size: 1.35rem;
+      font-family: 'mcfontb', sans-serif;
+      margin-bottom: 10px;
+      color: var(--accent-color);
+    }
+
+    .editor-card p {
+      font-size: 0.95rem;
+      font-family: 'mcfont', sans-serif;
+      color: var(--text-muted);
       line-height: 1.6;
       margin: 0;
-      color: var(--text-muted);
     }
 
-    /* --- Content / Showcase Blocks --- */
+    /* --- Value & Showcase Section --- */
     .showcase-container {
-      max-width: 1100px;
-      margin: 100px auto;
+      max-width: 1200px;
+      margin: 120px auto;
       padding: 0 5%;
       display: flex;
       flex-direction: column;
-      gap: 120px;
+      gap: 100px;
     }
 
     .showcase-block {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 50px;
+      gap: 60px;
       text-align: left;
     }
 
@@ -227,44 +319,55 @@
       flex-direction: row-reverse;
     }
 
-    .showcase-info {
-      flex: 1;
+    .showcase-info { flex: 1; }
+
+    .showcase-info .badge-inline {
+      font-size: 0.85rem;
+      color: var(--accent-color);
+      font-family: 'mcfontwide', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: block;
     }
 
     .showcase-info h2 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-      color: var(--accent-color);
+      font-size: 2.2rem;
+      font-family: 'mcfontb', sans-serif;
+      margin-bottom: 18px;
+      line-height: 1.25;
     }
 
     .showcase-info p {
       font-size: 1.1rem;
-      line-height: 1.7;
+      font-family: 'mcfont', sans-serif;
+      line-height: 1.75;
+      color: var(--text-muted);
     }
 
     .showcase-code {
-      flex: 1.2;
+      flex: 1.1;
       background-color: var(--code-bg);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 20px;
-      font-family: monospace;
+      border: 1px solid var(--card-border);
+      padding: 26px;
+      font-family: 'Consolas', 'Courier New', monospace;
       font-size: 0.95rem;
       text-align: left;
       overflow-x: auto;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.7);
       white-space: pre;
     }
 
     .showcase-image-wrapper {
-      flex: 1.2;
+      flex: 1.1;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: transform 0.3s ease;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+      border: 1px solid var(--card-border);
+      transition: border-color 0.3s ease;
     }
 
     .showcase-image-wrapper:hover {
-      transform: scale(1.02);
+      border-color: rgba(5, 238, 147, 0.4);
     }
 
     .showcase-image-wrapper img {
@@ -273,117 +376,223 @@
       display: block;
     }
 
-    /* Simple Syntax Highlight Simulation */
-    .sc-cmd { color: #e7007b; }
-    .sc-sel { color: #00ffcc; }
-    .sc-str { color: #f1c40f; }
-    .sc-num { color: #3498db; }
-    .sc-key { color: #9b59b6; }
+    /* Syntax Highlighting */
+    .sc-cmd { color: #e7007b; font-family: monospace !important; }
+    .sc-sel { color: #00ffcc; font-family: monospace !important; }
+    .sc-str { color: #f1c40f; font-family: monospace !important; }
+    .sc-num { color: #3498db; font-family: monospace !important; }
+    .sc-key { color: #a29bfe; font-family: monospace !important; }
+
+    /* --- Banner Section --- */
+    .cloud-banner {
+      max-width: 1200px;
+      margin: 80px auto;
+      padding: 0 5%;
+      box-sizing: border-box;
+    }
+
+    .cloud-banner-inner {
+      background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(5, 238, 147, 0.08));
+      border: 1px solid rgba(5, 238, 147, 0.3);
+      padding: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      text-align: left;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .cloud-banner h3 { 
+      font-size: 1.8rem; 
+      margin-bottom: 10px; 
+      font-family: 'mcfontb', sans-serif;
+    }
+
+    .cloud-banner p { 
+      margin: 0; 
+      color: var(--text-muted); 
+      font-size: 1.05rem; 
+      font-family: 'mcfont', sans-serif;
+    }
 
     /* --- Footer --- */
     footer {
       color: var(--text-muted);
-      background-color: rgba(10, 10, 10, 0.95);
-      padding: 60px 20px 30px 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.9rem;
+      background-color: rgba(8, 8, 8, 0.95);
+      padding: 70px 20px 40px 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.95rem;
+      font-family: 'mcfont', sans-serif;
     }
 
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 30px;
-      margin-bottom: 40px;
+    .footer-grid {
+      max-width: 1100px;
+      margin: 0 auto 50px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      text-align: left;
     }
 
-    .footer-links a {
-      color: var(--text-muted);
-      font-size: 1rem;
-    }
-
-    .footer-links a:hover {
+    .footer-col h4 {
+      font-size: 1.1rem;
+      margin-bottom: 18px;
       color: var(--accent-color);
+      font-family: 'mcfontb', sans-serif;
     }
 
-    /* Responsive adjustments */
+    .footer-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-col ul li {
+      margin-bottom: 12px;
+    }
+
+    .footer-col ul li a {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .footer-col ul li a:hover {
+      color: var(--text-main);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    /* Loading Overlay */
+    #startup-loading {
+      position: fixed;
+      inset: 0;
+      background: #0c0c0c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    #startup-loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #startup-loading img {
+      width: 96px;
+      height: 96px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* Responsiveness */
     @media (max-width: 900px) {
       .showcase-block, .showcase-block:nth-child(even) { flex-direction: column; text-align: center; }
       .showcase-code, .showcase-image-wrapper { width: 100%; box-sizing: border-box; }
-    }
-    @media (max-width: 768px) {
-      .quick-links { gap: 15px; }
-      #tagline { font-size: 2.5rem; }
-      .footer-links { gap: 15px; flex-direction: column; }
+      .cloud-banner-inner { flex-direction: column; text-align: center; }
     }
 
-#startup-loading {
-  position: fixed;
-  inset: 0;
-  background: #0c0c0c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-
-#startup-loading.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#startup-loading img {
-  width: 96px;
-  height: 96px;
-  user-select: none;
-  pointer-events: none;
-}
+    @media (max-width: 600px) {
+      #tagline { font-size: 2.1rem; }
+      .hero-buttons { flex-direction: column; width: 100%; }
+      .hero-buttons button, .hero-buttons .btn { width: 100%; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
   </style>
 </head>
 <body>
-<div id="startup-loading">
-  <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="Loading">
-</div>
 
-  <div class="hero-container">
-    <h2 id="tagline">Build Bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h2>
-    <p class="hero-subtext" style="font-family: mcfontwide !important">
-      The beginner-friendly alternative for Minecraft creators.
-    </p>
-    <div class="hero-buttons">
-      <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">Start Building</button>
-      <button onclick="window.location.href='https://mcbcode.com/dashboard'">Dashboard</button>
+  <!-- Main Hero Section with Background -->
+  <div class="hero-wrapper">
+    <main class="hero-container">
+      <div style="margin-top: 10%"></div>
+      <h1 id="tagline">Build Bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h1>
+      
+      <p class="hero-subtext">
+        The fast, lightweight web editor built specifically for Minecraft Bedrock creators. Craft manifests, write commands, and paint textures—all in browser.
+      </p>
+
+      <div class="hero-buttons">
+        <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">Get Started</button>
+        <button class="btn" onclick="window.location.href='https://mcbcode.com/dashboard'">Go to Dashboard</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Interactive Suite Launcher / Editors Matrix -->
+  <section>
+    <div class="section-header">
+      <h2>Editor Workspaces</h2>
+      <p>Select a dedicated tool to start creating immediately.</p>
     </div>
-  </div>
 
-  <div class="tools-grid">
-    <a href="https://mcbcode.com/editor/manifest" class="tool-card">
-      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/wrench.png" style="width: 64px; image-rendering: pixelated"></div>
-      <h3>Pack Setup</h3>
-      <p>Only a few clicks and your mod is ready for the game.</p>
-    </a>
-    
-    <a href="https://mcbcode.com/editor/mcfunction" class="tool-card">
-      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/slashdot.png" style="width: 64px; image-rendering: pixelated"></div>
-      <h3>Command Editor</h3>
-      <p>One of the first fully functional, up-to-date command editors for Bedrock edition.</p>
-    </a>
-    
-    <a href="https://mcbcode.com/account" class="tool-card">
-      <div class="tool-icon"><img src="https://mcbcode.com/img/icons/search.png" style="width: 64px; image-rendering: pixelated"></div>
-      <h3>Easy Cloud Saving</h3>
-      <p>Keeping your code safe is easy. Just click the button and done.</p>
-    </a>
-  </div>
+    <div class="editor-matrix">
+      <a href="https://mcbcode.com/editor/manifest" class="editor-card">
+        <div>
+          <div class="editor-card-header">
+            <img src="https://mcbcode.com/img/icons/wrench.png" alt="Manifest Tool">
+            <span class="editor-tag">manifest.json</span>
+          </div>
+          <h3>Pack Setup</h3>
+          <p>Generate valid UUIDs, pack manifests, and addon configurations in seconds.</p>
+        </div>
+      </a>
 
+      <a href="https://mcbcode.com/editor/mcfunction" class="editor-card">
+        <div>
+          <div class="editor-card-header">
+            <img src="https://mcbcode.com/img/icons/slashdot.png" alt="Command Editor">
+            <span class="editor-tag">.mcfunction</span>
+          </div>
+          <h3>Command Suite</h3>
+          <p>Write clean commands with high-visibility syntax highlight and error checking.</p>
+        </div>
+      </a>
+
+      <a href="https://mcbcode.com/editor/json" class="editor-card">
+        <div>
+          <div class="editor-card-header">
+            <img src="https://mcbcode.com/img/icons/search.png" alt="JSON Editor">
+            <span class="editor-tag">.json</span>
+          </div>
+          <h3>JSON Editor</h3>
+          <p>Easily edit entity structures, component groups, and item definitions.</p>
+        </div>
+      </a>
+
+      <a href="https://mcbcode.com/editor/javascript" class="editor-card">
+        <div>
+          <div class="editor-card-header">
+            <img src="https://mcbcode.com/img/icons/default-transparent-selected.png" alt="Scripting Suite">
+            <span class="editor-tag">.js / .ts</span>
+          </div>
+          <h3>Script API</h3>
+          <p>Develop modern GameTest & Bedrock Script API scripts directly online.</p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Core Showcase Sections -->
   <div class="showcase-container">
     
     <div class="showcase-block">
       <div class="showcase-info">
         <h2>A Friendlier Way to Mod</h2>
-        <p>Looking for an alternative to massive, complex modding tools like <a href="https://bridge-core.app" target="_blank">bridge.</a>? You shouldn't need a computer science degree to make a custom sword or a new mob.</p>
+        <p>Forget heavy desktop IDEs and overcomplicated setups like <a href="https://bridge-core.app" target="_blank">bridge.</a> You shouldn't need a computer science degree to create custom items, custom blocks, or new entity behaviors.</p>
       </div>
       <div class="showcase-image-wrapper">
         <img src="https://mcbcode.com/img/project-preview.png" alt="mcbCode Editor Preview">
@@ -393,7 +602,7 @@
     <div class="showcase-block">
       <div class="showcase-info">
         <h2>Skip the Boring Stuff</h2>
-        <p>Setting up your addon's basic files is usually a chore. Just state the name of your pack, and mcbC handles the rest.</p>
+        <p>Setting up your pack structure from scratch is tedious. Input your pack name, choose your targets, and mcbCode formats valid Minecraft Bedrock code immediately.</p>
       </div>
       <div class="showcase-code"><span>{</span>
   <span class="sc-key">"format_version"</span>: <span class="sc-num">2</span>,
@@ -408,8 +617,8 @@
 
     <div class="showcase-block">
       <div class="showcase-info">
-        <h2>Pixel Art Editor</h2>
-        <p>Textures, ever heard of them? No need to open up a separate drawing app. Design and export your pixel art directly within mcbC, perfectly sized and ready for the game.</p>
+        <h2>Pixel Art & Texture Editor</h2>
+        <p>Design pixel textures right in your browser. No third-party image editor needed—export 16x16 or 32x32 PNG assets directly into your active project workspace.</p>
       </div>
       <div class="showcase-image-wrapper">
         <img src="https://mcbcode.com/img/pixel-preview.png" alt="Pixel Art Tool Preview">
@@ -419,7 +628,7 @@
     <div class="showcase-block">
       <div class="showcase-info">
         <h2>Write Commands Faster</h2>
-        <p>No more back and forth importing and exporting. The script editor color-codes your commands and targets, so you can clearly see what's happening and catch typos immediately.</p>
+        <p>No more syntax guesswork or unseen typos. The command script editor color-codes target selectors, coordinates, and arguments for max clarity.</p>
       </div>
       <div class="showcase-code"><span class="sc-cmd">execute</span> as <span class="sc-sel">@a</span> at <span class="sc-sel">@s</span> run particle minecraft:basic_smoke_particle ~ ~1 ~
 <span class="sc-cmd">give</span> <span class="sc-sel">@s</span> diamond_sword <span class="sc-num">1</span> <span class="sc-num">0</span> {<span class="sc-str">"minecraft:item_lock"</span>: {<span class="sc-str">"mode"</span>: <span class="sc-str">"lock_in_slot"</span>}}
@@ -428,69 +637,67 @@
 
   </div>
 
-  <footer>
-    <div class="footer-links">
-      <a href="https://mcbcode.com/">Home</a>
-      <a href="https://mcbcode.com/dashboard">Dashboard</a>
-      <a href="https://mcbcode.com/about">About</a>
-      <a href="https://roadmap.mcbcode.com">Roadmap</a>
-      <a href="https://mcbcode.com/terms-of-use">Terms</a>
+  <!-- Cloud Sync / Call to Action Banner -->
+  <section class="cloud-banner">
+    <div class="cloud-banner-inner">
+      <div>
+        <h3>Ready to build your next addon?</h3>
+        <p>Save your projects safely in the cloud and work from anywhere.</p>
+      </div>
+      <div>
+        <button class="btn-primary" onclick="window.location.href='https://mcbcode.com/account'">Create Free Account</button>
+      </div>
     </div>
-    
-    Not affiliated with Microsoft or Mojang AB.<br><br>
-    <a href="https://admin.mcbcode.com" style="color: #bebebe; text-decoration: none; user-select: none;">©</a> Copyright 2026 mcb<g>Code</g>
+  </section>
+
+  <!-- Structured Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>mcbCode</h4>
+        <p style="font-size: 0.85rem; line-height: 1.5;">The web-first development workspace tailored specifically for Bedrock Edition creators.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Editors</h4>
+        <ul>
+          <li><a href="https://mcbcode.com/editor/mcfunction">Command Editor</a></li>
+          <li><a href="https://mcbcode.com/editor/manifest">Manifest Creator</a></li>
+          <li><a href="https://mcbcode.com/editor/json">JSON Editor</a></li>
+          <li><a href="https://mcbcode.com/editor/javascript">Scripting Studio</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="https://mcbcode.com/dashboard">Dashboard</a></li>
+          <li><a href="https://mcbcode.com/profile">Profile</a></li>
+          <li><a href="https://mcbcode.com/account">Settings</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://mcbcode.com/about">About</a></li>
+          <li><a href="https://roadmap.mcbcode.com">Roadmap</a></li>
+          <li><a href="https://mcbcode.com/terms-of-use">Terms of Use</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>
+        Not affiliated with Microsoft or Mojang AB.
+      </div>
+      <div>
+        <a href="https://admin.mcbcode.com" style="color: #bebebe; text-decoration: none; user-select: none;">©</a> Copyright 2026 mcb<g>Code</g><br><span style="color: #333333; text-align: right;">Created by: <a href="https://hello.mcbcode.com" style="color: #454545; font-family: mcfontb">idktoast</a></span>
+      </div>
+    </div>
   </footer>
 
   <textarea id="search-tabs" rows="1" placeholder="Search..." style="display:none;"></textarea>
   <div id="search-results" class="results-panel" style="display:none;"></div>
 
-  <script>
-    const dropdownBtn = document.getElementById('dd');
-    const dropdownMenu = document.querySelector('.dropdown');
 
-    dropdownBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdownBtn.classList.toggle('active');
-      dropdownMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
-        dropdownBtn.classList.remove('active');
-        dropdownMenu.classList.remove('active');
-      }
-    });
-  </script>
-
-<script>
-const loading = document.getElementById("startup-loading");
-
-// start auth check separately
-(async () => {
-  try {
-    const res = await fetch("https://auth.mcbcode.com/me", {
-      credentials: "include"
-    });
-
-    if (res.ok) {
-      const html = await fetch("/home.html").then(r => r.text());
-
-      document.open();
-      document.write(html);
-      document.close();
-    }
-  } catch {}
-})();
-
-// static loading screen duration
-setTimeout(() => {
-  loading.classList.add("fade-out");
-
-  setTimeout(() => {
-    loading.remove();
-  }, 500);
-}, 1000);
-</script>
   
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
