@@ -437,6 +437,27 @@
 
       <hr class="set-divider">
 
+      <div class="set-section-title">Obsidian Features</div>
+      <div id="obsidian-locked-msg" style="font-size:12px; color:#777; margin-bottom:10px;">these need an Obsidian subscription.</div>
+      <div id="obsidian-features" style="display:none;">
+        <div class="set-field">
+          <label>Custom Share Slug</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="set-slug" maxlength="30" placeholder="my-addon">
+            <button class="primary-btn" onclick="saveSlug()">Save</button>
+          </div>
+          <div class="inline-msg" id="slug-msg"></div>
+        </div>
+        <div class="set-field">
+          <label>GitHub Sync</label>
+          <div id="github-sync-status" style="font-size:12px; color:#888; margin-bottom:8px;">checking...</div>
+          <button class="primary-btn" id="github-link-btn" onclick="linkGithub()" style="display:none;">Link to GitHub</button>
+          <button class="sm-btn" id="github-sync-btn" onclick="syncGithub()" style="display:none;">Sync Now</button>
+        </div>
+      </div>
+
+      <hr class="set-divider">
+
       <div class="danger-title">Danger Zone</div>
       <div class="danger-sub">these actions can't be undone. be careful.</div>
 
@@ -500,7 +521,8 @@
     })();
 
     const AUTH = "https://auth.mcbcode.com";
-    const shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
+    let shareCode = location.pathname.split("/").filter(Boolean)[1] || "";
+    const urlBase = location.pathname.split("/").filter(Boolean)[0] || "project"; // "project" or "s"
 
     let project         = null;
     let allFiles        = [];
@@ -584,6 +606,14 @@
 
     // ---- INIT ----
     (async () => {
+      // /s/{slug} pretty share links resolve to the real project share_code first
+      if (urlBase === "s" && shareCode) {
+        try {
+          const r = await fetch(`${AUTH}/project/resolve-slug?slug=${encodeURIComponent(shareCode)}`);
+          if (r.ok) { const d = await r.json(); shareCode = d.share_code; }
+          else return showErr("that share link doesn't exist.");
+        } catch { return showErr("failed to resolve share link."); }
+      }
       if (!shareCode) return showErr("No project ID in URL.");
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
@@ -591,6 +621,7 @@
           const d = await r.json();
           document.getElementById("nav-user").textContent = d.email;
           window._myId = d.id;
+          window._isObsidian = d.is_obsidian || false;
           try {
             const sres = await fetch(`${AUTH}/settings`, { credentials: "include" });
             if (sres.ok) { const sd = await sres.json(); window._editorMode = sd.settings.editor_mode || "inline"; }
@@ -647,6 +678,7 @@
         currentTags = Array.isArray(project.tags) ? project.tags.slice(0, 10) : [];
         renderTags();
         loadCollaborators();
+        initObsidianFeatures();
       }
 
       const pngInput = document.getElementById("png-upload-input");
@@ -1215,6 +1247,76 @@ function renderFileList() {
     }
 
     document.getElementById("tag-input")?.addEventListener("keydown", e => { if (e.key === "Enter") addTag(); });
+
+    // ---- OBSIDIAN FEATURES (github sync + custom slug) ----
+    function initObsidianFeatures() {
+      const on = !!window._isObsidian;
+      document.getElementById("obsidian-features").style.display = on ? "" : "none";
+      document.getElementById("obsidian-locked-msg").style.display = on ? "none" : "";
+      if (!on) return;
+
+      if (project.custom_slug) document.getElementById("set-slug").value = project.custom_slug;
+
+      const statusEl = document.getElementById("github-sync-status");
+      if (project.github_repo_owner && project.github_repo_name) {
+        statusEl.textContent = `linked to github.com/${project.github_repo_owner}/${project.github_repo_name}`;
+        document.getElementById("github-link-btn").style.display = "none";
+        document.getElementById("github-sync-btn").style.display = "";
+      } else {
+        statusEl.textContent = "not linked yet.";
+        document.getElementById("github-link-btn").style.display = "";
+        document.getElementById("github-sync-btn").style.display = "none";
+      }
+    }
+
+    async function saveSlug() {
+      const slug = document.getElementById("set-slug").value.trim().toLowerCase();
+      const msg = document.getElementById("slug-msg");
+      try {
+        const res = await fetch(`${AUTH}/project/slug`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, slug })
+        });
+        const d = await res.json();
+        if (res.ok) { msg.textContent = "saved! new url: /s/" + slug; msg.className = "inline-msg ok"; project.custom_slug = slug; }
+        else { msg.textContent = d.error || "failed."; msg.className = "inline-msg err"; }
+      } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
+    }
+
+    async function linkGithub() {
+      const btn = document.getElementById("github-link-btn");
+      btn.disabled = true; btn.textContent = "Linking...";
+      try {
+        const res = await fetch(`${AUTH}/project/github/link`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          project.github_repo_owner = d.repo_owner; project.github_repo_name = d.repo_name;
+          initObsidianFeatures();
+        } else { alert(d.error || "failed to link github."); }
+      } catch { alert("something went wrong."); }
+      btn.disabled = false; btn.textContent = "Link to GitHub";
+    }
+
+    async function syncGithub() {
+      const btn = document.getElementById("github-sync-btn");
+      btn.disabled = true; btn.textContent = "Syncing...";
+      try {
+        const res = await fetch(`${AUTH}/project/github/sync?code=${encodeURIComponent(shareCode)}`, {
+          method: "POST", credentials: "include"
+        });
+        const d = await res.json();
+        if (res.ok) {
+          if (d.conflicts && d.conflicts.length) alert("synced, but these files conflicted and were skipped: " + d.conflicts.join(", "));
+          else alert("synced!");
+        } else { alert(d.error || "sync failed."); }
+      } catch { alert("something went wrong."); }
+      btn.disabled = false; btn.textContent = "Sync Now";
+    }
 
     // ---- DANGER ZONE ----
     function confirmDangerAction(action) {
