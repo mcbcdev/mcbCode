@@ -1298,8 +1298,14 @@ function renderFileList() {
         console.log("github link response", res.status, d);        if (res.ok) {
           project.github_repo_owner = d.repo_owner; project.github_repo_name = d.repo_name;
           initObsidianFeatures();
-        } else { alert(d.error || "failed to link github."); }
-      } catch { alert("something went wrong."); }
+} else {
+  if (d.error === "You haven't installed the mcbCode GitHub App yet.") {
+    window.location.href = "https://github.com/apps/mcbcode-sync/installations/new";
+    return;
+  }
+
+  alert(d.error || "failed to link github.");
+}      } catch { alert("something went wrong."); }
       btn.disabled = false; btn.textContent = "Link to GitHub";
     }
 
