@@ -1294,7 +1294,8 @@ function renderFileList() {
           body: JSON.stringify({ project_code: shareCode })
         });
         const d = await res.json();
-        if (res.ok) {
+
+        console.log("github link response", res.status, d);        if (res.ok) {
           project.github_repo_owner = d.repo_owner; project.github_repo_name = d.repo_name;
           initObsidianFeatures();
         } else { alert(d.error || "failed to link github."); }
