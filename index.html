@@ -80,109 +80,6 @@
     c { color: #e7007b; }
     g { color: #008e4c; }
 
-    /* --- Navigation Bar --- */
-    .navi {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 75px;
-      background-color: rgba(12, 12, 12, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-sizing: border-box;
-      padding: 0 5%;
-      z-index: 1000;
-    }
-
-    .navi-brand a {
-      display: flex;
-      align-items: center;
-    }
-
-    .navi-logo {
-      height: 35px;
-      margin-right: 12px;
-      filter: drop-shadow(0 0 5px rgba(5, 238, 147, 0.2));
-    }
-
-    .navi-brand h2 {
-      font-size: 24px;
-    }
-
-    .quick-links {
-      display: flex;
-      align-items: center;
-      gap: 30px;
-    }
-
-    /* --- Dropdown --- */
-    .dropdown-btn {
-      width: 18px;
-      height: 18px;
-      background-image: url('https://mcbcode.com/img/icons/dropdown.png');
-      background-size: cover;
-      transition: transform 0.3s ease, filter 0.3s ease;
-      cursor: pointer;
-    }
-
-    .dropdown-btn:hover, .dropdown-btn.active {
-      background-image: url('https://mcbcode.com/img/icons/dropdown-selected.png');
-      filter: drop-shadow(0 0 5px var(--accent-color));
-    }
-
-    .dropdown-btn.active {
-      transform: rotate(180deg);
-    }
-
-    .dropdown {
-      position: fixed;
-      width: 90%;
-      max-width: 600px;
-      background-color: rgba(20, 20, 20, 0.85);
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 999;
-      top: 85px;
-      left: 50% !important;
-      transform: translateX(-50%) translateY(-10px);
-      padding: 20px;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      opacity: 0;
-      visibility: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .dropdown-btn.active ~ .dropdown, .dropdown.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .dropdown-content {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px 30px;
-      width: 100%;
-    }
-
-    .dropdown-content a {
-      flex: 1 1 auto;
-      min-width: 100px;
-      padding: 10px;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    
-    .dropdown-content a:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-
     /* --- Buttons --- */
     button {
       background-color: rgba(255, 255, 255, 0.05);
@@ -449,27 +346,6 @@
 <div id="startup-loading">
   <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="Loading">
 </div>
-  <div class="navi">
-    <div class="navi-brand">
-      <a href="https://mcbcode.com">
-        <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="mcbCode Logo" class="navi-logo">
-        <h2><span style="color: #fff; font-family: mcfontb">mcb</span><span style="font-family: mcfontb; color: #05ee93; font-family: mcfontb;">Code</span></h2>
-      </a>
-    </div>
-    <div class="quick-links">
-      <a href="https://github.com/xyztoast/mcbCode">Source Code</a>
-      <a href="https://mcbcode.com/account">Account</a>
-      <div class="dropdown-btn" id="dd"></div>
-      <div class="dropdown">
-        <div class="dropdown-content">
-          <a href="https://mcbcode.com/terms-of-use">Terms</a>
-          <a href="https://roadmap.mcbcode.com">Roadmap</a>
-          <a href="https://mcbcode.com/about">About</a>
-          <a href="https://mcbcode.com/profile">Profiles</a>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div class="hero-container">
     <h2 id="tagline">Build Bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h2>
@@ -618,5 +494,6 @@ setTimeout(() => {
   
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
+  <script src="https://mcbcode.com/elements/navi.js"></script>
 </body>
 </html>
