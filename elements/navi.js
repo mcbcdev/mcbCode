@@ -1,3 +1,4 @@
+console.log("navi html loading");
 fetch("/elements/navi.html")
   .then(res => res.text())
   .then(html => {
