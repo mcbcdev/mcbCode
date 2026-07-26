@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="https://www.xml-sitemaps.com/css/sitemap.css"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+       <loc>https://mcbcode.com/</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>1.0000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/editor/manifest</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/editor/mcfunction</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/editor/json</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/editor/javascript</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/profile</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/about</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://mcbcode.com/terms-of-use</loc>
+       <lastmod>2026-07-26T23:52:43+00:00</lastmod>
+       <changefreq>daily</changefreq>
+       <priority>0.8000</priority>
+  </url>
+</urlset>
