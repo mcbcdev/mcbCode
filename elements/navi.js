@@ -1,4 +1,4 @@
-fetch("/components/navbar.html")
+fetch("/elements/navi.html")
   .then(res => res.text())
   .then(html => {
     document.body.insertAdjacentHTML("afterbegin", html);
