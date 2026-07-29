@@ -230,15 +230,82 @@
     .hljs-number { color: #c2f66d; }
     .hljs-attr, .hljs-variable, .hljs-title { color: #66d4ff; }
 
+    /* ---- share button/menu ---- */
+    .share-wrap { position: relative; }
+    .share-menu {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      background: #1a1c1f; border: 1px solid #343438; min-width: 190px; z-index: 210;
+    }
+    .share-menu.open { display: block; }
+    .share-menu-item {
+      display: flex; align-items: center; gap: 8px; padding: 9px 12px; font-size: 12px;
+      color: #ccc; cursor: pointer; transition: background 0.12s, color 0.12s; white-space: nowrap;
+    }
+    .share-menu-item:hover { background: #222326; color: #05ee93; }
+
+    .share-popup .modal { min-width: 320px; }
+    .share-popup-link-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .share-popup-link-row input {
+      flex: 1; background: #111214; border: 1px solid #343438; color: #aaa;
+      font-family: 'Fira Code', monospace; font-size: 12px; padding: 7px 9px; outline: none;
+    }
+    .share-popup-options { display: flex; flex-direction: column; gap: 6px; }
+
+    /* ---- resizable file explorer handle (desktop) ---- */
+    .resize-handle {
+      width: 5px; flex-shrink: 0; cursor: col-resize; background: transparent;
+      position: relative; z-index: 20;
+    }
+    .resize-handle:hover, .resize-handle.dragging { background: #05ee93; }
+
+    /* ---- mobile file explorer drawer ---- */
+    .mobile-explorer-trigger { display: none; }
+    .drawer-scrim {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 149;
+    }
+    .drawer-scrim.open { display: block; }
+
+    /* ---- first-time tutorial ---- */
+    .tut-overlay {
+      display: none; position: fixed; inset: 0; z-index: 900; pointer-events: none;
+    }
+    .tut-overlay.open { display: block; }
+    .tut-dim {
+      position: absolute; background: rgba(8,9,10,0.72); backdrop-filter: blur(2px);
+      transition: all 0.25s ease; pointer-events: auto;
+    }
+    .tut-hole {
+      position: absolute; border: 2px solid #05ee93; box-shadow: 0 0 0 4px rgba(5,238,147,0.15);
+      transition: all 0.25s ease; pointer-events: none; z-index: 901;
+    }
+    .tut-card {
+      position: absolute; background: #1a1c1f; border: 1px solid #05ee93; padding: 16px 18px;
+      max-width: 280px; z-index: 902; pointer-events: auto; transition: all 0.25s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .tut-card-step { font-size: 10px; color: #05ee93; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-family: 'mcfontb', sans-serif; }
+    .tut-card-text { font-size: 13px; color: #eee; line-height: 1.5; margin-bottom: 12px; }
+    .tut-card-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
     /* ---- portrait / mobile layout ---- */
     @media (max-width: 720px), (orientation: portrait) {
       .panels { flex-direction: column; }
+      .resize-handle { display: none; }
+
+      /* meta-panel becomes a slide-out drawer instead of a horizontal strip */
       .meta-panel {
-        width: 100%; min-width: 0; height: auto; max-height: 96px;
-        flex-direction: row; overflow-x: auto; overflow-y: hidden;
-        border-right: none; border-bottom: 1px solid #2a2a2e;
+        position: fixed; top: 0; bottom: 0; left: 0; width: 82vw; max-width: 320px;
+        height: auto; max-height: none; z-index: 150;
+        transform: translateX(-100%); transition: transform 0.22s ease;
+        border-right: 1px solid #2a2a2e; border-bottom: none;
+        flex-direction: column; overflow-x: hidden; overflow-y: auto;
+        padding-top: 48px;
       }
-      .meta-section { border-bottom: none; border-right: 1px solid #1e1e22; flex-shrink: 0; white-space: nowrap; }
+      .meta-panel.drawer-open { transform: translateX(0); }
+      .meta-section { border-bottom: 1px solid #1e1e22; border-right: none; flex-shrink: 0; white-space: normal; }
+      .mobile-explorer-trigger {
+        display: inline-flex; align-items: center; gap: 6px;
+      }
       .stat-row { gap: 12px; }
       .proj-title { font-size: 15px; }
       .proj-header-actions { margin-left: 0; }
@@ -247,11 +314,14 @@
       .path-toolbar { justify-content: flex-start; }
       .file-updated { display: none; }
       .modal, .confirm-modal, .warn-modal { min-width: 0; width: 90vw; max-width: 360px; padding: 18px; }
+      .share-menu { right: auto; left: 0; }
 
       .inline-editor { width: 100vw; height: 100vh; border: none; }
       .ie-toolbar { padding: 8px; }
       .ie-toolbar-actions { gap: 4px; }
       .ie-highlight, .ie-textarea { font-size: 12px; padding: 10px 12px; }
+
+      .tut-card { max-width: 240px; padding: 14px; }
     }
   </style>
 </head>
@@ -322,6 +392,42 @@
     </div>
   </div>
 
+  <div class="overlay share-popup" id="share-popup-overlay">
+    <div class="modal">
+      <h3>Share this project</h3>
+      <div class="share-popup-link-row">
+        <input type="text" id="share-popup-link" readonly>
+        <button class="primary-btn" onclick="copyProjectLink()">Copy</button>
+      </div>
+      <div class="share-popup-options">
+        <div class="share-menu-item" onclick="window.open('https://reddit.com/submit?url=' + encodeURIComponent(document.getElementById('share-popup-link').value), '_blank')">post to reddit</div>
+        <div class="share-menu-item" onclick="window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(document.getElementById('share-popup-link').value), '_blank')">post to x</div>
+        <div class="share-menu-item" onclick="window.open('https://discord.com/channels/@me', '_blank')">share on discord</div>
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('share-popup-overlay')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tut-overlay" id="tut-overlay">
+    <div class="tut-dim" id="tut-dim-top"></div>
+    <div class="tut-dim" id="tut-dim-bottom"></div>
+    <div class="tut-dim" id="tut-dim-left"></div>
+    <div class="tut-dim" id="tut-dim-right"></div>
+    <div class="tut-hole" id="tut-hole"></div>
+    <div class="tut-card" id="tut-card">
+      <div class="tut-card-step" id="tut-card-step">Step 1/6</div>
+      <div class="tut-card-text" id="tut-card-text"></div>
+      <div class="tut-card-actions">
+        <button class="cancel-btn" onclick="skipTutorial()">End</button>
+        <button class="primary-btn" id="tut-next-btn" onclick="tutorialAdvance()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-scrim" id="drawer-scrim" onclick="closeMobileDrawer()"></div>
+
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
     <div class="breadcrumb">
@@ -381,8 +487,11 @@
         </div>
       </div>
 
+      <div class="resize-handle" id="meta-resize-handle"></div>
+
       <div class="file-panel">
         <div class="path-bar">
+          <button class="sm-btn mobile-explorer-trigger" onclick="openMobileDrawer()">files</button>
           <span class="path-crumb" onclick="navToRoot()">root</span>
           <span id="path-segments"></span>
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
@@ -454,6 +563,13 @@
           <button class="primary-btn" id="github-link-btn" onclick="linkGithub()" style="display:none;">Link to GitHub</button>
           <button class="sm-btn" id="github-sync-btn" onclick="syncGithub()" style="display:none;">Sync Now</button>
         </div>
+      </div>
+
+      <hr class="set-divider">
+
+      <div class="set-section-title">Tutorial</div>
+      <div class="save-row" style="margin-bottom:0;">
+        <button class="sm-btn" onclick="restartTutorial()">Restart Tutorial</button>
       </div>
 
       <hr class="set-divider">
@@ -776,7 +892,40 @@ function renderToolbar() {
     bexport.title = "log in to export this project";
   }
   toolbar.appendChild(bexport);
+
+  // share button + dropdown, right of Export
+  const shareWrap = document.createElement("div");
+  shareWrap.className = "share-wrap";
+  const bshare = document.createElement("button");
+  bshare.className = "sm-btn";
+  bshare.textContent = "Share";
+  bshare.onclick = e => { e.stopPropagation(); toggleShareMenu(); };
+  const shareMenu = document.createElement("div");
+  shareMenu.className = "share-menu";
+  shareMenu.id = "share-menu";
+  shareMenu.innerHTML = `
+    <div class="share-menu-item" onclick="openSharePopup()">share link...</div>
+    <div class="share-menu-item" onclick="copyProjectLink(); closeShareMenu();">copy link</div>
+  `;
+  shareWrap.appendChild(bshare);
+  shareWrap.appendChild(shareMenu);
+  toolbar.appendChild(shareWrap);
 }
+
+function toggleShareMenu() {
+  document.getElementById("share-menu").classList.toggle("open");
+}
+function closeShareMenu() {
+  document.getElementById("share-menu")?.classList.remove("open");
+}
+document.addEventListener("click", e => { if (!e.target.closest(".share-wrap")) closeShareMenu(); });
+
+function openSharePopup() {
+  closeShareMenu();
+  document.getElementById("share-popup-link").value = `https://mcbcode.com/project/${project.share_code}/`;
+  document.getElementById("share-popup-overlay").classList.add("open");
+}
+document.getElementById("share-popup-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("share-popup-overlay"); });
 
     function toggleImagePreview(file, row) {
       const existing = document.querySelector(".image-preview-row");
@@ -1381,6 +1530,41 @@ function renderFileList() {
     document.getElementById("export-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("export-warn-overlay"); });
     document.getElementById("danger-confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("danger-confirm-overlay"); });
 
+    // ---- RESIZABLE FILE EXPLORER (meta panel width, desktop) ----
+    (function initResize() {
+      const handle = document.getElementById("meta-resize-handle");
+      const panel = document.querySelector(".meta-panel");
+      let dragging = false;
+      const saved = localStorage.getItem("metaPanelWidth");
+      if (saved) panel.style.width = saved + "px";
+      handle.addEventListener("mousedown", e => {
+        dragging = true;
+        handle.classList.add("dragging");
+        e.preventDefault();
+      });
+      window.addEventListener("mousemove", e => {
+        if (!dragging) return;
+        const w = Math.min(460, Math.max(180, e.clientX));
+        panel.style.width = w + "px";
+      });
+      window.addEventListener("mouseup", () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove("dragging");
+        localStorage.setItem("metaPanelWidth", parseInt(panel.style.width, 10));
+      });
+    })();
+
+    // ---- MOBILE FILE EXPLORER DRAWER ----
+    function openMobileDrawer() {
+      document.querySelector(".meta-panel").classList.add("drawer-open");
+      document.getElementById("drawer-scrim").classList.add("open");
+    }
+    function closeMobileDrawer() {
+      document.querySelector(".meta-panel").classList.remove("drawer-open");
+      document.getElementById("drawer-scrim").classList.remove("open");
+    }
+
     async function doLogout() {
       await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
       window.location.href = "/account";
@@ -1582,6 +1766,139 @@ function renderFileList() {
       hl.scrollLeft = ta.scrollLeft;
     });
     document.getElementById("inline-editor-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeInlineEditor(); });
+
+    // ---- FIRST-TIME TUTORIAL ----
+    let tutorialActive = false;
+    let tutorialStep = 0;
+    let tutorialWaitTimer = null;
+
+    const TUT_STEPS = [
+      null,
+      { text: "This is your project's file tree. Create a file or folder to continue.", target: () => document.querySelector(".file-panel") },
+      { text: "Click files here to open them.", target: () => document.querySelector(".file-row") },
+      { text: "This is where you'll write your file.", target: () => document.querySelector(".inline-editor") },
+      { text: "Save stores your changes to your project.", target: () => document.querySelector(".ie-toolbar-actions .export-highlight") },
+      { text: "When you're ready to test, export your add-on here. (This won't export during the tutorial).", target: () => document.getElementById("export-btn") },
+      { text: "Project Settings lets you manage collaborators, tags, and danger-zone actions.", target: () => document.getElementById("tab-settings-btn") },
+    ];
+
+    function shouldShowTutorial() {
+      return isOwner && localStorage.getItem("tutorialComplete") !== "true";
+    }
+
+    function startTutorial() {
+      tutorialActive = true;
+      tutorialStep = 1;
+      document.getElementById("tut-overlay").classList.add("open");
+      renderTutorialStep();
+    }
+
+    function restartTutorial() {
+      localStorage.removeItem("tutorialComplete");
+      switchTab("files", document.getElementById("tab-files-btn"));
+      startTutorial();
+    }
+
+    function skipTutorial() { completeTutorial(); }
+
+    function completeTutorial() {
+      tutorialActive = false;
+      clearTimeout(tutorialWaitTimer);
+      localStorage.setItem("tutorialComplete", "true");
+      document.getElementById("tut-overlay").classList.remove("open");
+    }
+
+    function tutorialAdvance() {
+      if (tutorialStep >= TUT_STEPS.length - 1) { completeTutorial(); return; }
+      tutorialStep++;
+      renderTutorialStep();
+    }
+
+    function renderTutorialStep() {
+      const step = TUT_STEPS[tutorialStep];
+      if (!step) return;
+      document.getElementById("tut-card-step").textContent = `Step ${tutorialStep}/6`;
+      document.getElementById("tut-card-text").textContent = step.text;
+      const nextBtn = document.getElementById("tut-next-btn");
+      nextBtn.style.display = "";
+      nextBtn.textContent = tutorialStep === 6 ? "Finish" : "Next";
+      positionTutorialSpotlight();
+    }
+
+    function positionTutorialSpotlight() {
+      const step = TUT_STEPS[tutorialStep];
+      const el = step && step.target();
+      if (!el) { setTimeout(() => { if (tutorialActive) positionTutorialSpotlight(); }, 150); return; }
+      const r = el.getBoundingClientRect();
+      const pad = 6;
+      const x = Math.max(0, r.left - pad), y = Math.max(0, r.top - pad);
+      const w = r.width + pad * 2, h = r.height + pad * 2;
+
+      document.getElementById("tut-dim-top").style.cssText    = `left:0; top:0; right:0; height:${y}px;`;
+      document.getElementById("tut-dim-bottom").style.cssText = `left:0; top:${y + h}px; right:0; bottom:0;`;
+      document.getElementById("tut-dim-left").style.cssText   = `left:0; top:${y}px; width:${x}px; height:${h}px;`;
+      document.getElementById("tut-dim-right").style.cssText  = `left:${x + w}px; top:${y}px; right:0; height:${h}px;`;
+      document.getElementById("tut-hole").style.cssText = `left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
+
+      const card = document.getElementById("tut-card");
+      let cardTop = y + h + 12;
+      let cardLeft = Math.min(Math.max(x, 8), window.innerWidth - 296);
+      if (cardTop + 160 > window.innerHeight) cardTop = Math.max(8, y - 160);
+      card.style.left = cardLeft + "px";
+      card.style.top = cardTop + "px";
+    }
+
+    window.addEventListener("resize", () => { if (tutorialActive) positionTutorialSpotlight(); });
+
+    // hook: creating a file/folder completes step 1
+    const _origSubmitNewFile = submitNewFile;
+    submitNewFile = async function() {
+      const before = allFiles.length;
+      await _origSubmitNewFile();
+      if (tutorialActive && tutorialStep === 1 && allFiles.length > before) { tutorialStep = 2; renderTutorialStep(); }
+    };
+
+    // hook: opening a file completes step 2
+    const _origOpenInlineEditor = openInlineEditor;
+    openInlineEditor = async function(fileRef) {
+      await _origOpenInlineEditor(fileRef);
+      if (tutorialActive && tutorialStep === 2) { tutorialStep = 3; renderTutorialStep(); }
+    };
+
+    // hook: typing in the editor + a 3s pause completes step 3
+    document.getElementById("ie-textarea")?.addEventListener("input", () => {
+      if (!tutorialActive || tutorialStep !== 3) return;
+      const ta = document.getElementById("ie-textarea");
+      clearTimeout(tutorialWaitTimer);
+      if (ta.value.trim().length > 0) {
+        tutorialWaitTimer = setTimeout(() => {
+          if (tutorialActive && tutorialStep === 3) { tutorialStep = 4; renderTutorialStep(); }
+        }, 3000);
+      }
+    });
+
+    // hook: saving completes step 4
+    const _origSaveInlineFile = saveInlineFile;
+    saveInlineFile = async function() {
+      await _origSaveInlineFile();
+      if (tutorialActive && tutorialStep === 4 && document.getElementById("ie-status").textContent === "saved!") {
+        tutorialStep = 5; renderTutorialStep();
+      }
+    };
+
+    // hook: clicking export completes step 5 — the real export is skipped during the tutorial
+    const _origStartExport = startExport;
+    startExport = async function() {
+      if (tutorialActive && tutorialStep === 5) { tutorialStep = 6; renderTutorialStep(); return; }
+      return _origStartExport();
+    };
+
+    // kick off once the project has actually rendered
+    const _origRender = render;
+    render = function() {
+      _origRender();
+      if (shouldShowTutorial()) startTutorial();
+    };
   </script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
