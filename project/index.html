@@ -662,6 +662,48 @@
       const d = new Date(s.endsWith("Z") ? s : s + "Z");
       return d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
     }
+    // full local date + time, used as a hover tooltip / exact-time fallback
+    function fmtDateTime(s) {
+      if (!s) return "—";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      return d.toLocaleString(undefined, { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+    }
+    // relative "x minutes/hours/days/weeks/months/years ago" — this is what
+    // gets shown in the UI; fmtDateTime is kept as the title="" tooltip
+    function timeAgo(s) {
+      if (!s) return "—";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      const secs = Math.round((Date.now() - d.getTime()) / 1000);
+      if (secs < 5) return "just now";
+      const units = [
+        ["year",   31536000],
+        ["month",  2592000],
+        ["week",   604800],
+        ["day",    86400],
+        ["hour",   3600],
+        ["minute", 60],
+      ];
+      for (const [label, secsPer] of units) {
+        const n = Math.floor(secs / secsPer);
+        if (n >= 1) return `${n} ${label}${n > 1 ? "s" : ""} ago`;
+      }
+      return `${secs} second${secs === 1 ? "" : "s"} ago`;
+    }
+    // newest updated_at among all files nested under a given folder id
+    // (recursive; used so folders show the most recent activity inside them)
+    function newestUpdateInFolder(folderId) {
+      let newest = null;
+      const stack = [folderId];
+      while (stack.length) {
+        const pid = stack.pop();
+        for (const f of allFiles) {
+          if (String(f.parent_id) !== String(pid)) continue;
+          if (f.type === "folder") { stack.push(f.id); continue; }
+          if (f.updated_at && (!newest || f.updated_at > newest)) newest = f.updated_at;
+        }
+      }
+      return newest;
+    }
     function editorUrl(file) {
       const n = file.name.toLowerCase();
     
@@ -781,7 +823,8 @@
       badge.classList.toggle("public", isPublic);
       document.getElementById("m-desc").textContent    = project.description || "No description.";
       renderContributors();
-      document.getElementById("m-updated").textContent = fmtDate(project.updated_at);
+      document.getElementById("m-updated").textContent = timeAgo(project.updated_at);
+      document.getElementById("m-updated").title = fmtDateTime(project.updated_at);
       document.getElementById("m-code").textContent    = project.share_code;
       updateStats();
 
@@ -993,11 +1036,12 @@ function renderFileList() {
     const icon = f.type === "folder" ? "+" : ">";
     const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
+    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
     row.innerHTML = `
       <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
       <span class="${nameClass}">${esc(f.name)}</span>
       ${pngBadge}
-      <span class="file-updated">${fmtDate(f.updated_at)}</span>
+      <span class="file-updated" title="${esc(fmtDateTime(rowTime))}">${rowTime ? esc(timeAgo(rowTime)) : "—"}</span>
       ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
       ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
     `;
