@@ -452,6 +452,7 @@
         </div>
       </div>
       <div class="proj-tabs">
+        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()">Info</div>
         <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)">Files</div>
         <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display:none;">Settings</div>
       </div>
@@ -491,7 +492,6 @@
 
       <div class="file-panel">
         <div class="path-bar">
-          <button class="sm-btn mobile-explorer-trigger" onclick="openMobileDrawer()">files</button>
           <span class="path-crumb" onclick="navToRoot()">root</span>
           <span id="path-segments"></span>
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
@@ -615,7 +615,7 @@
           <button class="sm-btn" onclick="ieRedo()">Redo</button>
           <button class="sm-btn" onclick="ieToggleWrap()">Wrap</button>
           <button class="sm-btn export-highlight" onclick="saveInlineFile()">Save</button>
-          <button class="sm-btn" onclick="closeInlineEditor()">Close</button>
+          <button class="sm-btn" id="ie-close-btn" onclick="closeInlineEditor()">Close</button>
         </div>
       </div>
       <div class="ie-body">
@@ -989,6 +989,7 @@ function renderFileList() {
   children.forEach(f => {
     const row = document.createElement("div");
     row.className = "file-row";
+    row.dataset.fileId = f.id;
     const icon = f.type === "folder" ? "+" : ">";
     const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
@@ -1771,16 +1772,31 @@ function renderFileList() {
     let tutorialActive = false;
     let tutorialStep = 0;
     let tutorialWaitTimer = null;
+    let tutorialCreatedId = null;
 
     const TUT_STEPS = [
       null,
-      { text: "This is your project's file tree. Create a file or folder to continue.", target: () => document.querySelector(".file-panel") },
-      { text: "Click files here to open them.", target: () => document.querySelector(".file-row") },
+      { text: "This is your project's file tree. Create a file or folder to continue.",
+        target: () => unionRect(document.querySelector(".proj-header-actions"), document.querySelector(".file-panel")) },
+      { text: "Click files here to open them.",
+        target: () => document.querySelector(`.file-row[data-file-id="${tutorialCreatedId}"]`) || document.querySelector(".file-row") },
       { text: "This is where you'll write your file.", target: () => document.querySelector(".inline-editor") },
       { text: "Save stores your changes to your project.", target: () => document.querySelector(".ie-toolbar-actions .export-highlight") },
-      { text: "When you're ready to test, export your add-on here. (This won't export during the tutorial).", target: () => document.getElementById("export-btn") },
+      { text: "Close the editor when you're done with it.", target: () => document.getElementById("ie-close-btn") },
       { text: "Project Settings lets you manage collaborators, tags, and danger-zone actions.", target: () => document.getElementById("tab-settings-btn") },
     ];
+
+    // combines two elements' bounding boxes into one rect, so a highlight
+    // can span, e.g., the toolbar buttons AND the file list beneath them
+    function unionRect(elA, elB) {
+      if (!elA && !elB) return null;
+      if (!elA) return elB.getBoundingClientRect();
+      if (!elB) return elA.getBoundingClientRect();
+      const a = elA.getBoundingClientRect(), b = elB.getBoundingClientRect();
+      const left = Math.min(a.left, b.left), top = Math.min(a.top, b.top);
+      const right = Math.max(a.right, b.right), bottom = Math.max(a.bottom, b.bottom);
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }
 
     function shouldShowTutorial() {
       return isOwner && localStorage.getItem("tutorialComplete") !== "true";
@@ -1789,6 +1805,7 @@ function renderFileList() {
     function startTutorial() {
       tutorialActive = true;
       tutorialStep = 1;
+      tutorialCreatedId = null;
       document.getElementById("tut-overlay").classList.add("open");
       renderTutorialStep();
     }
@@ -1827,9 +1844,8 @@ function renderFileList() {
 
     function positionTutorialSpotlight() {
       const step = TUT_STEPS[tutorialStep];
-      const el = step && step.target();
-      if (!el) { setTimeout(() => { if (tutorialActive) positionTutorialSpotlight(); }, 150); return; }
-      const r = el.getBoundingClientRect();
+      const r = step && step.target();
+      if (!r) { setTimeout(() => { if (tutorialActive) positionTutorialSpotlight(); }, 150); return; }
       const pad = 6;
       const x = Math.max(0, r.left - pad), y = Math.max(0, r.top - pad);
       const w = r.width + pad * 2, h = r.height + pad * 2;
@@ -1850,12 +1866,16 @@ function renderFileList() {
 
     window.addEventListener("resize", () => { if (tutorialActive) positionTutorialSpotlight(); });
 
-    // hook: creating a file/folder completes step 1
+    // hook: creating a file/folder completes step 1, remembers which one was made
     const _origSubmitNewFile = submitNewFile;
     submitNewFile = async function() {
       const before = allFiles.length;
       await _origSubmitNewFile();
-      if (tutorialActive && tutorialStep === 1 && allFiles.length > before) { tutorialStep = 2; renderTutorialStep(); }
+      if (tutorialActive && tutorialStep === 1 && allFiles.length > before) {
+        tutorialCreatedId = allFiles[allFiles.length - 1].id;
+        tutorialStep = 2;
+        renderTutorialStep();
+      }
     };
 
     // hook: opening a file completes step 2
@@ -1886,11 +1906,15 @@ function renderFileList() {
       }
     };
 
-    // hook: clicking export completes step 5 — the real export is skipped during the tutorial
-    const _origStartExport = startExport;
-    startExport = async function() {
-      if (tutorialActive && tutorialStep === 5) { tutorialStep = 6; renderTutorialStep(); return; }
-      return _origStartExport();
+    // hook: closing the editor completes step 5
+    const _origCloseInlineEditor = closeInlineEditor;
+    closeInlineEditor = function() {
+      const wasOpen = document.getElementById("inline-editor-overlay").classList.contains("open");
+      _origCloseInlineEditor();
+      const isNowClosed = !document.getElementById("inline-editor-overlay").classList.contains("open");
+      if (tutorialActive && tutorialStep === 5 && wasOpen && isNowClosed) {
+        tutorialStep = 6; renderTutorialStep();
+      }
     };
 
     // kick off once the project has actually rendered
