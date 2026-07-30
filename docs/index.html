@@ -59,23 +59,63 @@
     /* --- Layout: sidebar + content --- */
     .docs-layout {
       display: flex;
-      align-items: flex-start;
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 40px 5%;
-      gap: 40px;
+      align-items: stretch;
+      min-height: 100vh;
     }
 
-    /* --- Sidebar --- */
+    /* --- Sidebar: full-height side panel on desktop --- */
     #docs-sidebar {
-      width: 260px;
+      width: 280px;
       flex-shrink: 0;
       position: sticky;
-      top: 40px;
-      background: var(--card-bg);
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: rgba(14, 14, 14, 0.9);
+      border-right: 1px solid var(--card-border);
+      padding: 30px 20px;
+    }
+
+    #docs-content-outer {
+      flex: 1;
+      min-width: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 5%;
+    }
+
+    /* --- Mobile hamburger toggle --- */
+    #sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 100;
+      width: 44px;
+      height: 44px;
+      background: rgba(18, 18, 18, 0.85);
       border: 1px solid var(--card-border);
-      padding: 20px;
-      backdrop-filter: blur(12px);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      backdrop-filter: blur(8px);
+    }
+
+    #sidebar-toggle span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--text-main);
+    }
+
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 90;
     }
 
     .sidebar-section {
@@ -208,37 +248,108 @@
       color: var(--accent-color);
     }
 
+    /* --- Footer --- */
+    .docs-footer {
+      border-top: 1px solid var(--card-border);
+      padding: 24px 5% 30px 5%;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .docs-footer a {
+      color: #bebebe;
+      text-decoration: none;
+    }
+
+    .docs-footer .creator {
+      color: #454545;
+      font-family: 'mcfontb', sans-serif;
+    }
+
     @media (max-width: 900px) {
-      .docs-layout {
-        flex-direction: column;
+      #sidebar-toggle {
+        display: flex;
       }
+
       #docs-sidebar {
-        width: 100%;
-        position: static;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 95;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+      }
+
+      #docs-sidebar.open {
+        transform: translateX(0);
+      }
+
+      #docs-content-outer {
+        max-width: 100%;
+        padding: 40px 6%;
       }
     }
   </style>
 </head>
 <body>
 
+  <button id="sidebar-toggle" aria-label="Toggle navigation">
+    <span></span><span></span><span></span>
+  </button>
+  <div id="sidebar-overlay"></div>
+
   <div class="docs-layout">
     <aside id="docs-sidebar">
       <!-- filled in automatically by /docs/elements/sidebar.js -->
     </aside>
 
-    <div id="docs-content-wrapper">
-      <div class="docs-toolbar">
-        <button id="btn-copy">Copy Markdown</button>
-        <button id="btn-download">Download Markdown</button>
-        <button id="btn-view">View as Markdown</button>
+    <div id="docs-content-outer">
+      <div id="docs-content-wrapper">
+        <div class="docs-toolbar">
+          <button id="btn-copy">Copy Markdown</button>
+          <button id="btn-download">Download Markdown</button>
+          <button id="btn-view">View as Markdown</button>
+        </div>
+
+        <div id="docs-content">Loading...</div>
       </div>
 
-      <div id="docs-content">Loading...</div>
+      <div class="docs-footer">
+        <a href="https://admin.mcbcode.com">©</a> Copyright 2026 mcbCode<br>
+        <span class="creator">Created by: <a href="https://hello.mcbcode.com" class="creator">idktoast</a></span>
+      </div>
     </div>
   </div>
 
   <script>
-    const mdFile = "https://mcbcode.com/docs/md/getting-started.md";
+    // mobile sidebar toggle
+    const sidebarEl = document.getElementById("docs-sidebar");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    const overlayEl = document.getElementById("sidebar-overlay");
+
+    function openSidebar() {
+      sidebarEl.classList.add("open");
+      overlayEl.style.display = "block";
+    }
+
+    function closeSidebar() {
+      sidebarEl.classList.remove("open");
+      overlayEl.style.display = "none";
+    }
+
+    toggleBtn.onclick = () => {
+      sidebarEl.classList.contains("open") ? closeSidebar() : openSidebar();
+    };
+
+    overlayEl.onclick = closeSidebar;
+  </script>
+
+  <script>
+    // ---- THE ONLY LINE YOU CHANGE WHEN COPYING THIS TEMPLATE ----
+    const mdFile = "/docs/md/example-page.md";
+    // ---------------------------------------------------------------
 
     let rawMarkdown = "";
 
@@ -283,7 +394,7 @@
     });
   </script>
 
-  <script src="https://mcbcode.com/docs/elements/sidebar.js"></script>
-  <script src="https://mcbcode.com/docs/elements/navi.js"></script>
+  <script src="/docs/elements/sidebar.js"></script>
+  <script src="/docs/elements/navi.js"></script>
 </body>
 </html>
