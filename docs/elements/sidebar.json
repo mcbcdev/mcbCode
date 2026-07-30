@@ -1,0 +1,20 @@
+{
+  "sections": [
+    {
+      "title": "Getting Started",
+      "links": [
+        { "name": "Introduction", "href": "/docs/introduction" },
+        { "name": "Installation", "href": "/docs/installation" }
+      ]
+    },
+    {
+      "title": "Editors",
+      "links": [
+        { "name": "Command Editor", "href": "/docs/command-editor" },
+        { "name": "Manifest Creator", "href": "/docs/manifest-creator" },
+        { "name": "JSON Editor", "href": "/docs/json-editor" },
+        { "name": "Script API", "href": "/docs/script-api" }
+      ]
+    }
+  ]
+}
