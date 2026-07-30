@@ -1,600 +1,289 @@
 <!doctype html>
 <html lang="en">
 <head>
-
-<meta name="google-adsense-account" content="ca-pub-2825557346768110">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://mcbcode.com/docs/index.html">
-<meta property="og:title" content="mcbCode Documentation | Bedrock mcfunction editor guides">
-<meta property="og:description" content="Learn how to write, format, and organize Minecraft Bedrock Edition .mcfunction files with mcbCode. Guides, shortcuts, and syntax references for addon creators.">
-<meta property="og:image" content="https://mcbcode.com/theme/favicon.png">
-<meta property="og:site_name" content="mcbCode Documentation">
-<meta name="keywords" content="minecraft bedrock mcfunction documentation help guides tutorials code editor">
-<meta name="description" content="Learn how to write, format, and organize Minecraft Bedrock Edition .mcfunction files with mcbCode. Guides, shortcuts, and syntax references for addon creators.">
-<meta name="robots" content="index, follow">
-
-<link rel="stylesheet" href="https://mcbcode.com/tools/search.css">
-<script src="https://mcbcode.com/tools/search.js" defer></script>
-
-  <link rel="icon" href="https://mcbcode.com/theme/docs_favicon.png">
-  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>mcbCode | Docs</title>
+  <title>mcbCode Docs | Introduction</title>
+
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+
+  <!-- markdown parser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js" defer></script>
+
   <style>
-    html,body{
-      min-height:100%;
-      margin:0;
-      font-family:'mcfont', sans-serif;
-      background:#0c0c0c;
-      font-weight: 0;
-      color: #bebebe;
+    :root {
+      --accent-color: #05ee93;
+      --accent-dark: #00a459;
+      --accent-glow: rgba(5, 238, 147, 0.25);
+      --bg-color: #0c0c0c;
+      --card-bg: rgba(18, 18, 18, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-muted: #bebebe;
+      --code-bg: #111111;
+    }
+
+    *, *::before, *::after {
+      font-weight: normal !important;
+      border-radius: 0px !important;
       box-sizing: border-box;
     }
 
-    h1{
-      font-family: "mcfontb", sans-serif;
-      font-size: 32px;
-      margin: 0 0 10px 0;
-      color: #ffffff;
-      text-align: left;
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      font-family: 'mcfont', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-muted);
     }
 
-    h2 {
-     font-size: 24px;
-     color: #ffffff;
-     margin-top: 30px;
-     margin-bottom: 12px;
-     font-family: "mcfontb", sans-serif;
-    }
-
-    h3 {
-      font-family: "mcfontb", sans-serif;
-      font-size: 18px;
-      color: #05ee93;
-      margin-top: 24px;
-      margin-bottom: 8px;
+    h1, h2, h3, h4 {
+      color: var(--text-main);
+      margin: 0;
+      font-family: 'mcfontb', 'mcfont', sans-serif;
     }
 
     a {
-        text-decoration: none;
-        color: #bebebe;
-        transition: color 0.2s ease-in-out;
+      text-decoration: none;
+      color: var(--accent-color);
+      transition: all 0.2s ease;
+      font-family: 'mcfont', sans-serif;
     }
 
     a:hover {
-        text-decoration: none;
-        color: #05ee93;
+      color: var(--text-main);
+      text-shadow: 0 0 8px var(--accent-glow);
     }
 
-  .mcbc {
-    position: fixed;
-    left: 5px;
-    top: 10px;
-    height: 50px;
-    max-width: 50px;
-  }
-
-  c {
-      color: #e7007b;
-  }
-
-  /* Navigation Bar styles */
-  .navi {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 70px;
-      background-color: rgba(15, 15, 15, 0.8);
-      backdrop-filter: blur(8px);
+    /* --- Layout: sidebar + content --- */
+    .docs-layout {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-sizing: border-box;
-      padding: 0 24px;
-      z-index: 100;
-      border-bottom: 1px solid #222;
-  }
+      align-items: flex-start;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 5%;
+      gap: 40px;
+    }
 
-  .navi-brand {
-    display: flex;
-    background-color: #9adbb31a;
-    padding: 4px 8px;
-  }
+    /* --- Sidebar --- */
+    #docs-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 40px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      backdrop-filter: blur(12px);
+    }
 
-  .navi-brand h2 {
+    .sidebar-section {
+      margin-bottom: 28px;
+    }
+
+    .sidebar-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .sidebar-title {
+      font-size: 0.85rem;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'mcfontwide', 'mcfont', sans-serif;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-list {
+      list-style: none;
       margin: 0;
-      font-size: 22px;
-  }
+      padding: 0;
+    }
 
-  .quick-links {
+    .sidebar-list li {
+      margin-bottom: 8px;
+    }
+
+    .sidebar-link {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      padding: 6px 10px;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-link:hover {
+      color: var(--text-main);
+      border-left: 2px solid var(--accent-color);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar-link.active {
+      color: var(--accent-color);
+      border-left: 2px solid var(--accent-color);
+      background: rgba(5, 238, 147, 0.08);
+    }
+
+    /* --- Main content --- */
+    #docs-content-wrapper {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .docs-toolbar {
       display: flex;
-      align-items: center;
-      gap: 24px;
-  }
-
-  /* Dual-Column Wiki Layout */
-  .wiki-container {
-    display: flex;
-    margin-top: 70px;
-    min-height: calc(100vh - 70px);
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Right Sidebar Style (wiki.bedrock.dev inspired, strictly locked width) */
-  .wiki-sidebar {
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
-    background-color: #111112;
-    border-left: 1px solid #222224;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    position: fixed;
-    top: 70px;
-    bottom: 0;
-    right: 0;
-    overflow-y: auto;
-    text-align: left;
-    transition: right 0.2s ease-in-out;
-  }
-
-  /* Sidebar Section Title */
-  .sidebar-section {
-    font-family: "mcfontb", sans-serif;
-    font-size: 15px;
-    color: #55555d;
-    margin-top: 24px;
-    margin-bottom: 8px;
-    padding-left: 8px;
-  }
-
-  .sidebar-section:first-child {
-    margin-top: 0;
-  }
-
-  /* Sidebar Links */
-  .sidebar-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .sidebar-item {
-    margin-bottom: 4px;
-  }
-
-  .sidebar-link {
-    display: block;
-    padding: 8px 12px;
-    font-size: 14px;
-    color: #a0a0a5;
-    border-radius: 0;
-    border-left: 2px solid transparent;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  }
-
-  .sidebar-link:hover {
-    color: #ffffff;
-    background-color: #1a1a1c;
-  }
-
-  .sidebar-link.active {
-    color: #05ee93;
-    background-color: rgba(5, 238, 147, 0.05);
-    border-left-color: #05ee93;
-    font-family: "mcfontb", sans-serif;
-  }
-
-  /* Main Reading Area on Left - dynamically resizes to fill remaining space */
-  .wiki-main {
-    margin-right: 280px;
-    width: calc(100% - 280px);
-    flex-grow: 1;
-    padding: 40px 60px;
-    box-sizing: border-box;
-    text-align: left;
-    transition: margin-right 0.2s ease-in-out, width 0.2s ease-in-out;
-  }
-
-  /* Top search input styled like wiki.bedrock.dev */
-  .wiki-search-box {
-    margin-bottom: 30px;
-    width: 100%;
-    max-width: 450px;
-  }
-
-  .doc-search-bar {
-    width: 100%;
-    background-color: #161618;
-    border: 1px solid #2e2e30;
-    border-radius: 0;
-    padding: 10px 14px;
-    color: #ffffff;
-    font-size: 14px;
-    font-family: inherit;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .doc-search-bar:focus {
-    outline: none;
-    border-color: #05ee93;
-    box-shadow: 0 0 8px rgba(5, 238, 147, 0.15);
-  }
-
-  /* Content Article Display Area */
-  .wiki-article {
-    line-height: 1.8;
-    font-size: 15px;
-    color: #cccccc;
-  }
-
-  .wiki-article code {
-    background-color: #1d1d20;
-    padding: 2px 6px;
-    border-radius: 0;
-    font-family: monospace;
-    color: #ff5555;
-    font-size: 14px;
-  }
-
-  .wiki-article p {
-    margin-bottom: 20px;
-  }
-
-  .wiki-article ul {
-    margin-bottom: 24px;
-    padding-left: 20px;
-  }
-
-  .wiki-article li {
-    margin-bottom: 6px;
-  }
-
-  /* --- Dropdown Styles (Behaves as mobile wiki sidebar) --- */
-  .dropdown-btn {
-    top: 25px;
-    right: 25px;
-    z-index: 1000;
-    color: #ffffff;
-    text-align: center;
-    user-select: none;
-    transition: all 0.2s ease-in-out;
-    display: none; /* Hidden by default on desktop/wide screens */
-  }
-
-  .dropdown-btn:hover {
-    color: #05ee93;
-  }
-
-  .dropdown {
-    position: fixed;
-    width: 100%;
-    background-color: rgba(17, 17, 18, 0.98);
-    backdrop-filter: blur(8px) !important;
-    z-index: 9999 !important; 
-    top: 70px;
-    padding: 24px;
-    box-sizing: border-box;
-    transition: all 0.2s ease-in-out;
-    opacity: 0;
-    margin: auto;
-    visibility: hidden;
-    left: 0 !important;
-    right: 0 !important;
-    border-radius: 0;
-    border-bottom: 1px solid #222224;
-    max-height: calc(100vh - 70px);
-    overflow-y: auto;
-  }
-
-  .dropdown-btn.active ~ .dropdown,
-  .dropdown.active {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .dropdown-content {
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-  }
-
-  .dropdown-content .sidebar-section {
-    margin-top: 16px;
-  }
-
-  .dropdown-content .sidebar-section:first-child {
-    margin-top: 0;
-  }
-
-  #dd {
-    width: 18px;
-    height: 18px;
-    background-image: url(https://mcbcode.com/img/icons/dropdown.png);
-    background-size: cover;
-    transition: transform 0.3s ease-in-out;
-  }
-
-  #dd:hover,
-  #dd.active {
-    background-image: url(https://mcbcode.com/img/icons/dropdown-selected.png);
-    cursor: pointer;
-  }
-
-  #dd.active {
-    transform: rotate(180deg);
-  }
-
-  /* Responsive styling */
-  @media (max-width: 850px) {
-    .wiki-sidebar {
-      display: none; /* Collapse sidebar completely on narrow screens */
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
     }
-    .wiki-main {
-      margin-right: 0;
-      width: 100%;
-      padding: 30px 20px;
-    }
-    .wiki-container {
-      flex-direction: column;
-    }
-    .dropdown-btn {
-      display: block; /* Show the dropdown menu activator ONLY on narrow viewports */
-    }
-  }
 
-  footer {
-    color: #777;
-    border-top: 1px solid #222;
-    padding: 24px;
-    margin-top: 60px;
-    text-align: left;
-    font-size: 13px;
-  }
+    .docs-toolbar button {
+      background-color: transparent;
+      border: none;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      color: var(--text-muted);
+      font-family: 'mcfont', sans-serif;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
 
-  footer g {
-    color: #008e4c;
-  }
+    .docs-toolbar button:hover {
+      color: var(--accent-color);
+      background-color: rgba(255, 255, 255, 0.05);
+      transform: none;
+    }
 
-</style>
+    #docs-content {
+      background: transparent;
+      padding: 40px 0 0 0;
+      text-align: left;
+      line-height: 1.75;
+    }
+
+    #docs-content h1 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    #docs-content h2 {
+      font-size: 1.6rem;
+      margin: 32px 0 14px 0;
+      color: var(--accent-color);
+    }
+
+    #docs-content h3 {
+      font-size: 1.25rem;
+      margin: 24px 0 10px 0;
+    }
+
+    #docs-content p, #docs-content li {
+      color: var(--text-muted);
+      font-family: 'mcfont', sans-serif;
+    }
+
+    #docs-content code {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      padding: 2px 6px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      color: #00ffcc;
+    }
+
+    #docs-content pre {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    #docs-content pre code {
+      border: none;
+      padding: 0;
+      background: none;
+    }
+
+    #docs-content a {
+      color: var(--accent-color);
+    }
+
+    @media (max-width: 900px) {
+      .docs-layout {
+        flex-direction: column;
+      }
+      #docs-sidebar {
+        width: 100%;
+        position: static;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="navi">
-        <div class="navi-brand">
-            <a href="https://mcbcode.com">
-                <h2>mcb<g>Code</g></h2>
-            </a>
-        </div>
-        <div class="quick-links">
-            <a href="https://mcbcode.com/editor">Editor</a>
-            <a href="https://mcbcode.com/account">Account</a>
-            <div class="dropdown-btn" id="dd"></div>
-            <div class="dropdown">
-                <div class="dropdown-content" id="mobileSidebarContainer"></div>
-            </div>
-        </div>
+  <div class="docs-layout">
+    <aside id="docs-sidebar">
+      <!-- filled in automatically by /docs/elements/sidebar.js -->
+    </aside>
+
+    <div id="docs-content-wrapper">
+      <div class="docs-toolbar">
+        <button id="btn-copy">Copy Markdown</button>
+        <button id="btn-download">Download Markdown</button>
+        <button id="btn-view">View as Markdown</button>
+      </div>
+
+      <div id="docs-content">Loading...</div>
     </div>
-
-  <div class="wiki-container">
-    
-    <main class="wiki-main">
-
-      <article class="wiki-article" id="wikiArticle">
-        <div id="content-welcome">
-          <h1>mcb<g>Code</g> <span style="color: #00b2ff; font-family: 'mcfontb'">Documentation</span></h1>
-          <p>Welcome to the official documentation wiki for mcbCode—the premier, browser-based coding space built exclusively for Minecraft Bedrock Edition .mcfunction script files.</p>
-          <p>This resource guide is modeled to provide quick, responsive access to configuration metrics, keyboard maps, syntax highlighting guides, and entity selection parameters.</p>
-        </div>
-      </article>
-
-      <footer>
-        Not affiliated with Microsoft or Mojang AB.<br><br>
-        © Copyright 2026 mcb<g>Code</g>
-      </footer>
-
-    </main>
-
-    <aside class="wiki-sidebar" id="desktopSidebarContainer"></aside>
-
   </div>
 
   <script>
-  (async function() {
-      const desktopContainer = document.getElementById('desktopSidebarContainer');
-      const mobileContainer = document.getElementById('mobileSidebarContainer');
-      const wikiArticle = document.getElementById('wikiArticle');
-      const defaultContent = wikiArticle.innerHTML;
+    const mdFile = "https://mcbcode.com/docs/md/getting-started.md";
 
-      // Change this to match your real file path location (e.g., './sidebar.json')
-      const jsonUrl = 'https://mcbcode.com/docs/sidebar.json'; 
+    let rawMarkdown = "";
 
-      // Basic local Markdown Parser engine
-      function parseMarkdown(md) {
-          return md
-              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape HTML characters
-              .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-              .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-              .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-              .replace(/^\s*\n\* (.*)/gim, '<ul>\n<li>$1</li>\n</ul>') // simple single ul structure wrapper
-              .replace(/<\/ul>\n<ul>/g, '')
-              .replace(/^\* (.*$)/gim, '<li>$1</li>')
-              .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-              .replace(/`(.*?)`/gim, '<code>$1</code>')
-              .replace(/\n\n/g, '</p><p>')
-              .replace(/\n/g, '<br>');
-      }
-
-      // Router configuration system to parse the actual markdown item contents
-      async function handleRouting() {
-          const path = window.location.pathname;
-          // Check if path is in format /docs/page-name
-          const match = path.match(/\/docs\/([^\/]+)$/);
-          
-          if (match && match[1] && match[1] !== 'index.html') {
-              const pageName = match[1];
-              wikiArticle.innerHTML = '<h1>Loading...</h1>';
-              try {
-                  const mdResponse = await fetch(`https://mcbcode.com/docs/md/${pageName}.md`);
-                  if (!mdResponse.ok) throw new Error('Page not found');
-                  const mdText = await mdResponse.text();
-                  wikiArticle.innerHTML = `<p>${parseMarkdown(mdText)}</p>`;
-              } catch (err) {
-                  wikiArticle.innerHTML = '<h1>404</h1><p>The requested document page could not be located.</p>';
-              }
-          } else {
-              wikiArticle.innerHTML = defaultContent;
-          }
-          updateActiveLink();
-      }
-
-      function updateActiveLink() {
-          const currentPath = window.location.pathname;
-          document.querySelectorAll('.sidebar-link').forEach(link => {
-              const linkUrl = new URL(link.href);
-              if (linkUrl.pathname === currentPath) {
-                  link.classList.add('active');
-              } else {
-                  link.classList.remove('active');
-              }
-          });
-      }
-
-      // Intercept sidebar clicks to render routes dynamically without breaking browser window states
-      function setupLinkInterceptors() {
-          document.querySelectorAll('.sidebar-link').forEach(link => {
-              link.addEventListener('click', function(e) {
-                  const targetUrl = new URL(this.href);
-                  // Ensure it is internal routing
-                  if (targetUrl.origin === window.location.origin) {
-                      e.preventDefault();
-                      window.history.pushState({}, '', this.href);
-                      handleRouting();
-                  }
-              });
-          });
-      }
-
-      // Track back and forward browser page history mechanics
-      window.addEventListener('popstate', handleRouting);
-
-      try {
-          const response = await fetch(jsonUrl);
-          const data = await response.json();
-          
-          let htmlMarkup = '';
-
-          // Loop through categories and items parsed from the JSON
-          data.forEach(section => {
-              htmlMarkup += `<div class="sidebar-section">${section.category}</div>`;
-              htmlMarkup += `<ul class="sidebar-list">`;
-              
-              section.items.forEach(item => {
-                  const activeClass = item.active ? ' active' : '';
-                  // Constructs link path pointing explicitly toward your domain
-                  const fullUrl = `https://mcbcode.com/docs${item.link}`;
-                  
-                  htmlMarkup += `
-                    <li class="sidebar-item">
-                        <a href="${fullUrl}" class="sidebar-link${activeClass}" data-keywords="${item.keywords || ''}">
-                            ${item.title}
-                        </a>
-                    </li>`;
-              });
-              
-              htmlMarkup += `</ul>`;
-          });
-
-          // Inject parsed HTML structural layers into desktop and mobile holders
-          if (desktopContainer) desktopContainer.innerHTML = htmlMarkup;
-          if (mobileContainer) mobileContainer.innerHTML = htmlMarkup;
-
-          // Enable structural intercepts and load page route on fresh access instances
-          setupLinkInterceptors();
-          handleRouting();
-
-          // Re-initialize your original Filtering and Search functionality after layout loads
-          initializeSidebarSearch();
-
-      } catch (error) {
-          console.error("Error loading sidebar data:", error);
-      }
-
-      function initializeSidebarSearch() {
-          const sidebarLinks = document.querySelectorAll('.sidebar-link');
-          const searchBar = document.getElementById('docSearch');
-          
-          if (searchBar && sidebarLinks.length > 0) {
-              searchBar.addEventListener('input', function() {
-                  const query = searchBar.value.toLowerCase();
-                  sidebarLinks.forEach(link => {
-                      const keywords = link.getAttribute('data-keywords').toLowerCase();
-                      const text = link.textContent.toLowerCase();
-                      const parentLi = link.closest('.sidebar-item');
-                      
-                      if (parentLi) {
-                          if (keywords.includes(query) || text.includes(query)) {
-                              parentLi.style.display = 'block';
-                          } else {
-                              parentLi.style.display = 'none';
-                          }
-                      }
-                  });
-
-                  const sections = document.querySelectorAll('.sidebar-section');
-                  sections.forEach(section => {
-                      const siblingUl = section.nextElementSibling;
-                      if (siblingUl && siblingUl.tagName === 'UL') {
-                          const visibleItems = Array.from(siblingUl.children).filter(li => li.style.display !== 'none');
-                          section.style.display = visibleItems.length === 0 ? 'none' : 'block';
-                      }
-                  });
-              });
-          }
-      }
-
-      // Close mobile dropdown smoothly if browser window is resized to desktop mode
-      const dropdownBtn = document.getElementById('dd');
-      const dropdownMenu = document.querySelector('.dropdown');
-      window.addEventListener('resize', function() {
-          if (window.innerWidth > 850) {
-              if (dropdownBtn && dropdownMenu) {
-                  dropdownBtn.classList.remove('active');
-                  dropdownMenu.classList.remove('active');
-              }
-          }
+    fetch(mdFile)
+      .then(res => res.text())
+      .then(text => {
+        rawMarkdown = text;
+        document.getElementById("docs-content").innerHTML = marked.parse(text);
+      })
+      .catch(err => {
+        document.getElementById("docs-content").innerHTML = "Failed to load documentation.";
+        console.log("failed to load markdown:", err);
       });
-  })();
+
+    document.getElementById("btn-copy").onclick = () => {
+      navigator.clipboard.writeText(rawMarkdown)
+        .then(() => console.log("markdown copied"))
+        .catch(err => console.log("copy failed:", err));
+    };
+
+    document.getElementById("btn-download").onclick = () => {
+      const blob = new Blob([rawMarkdown], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = mdFile.split("/").pop();
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById("btn-view").onclick = () => {
+      window.open(mdFile, "_blank");
+    };
   </script>
 
-<script>
-    const dropdownBtn = document.getElementById('dd');
-    const dropdownMenu = document.querySelector('.dropdown');
+  <!-- marked needs to be loaded before this runs, so wait for it -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      if (typeof marked === "undefined") {
+        console.log("marked not loaded yet, retrying render shortly");
+      }
+    });
+  </script>
 
-    if (dropdownBtn && dropdownMenu) {
-        dropdownBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownBtn.classList.toggle('active');
-            dropdownMenu.classList.toggle('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
-                dropdownBtn.classList.remove('active');
-                dropdownMenu.classList.remove('active');
-            }
-        });
-    }
-</script>
-
-  <script data-goatcounter="https://mcbcode.goatcounter.com/count"
-          async src="//gc.zgo.at/count.js"></script>
+  <script src="https://mcbcode.com/docs/elements/sidebar.js"></script>
+  <script src="https://mcbcode.com/docs/elements/navi.js"></script>
 </body>
 </html>
