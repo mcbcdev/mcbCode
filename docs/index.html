@@ -74,7 +74,7 @@
       overflow-y: auto;
       background: rgba(14, 14, 14, 0.9);
       border-right: 1px solid var(--card-border);
-      padding: 30px 20px;
+      padding: 90px 20px 30px 20px;
     }
 
     #docs-content-outer {
@@ -297,14 +297,12 @@
   </style>
 </head>
 <body>
-<br><br><br>
   <button id="sidebar-toggle" aria-label="Toggle navigation">
     <span></span><span></span><span></span>
   </button>
   <div id="sidebar-overlay"></div>
 
   <div class="docs-layout">
-    <br><br><br>
     <aside id="docs-sidebar">
     </aside>
 
@@ -350,7 +348,9 @@
   </script>
 
   <script>
+    // ---- THE ONLY LINE YOU CHANGE WHEN COPYING THIS TEMPLATE ----
     const mdFile = "https://mcbcode.com/docs/md/getting-started.md";
+    // ---------------------------------------------------------------
 
     let rawMarkdown = "";
 
