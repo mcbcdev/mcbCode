@@ -3,17 +3,16 @@
     {
       "title": "Getting Started",
       "links": [
-        { "name": "Introduction", "href": "/docs/introduction" },
-        { "name": "Installation", "href": "/docs/installation" }
+        { "name": "About", "href": "/docs/" }
+        { "name": "Creating an Account", "href": "/docs/creating-an-account" }
       ]
     },
     {
-      "title": "Editors",
+      "title": "Projects",
       "links": [
-        { "name": "Command Editor", "href": "/docs/command-editor" },
-        { "name": "Manifest Creator", "href": "/docs/manifest-creator" },
-        { "name": "JSON Editor", "href": "/docs/json-editor" },
-        { "name": "Script API", "href": "/docs/script-api" }
+        { "name": "Adding Collaborators", "href": "/docs/adding-collaborators" },
+        { "name": "Creating Files", "href": "/docs/creating-files" },
+        { "name": "Creating Folders", "href": "/docs/creating-folders" }
       ]
     }
   ]
