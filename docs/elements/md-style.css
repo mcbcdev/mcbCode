@@ -1,0 +1,19 @@
+blockquote.note {
+    border-left: 4px solid #05ee93;
+    background-color: #05ee931a;
+}
+
+blockquote.tip {
+    border-left: 4px solid #00b2ff;
+    background-color: #00b2ff1a;
+}
+
+blockquote.warning {
+    border-left: 4px solid #ffaa00;
+    background-color: #ffaa001a;
+}
+
+blockquote.important {
+    border-left: 4px solid #ff5555;
+    background-color: #ff55551a;
+}
