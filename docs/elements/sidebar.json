@@ -3,7 +3,7 @@
     {
       "title": "Getting Started",
       "links": [
-        { "name": "About", "href": "/docs/" }
+        { "name": "About", "href": "/docs/" },
         { "name": "Creating an Account", "href": "/docs/creating-an-account" }
       ]
     },
