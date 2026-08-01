@@ -9,7 +9,7 @@ Most changes made in your account settings are saved automatically upon selectio
 To access and modify your account settings, follow these steps:
 
 1. Sign in to your mcbCode account.
-2. Open the **Profile** page at [mcbcode.com/profile](https://www.google.com/search?q=https://mcbcode.com/profile).
+2. Open the **Profile** page at [mcbcode.com/profile](https://mcbcode.com/profile).
 3. Select the **Settings** button below your username.
 4. Scroll to the specific setting you wish to modify.
 5. Update the setting using the provided controls (e.g., toggles, dropdown menus, or text fields).
