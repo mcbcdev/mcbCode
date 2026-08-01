@@ -380,6 +380,8 @@
         rawMarkdown = text;
         document.getElementById("docs-content").innerHTML = marked.parse(text);
         document.title = `mcbCode Docs | ${pageName}`;
+        // clean up the url bar so it shows /docs/[page] instead of ?page=
+        history.replaceState(null, "", `/docs/${pageName}`);
       })
       .catch(err => {
         rawMarkdown = "";
