@@ -83,6 +83,9 @@
     .file-del { opacity: 0; background: none; border: none; color: #555; font-size: 11px; padding: 2px 6px; cursor: pointer; font-family: 'mcfont', sans-serif; transition: color 0.15s; flex-shrink: 0; }
     .file-del:hover { color: #ff5555; }
     .file-list-empty { padding: 48px 20px; text-align: center; color: #333; font-size: 13px; }
+    .root-hint { padding: 14px 16px; border-bottom: 1px solid #1a1a1e; font-size: 12px; color: #777; line-height: 1.6; background: #141517; }
+    .root-hint b { color: #ccc; }
+    .root-hint .hint-actions { margin-top: 8px; display: flex; gap: 8px; }
 
     .image-preview-row {
       overflow: hidden;
@@ -179,6 +182,7 @@
     .modal-field label { display: block; font-size: 10px; color: #00b2ff; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; font-family: 'mcfontb', sans-serif; }
     .modal-field input { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 9px; outline: none; transition: border-color 0.2s; }
     .modal-field input:focus { border-color: #05ee93; }
+    .modal-field .field-hint { font-size: 10px; color: #555; margin-top: 4px; }
     .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
     .modal-err { font-size: 11px; color: #ff5555; margin-top: 6px; display: none; }
     .modal-err.show { display: block; }
@@ -188,6 +192,7 @@
     .confirm-modal p { font-size: 14px; color: #fff; margin-bottom: 4px; }
     .confirm-modal small { font-size: 11px; color: #666; }
     .confirm-modal .modal-actions { justify-content: center; }
+    .confirm-modal .critical-warn { color: #ffaa00; font-size: 11px; margin-top: 8px; display: block; }
     .del-btn { background: #ff5555; border: none; color: #fff; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 16px; cursor: pointer; }
     .del-btn:hover { background: #cc0000; }
     .warn-modal { background: #1a1c1f; border: 1px solid #343438; padding: 24px 28px; min-width: 340px; max-width: 480px; }
@@ -206,6 +211,8 @@
     .ie-toolbar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #2a2a2e; flex-shrink: 0; flex-wrap: wrap; }
     .ie-filename { font-size: 13px; color: #fff; font-family: 'mcfontb', sans-serif; }
     .ie-status { font-size: 11px; color: #05ee93; flex: 1; }
+    .ie-readonly-badge { font-size: 10px; color: #ff9900; border: 1px solid #3a2e18; padding: 2px 6px; display: none; }
+    .inline-editor.ie-readonly .ie-readonly-badge { display: inline-block; }
     .ie-toolbar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .ie-body { position: relative; flex: 1; overflow: hidden; background: #0d0e0f; }
     .ie-highlight, .ie-textarea {
@@ -216,6 +223,8 @@
     .ie-highlight { color: #ccc; pointer-events: none; }
     .ie-textarea { background: transparent; color: transparent; caret-color: #fff; border: none; outline: none; resize: none; }
     .ie-textarea::selection { background: rgba(0,178,255,0.35); }
+    .inline-editor.ie-readonly .ie-textarea { cursor: default; caret-color: transparent; }
+    .inline-editor.ie-readonly .ie-highlight { color: #888; }
     .tok-key { color: #66d4ff; }
     .tok-str { color: #78e3a6; }
     .tok-kw  { color: #ff9900; }
@@ -229,6 +238,14 @@
     .hljs-string, .hljs-literal { color: #78e3a6; }
     .hljs-number { color: #c2f66d; }
     .hljs-attr, .hljs-variable, .hljs-title { color: #66d4ff; }
+
+    /* ---- logged-out blocked overlay on inline editor ---- */
+    .ie-login-block { display: none; position: absolute; inset: 0; z-index: 30; align-items: center; justify-content: center; flex-direction: column; gap: 12px; background: rgba(13,14,15,0.35); text-align: center; padding: 20px; }
+    .inline-editor.ie-blocked .ie-login-block { display: flex; }
+    .inline-editor.ie-blocked .ie-highlight,
+    .inline-editor.ie-blocked .ie-textarea { filter: blur(6px); user-select: none; pointer-events: none; }
+    .ie-login-block p { font-size: 14px; color: #eee; max-width: 260px; }
+    .ie-login-block a.primary-btn { display: inline-block; }
 
     /* ---- share button/menu ---- */
     .share-wrap { position: relative; }
@@ -333,6 +350,7 @@
       <div class="modal-field">
         <label>Name</label>
         <input type="text" id="nf-name" maxlength="128">
+        <div class="field-hint" id="nf-hint"></div>
       </div>
       <div class="modal-err" id="nf-err"></div>
       <div class="modal-actions">
@@ -361,6 +379,7 @@
     <div class="confirm-modal">
       <p>Delete this item?</p>
       <small id="del-name"></small>
+      <small class="critical-warn" id="del-critical-warn" style="display:none;"></small>
       <div class="modal-actions">
         <button class="del-btn" onclick="confirmDelete()">Delete</button>
         <button class="cancel-btn" onclick="closeModal('del-overlay')">Cancel</button>
@@ -388,6 +407,16 @@
       <div class="modal-actions">
         <button class="cancel-btn" onclick="closeModal('export-warn-overlay')">Cancel</button>
         <button class="primary-btn" onclick="doExport()">Export Anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="guardrail-warn-overlay">
+    <div class="warn-modal">
+      <h3>That file doesn't belong there</h3>
+      <p id="guardrail-warn-text"></p>
+      <div class="modal-actions">
+        <button class="primary-btn" onclick="closeModal('guardrail-warn-overlay')">Got it</button>
       </div>
     </div>
   </div>
@@ -606,21 +635,26 @@
   </div>
 
   <div class="inline-editor-overlay" id="inline-editor-overlay">
-    <div class="inline-editor">
+    <div class="inline-editor" id="inline-editor">
       <div class="ie-toolbar">
         <span class="ie-filename" id="ie-filename"></span>
+        <span class="ie-readonly-badge">read only</span>
         <span class="ie-status" id="ie-status"></span>
-        <div class="ie-toolbar-actions">
-          <button class="sm-btn" onclick="ieUndo()">Undo</button>
-          <button class="sm-btn" onclick="ieRedo()">Redo</button>
+        <div class="ie-toolbar-actions" id="ie-toolbar-actions">
+          <button class="sm-btn" id="ie-undo-btn" onclick="ieUndo()">Undo</button>
+          <button class="sm-btn" id="ie-redo-btn" onclick="ieRedo()">Redo</button>
           <button class="sm-btn" onclick="ieToggleWrap()">Wrap</button>
-          <button class="sm-btn export-highlight" onclick="saveInlineFile()">Save</button>
+          <button class="sm-btn export-highlight" id="ie-save-btn" onclick="saveInlineFile()">Save</button>
           <button class="sm-btn" id="ie-close-btn" onclick="closeInlineEditor()">Close</button>
         </div>
       </div>
       <div class="ie-body">
         <pre class="ie-highlight" id="ie-highlight"><code id="ie-highlight-code"></code></pre>
         <textarea class="ie-textarea" id="ie-textarea" spellcheck="false"></textarea>
+        <div class="ie-login-block" id="ie-login-block">
+          <p>Log in to view file contents.</p>
+          <a class="primary-btn" href="https://mcbcode.com/account">Log In</a>
+        </div>
       </div>
     </div>
   </div>
@@ -646,6 +680,7 @@
     let isCollab        = false;
     let currentPath     = [];
     let pendingDelId    = null;
+    let pendingDelIsCritical = false;
     let newFileType     = "folder";
     let newFileParentId = null;
     let exportFileData  = null;
@@ -655,6 +690,10 @@
     let currentTags       = [];
     let pendingDangerAction = null;
     let openImagePreview = null;
+
+    // filenames that get an extra "are you sure" nudge before deleting, since
+    // beginners often don't realize these are load-bearing for the pack
+    const CRITICAL_FILENAMES = ["manifest.json", "pack_icon.png"];
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     function fmtDate(s) {
@@ -762,6 +801,72 @@
       }
     }
 
+    // ---- GUARDRAILS (beginner-friendly file placement rules) ----
+    // loaded from /project/guardrails.json; this default is used as a
+    // fallback if that file can't be reached, so the guardrail system
+    // still works even if the config request fails.
+    const DEFAULT_GUARDRAILS = {
+      ".mcfunction": ["/BP/functions/*", "/BP/functions/**/*"],
+      ".png": ["/RP/textures/*", "/RP/textures/**/*"],
+      ".json": ["/BP/*", "/BP/**/*", "/RP/*", "/RP/**/*"],
+      "manifest.json": ["/BP/", "/RP/"],
+      "pack_icon.png": ["/BP/", "/RP/"]
+    };
+    let guardrails = DEFAULT_GUARDRAILS;
+
+    async function loadGuardrails() {
+      try {
+        const r = await fetch("/project/guardrails.json");
+        if (r.ok) guardrails = await r.json();
+      } catch { /* fall back to defaults */ }
+    }
+
+    // turns a glob-style pattern (supports * and **) into a RegExp
+    function globToRegex(pattern) {
+      let re = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+      re = re.replace(/\*\*/g, "§§DBL§§");
+      re = re.replace(/\*/g, "[^/]*");
+      re = re.replace(/§§DBL§§/g, ".*");
+      return new RegExp("^" + re + "$");
+    }
+
+    function normFolder(p) { return (p.endsWith("/") ? p : p + "/"); }
+
+    // returns { ok: true } or { ok: false, message } for creating `fileName`
+    // inside folder path `folderSegments` (array of folder name strings)
+    function checkGuardrail(fileName, folderSegments) {
+      const folderPath = "/" + folderSegments.join("/") + (folderSegments.length ? "/" : "");
+      const rules = guardrails || {};
+
+      // 1. exact filename rule takes priority over extension rules
+      const exactKey = Object.keys(rules).find(k => !k.startsWith(".") && k.toLowerCase() === fileName.toLowerCase());
+      if (exactKey) {
+        const patterns = rules[exactKey];
+        const ok = patterns.some(p => globToRegex(normFolder(p)).test(folderPath));
+        if (!ok) {
+          return { ok: false, message: `${exactKey} can only exist in one of these locations: ${patterns.join(", ")}` };
+        }
+        return { ok: true };
+      }
+
+      // 2. extension rule
+      const dot = fileName.lastIndexOf(".");
+      const ext = dot === -1 ? "" : fileName.slice(dot).toLowerCase();
+      const extKey = Object.keys(rules).find(k => k.startsWith(".") && k.toLowerCase() === ext);
+      if (extKey) {
+        const patterns = rules[extKey];
+        const fullPath = folderPath + fileName;
+        const ok = patterns.some(p => globToRegex(p).test(fullPath));
+        if (!ok) {
+          return { ok: false, message: `${extKey} files belong inside one of these folders: ${patterns.map(p => p.replace(/\*+$/, "")).join(", ")}` };
+        }
+        return { ok: true };
+      }
+
+      // no matching rule defined — allow it
+      return { ok: true };
+    }
+
     // ---- INIT ----
     (async () => {
       // /s/{slug} pretty share links resolve to the real project share_code first
@@ -773,6 +878,7 @@
         } catch { return showErr("failed to resolve share link."); }
       }
       if (!shareCode) return showErr("No project ID in URL.");
+      loadGuardrails();
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
         if (r.ok) {
@@ -905,6 +1011,7 @@ function renderToolbar() {
     const bfo = document.createElement("button");
     bfo.className = "sm-btn";
     bfo.textContent = "+ Folder";
+    bfo.title = "create a new folder inside the current location";
     bfo.onclick = () => openNewFile("folder");
     toolbar.appendChild(bfo);
 
@@ -912,12 +1019,14 @@ function renderToolbar() {
       const bf = document.createElement("button");
       bf.className = "sm-btn";
       bf.textContent = "+ File";
+      bf.title = "create a new file inside the current folder";
       bf.onclick = () => openNewFile("file");
       toolbar.appendChild(bf);
 
       const bpng = document.createElement("button");
       bpng.className = "sm-btn";
       bpng.textContent = "+ Image";
+      bpng.title = "upload a PNG texture or icon";
       bpng.onclick = () => document.getElementById("png-upload-input").click();
       toolbar.appendChild(bpng);
     }
@@ -930,6 +1039,7 @@ function renderToolbar() {
   bexport.textContent = "Export";
   if (isLoggedIn()) {
     bexport.onclick = startExport;
+    bexport.title = "download this project as a .mcaddon or .mcpack";
   } else {
     bexport.disabled = true;
     bexport.title = "log in to export this project";
@@ -942,6 +1052,7 @@ function renderToolbar() {
   const bshare = document.createElement("button");
   bshare.className = "sm-btn";
   bshare.textContent = "Share";
+  bshare.title = "get a link to this project";
   bshare.onclick = e => { e.stopPropagation(); toggleShareMenu(); };
   const shareMenu = document.createElement("div");
   shareMenu.className = "share-menu";
@@ -1018,6 +1129,37 @@ function renderFileList() {
   const children = allFiles
     .filter(f => (f.parent_id === null ? null : String(f.parent_id)) === parentKey)
     .sort((a, b) => { if (a.type !== b.type) return a.type === "folder" ? -1 : 1; return a.name.localeCompare(b.name); });
+
+  // beginner hint at the project root explaining BP/RP structure, plus
+  // quick-create shortcuts, if those folders don't exist yet
+  if (isAtRoot()) {
+    const hasBP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "BP");
+    const hasRP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "RP");
+    if (!hasBP || !hasRP) {
+      const hint = document.createElement("div");
+      hint.className = "root-hint";
+      hint.innerHTML = `most addons are made of a <b>BP</b> (Behavior Pack) folder and an <b>RP</b> (Resource Pack) folder at the root. ${canEdit() ? "create whichever ones you're missing:" : ""}`;
+      if (canEdit()) {
+        const actions = document.createElement("div");
+        actions.className = "hint-actions";
+        if (!hasBP) {
+          const b = document.createElement("button");
+          b.className = "sm-btn"; b.textContent = "+ BP folder";
+          b.onclick = () => quickCreateRootFolder("BP");
+          actions.appendChild(b);
+        }
+        if (!hasRP) {
+          const b = document.createElement("button");
+          b.className = "sm-btn"; b.textContent = "+ RP folder";
+          b.onclick = () => quickCreateRootFolder("RP");
+          actions.appendChild(b);
+        }
+        hint.appendChild(actions);
+      }
+      list.appendChild(hint);
+    }
+  }
+
   if (currentPath.length > 0) {
     const up = document.createElement("div");
     up.className = "file-row";
@@ -1068,6 +1210,21 @@ function renderFileList() {
   });
 }
 
+    // creates a root-level BP or RP folder directly, used by the root hint shortcuts
+    async function quickCreateRootFolder(name) {
+      try {
+        const res = await fetch(`${AUTH}/project/file`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, parent_id: null, name, type: "folder" })
+        });
+        const d = await res.json();
+        if (!res.ok) { alert(d.error || "failed to create folder."); return; }
+        allFiles.push({ id: d.file_id, project_id: project.id, parent_id: null, name, type: "folder", save_id: null, updated_at: new Date().toISOString() });
+        updateStats(); renderFileList();
+      } catch { alert("something went wrong."); }
+    }
+
     function renderPathBar() {
       const seg = document.getElementById("path-segments");
       seg.innerHTML = "";
@@ -1087,6 +1244,7 @@ function renderFileList() {
       document.getElementById("nf-title").textContent = type === "folder" ? "New Folder" : "New File";
       document.getElementById("nf-name").value = "";
       document.getElementById("nf-name").placeholder = type === "folder" ? "e.g. functions" : "e.g. player.mcfunction";
+      document.getElementById("nf-hint").textContent = type === "folder" ? "" : "include the file extension, e.g. .mcfunction, .json, .png";
       document.getElementById("nf-err").textContent = "";
       document.getElementById("nf-err").classList.remove("show");
       document.getElementById("new-file-overlay").classList.add("open");
@@ -1098,6 +1256,20 @@ function renderFileList() {
       const err  = document.getElementById("nf-err");
       const btn  = document.getElementById("nf-submit");
       if (!name) { err.textContent = "Name is required."; err.classList.add("show"); return; }
+
+      // beginner guardrail check — only applies to files, not folders
+      if (newFileType === "file") {
+        const folderSegments = currentPath.map(c => c.name);
+        const check = checkGuardrail(name, folderSegments);
+        if (!check.ok) {
+          err.textContent = "";
+          err.classList.remove("show");
+          document.getElementById("guardrail-warn-text").textContent = check.message;
+          document.getElementById("guardrail-warn-overlay").classList.add("open");
+          return;
+        }
+      }
+
       btn.disabled = true;
       try {
         const res = await fetch(`${AUTH}/project/file`, {
@@ -1119,6 +1291,15 @@ function renderFileList() {
       e.target.value = ""; // reset so same file can be picked again
       if (!file) return;
       if (file.type !== "image/png") { alert("Only PNG files are allowed."); return; }
+
+      // beginner guardrail check applies to uploaded images too
+      const folderSegments = currentPath.map(c => c.name);
+      const check = checkGuardrail(file.name, folderSegments);
+      if (!check.ok) {
+        document.getElementById("guardrail-warn-text").textContent = check.message;
+        document.getElementById("guardrail-warn-overlay").classList.add("open");
+        return;
+      }
 
       const parentId = currentFolderId();
       const params = new URLSearchParams({ project_code: shareCode, name: file.name });
@@ -1146,6 +1327,14 @@ function renderFileList() {
     function askDelete(e, id, name) {
       e.stopPropagation(); pendingDelId = id;
       document.getElementById("del-name").textContent = name;
+      const warnEl = document.getElementById("del-critical-warn");
+      pendingDelIsCritical = CRITICAL_FILENAMES.includes(name.toLowerCase());
+      if (pendingDelIsCritical) {
+        warnEl.textContent = "heads up — this file is important for your pack to work. deleting it may break your project.";
+        warnEl.style.display = "block";
+      } else {
+        warnEl.style.display = "none";
+      }
       document.getElementById("del-overlay").classList.add("open");
     }
 
@@ -1181,6 +1370,19 @@ function renderFileList() {
       const btn  = document.getElementById("rn-submit");
       if (!name) { err.textContent = "name is required."; err.classList.add("show"); return; }
       if (!pendingRenameId) return closeModal("rename-overlay");
+
+      // guardrail check applies on rename too (folder stays the same, name changes)
+      if (pendingRenameType === "file") {
+        const check = checkGuardrail(name, currentPath.map(c => c.name));
+        if (!check.ok) {
+          err.textContent = "";
+          err.classList.remove("show");
+          document.getElementById("guardrail-warn-text").textContent = check.message;
+          document.getElementById("guardrail-warn-overlay").classList.add("open");
+          return;
+        }
+      }
+
       btn.disabled = true;
       try {
         const res = await fetch(`${AUTH}/project/file`, {
@@ -1573,6 +1775,7 @@ function renderFileList() {
     document.getElementById("del-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("del-overlay"); });
     document.getElementById("rename-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("rename-overlay"); });
     document.getElementById("export-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("export-warn-overlay"); });
+    document.getElementById("guardrail-warn-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("guardrail-warn-overlay"); });
     document.getElementById("danger-confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("danger-confirm-overlay"); });
 
     // ---- RESIZABLE FILE EXPLORER (meta panel width, desktop) ----
@@ -1602,12 +1805,23 @@ function renderFileList() {
 
     // ---- MOBILE FILE EXPLORER DRAWER ----
     function openMobileDrawer() {
+      // fix: the meta-panel lives inside #tab-files, which gets display:none
+      // when the Settings tab is active. a display:none parent hides its
+      // fixed-position children too, so the drawer would never appear.
+      // make sure #tab-files is laid out (flex) whenever the drawer opens,
+      // regardless of which tab is currently marked "active".
+      const filesPanel = document.getElementById("tab-files");
+      if (filesPanel.style.display === "none") filesPanel.style.display = "flex";
       document.querySelector(".meta-panel").classList.add("drawer-open");
       document.getElementById("drawer-scrim").classList.add("open");
     }
     function closeMobileDrawer() {
       document.querySelector(".meta-panel").classList.remove("drawer-open");
       document.getElementById("drawer-scrim").classList.remove("open");
+      // if settings tab is the active tab, restore tab-files to hidden now
+      // that the drawer is closed, so we're back to the normal single-tab view
+      const settingsActive = document.getElementById("tab-settings-btn").classList.contains("active");
+      if (settingsActive) document.getElementById("tab-files").style.display = "none";
     }
 
     async function doLogout() {
@@ -1627,6 +1841,7 @@ function renderFileList() {
     let ieOriginalContent = "";
     let ieWrap = false;
     let mcHighlighterReady = false;
+    let ieCanEditFile = false;
 
     function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
     function getExt(name) { const i = name.lastIndexOf("."); return i === -1 ? "" : name.slice(i + 1).toLowerCase(); }
@@ -1733,11 +1948,31 @@ function renderFileList() {
       }
 
       ieCurrentFile = f;
+      const editorEl = document.getElementById("inline-editor");
+      const textarea = document.getElementById("ie-textarea");
+
+      // ---- permissions ----
+      // owner/collaborator: full view + edit
+      // logged in, not a collaborator: view only, no editing
+      // not logged in: no viewing at all — blurred + blocked with a login prompt
+      ieCanEditFile = isOwner || isCollab;
+      const canView = isLoggedIn(); // owners/collabs are always logged in too
+
+      editorEl.classList.toggle("ie-readonly", !ieCanEditFile);
+      editorEl.classList.toggle("ie-blocked", !canView);
+      textarea.readOnly = !ieCanEditFile;
+      document.getElementById("ie-save-btn").style.display = ieCanEditFile ? "" : "none";
+      document.getElementById("ie-undo-btn").style.display = ieCanEditFile ? "" : "none";
+      document.getElementById("ie-redo-btn").style.display = ieCanEditFile ? "" : "none";
+
       document.getElementById("ie-filename").textContent = f.name;
-      document.getElementById("ie-status").textContent = "loading...";
+      document.getElementById("ie-status").textContent = canView ? "loading..." : "";
       document.getElementById("ie-textarea").value = "";
       document.getElementById("ie-highlight-code").innerHTML = "";
       document.getElementById("inline-editor-overlay").classList.add("open");
+
+      // not logged in: never fetch file contents at all
+      if (!canView) return;
 
       try {
         const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(f.save_id)}`, { credentials: "include" });
@@ -1753,7 +1988,7 @@ function renderFileList() {
 
         ieOriginalContent = typeof d.content === "string" ? d.content : "";
         document.getElementById("ie-textarea").value = ieOriginalContent;
-        document.getElementById("ie-status").textContent = "";
+        document.getElementById("ie-status").textContent = ieCanEditFile ? "" : "you can view this file, but only the owner or collaborators can edit it.";
         renderHighlight();
       } catch (err) {
         console.error("inline editor load threw:", err);
@@ -1762,10 +1997,11 @@ function renderFileList() {
     }
 
     function closeInlineEditor() {
-      if (ieCurrentFile && document.getElementById("ie-textarea").value !== ieOriginalContent) {
+      if (ieCanEditFile && ieCurrentFile && document.getElementById("ie-textarea").value !== ieOriginalContent) {
         if (!confirm("you have unsaved changes. close anyway?")) return;
       }
       document.getElementById("inline-editor-overlay").classList.remove("open");
+      document.getElementById("inline-editor").classList.remove("ie-readonly", "ie-blocked");
       ieCurrentFile = null;
     }
 
@@ -1776,11 +2012,11 @@ function renderFileList() {
       document.getElementById("ie-highlight").style.whiteSpace = ws;
     }
 
-    function ieUndo() { document.execCommand("undo"); }
-    function ieRedo() { document.execCommand("redo"); }
+    function ieUndo() { if (ieCanEditFile) document.execCommand("undo"); }
+    function ieRedo() { if (ieCanEditFile) document.execCommand("redo"); }
 
     async function saveInlineFile() {
-      if (!ieCurrentFile) return;
+      if (!ieCurrentFile || !ieCanEditFile) return;
       const status = document.getElementById("ie-status");
       status.textContent = "saving...";
       try {
@@ -1803,12 +2039,20 @@ function renderFileList() {
       } catch { status.textContent = "error saving."; }
     }
 
-    document.getElementById("ie-textarea")?.addEventListener("input", renderHighlight);
+    document.getElementById("ie-textarea")?.addEventListener("input", () => { if (ieCanEditFile) renderHighlight(); });
     document.getElementById("ie-textarea")?.addEventListener("scroll", () => {
       const hl = document.getElementById("ie-highlight");
       const ta = document.getElementById("ie-textarea");
       hl.scrollTop = ta.scrollTop;
       hl.scrollLeft = ta.scrollLeft;
+    });
+    // block typing entirely when read-only, as an extra guard beyond the
+    // readOnly attribute (covers paste-via-keyboard-shortcut edge cases)
+    document.getElementById("ie-textarea")?.addEventListener("keydown", e => {
+      if (!ieCanEditFile && !(e.ctrlKey || e.metaKey) && e.key.length === 1) e.preventDefault();
+    });
+    document.getElementById("ie-textarea")?.addEventListener("copy", e => {
+      if (!isLoggedIn()) e.preventDefault();
     });
     document.getElementById("inline-editor-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeInlineEditor(); });
 
