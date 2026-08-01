@@ -7,9 +7,7 @@
 
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
-  
-  <!-- markdown styling -->
-  <link rel="stylesheet" href="https://mcbcode.com/docs/elements/md-style.css">
+
 
   <!-- markdown parser -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js" defer></script>
@@ -295,6 +293,129 @@
         padding: 40px 6%;
       }
     }
+
+    /* markdown styling below */
+
+    
+    /* ===== headings ===== */
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+  margin: 28px 0 12px 0;
+  line-height: 1.3;
+}
+
+h1 { font-size: 2.1rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 10px; }
+h2 { font-size: 1.6rem; color: #05ee93; margin-top: 36px; }
+h3 { font-size: 1.3rem; }
+h4 { font-size: 1.1rem; color: #bebebe; }
+
+/* ===== paragraphs & text ===== */
+p {
+  color: #bebebe;
+  font-family: 'mcfont', sans-serif;
+  line-height: 1.75;
+  margin: 14px 0;
+}
+
+strong { color: #ffffff; }
+em { color: #d6d6d6; }
+
+/* ===== links ===== */
+a {
+  color: #05ee93;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(5, 238, 147, 0.25);
+}
+
+/* ===== lists ===== */
+ul, ol {
+  color: #bebebe;
+  font-family: 'mcfont', sans-serif;
+  margin: 14px 0;
+  padding-left: 28px;
+  line-height: 1.75;
+  list-style-type: square;
+}
+
+li { margin: 6px 0; }
+li::marker { color: #05ee93; }
+
+/* ===== inline code ===== */
+code {
+  background: #111111;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: #00ffcc;
+  font-size: 0.9em;
+}
+
+/* ===== code blocks ===== */
+pre {
+  background: #111111;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 20px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+
+pre code {
+  border: none;
+  padding: 0;
+  background: none;
+  color: #d6d6d6;
+  font-size: 0.9em;
+}
+
+/* ===== blockquotes ===== */
+blockquote {
+  border-left: 4px solid #fad870;
+  background-color: #fad8701a;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+/* ===== tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  font-family: 'mcfont', sans-serif;
+  border: 1px solid #454545;
+}
+
+th, td {
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 14px;
+  text-align: left;
+  color: #bebebe;
+}
+
+th {
+  background: rgba(5, 238, 147, 0.08);
+  color: #ffffff;
+  font-family: 'mcfontb', sans-serif;
+}
+
+tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+
+/* ===== horizontal rule ===== */
+hr {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 32px 0;
+}
   </style>
 </head>
 <body>
