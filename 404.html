@@ -56,27 +56,30 @@
     </div>
   </div>
 
-  <div class="coords" id="coords">XYZ: — / -64 / —</div>
+<script>
 
-  <script>
-    // fake minecraft coords that drift
-    const coords = document.getElementById("coords");
-    let x = Math.floor(Math.random() * 10000) - 5000;
-    let z = Math.floor(Math.random() * 10000) - 5000;
-    setInterval(() => {
-      x += Math.floor(Math.random() * 3) - 1;
-      z += Math.floor(Math.random() * 3) - 1;
-      coords.textContent = `XYZ: ${x} / -64 / ${z}`;
-    }, 800);
-
-    // redirect logic for github pages dynamic routing (spa-style)
-    // if the path looks like /project/... or /profile/..., save the full
-    // path (+ hash, so #settings survives) and bounce to the real page
-    // so that page's script can restore it with history.replaceState
     const path = location.pathname;
     const fullPath = path + location.hash;
 
-    if (path.startsWith("/project/") && path !== "/project/") {
+    if (path.startsWith("/docs/")) {
+      // docs page check: if the md exists, redirect to the docs template
+      const parts = path.split("/docs/");
+      const seg = parts[1] ? parts[1].split("/").filter(Boolean).pop() : null;
+      const page = seg ? seg.replace(/\.html$/, "") : null;
+
+      if (page) {
+        fetch(`https://mcbcode.com/docs/md/${page}.md`, { method: "HEAD" })
+          .then(res => {
+            if (res.ok) {
+              location.replace(`/docs/index.html?page=${page}`);
+            }
+            // if not ok, do nothing — the normal 404 page below just stays visible
+          })
+          .catch(() => {
+            // network error, treat as not found, normal 404 stays visible
+          });
+      }
+    } else if (path.startsWith("/project/") && path !== "/project/") {
       sessionStorage.setItem("spa-redirect", fullPath);
       location.replace("/project/");
     } else if (path.startsWith("/profile/") && path !== "/profile/") {
