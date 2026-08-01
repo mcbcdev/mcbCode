@@ -348,52 +348,69 @@
     overlayEl.onclick = closeSidebar;
   </script>
 
-  <script>
-    // ---- THE ONLY LINE YOU CHANGE WHEN COPYING THIS TEMPLATE ----
-    const mdFile = "https://mcbcode.com/docs/md/getting-started.md";
-    // ---------------------------------------------------------------
+<script>
+    // ---- figure out which page to load ----
+    function getPageName() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("page")) {
+        return params.get("page");
+      }
+      // fallback: last segment after /docs/
+      const parts = window.location.pathname.split("/docs/");
+      if (parts.length > 1) {
+        const seg = parts[1].split("/").filter(Boolean).pop();
+        if (seg && seg !== "index.html") {
+          return seg.replace(/\.html$/, "");
+        }
+      }
+      return "getting-started"; // default fallback page
+    }
+
+    const pageName = getPageName();
+    const mdFile = `https://mcbcode.com/docs/md/${pageName}.md`;
 
     let rawMarkdown = "";
 
     fetch(mdFile)
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) throw new Error("not found");
+        return res.text();
+      })
       .then(text => {
         rawMarkdown = text;
         document.getElementById("docs-content").innerHTML = marked.parse(text);
+        document.title = `mcbCode Docs | ${pageName}`;
       })
       .catch(err => {
-        document.getElementById("docs-content").innerHTML = "Failed to load documentation.";
+        rawMarkdown = "";
+        document.getElementById("docs-content").innerHTML =
+          "<h1>Documentation not found</h1><p>the page youre looking for doesnt exist.</p>";
+        document.title = "mcbCode Docs | Not Found";
         console.log("failed to load markdown:", err);
       });
 
     document.getElementById("btn-copy").onclick = () => {
+      if (!rawMarkdown) return;
       navigator.clipboard.writeText(rawMarkdown)
         .then(() => console.log("markdown copied"))
         .catch(err => console.log("copy failed:", err));
     };
 
     document.getElementById("btn-download").onclick = () => {
+      if (!rawMarkdown) return;
       const blob = new Blob([rawMarkdown], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = mdFile.split("/").pop();
+      a.download = `${pageName}.md`;
       a.click();
       URL.revokeObjectURL(url);
     };
 
     document.getElementById("btn-view").onclick = () => {
+      if (!rawMarkdown) return;
       window.open(mdFile, "_blank");
     };
-  </script>
-
-  <!-- marked needs to be loaded before this runs, so wait for it -->
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      if (typeof marked === "undefined") {
-        console.log("marked not loaded yet, retrying render shortly");
-      }
-    });
   </script>
 
   <script src="/docs/elements/sidebar.js"></script>
