@@ -9,6 +9,13 @@
       ]
     },
     {
+      "title": "User Data",
+      "links": [
+        { "name": "Changing Settings", "href": "/docs/changing-settings" },
+        { "name": "Creating an Account", "href": "/docs/changing-account-info" }
+      ]
+    },
+    {
       "title": "Projects",
       "links": [
         { "name": "Adding Collaborators", "href": "/docs/adding-collaborators" },
