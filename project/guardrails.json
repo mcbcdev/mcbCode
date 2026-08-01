@@ -1,0 +1,28 @@
+{
+  ".mcfunction": [
+    "/BP/functions/*",
+    "/BP/functions/**/*"
+  ],
+  ".js": [
+    "/BP/scripts/*",
+    "/BP/scripts/**/*"
+  ],
+  ".png": [
+    "/RP/textures/*",
+    "/RP/textures/**/*"
+  ],
+  ".json": [
+    "/BP/*",
+    "/BP/**/*",
+    "/RP/*",
+    "/RP/**/*"
+  ],
+  "manifest.json": [
+    "/BP/",
+    "/RP/"
+  ],
+  "pack_icon.png": [
+    "/BP/",
+    "/RP/"
+  ]
+}
