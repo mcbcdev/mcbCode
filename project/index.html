@@ -806,11 +806,7 @@
     // fallback if that file can't be reached, so the guardrail system
     // still works even if the config request fails.
     const DEFAULT_GUARDRAILS = {
-      ".mcfunction": ["/BP/functions/*", "/BP/functions/**/*"],
-      ".png": ["/RP/textures/*", "/RP/textures/**/*"],
-      ".json": ["/BP/*", "/BP/**/*", "/RP/*", "/RP/**/*"],
-      "manifest.json": ["/BP/", "/RP/"],
-      "pack_icon.png": ["/BP/", "/RP/"]
+      "manifest.json": ["/BP/", "/RP/"]
     };
     let guardrails = DEFAULT_GUARDRAILS;
 
