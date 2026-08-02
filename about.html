@@ -5,36 +5,281 @@
 <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
 <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
 
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>mcbCode | About</title>
 
 <style>
 html, body {
-    min-height: 100%;
     margin: 0;
     background: #0c0c0c;
-    font-family: 'mcfont', sans-serif;
-    color: #ffffff;
+    color: white;
+    font-family: "mcfont", sans-serif;
+}
+
+main {
+    width: min(1100px, 92%);
+    margin: auto;
+}
+
+section {
+    padding: 110px 0;
+    border-top: 1px solid #222;
+}
+
+section:first-child {
+    border-top: none;
+}
+
+.hero {
+    min-height: 65vh;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: center;
     text-align: center;
 }
 
-p {
-    color: #ffffff;
-    font-size: 25px;
-    font-family: 'mcfont', sans-serif;
+.hero h1 {
+    margin: 0;
+    font-size: clamp(52px, 8vw, 82px);
     font-weight: normal;
+    line-height: 1.1;
+}
+
+.hero p {
+    width: min(760px, 90%);
+    margin: 35px auto 0;
+    font-size: 23px;
+    line-height: 1.7;
+    color: #cfcfcf;
+}
+
+h2 {
+    margin: 0 0 35px;
+    font-size: 46px;
+    font-weight: normal;
+}
+
+p {
+    margin: 0 0 24px;
+    font-size: 21px;
+    line-height: 1.8;
+    color: #d2d2d2;
+}
+
+.content {
+    max-width: 820px;
+}
+
+.twocolumn {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 70px;
+    align-items: center;
+}
+
+.placeholder {
+    aspect-ratio: 16 / 10;
+    background: #171717;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    border: 1px solid #262626;
+}
+
+.creator {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 70px;
+    align-items: start;
+}
+
+.creator img {
+    width: 100%;
+    display: block;
+}
+
+.creator h3 {
+    font-size: 38px;
+    font-weight: normal;
+    margin: 0 0 18px;
+}
+
+.socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 40px;
+}
+
+.socials a {
+    width: 75px;
+    height: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition: border-radius 0.2s ease-in-out, background-color 0.4s ease-in-out;
+}
+
+.socials a:hover {
+    border-radius: 20px;
+    background-color: #ffffff1a;
+}
+
+.socials img {
+    width: 28px;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    max-width: 900px;
+}
+
+.event {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 25px;
+}
+
+.year {
+    color: #05ee93;
+    font-size: 26px;
+}
+
+@media (max-width: 850px) {
+
+.twocolumn,
+.creator,
+.event {
+    grid-template-columns: 1fr;
+}
+
+.hero {
+    min-height: 50vh;
+}
+
+.hero p {
+    font-size: 20px;
+}
+
+h2 {
+    font-size: 38px;
+}
+
+.creator img {
+    max-width: 260px;
+}
 }
 </style>
 
 </head>
+
 <body>
 
-<p>the best <g>mcfunction code editor</g></p>
-<p>free, online tools<br>to help you make<br>minecraft bedrock mods</p>
+<main>
+
+<section>
+
+<div class="twocolumn">
+
+<div class="content">
+
+<h2 style="color: #05ee93;">About mcbCode</h2>
+
+<p>
+mcbCode was created to provide an editor built specifically for Minecraft Bedrock Edition development. Rather than adapting a general-purpose code editor, every feature is designed around the workflow of creating behavior packs, resource packs, and add-ons.
+</p>
+
+<p>
+The platform continues to expand with collaboration features, project management, integrated development tools, and services that help creators spend less time managing files and more time building.
+</p>
+
+</div>
+
+<img src="https://mcbcode.com/img/project-preview.png" style="width: 550px; margin: auto;">
+
+</div>
+
+</section>
+
+<section>
+
+<h2>About the Creator</h2>
+
+<div class="creator">
+
+<img src="https://media.forgecdn.net/avatars/1645/362/639050852084521204.png" alt="Creator" style="border-radius: 32px;">
+
+<div>
+
+<h3 style="color: #00b2ff">idktoast</h3>
+
+<p>
+idktoast is the creator of mcbCode and an active Minecraft Bedrock developer. What began as a one page function editor gradually evolved into a platform dedicated to improving the Bedrock development experience for creators of every skill level.
+</p>
+
+<div class="socials">
+
+<a href="https://www.curseforge.com/members/idktoast/projects"><img src="https://mcbcode.com/img/icons/curseforge_symbol.svg" style="width: 75%"></a>
+
+<a href="https://github.com/xyztoast"><img src="https://mcbcode.com/img/icons/github_symbol.svg" style="width: 75%"></a>
+
+<a href="https://ko-fi.com/idktoast"><img src="https://mcbcode.com/img/icons/kofi_symbol.svg" style="width: 75%"></a>
+
+<a href="https://hello.mcbcode.com"><img src="https://mcbcode.com/img/icons/globe_symbol.svg" style="width: 75%"></a>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section>
+
+<h2>The Journey</h2>
+
+<div class="timeline">
+
+<div class="event">
+<div class="year">June 1st, 2025</div>
+<div>
+<p>Began creating Minecraft Bedrock add-ons.</p>
+</div>
+</div>
+
+<div class="event">
+<div class="year">January 1st, 2026</div>
+<div>
+<p>mcbCode was created as an mcfunction editor. The archived file can be viewed <a href="https://hello.mcbcode.com/archive/real-og-editor.html" style="color: #ffffff; text-decoration: none; font-family: mcfontb">here</a>.</p>
+</div>
+</div>
+
+<div class="event">
+<div class="year">March 25th, 2026</div>
+<div>
+<p>mcbCode was made into its own repository. Almost daily updates were added since then.</p>
+</div>
+</div>
+
+<div class="event">
+<div class="year">Today</div>
+<div>
+<p>mcbCode continues to grow with new features, integrations, and improvements.</p>
+</div>
+</div>
+
+</div>
+
+</section>
+
+</main>
 
 </body>
 </html>
