@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>mcfunction editor</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #323738;
+    font-family: monospace;
+    color: #fff;
+  }
+
+  .editor {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    align-items: flex-start;
+  }
+
+  .line-numbers {
+    background-color: #323738;
+    padding: 0 5px;
+    user-select: none;
+    overflow: hidden;
+    text-align: right;
+    line-height: 1.2em;
+    font-size: 12px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .code-area {
+    flex: 1;
+    padding: 0 10px;
+    background-color: #212425;
+    color: #bebebe;
+    outline: none;
+    border: none;
+    resize: none;
+    font-family: monospace;
+    overflow: hidden;
+    line-height: 1.2em;
+    white-space: pre;
+    margin: 0;
+    font-size: 12px;
+    height: 100%;
+  }
+
+  .fade {
+    opacity: 0;
+    transition: opacity 0.2s ease-in;
+  }
+
+  .top-button {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background-color: rgba(255,255,255,0.1);
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    z-index: 1000;
+  }
+
+  .dropdown {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    background-color: #212425;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 0;
+    min-width: 120px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  .dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .dropdown div {
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .dropdown div:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+
+  .delete {
+    color: #ff4d4d;
+  }
+</style>
+</head>
+<body>
+  <div class="editor">
+    <pre class="line-numbers" id="lineNumbers">1</pre>
+    <textarea class="code-area" id="codeArea" spellcheck="false"></textarea>
+  </div>
+
+  <div class="top-button" id="menuButton">⋯</div>
+  <div class="dropdown" id="dropdownMenu">
+    <div id="copyCode">copy code</div>
+    <div id="deleteCode" class="delete">delete code</div>
+  </div>
+
+  <script>
+    const codeArea = document.getElementById('codeArea');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const menuButton = document.getElementById('menuButton');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    function updateLineNumbers() {
+      const lines = codeArea.value.split('\n').length;
+      let lineContent = '';
+      for (let i = 1; i <= lines; i++) {
+        lineContent += i + '\n';
+      }
+      lineNumbers.textContent = lineContent;
+    }
+
+    codeArea.addEventListener('input', (e) => {
+      if (e.inputType === 'insertLineBreak') {
+        lineNumbers.classList.add('fade');
+        codeArea.classList.add('fade');
+        requestAnimationFrame(() => {
+          lineNumbers.classList.remove('fade');
+          codeArea.classList.remove('fade');
+        });
+      }
+      updateLineNumbers();
+    });
+
+    codeArea.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = codeArea.scrollTop;
+    });
+
+    menuButton.addEventListener('click', () => {
+      dropdownMenu.classList.toggle('show');
+    });
+
+    // Fallback copy method in case Clipboard API is blocked
+    document.getElementById('copyCode').addEventListener('click', () => {
+      try {
+        navigator.clipboard.writeText(codeArea.value);
+      } catch (err) {
+        const temp = document.createElement('textarea');
+        temp.value = codeArea.value;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+          document.execCommand('copy');
+        } catch(e) {
+          alert('Copy failed');
+        }
+        document.body.removeChild(temp);
+      }
+    });
+
+    document.getElementById('deleteCode').addEventListener('click', () => {
+      codeArea.value = '';
+      updateLineNumbers();
+    });
+
+    updateLineNumbers();
+  </script>
+</body>
+</html>
