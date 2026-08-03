@@ -31,7 +31,21 @@
     }
   }
 
+  var currentUseMojangles = true; // updated once we know the real setting
+
+  // watches for new elements getting added to the page (innerHTML swaps,
+  // dynamically built cards, etc) and re-runs the inline style fix on them
+  var observer = new MutationObserver(function (mutations) {
+    var needsCheck = false;
+    for (var i = 0; i < mutations.length; i++) {
+      if (mutations[i].addedNodes.length) { needsCheck = true; break; }
+    }
+    if (needsCheck) applyToInlineStyles(currentUseMojangles);
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
   function apply(useMojangles) {
+    currentUseMojangles = useMojangles;
     var root = document.documentElement.style;
     if (useMojangles) {
       root.setProperty("--mcfont", "mcfont");
