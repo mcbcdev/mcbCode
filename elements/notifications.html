@@ -1,3 +1,10 @@
+
+<style>
+    #notif-badge:not(:empty) {
+  padding-left: 14px;
+}
+
+</style>
 <button
 id="notif-btn"
 type="button"
@@ -17,15 +24,19 @@ font-weight: normal !important;"
 <img src="https://mcbcode.com/img/icons/bell.png" style="image-rendering: pixelated; clip-path: inset(2px 2px 2px 2px);">
 </span>
 <span
-id=notif-badge"
+id="notif-badge"
 style=
-"display: non;
+"display: none;
 color: #00b2ff;
-padding-left: 8px;
+align-items: center;
 align-items: center;
 justify-content: center;
-font-family: mcfontb"
+font-family: mcfontb;
+display: inline-block; /* Allows the span to accept custom height values */
+height: 14px;
+line-height: 16px;"
 >
+1
 </span>
 
 </button>
