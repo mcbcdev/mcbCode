@@ -1,7 +1,13 @@
 User-agent: *
-Disallow: /docs/*
-Disallow: /profile/*
+
 Disallow: /dashboard
 Disallow: /account
+Disallow: /home
+
+Allow: /docs/*
+Allow: /profile/*
+Allow: /project/*
+Allow: /editor/*
+Allow: /pixel
 
 Sitemap: https://mcbcode.com/sitemap.xml
