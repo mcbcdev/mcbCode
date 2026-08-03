@@ -23,9 +23,7 @@ console.log("notifications loading");
         fetch("/elements/notifications.html")
             .then(res => res.text())
             .then(html => {
-                const placeholder = document.currentScript
-                    ? document.currentScript.parentElement
-                    : document.body;
+                const placeholder = document.getElementById("notif-placeholder") || document.body;
                 placeholder.insertAdjacentHTML("beforeend", html);
                 buildModal();
                 attachButtonEvents();
