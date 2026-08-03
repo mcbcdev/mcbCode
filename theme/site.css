@@ -118,7 +118,7 @@ h4 {
   font-family: var(--mcfont) !important;
 }
 p {
-  font-family: var(--mcfont);
+  font-family: var(--mcfont) !important;
 }
 input {
   font-family: var(--mcfont) !important;
