@@ -1,34 +1,45 @@
 (function () {
-  function getCookie(name) {
-    var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-    return m ? decodeURIComponent(m.pop()) : null;
-  }
+  var AUTH = "https://auth.mcbcode.com";
 
-  function setCookie(name, value, days) {
-    var d = new Date();
-    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/';
-  }
+  // hide the page immediately so nothing flashes in the wrong font while
+  // we wait on the /settings fetch. gets removed once we know the answer.
+  var hideStyle = document.createElement("style");
+  hideStyle.id = "mcfont-hide";
+  hideStyle.textContent = "html{visibility:hidden}";
+  document.head.appendChild(hideStyle);
 
-  function apply(useMojangles, persist) {
+  function apply(useMojangles) {
     var root = document.documentElement.style;
     if (useMojangles) {
-      root.setProperty('--mcfont', 'Mojangles');
-      root.setProperty('--mcfontb', 'Mojangles Bold');
-      root.setProperty('--mcfontwide', 'Mojangles Wide');
+      root.setProperty("--mcfont", "mcfont");
+      root.setProperty("--mcfontb", "mcfontb");
+      root.setProperty("--mcfontwide", "mcfontwide");
     } else {
-      root.setProperty('--mcfont', 'var(--normal)');
-      root.setProperty('--mcfontb', 'var(--normalb)');
-      root.setProperty('--mcfontwide', 'var(--normalwide)');
+      root.setProperty("--mcfont", "var(--normal)");
+      root.setProperty("--mcfontb", "var(--normalb)");
+      root.setProperty("--mcfontwide", "var(--normalwide)");
     }
-    if (persist !== false) setCookie('use_mojangles_font', useMojangles ? '1' : '0', 365);
   }
 
-  // exposed globally so any page/settings toggle can call this instantly,
-  // without a refresh
+  function reveal() {
+    var el = document.getElementById("mcfont-hide");
+    if (el) el.remove();
+  }
+
+  // exposed globally so a settings toggle can call this instantly
+  // (no fetch, no cookie, just flips the vars right away)
   window.mcbFont = { apply: apply };
 
-  // run immediately (this script must be loaded un-deferred, un-async,
-  // in <head>, so this runs before first paint and nothing flashes)
-  apply(getCookie('use_mojangles_font') === '1', false);
+  fetch(AUTH + "/settings", { credentials: "include" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var useMojangles = d && d.settings ? !!d.settings.use_mojangles_font : true;
+      apply(useMojangles);
+    })
+    .catch(function () {
+      apply(true); // matches the DB default for a new user
+    })
+    .finally(function () {
+      reveal();
+    });
 })();
