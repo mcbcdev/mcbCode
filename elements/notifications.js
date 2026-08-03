@@ -65,14 +65,13 @@ console.log("notifications loading");
                     max-width: 600px;
                     height: 85vh;
                     max-height: 700px;
-                    border-radius: 12px;
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
                     font-family: inherit;
                  ">
                 <div style="display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid rgba(128,128,128,0.3);">
-                    <strong style="font-size: 1.1em;">Notifications</strong>
+                    <span style="font-size: 1.1em; font-family: mcfontb">Notifications</span>
                     <button id="notif-close-btn" aria-label="Close" style="background:none; border:none; font-size: 1.3em; cursor:pointer; color: inherit;">&times;</button>
                 </div>
 
@@ -80,7 +79,6 @@ console.log("notifications loading");
                     ${["All", "Activity", "Points", "Unread", "Read"].map(f =>
                         `<button class="notif-filter-btn" data-filter="${f}" style="
                             padding: 6px 12px;
-                            border-radius: 20px;
                             border: 1px solid rgba(128,128,128,0.4);
                             background: ${f === "All" ? "rgba(128,128,128,0.3)" : "transparent"};
                             color: inherit;
@@ -92,7 +90,7 @@ console.log("notifications loading");
                 </div>
 
                 <div style="padding: 8px 16px; display:flex; justify-content:flex-end; border-bottom: 1px solid rgba(128,128,128,0.15);">
-                    <button id="notif-mark-all-btn" style="background:none; border:none; color: inherit; opacity:0.8; cursor:pointer; font-size:0.85em; text-decoration:underline;">
+                    <button id="notif-mark-all-btn" style="background:none; border:none; color: inherit; opacity:0.8; cursor:pointer; font-size:0.85em;">
                         Mark All Read
                     </button>
                 </div>
@@ -228,11 +226,11 @@ console.log("notifications loading");
                 cursor: pointer;
                 background: ${n.is_read ? "transparent" : "rgba(100,150,255,0.08)"};
             ">
-                ${n.icon ? `<img src="${escapeAttr(n.icon)}" alt="" style="width:32px; height:32px; border-radius:6px; flex-shrink:0;">` : ""}
+                ${n.icon ? `<img src="${escapeAttr(n.icon)}" alt="" style="width:32px; height:32px; flex-shrink:0;">` : ""}
                 <div style="flex:1; min-width:0;">
                     <div style="display:flex; align-items:center; gap:6px;">
-                        ${!n.is_read ? `<span style="width:8px; height:8px; border-radius:50%; background:#4a9dff; flex-shrink:0;"></span>` : ""}
-                        <strong style="font-size:0.95em;">${escapeHtml(n.title)}</strong>
+                        ${!n.is_read ? `<span style="width:8px; height:8px; background:#4a9dff; flex-shrink:0;"></span>` : ""}
+                        <span style="font-size:0.95em; font-family: mcfontb">${escapeHtml(n.title)}</span>
                     </div>
                     ${n.description ? `<p style="margin:4px 0 0; opacity:0.75; font-size:0.85em;">${escapeHtml(n.description)}</p>` : ""}
                     <span style="opacity:0.5; font-size:0.75em;">${formatTime(n.created_at)}</span>
