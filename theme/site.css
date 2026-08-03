@@ -9,7 +9,7 @@
   --mcfontwide: var(--normalwide);
 }
 /* scrollbar */
-    html {
+html {
   scrollbar-width: thin; /* firefox */
   scrollbar-color: 
 #05ee93 
@@ -83,6 +83,9 @@ html::-webkit-scrollbar-thumb:hover {
     @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 /* inconsolota import */
     @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap');
+* {
+  font-family: var(--mcfont);
+}
 body {
   background-color: #0c0c0c;
   font-family: var(--mcfont), sans-serif;
