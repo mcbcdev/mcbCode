@@ -1,0 +1,86 @@
+/* beacon.css
+ * Where to put this: elements/beacon/beacon.css
+ * Matches the visual theme of project.html (dark shell, mcfont, green/blue accents).
+ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; overflow: hidden; }
+a { text-decoration: none; color: #ffffff; transition: color 0.2s; }
+a:hover { color: #05ee93; }
+g { color: #05ee93; }
+
+.topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 10px; flex-shrink: 0; }
+.topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+.beacon-crumb { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.beacon-crumb b { color: #bbb; }
+.topnav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.nav-btn, .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+.nav-btn:hover, .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
+.sm-btn.active { color: #0c0c0c; background: #05ee93; border-color: #05ee93; }
+.primary-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 16px; cursor: pointer; transition: background 0.2s; }
+.primary-btn:hover { background: #78e3a6; }
+.primary-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.shell { display: flex; flex-direction: column; height: 100vh; padding-top: 48px; }
+
+.mode-tabs { display: flex; gap: 0; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; }
+.mode-tab { padding: 8px 16px; font-size: 12px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+.mode-tab:hover { color: #ccc; }
+.mode-tab.active { color: #fff; border-bottom-color: #05ee93; }
+.mode-tabs .status { margin-left: auto; padding: 8px 16px; font-size: 11px; color: #05ee93; }
+
+.layout { flex: 1; display: flex; overflow: hidden; }
+
+/* left: block/cube palette + tree */
+.side-panel { width: 260px; min-width: 220px; border-right: 1px solid #2a2a2e; background: #161719; overflow-y: auto; display: flex; flex-direction: column; }
+.panel-section { border-bottom: 1px solid #1e1e22; padding: 12px 14px; }
+.panel-label { font-size: 10px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+.block-search { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 6px 8px; outline: none; margin-bottom: 8px; }
+.block-search:focus { border-color: #05ee93; }
+.block-grid { display: grid; grid-template-columns: repeat(auto-fill, 42px); gap: 6px; }
+.block-swatch { width: 42px; height: 42px; background: #1a1c1f; border: 1px solid #343438; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; image-rendering: pixelated; }
+.block-swatch:hover { border-color: #05ee93; }
+.block-swatch.selected { border-color: #05ee93; box-shadow: 0 0 0 1px #05ee93; }
+.block-swatch img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.block-swatch .fallback-color { width: 100%; height: 100%; }
+.block-name-hint { font-size: 10px; color: #555; margin-top: 6px; word-break: break-all; }
+
+.cube-list { display: flex; flex-direction: column; gap: 4px; }
+.cube-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 12px; background: #1a1c1f; border: 1px solid #1e1e22; cursor: pointer; }
+.cube-row:hover { border-color: #343438; }
+.cube-row.selected { border-color: #05ee93; color: #05ee93; }
+.cube-row-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cube-row button { background: none; border: none; color: #555; cursor: pointer; font-family: 'mcfont', sans-serif; font-size: 11px; }
+.cube-row button:hover { color: #ff5555; }
+
+/* center: 3d viewport */
+.viewport-wrap { flex: 1; position: relative; background: #0d0e0f; overflow: hidden; }
+#beacon-canvas { width: 100%; height: 100%; display: block; }
+.viewport-toolbar { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 10; }
+.viewport-hint { position: absolute; bottom: 10px; left: 10px; font-size: 11px; color: #555; z-index: 10; max-width: 320px; line-height: 1.5; }
+.axis-badge { position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #444; z-index: 10; }
+.loading-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #444; font-size: 13px; z-index: 20; background: #0d0e0f; }
+
+/* right: inspector */
+.inspector { width: 260px; min-width: 220px; border-left: 1px solid #2a2a2e; background: #161719; overflow-y: auto; display: flex; flex-direction: column; }
+.insp-field { margin-bottom: 10px; }
+.insp-field label { display: block; font-size: 10px; color: #00b2ff; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; font-family: 'mcfontb', sans-serif; }
+.insp-field input { width: 100%; background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 8px; outline: none; }
+.insp-field input:focus { border-color: #05ee93; }
+.insp-row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.insp-empty { padding: 40px 16px; text-align: center; color: #333; font-size: 12px; }
+
+.state-chip { display: flex; justify-content: space-between; align-items: center; background: #1a1c1f; border: 1px solid #1e1e22; padding: 5px 8px; font-size: 11px; margin-bottom: 4px; }
+.state-chip span:first-child { color: #888; }
+.state-chip span:last-child { color: #ccc; }
+
+.err-msg, .loading-msg { padding: 48px; text-align: center; color: #ff5555; font-size: 13px; }
+
+@media (max-width: 860px) {
+  .side-panel, .inspector { position: absolute; top: 0; bottom: 0; z-index: 100; width: 78vw; max-width: 300px; transition: transform .2s ease; }
+  .side-panel { left: 0; transform: translateX(-100%); }
+  .side-panel.open { transform: translateX(0); }
+  .inspector { right: 0; transform: translateX(100%); }
+  .inspector.open { transform: translateX(0); }
+  .mobile-panel-triggers { display: flex; gap: 6px; }
+}
+.mobile-panel-triggers { display: none; }
