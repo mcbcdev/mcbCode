@@ -86,6 +86,7 @@ export class BeaconModel {
       uv: c.uv || [0, 0]
     }));
     this._rebuild();
+    this.select(this.cubes.length ? 0 : -1);
   }
 
   addCube() {
@@ -105,7 +106,8 @@ export class BeaconModel {
   removeCube(i) {
     this.cubes.splice(i, 1);
     this._rebuild();
-    this.select(-1);
+    const next = this.cubes.length ? Math.min(i, this.cubes.length - 1) : -1;
+    this.select(next);
     if (this.onChange) this.onChange();
   }
 
