@@ -2,7 +2,7 @@
  * Beacon is opened like this:
  *   mcbcode.com/editor/beacon?project=SHARE_CODE&file=FILE_ID&mode=structure
  *   mcbcode.com/editor/beacon?project=SHARE_CODE&file=FILE_ID&mode=model
- * (mode is inferred from the file extension if omitted: .mcstructure -> structure, .geo.json -> model
+ * (mode is inferred from the file extension if omitted: .mcstructure -> structure, .geo.json -> model)
  */
 
 const AUTH = "https://auth.mcbcode.com";
@@ -86,12 +86,17 @@ const BeaconProject = {
     });
   },
 
-  // fetches the raw bytes of the current file (mcstructure binary, or geo.json text)
+  // fetches the raw bytes of the current file (mcstructure binary, or geo.json text).
+  // returns null for a brand new file that hasn't been saved yet (no r2_key
+  // yet, so the asset endpoint 404s) — that's a normal "blank" state, not an
+  // error, and the editor should just start empty in that case.
   async fetchCurrentFileBytes() {
     if (!this.currentFile) return null;
-    const res = await fetch(`${AUTH}/project/asset?file_id=${this.currentFile.id}`, { credentials: "include" });
+    const res = await fetch(`${AUTH}/project/asset?file_id=${this.currentFile.id}&_=${Date.now()}`, { credentials: "include", cache: "no-store" });
+    if (res.status === 404) return null;
     if (!res.ok) throw new Error("failed to load file (status " + res.status + ")");
-    return await res.arrayBuffer();
+    const buf = await res.arrayBuffer();
+    return buf.byteLength === 0 ? null : buf;
   },
 
   // saves bytes back to the current file. creates a brand new file if
