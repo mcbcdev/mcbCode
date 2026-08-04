@@ -593,6 +593,7 @@
           <div class="path-toolbar" id="owner-toolbar" style="display:none;"></div>
         </div>
         <input type="file" id="png-upload-input" accept="image/png" style="display:none;">
+        <input type="file" id="mcstructure-upload-input" accept=".mcstructure" style="display:none;">
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
@@ -1021,6 +1022,8 @@
 
       const pngInput = document.getElementById("png-upload-input");
       if (pngInput) pngInput.addEventListener("change", handlePngUpload);
+      const mcsInput = document.getElementById("mcstructure-upload-input");
+      if (mcsInput) mcsInput.addEventListener("change", handleMcstructureUpload);
 
       // collab autocomplete
       const ci = document.getElementById("collab-input");
@@ -1081,59 +1084,35 @@ function renderToolbar() {
   toolbar.innerHTML = "";
 
   if (canEdit()) {
-    const bfo = document.createElement("button");
-    bfo.className = "sm-btn";
-    bfo.textContent = "+ Folder";
-    bfo.title = "create a new folder inside the current location";
-    bfo.onclick = () => openNewFile("folder");
-    toolbar.appendChild(bfo);
+    const addWrap = document.createElement("div");
+    addWrap.className = "share-wrap";
+    const addBtn = document.createElement("button");
+    addBtn.className = "sm-btn";
+    addBtn.textContent = "+ Add Files";
+    addBtn.onclick = e => { e.stopPropagation(); toggleAddFilesMenu(); };
 
-    if (!isAtRoot()) {
-      const bf = document.createElement("button");
-      bf.className = "sm-btn";
-      bf.textContent = "+ File";
-      bf.title = "create a new file inside the current folder";
-      bf.onclick = () => openNewFile("file");
-      toolbar.appendChild(bf);
+    const menu = document.createElement("div");
+    menu.className = "share-menu";
+    menu.id = "add-files-menu";
 
-      const bpng = document.createElement("button");
-      bpng.className = "sm-btn";
-      bpng.textContent = "+ Image";
-      bpng.title = "upload a PNG texture or icon";
-      bpng.onclick = () => document.getElementById("png-upload-input").click();
-      toolbar.appendChild(bpng);
-    }
-  }
+    const items = [
+      { label: "+ Folder", action: () => openNewFile("folder"), always: true },
+      { label: "+ File", action: () => openNewFile("file"), rootOnly: false, needsSubfolder: true },
+      { label: "+ Image", action: () => document.getElementById("png-upload-input").click(), needsSubfolder: true },
+      { label: "+ Structure", action: () => document.getElementById("mcstructure-upload-input").click(), needsSubfolder: true },
+    ];
+    items.forEach(item => {
+      if (item.needsSubfolder && isAtRoot()) return; // same rule as before: files/images/structures need a folder
+      const el = document.createElement("div");
+      el.className = "share-menu-item";
+      el.textContent = item.label;
+      el.onclick = () => { closeAddFilesMenu(); item.action(); };
+      menu.appendChild(el);
+    });
 
-  // "+" create dropdown (block/entity/item creators) — sits directly left of Export
-  if (canEdit()) {
-    const createWrap = document.createElement("div");
-    createWrap.className = "create-wrap";
-    const cbtn = document.createElement("button");
-    cbtn.className = "sm-btn create-btn";
-    cbtn.title = "create a block, entity, or item";
-    cbtn.innerHTML = `<img src="https://mcbcode.com/img/icons/dots.png" alt="create">`;
-    cbtn.onclick = e => { e.stopPropagation(); toggleCreateMenu(); };
-    const cmenu = document.createElement("div");
-    cmenu.className = "create-menu";
-    cmenu.id = "create-menu";
-    cmenu.innerHTML = `
-      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('block');">
-        <img src="https://mcbcode.com/img/icons/block.png" alt="">
-        <span>Create Block</span>
-      </div>
-      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('entity');">
-        <img src="https://mcbcode.com/img/icons/entity.png" alt="">
-        <span>Create Entity</span>
-      </div>
-      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('item');">
-        <img src="https://mcbcode.com/img/icons/item.png" alt="">
-        <span>Create Item</span>
-      </div>
-    `;
-    createWrap.appendChild(cbtn);
-    createWrap.appendChild(cmenu);
-    toolbar.appendChild(createWrap);
+    addWrap.appendChild(addBtn);
+    addWrap.appendChild(menu);
+    toolbar.appendChild(addWrap);
   }
 
   // export button: visible to everyone, but greyed out / disabled if not logged in
@@ -1169,6 +1148,14 @@ function renderToolbar() {
   shareWrap.appendChild(shareMenu);
   toolbar.appendChild(shareWrap);
 }
+
+function toggleAddFilesMenu() {
+  document.getElementById("add-files-menu")?.classList.toggle("open");
+}
+function closeAddFilesMenu() {
+  document.getElementById("add-files-menu")?.classList.remove("open");
+}
+document.addEventListener("click", e => { if (!e.target.closest(".share-wrap")) { closeAddFilesMenu(); } });
 
 function toggleShareMenu() {
   document.getElementById("share-menu").classList.toggle("open");
@@ -1796,6 +1783,42 @@ function renderFileList() {
       } catch { alert("Something went wrong uploading the image."); }
     }
 
+    async function handleMcstructureUpload(e) {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".mcstructure")) { alert("Only .mcstructure files are allowed."); return; }
+
+      const folderSegments = currentPath.map(c => c.name);
+      const check = checkGuardrail(file.name, folderSegments);
+      if (!check.ok) {
+        document.getElementById("guardrail-warn-text").textContent = check.message;
+        document.getElementById("guardrail-warn-overlay").classList.add("open");
+        return;
+      }
+
+      const parentId = currentFolderId();
+      const buf = await file.arrayBuffer();
+      const params = new URLSearchParams({ project_code: shareCode, new: "1", name: file.name });
+      if (parentId) params.set("parent_id", parentId);
+
+      try {
+        const res = await fetch(`${AUTH}/project/structure/save?${params.toString()}`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: buf
+        });
+        const d = await res.json();
+        if (!res.ok) { alert(d.error || "Upload failed."); return; }
+        allFiles.push({
+          id: d.file_id, project_id: project.id, parent_id: parentId,
+          name: file.name, type: "file", save_id: null, updated_at: new Date().toISOString()
+        });
+        updateStats(); renderFileList();
+      } catch { alert("Something went wrong uploading the structure."); }
+    }
+    
     // ---- DELETE FILE ----
     function askDelete(e, id, name) {
       e.stopPropagation(); pendingDelId = id;
