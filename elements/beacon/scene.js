@@ -1,5 +1,4 @@
 /* scene.js
- * Requires three.js + OrbitControls loaded first (see index.html importmap).
  * This is "structure mode": editing a 3D grid of blocks (.mcstructure).
  */
 
