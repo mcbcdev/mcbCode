@@ -1,6 +1,5 @@
 /* nbt.js
  * Minimal little-endian NBT reader/writer, tailored for Bedrock .mcstructure files.
- * Where to put this: elements/beacon/nbt.js
  * Loaded by editor/beacon/index.html as a plain <script> (no build step needed).
  */
 
