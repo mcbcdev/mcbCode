@@ -2,11 +2,7 @@
  * Beacon is opened like this:
  *   mcbcode.com/editor/beacon?project=SHARE_CODE&file=FILE_ID&mode=structure
  *   mcbcode.com/editor/beacon?project=SHARE_CODE&file=FILE_ID&mode=model
- * (mode is inferred from the file extension if omitted: .mcstructure -> structure, .geo.json -> model)
- *
- * This file needs 3 worker endpoints that don't exist yet on your AUTH worker.
- * See worker-endpoints.md for exactly what to add — nothing here will work
- * until those exist.
+ * (mode is inferred from the file extension if omitted: .mcstructure -> structure, .geo.json -> model
  */
 
 const AUTH = "https://auth.mcbcode.com";
@@ -28,12 +24,20 @@ const BeaconProject = {
 
     if (!this.shareCode) throw new Error("no project specified. open beacon from a project's file list.");
 
+    // /me first, so we know our own user id (needed to tell owner vs everyone else apart)
+    let myId = null;
+    try {
+      const meRes = await fetch(`${AUTH}/me`, { credentials: "include" });
+      if (meRes.ok) { const me = await meRes.json(); myId = me.id; }
+    } catch { /* not logged in, that's fine — view-only */ }
+
     const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(this.shareCode)}`, { credentials: "include" });
     if (!r.ok) throw new Error("couldn't load that project.");
     const d = await r.json();
     this.project = d.project;
     this.allFiles = d.files || [];
-    this.canEdit = !!(d.is_owner || d.is_collaborator);
+    const isOwner = !!(myId && d.project.owner_id === myId);
+    this.canEdit = isOwner || !!d.is_collaborator;
 
     if (this.fileId) {
       this.currentFile = this.allFiles.find(f => String(f.id) === String(this.fileId)) || null;
