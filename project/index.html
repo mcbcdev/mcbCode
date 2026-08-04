@@ -824,6 +824,15 @@
       return typeof f.name === "string" && f.name.toLowerCase().endsWith(".png");
     }
 
+    function isBeaconFile(f) {
+      if (typeof f.name !== "string") return false;
+      const n = f.name.toLowerCase();
+      return n.endsWith(".mcstructure") || n.endsWith(".geo.json");
+    }
+    function beaconModeFor(f) {
+      return f.name.toLowerCase().endsWith(".mcstructure") ? "structure" : "model";
+    }
+    
     // ---- URL <-> folder path helpers ----
     function buildPathUrl(pathArr) {
       const base = `/project/${shareCode}`;
@@ -1544,7 +1553,37 @@ async function creatorSave() {
       row.querySelector(".file-icon").textContent = "v";
       openImagePreview = file.id;
     }
-    
+
+    function toggleBeaconPreview(file, row) {
+      const existing = document.querySelector(".image-preview-row");
+      const wasOpenForThisFile = openImagePreview === file.id;
+
+      if (existing) {
+        document.querySelectorAll(".file-icon").forEach(icon => {
+          if (icon.textContent === "v") icon.textContent = ">";
+        });
+        existing.classList.remove("open");
+        setTimeout(() => { existing.remove(); }, 180);
+        openImagePreview = null;
+      }
+      if (wasOpenForThisFile) return;
+
+      const preview = document.createElement("div");
+      preview.className = "image-preview-row";
+      const mode = beaconModeFor(file);
+      const url = `https://mcbcode.com/editor/beacon?project=${encodeURIComponent(shareCode)}&file=${file.id}&mode=${mode}`;
+
+      preview.innerHTML = `
+        <div class="image-preview-inner" style="flex-direction:column; gap:10px;">
+          <span style="font-size:12px; color:#888;">${mode === "structure" ? "3D block structure" : "3D custom model"}</span>
+          <a class="primary-btn" href="${url}" style="display:inline-block;">Open Beacon Editor</a>
+        </div>
+      `;
+      row.after(preview);
+      requestAnimationFrame(() => preview.classList.add("open"));
+      row.querySelector(".file-icon").textContent = "v";
+      openImagePreview = file.id;
+    }
 function renderFileList() {
   renderPathBar();
   renderToolbar();
@@ -1606,11 +1645,12 @@ function renderFileList() {
     const icon = f.type === "folder" ? "+" : ">";
     const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
-    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
+    const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
     row.innerHTML = `
       <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
       <span class="${nameClass}">${esc(f.name)}</span>
       ${pngBadge}
+      ${beaconBadge}
       <span class="file-updated" title="${esc(fmtDateTime(rowTime))}">${rowTime ? esc(timeAgo(rowTime)) : "—"}</span>
       ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
       ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
@@ -1621,6 +1661,11 @@ function renderFileList() {
       row.onclick = e => {
         if (e.target.classList.contains("file-del")) return;
         toggleImagePreview(f, row);
+      };
+    } else if (isBeaconFile(f)) {
+      row.onclick = e => {
+        if (e.target.classList.contains("file-del")) return;
+        toggleBeaconPreview(f, row);
       };
     } else {
       row.onclick = e => {
