@@ -57,6 +57,7 @@ async function bootStructureMode() {
   scene = new BeaconScene(canvas);
   scene.setEditable(window.BeaconProject.canEdit);
   scene.onChange = markDirty;
+  scene.onInspect = renderBlockInspector;
 
   let bytes = null;
   if (window.BeaconProject.currentFile) {
@@ -90,10 +91,8 @@ function buildBlockPalette() {
   const grid = $("#block-grid");
   grid.innerHTML = "";
 
-  // air / eraser swatch, always first
-  grid.appendChild(makeSwatch({ identifier: "minecraft:air", displayName: "air (erase)" }, true));
-
-  customBlocks.forEach(b => grid.appendChild(makeSwatch(b, false)));
+  grid.appendChild(makeSwatch({ identifier: AIR_TOOL, displayName: "eraser" }, "eraser"));
+  customBlocks.forEach(b => grid.appendChild(makeSwatch(b, "block")));
 
   if (customBlocks.length === 0) {
     const hint = document.createElement("div");
@@ -101,14 +100,17 @@ function buildBlockPalette() {
     hint.textContent = "no custom block textures found under your project's RP folder yet. upload pngs there and reload beacon to see them here.";
     $("#block-panel").appendChild(hint);
   }
+  renderBlockInspector(null, null);
 }
 
-function makeSwatch(block, isAir) {
+const AIR_TOOL = "minecraft:air";
+
+function makeSwatch(block, kind) {
   const el = document.createElement("div");
   el.className = "block-swatch";
   el.title = block.displayName || block.identifier;
-  if (isAir) {
-    el.innerHTML = `<div class="fallback-color" style="background:#111;border:1px dashed #444;"></div>`;
+  if (kind === "eraser") {
+    el.innerHTML = `<div class="fallback-color" style="background:#111;border:1px dashed #444; display:flex; align-items:center; justify-content:center; font-size:16px; color:#666;">×</div>`;
   } else if (block.textureUrl) {
     el.innerHTML = `<img src="${block.textureUrl}" alt="">`;
   } else {
@@ -119,8 +121,33 @@ function makeSwatch(block, isAir) {
     el.classList.add("selected");
     scene.setSelectedBlock({ name: block.identifier, states: {}, version: 18163713 });
   };
-  if (isAir) el.classList.add("selected");
   return el;
+}
+
+function renderBlockInspector(pos, paletteEntry) {
+  const insp = $("#inspector");
+  if (!paletteEntry) {
+    insp.innerHTML = `<div class="insp-empty">click a block with no tool selected to inspect it.<br><br>pick a block (or the eraser) from the left panel to start placing/erasing instead.</div>`;
+    return;
+  }
+  const statesHtml = Object.keys(paletteEntry.states || {}).length
+    ? Object.entries(paletteEntry.states).map(([k, v]) => `<div class="state-chip"><span>${escHtml(k)}</span><span>${escHtml(String(v))}</span></div>`).join("")
+    : `<div class="state-chip"><span>no states</span></div>`;
+  insp.innerHTML = `
+    <div class="panel-section">
+      <div class="panel-label">Selected Block</div>
+      <div class="meta-value" style="margin-bottom:10px;">${escHtml(paletteEntry.name)}</div>
+      <div class="meta-value" style="margin-bottom:10px; color:#555;">position: ${pos.join(", ")}</div>
+      <div class="panel-label">States</div>
+      ${statesHtml}
+      <div style="margin-top:12px;">
+        <button class="sm-btn" id="remove-block-btn" style="color:#ff5555;">Remove this block</button>
+      </div>
+    </div>`;
+  $("#remove-block-btn").onclick = () => {
+    scene.removeAt(pos);
+    renderBlockInspector(null, null);
+  };
 }
 
 // ---------------- model mode ----------------
