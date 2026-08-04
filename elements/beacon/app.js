@@ -58,15 +58,18 @@ async function bootStructureMode() {
   scene.setEditable(window.BeaconProject.canEdit);
   scene.onChange = markDirty;
 
+  let bytes = null;
   if (window.BeaconProject.currentFile) {
     setStatus("loading structure...");
-    const bytes = await window.BeaconProject.fetchCurrentFileBytes();
+    bytes = await window.BeaconProject.fetchCurrentFileBytes();
+  }
+  if (bytes) {
     const data = window.BeaconNbt.decodeStructure(bytes);
     scene.load(data, customBlocks);
     setStatus(`${data.size[0]}x${data.size[1]}x${data.size[2]} — loaded`);
   } else {
     scene.createEmpty(8, 8, 8, customBlocks);
-    setStatus("new structure (8x8x8) — unsaved");
+    setStatus(window.BeaconProject.currentFile ? "empty file — new structure (8x8x8)" : "new structure (8x8x8) — unsaved");
     markDirty();
   }
 
@@ -127,15 +130,18 @@ async function bootModelMode() {
   model.onChange = markDirty;
   model.onSelectionChange = renderInspector;
 
+  let bytes = null;
   if (window.BeaconProject.currentFile) {
     setStatus("loading model...");
-    const bytes = await window.BeaconProject.fetchCurrentFileBytes();
+    bytes = await window.BeaconProject.fetchCurrentFileBytes();
+  }
+  if (bytes) {
     const text = new TextDecoder().decode(bytes);
     model.load(JSON.parse(text));
     setStatus(`${model.cubes.length} cube(s) — loaded`);
   } else {
     model.createEmpty("geometry.custom");
-    setStatus("new model — unsaved");
+    setStatus(window.BeaconProject.currentFile ? "empty file — new model" : "new model — unsaved");
     markDirty();
   }
 
@@ -162,9 +168,9 @@ function renderCubeList() {
   model.cubes.forEach((c, i) => {
     const row = document.createElement("div");
     row.className = "cube-row" + (i === model.selectedIndex ? " selected" : "");
-    row.innerHTML = `<span class="cube-row-name">${escHtml(c.name)}</span><button title="delete">del</button>`;
+    row.innerHTML = `<span class="cube-row-name">${escHtml(c.name)}</span><button title="delete this cube" style="color:#ff5555;">✕ delete</button>`;
     row.querySelector("span").onclick = () => { model.select(i); renderCubeList(); };
-    row.querySelector("button").onclick = e => { e.stopPropagation(); model.removeCube(i); renderCubeList(); };
+    row.querySelector("button").onclick = e => { e.preventDefault(); e.stopPropagation(); model.removeCube(i); renderCubeList(); };
     list.appendChild(row);
   });
 }
