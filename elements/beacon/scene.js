@@ -1,4 +1,5 @@
 /* scene.js
+ * Requires three.js + OrbitControls loaded first (see index.html importmap).
  * This is "structure mode": editing a 3D grid of blocks (.mcstructure).
  */
 
@@ -38,8 +39,9 @@ export class BeaconScene {
     this.materialCache = new Map(); // identifier -> THREE.Material
     this.textureLoader = new THREE.TextureLoader();
 
-    this.selectedPaletteEntry = { name: AIR_NAME, states: {}, version: 18163713 }; // "eraser" by default
+    this.selectedPaletteEntry = null; // no tool selected = clicking just inspects, doesn't place/erase
     this.onChange = null; // callback fired after edits, for the save button
+    this.onInspect = null; // callback fired when a block is clicked with no tool selected
 
     // raycasting for placing/removing
     this.raycaster = new THREE.Raycaster();
@@ -191,7 +193,22 @@ export class BeaconScene {
     const pos = mesh.userData[`pos_${hit.instanceId}`];
     if (!pos) return;
 
-    const erasing = e.shiftKey || this.selectedPaletteEntry.name === AIR_NAME;
+    // shift-click always erases, regardless of selected tool
+    if (e.shiftKey) {
+      this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
+      this._rebuildBlocks();
+      if (this.onChange) this.onChange();
+      return;
+    }
+
+    // no tool selected: clicking a block just inspects it, no mutation
+    if (!this.selectedPaletteEntry) {
+      const pi = this.indices[this._idx(...pos)];
+      if (this.onInspect) this.onInspect(pos, this.palette[pi]);
+      return;
+    }
+
+    const erasing = this.selectedPaletteEntry.name === AIR_NAME;
     let target;
     if (erasing) {
       target = pos;
@@ -203,14 +220,20 @@ export class BeaconScene {
     const [tx, ty, tz] = target;
     if (tx < 0 || ty < 0 || tz < 0 || tx >= sx || ty >= sy || tz >= sz) return;
 
-    const newEntry = erasing ? { name: AIR_NAME, states: {}, version: 18163713 } : this.selectedPaletteEntry;
-    this.indices[this._idx(tx, ty, tz)] = this._paletteIndexFor(newEntry);
+    this.indices[this._idx(tx, ty, tz)] = this._paletteIndexFor(this.selectedPaletteEntry);
     this._rebuildBlocks();
     if (this.onChange) this.onChange();
   }
 
   setSelectedBlock(entry) { this.selectedPaletteEntry = entry; }
   setEditable(v) { this.editable = v; }
+
+  /** explicit removal, used by the inspector's "Remove this block" button */
+  removeAt(pos) {
+    this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
+    this._rebuildBlocks();
+    if (this.onChange) this.onChange();
+  }
 
   /** returns the current state in the shape BeaconNbt.encodeStructure expects */
   exportData() {
