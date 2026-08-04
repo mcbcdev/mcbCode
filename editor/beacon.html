@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="https://mcbcode.com/elements/beacon/beacon.css">
+  <title>mcbCode | Beacon</title>
+
+  <!-- three.js, loaded from cdn as ES modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <div class="topnav">
+    <a href="/" class="topnav-logo">mcb<g>Code</g></a>
+    <span class="beacon-crumb" id="beacon-crumb">loading...</span>
+    <div class="topnav-right">
+      <button class="nav-btn" onclick="window.location.href='https://mcbcode.com/dashboard';">Dashboard</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="mode-tabs">
+      <div class="mode-tab" id="tab-structure">Structure</div>
+      <div class="mode-tab" id="tab-model">Model</div>
+      <span class="status">loading...</span>
+    </div>
+
+    <div class="layout">
+      <div class="side-panel" id="side-panel">
+        <div class="panel-section" id="block-panel">
+          <div class="panel-label">Blocks</div>
+          <div class="block-grid" id="block-grid"></div>
+        </div>
+      </div>
+
+      <div class="viewport-wrap">
+        <canvas id="beacon-canvas"></canvas>
+        <div class="viewport-toolbar">
+          <button class="primary-btn" id="save-btn" disabled>Save</button>
+        </div>
+        <div class="viewport-hint">
+          click a face to place the selected block. shift-click (or select "air") to erase. drag to orbit, scroll to zoom.
+        </div>
+        <div class="loading-overlay" id="loading-overlay">loading beacon...</div>
+      </div>
+
+      <div class="inspector" id="inspector">
+        <div class="insp-empty">select a cube to edit it.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- template used only in model mode, swapped into #side-panel by app.js -->
+  <template id="cube-panel-template">
+    <div class="panel-section">
+      <div class="panel-label">Cubes</div>
+      <div class="cube-list" id="cube-list"></div>
+      <div style="margin-top:8px;">
+        <button class="sm-btn" id="add-cube-btn">+ Cube</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://mcbcode.com/elements/beacon/nbt.js"></script>
+  <script src="https://mcbcode.com/elements/beacon/project-api.js"></script>
+  <script type="module" src="https://mcbcode.com/elements/beacon/app.js"></script>
+</body>
+</html>
