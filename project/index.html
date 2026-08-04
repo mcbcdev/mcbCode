@@ -34,7 +34,7 @@
     .proj-title { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; }
     .proj-badge { font-size: 10px; padding: 2px 7px; border: 1px solid #343438; color: #777; }
     .proj-badge.public { border-color: #05ee93; color: #05ee93; }
-    .proj-header-actions { margin-left: auto; display: flex; gap: 8px; }
+    .proj-header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .export-btn { background: #00b2ff; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
     .export-btn:hover { background: #33c5ff; }
     .export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -344,8 +344,8 @@
 
     /* ---- create button + dropdown ---- */
     .create-wrap { position: relative; }
-    .create-btn { display: inline-flex; align-items: center; justify-content: center; padding: 5px 10px; }
-    .create-btn img { width: 16px; height: 16px; image-rendering: pixelated; display: block; }
+    .create-btn { display: inline-flex; align-items: center; justify-content: center; padding: 3px 10px; line-height: 0; }
+    .create-btn img { width: 14px; height: 14px; image-rendering: pixelated; display: block; }
     .create-menu {
       display: none; position: absolute; top: calc(100% + 6px); left: 0;
       background: #1a1c1f; border: 1px solid #343438; min-width: 190px; z-index: 210;
@@ -494,6 +494,7 @@
     <div class="creator-panel">
       <div class="creator-header">
         <span class="creator-title" id="creator-title">Create</span>
+        <span class="ie-status" id="creator-status"></span>
         <div class="creator-header-actions">
           <button class="primary-btn" id="creator-save-btn" onclick="creatorSave()">Save</button>
           <button class="sm-btn" onclick="closeCreator()">Close</button>
@@ -1248,6 +1249,8 @@ function openCreator(kind) {
   title.textContent = kind === "block" ? "Create Block" : "Create Item";
   const components = kind === "block" ? BLOCK_COMPONENTS : ITEM_COMPONENTS;
 
+  const textureFolder = kind === "block" ? "blocks" : "items";
+
   let html = `
     <div class="set-field">
       <label>Name</label>
@@ -1258,6 +1261,15 @@ function openCreator(kind) {
       <textarea id="creator-identifier" rows="1" maxlength="128" placeholder="e.g. wiki:${kind}_identifier"></textarea>
       <div class="field-hint" id="creator-identifier-hint" style="color:#666; font-size:10px; margin-top:4px;">must be in "namespace:identifier" format, e.g. wiki:ruby_block</div>
       <div class="modal-err" id="creator-identifier-err"></div>
+    </div>
+    <div class="set-field">
+      <label>Texture (upload new)</label>
+      <input type="file" id="creator-texture-file" accept="image/png">
+      <div class="field-hint" style="color:#666; font-size:10px; margin-top:4px;">uploads to RP/textures/${textureFolder}/ and registers it automatically. leave empty to use an existing texture instead.</div>
+    </div>
+    <div class="set-field">
+      <label>Texture Path / Shortname (used if no upload above)</label>
+      <textarea id="creator-texture-path" rows="1" placeholder="e.g. wiki:existing_texture"></textarea>
     </div>
     <div class="creator-section-label">Components</div>
   `;
@@ -1299,10 +1311,103 @@ function validateIdentifier(value) {
   return /^[a-z0-9_]+:[a-z0-9_]+$/.test(value.trim());
 }
 
-function creatorSave() {
+// ---- creator file-writing helpers (real project files, not local-only) ----
+
+// walks/creates a chain of folders (e.g. ["RP","textures","blocks"]) starting
+// from project root, reusing existing folders where they already exist.
+// returns the parent_id to use for a file placed inside the final folder.
+async function ensureFolderPath(segments) {
+  let parentId = null;
+  for (const seg of segments) {
+    const parentKey = parentId === null ? null : String(parentId);
+    let folder = allFiles.find(f =>
+      f.type === "folder" &&
+      (f.parent_id === null ? null : String(f.parent_id)) === parentKey &&
+      f.name.toLowerCase() === seg.toLowerCase()
+    );
+    if (!folder) {
+      const res = await fetch(`${AUTH}/project/file`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_code: shareCode, parent_id: parentId, name: seg, type: "folder" })
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || `failed to create folder "${seg}"`);
+      folder = { id: d.file_id, project_id: project.id, parent_id: parentId, name: seg, type: "folder", save_id: null, updated_at: new Date().toISOString() };
+      allFiles.push(folder);
+    }
+    parentId = folder.id;
+  }
+  return parentId;
+}
+
+function findFileInFolder(parentId, filename) {
+  const parentKey = parentId === null ? null : String(parentId);
+  return allFiles.find(f =>
+    f.type === "file" &&
+    (f.parent_id === null ? null : String(f.parent_id)) === parentKey &&
+    f.name.toLowerCase() === filename.toLowerCase()
+  );
+}
+
+// reads a file's saved text content (used to merge into existing terrain_texture.json etc)
+async function readFileContent(fileObj) {
+  if (!fileObj || !fileObj.save_id) return null;
+  try {
+    const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(fileObj.save_id)}`, { credentials: "include" });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return typeof d.content === "string" ? d.content : null;
+  } catch { return null; }
+}
+
+// creates or updates a JSON file inside a folder with real content, via the
+// same /project/file endpoint the rest of the file explorer uses.
+async function writeJSONFile(parentId, filename, obj) {
+  const existing = findFileInFolder(parentId, filename);
+  const content = JSON.stringify(obj, null, 4);
+  const body = { project_code: shareCode, name: filename, type: "file", content };
+  if (existing) body.file_id = existing.id; else body.parent_id = parentId;
+
+  const res = await fetch(`${AUTH}/project/file`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.error || `failed to save ${filename}`);
+
+  if (existing) {
+    existing.updated_at = new Date().toISOString();
+  } else {
+    allFiles.push({ id: d.file_id, project_id: project.id, parent_id: parentId, name: filename, type: "file", save_id: d.save_id || null, updated_at: new Date().toISOString() });
+  }
+  return d;
+}
+
+// uploads a PNG (ArrayBuffer/File) into a folder, same endpoint the "+ Image" button uses
+async function uploadPngFile(parentId, filename, data) {
+  const params = new URLSearchParams({ project_code: shareCode, name: filename });
+  if (parentId) params.set("parent_id", parentId);
+  const res = await fetch(`${AUTH}/project/file/upload?${params.toString()}`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "image/png" },
+    body: data
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.error || "texture upload failed");
+  allFiles.push({ id: d.file_id, project_id: project.id, parent_id: parentId, name: filename, type: "file", save_id: null, r2_key: d.r2_key, updated_at: new Date().toISOString() });
+  return d;
+}
+
+async function creatorSave() {
+  if (creatorKind !== "block" && creatorKind !== "item") return;
+
   const nameEl = document.getElementById("creator-name");
   const idEl = document.getElementById("creator-identifier");
   const idErr = document.getElementById("creator-identifier-err");
+  const status = document.getElementById("creator-status");
+  const saveBtn = document.getElementById("creator-save-btn");
   idErr.textContent = "";
   idErr.classList.remove("show");
 
@@ -1316,15 +1421,92 @@ function creatorSave() {
     return;
   }
 
+  const idPart = identifier.split(":")[1];
+
   const componentValues = {};
   document.querySelectorAll("#creator-body textarea[data-component-id]").forEach(ta => {
     const v = ta.value.trim();
-    if (v) componentValues[ta.dataset.componentId] = v;
+    if (!v) return;
+    let parsed;
+    try { parsed = JSON.parse(v); } catch { parsed = v; }
+    componentValues[ta.dataset.componentId] = parsed;
   });
 
-  console.log("creator save", { kind: creatorKind, name, identifier, componentValues });
-  alert("saved (locally) — hook this up to your save endpoint whenever it's ready.");
-  closeCreator();
+  const textureFileEl = document.getElementById("creator-texture-file");
+  const texturePathEl = document.getElementById("creator-texture-path");
+  const textureFile = textureFileEl && textureFileEl.files && textureFileEl.files[0] ? textureFileEl.files[0] : null;
+  const texturePath = texturePathEl ? texturePathEl.value.trim() : "";
+
+  saveBtn.disabled = true;
+  status.textContent = "saving...";
+
+  try {
+    const kindFolder = creatorKind === "block" ? "blocks" : "items";
+    const bpFolderId = await ensureFolderPath(["BP", kindFolder]);
+
+    let textureShortname = null;
+
+    if (textureFile) {
+      if (textureFile.type !== "image/png") throw new Error("texture must be a PNG file.");
+      status.textContent = "uploading texture...";
+      textureShortname = identifier;
+
+      const texFolderId = await ensureFolderPath(["RP", "textures", kindFolder]);
+      const buf = await textureFile.arrayBuffer();
+      await uploadPngFile(texFolderId, `${idPart}.png`, buf);
+
+      const atlasFolderId = await ensureFolderPath(["RP", "textures"]);
+      const atlasFilename = creatorKind === "block" ? "terrain_texture.json" : "item_texture.json";
+      const existingAtlas = findFileInFolder(atlasFolderId, atlasFilename);
+      const existingContent = existingAtlas ? await readFileContent(existingAtlas) : null;
+
+      let atlasObj = null;
+      try { atlasObj = existingContent ? JSON.parse(existingContent) : null; } catch { atlasObj = null; }
+      if (!atlasObj || typeof atlasObj !== "object") {
+        atlasObj = creatorKind === "block"
+          ? { resource_pack_name: "vanilla", texture_name: "atlas.terrain", texture_data: {} }
+          : { resource_pack_name: "vanilla", texture_name: "atlas.items", texture_data: {} };
+      }
+      atlasObj.texture_data = atlasObj.texture_data || {};
+      atlasObj.texture_data[textureShortname] = { textures: `textures/${kindFolder}/${idPart}` };
+
+      status.textContent = "registering texture...";
+      await writeJSONFile(atlasFolderId, atlasFilename, atlasObj);
+    } else if (texturePath) {
+      textureShortname = texturePath;
+    }
+
+    if (textureShortname) {
+      if (creatorKind === "block" && !componentValues["minecraft:material_instances"]) {
+        componentValues["minecraft:material_instances"] = { "*": { texture: textureShortname } };
+      } else if (creatorKind === "item" && !componentValues["minecraft:icon"]) {
+        componentValues["minecraft:icon"] = textureShortname;
+      }
+    }
+
+    const rootKey = creatorKind === "block" ? "minecraft:block" : "minecraft:item";
+    const fileObj = {
+      format_version: "1.26.30",
+      [rootKey]: {
+        description: {
+          identifier,
+          menu_category: { category: "items" }
+        },
+        components: componentValues
+      }
+    };
+
+    status.textContent = "writing file...";
+    await writeJSONFile(bpFolderId, `${idPart}.json`, fileObj);
+
+    updateStats();
+    renderFileList();
+    status.textContent = "saved!";
+    setTimeout(() => { closeCreator(); }, 700);
+  } catch (e) {
+    status.textContent = e.message || "something went wrong.";
+  }
+  saveBtn.disabled = false;
 }
 
     function toggleImagePreview(file, row) {
