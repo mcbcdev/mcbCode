@@ -24,5 +24,8 @@
   "pack_icon.png": [
     "/BP/",
     "/RP/"
-  ]
+  ],
+  ".mcstructure": [
+    "/BP/structures/"
+  ],
 }
