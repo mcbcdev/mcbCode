@@ -3,7 +3,7 @@
  * Matches the visual theme of project.html (dark shell, mcfont, green/blue accents).
  */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; overflow: hidden; }
+html, body { height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont'; overflow: hidden; }
 a { text-decoration: none; color: #ffffff; transition: color 0.2s; }
 a:hover { color: #05ee93; }
 g { color: #05ee93; }
