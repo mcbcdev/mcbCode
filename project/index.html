@@ -1084,6 +1084,7 @@ function renderToolbar() {
   toolbar.innerHTML = "";
 
   if (canEdit()) {
+    // "+ Add Files" dropdown: Folder / File / Image / Structure
     const addWrap = document.createElement("div");
     addWrap.className = "share-wrap";
     const addBtn = document.createElement("button");
@@ -1091,13 +1092,13 @@ function renderToolbar() {
     addBtn.textContent = "+ Add Files";
     addBtn.onclick = e => { e.stopPropagation(); toggleAddFilesMenu(); };
 
-    const menu = document.createElement("div");
-    menu.className = "share-menu";
-    menu.id = "add-files-menu";
+    const addMenu = document.createElement("div");
+    addMenu.className = "share-menu";
+    addMenu.id = "add-files-menu";
 
     const items = [
-      { label: "+ Folder", action: () => openNewFile("folder"), always: true },
-      { label: "+ File", action: () => openNewFile("file"), rootOnly: false, needsSubfolder: true },
+      { label: "+ Folder", action: () => openNewFile("folder"), needsSubfolder: false },
+      { label: "+ File", action: () => openNewFile("file"), needsSubfolder: true },
       { label: "+ Image", action: () => document.getElementById("png-upload-input").click(), needsSubfolder: true },
       { label: "+ Structure", action: () => document.getElementById("mcstructure-upload-input").click(), needsSubfolder: true },
     ];
@@ -1107,12 +1108,41 @@ function renderToolbar() {
       el.className = "share-menu-item";
       el.textContent = item.label;
       el.onclick = () => { closeAddFilesMenu(); item.action(); };
-      menu.appendChild(el);
+      addMenu.appendChild(el);
     });
 
     addWrap.appendChild(addBtn);
-    addWrap.appendChild(menu);
+    addWrap.appendChild(addMenu);
     toolbar.appendChild(addWrap);
+
+    // "+" create dropdown (block/entity/item) — unchanged, sits right after Add Files
+    const createWrap = document.createElement("div");
+    createWrap.className = "create-wrap";
+    const cbtn = document.createElement("button");
+    cbtn.className = "sm-btn create-btn";
+    cbtn.title = "create a block, entity, or item";
+    cbtn.innerHTML = `<img src="https://mcbcode.com/img/icons/dots.png" alt="create">`;
+    cbtn.onclick = e => { e.stopPropagation(); toggleCreateMenu(); };
+    const cmenu = document.createElement("div");
+    cmenu.className = "create-menu";
+    cmenu.id = "create-menu";
+    cmenu.innerHTML = `
+      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('block');">
+        <img src="https://mcbcode.com/img/icons/block.png" alt="">
+        <span>Create Block</span>
+      </div>
+      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('entity');">
+        <img src="https://mcbcode.com/img/icons/entity.png" alt="">
+        <span>Create Entity</span>
+      </div>
+      <div class="create-menu-item" onclick="closeCreateMenu(); openCreator('item');">
+        <img src="https://mcbcode.com/img/icons/item.png" alt="">
+        <span>Create Item</span>
+      </div>
+    `;
+    createWrap.appendChild(cbtn);
+    createWrap.appendChild(cmenu);
+    toolbar.appendChild(createWrap);
   }
 
   // export button: visible to everyone, but greyed out / disabled if not logged in
@@ -1148,6 +1178,14 @@ function renderToolbar() {
   shareWrap.appendChild(shareMenu);
   toolbar.appendChild(shareWrap);
 }
+
+function toggleAddFilesMenu() {
+  document.getElementById("add-files-menu")?.classList.toggle("open");
+}
+function closeAddFilesMenu() {
+  document.getElementById("add-files-menu")?.classList.remove("open");
+}
+document.addEventListener("click", e => { if (!e.target.closest(".share-wrap")) closeAddFilesMenu(); });
 
 function toggleAddFilesMenu() {
   document.getElementById("add-files-menu")?.classList.toggle("open");
@@ -1632,6 +1670,7 @@ function renderFileList() {
     const icon = f.type === "folder" ? "+" : ">";
     const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
+    const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";
     const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
     row.innerHTML = `
       <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
@@ -1783,6 +1822,7 @@ function renderFileList() {
       } catch { alert("Something went wrong uploading the image."); }
     }
 
+    
     async function handleMcstructureUpload(e) {
       const file = e.target.files[0];
       e.target.value = "";
