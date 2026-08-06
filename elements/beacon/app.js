@@ -47,6 +47,8 @@ async function boot() {
   if (!canEdit) setStatus("view only — you're not a collaborator on this project");
 
   $("#loading-overlay").style.display = "none";
+  buildMenuBar();
+  bindShortcuts();
 }
 
 function escHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -74,17 +76,31 @@ async function bootStructureMode() {
     markDirty();
   }
 
-  $("#save-btn").onclick = async () => {
-    try {
-      setStatus("saving...");
-      const exported = scene.exportData();
-      const bytes = window.BeaconNbt.encodeStructure(exported);
-      await window.BeaconProject.saveBytes(bytes, "untitled.mcstructure");
-      dirty = false;
-      $("#save-btn").disabled = true;
-      setStatus("saved!");
-    } catch (e) { setStatus("save failed: " + e.message); }
-  };
+  $("#save-btn").onclick = () => saveStructure();
+}
+
+async function saveStructure() {
+  try {
+    setStatus("saving...");
+    const exported = scene.exportData();
+    const bytes = window.BeaconNbt.encodeStructure(exported);
+    await window.BeaconProject.saveBytes(bytes, "untitled.mcstructure");
+    dirty = false;
+    $("#save-btn").disabled = true;
+    setStatus("saved!");
+  } catch (e) { setStatus("save failed: " + e.message); }
+}
+
+function exportStructureFile() {
+  const exported = scene.exportData();
+  const bytes = window.BeaconNbt.encodeStructure(exported);
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (window.BeaconProject.currentFile?.name || "structure").replace(/\.mcstructure$/i, "") + ".mcstructure";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function buildBlockPalette() {
@@ -100,7 +116,7 @@ function buildBlockPalette() {
     hint.textContent = "no custom block textures found under your project's RP folder yet. upload pngs there and reload beacon to see them here.";
     $("#block-panel").appendChild(hint);
   }
-  renderBlockInspector(null, null);
+  renderBlockInspector([], []);
 }
 
 const AIR_TOOL = "minecraft:air";
@@ -112,42 +128,69 @@ function makeSwatch(block, kind) {
   if (kind === "eraser") {
     el.innerHTML = `<div class="fallback-color" style="background:#111;border:1px dashed #444; display:flex; align-items:center; justify-content:center; font-size:16px; color:#666;">×</div>`;
   } else if (block.textureUrl) {
-    el.innerHTML = `<img src="${block.textureUrl}" alt="">`;
+    el.innerHTML = `<img src="${block.textureUrl}" alt="" onerror="this.src='https://mcbcode.com/img/undefined.png';">`;
   } else {
     el.innerHTML = `<div class="fallback-color" style="background:#3a3a3e;"></div>`;
   }
-  el.onclick = () => {
-    document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
-    el.classList.add("selected");
-    scene.setSelectedBlock({ name: block.identifier, states: {}, version: 18163713 });
-  };
+  el.onclick = () => selectSwatch(el, block);
   return el;
 }
 
-function renderBlockInspector(pos, paletteEntry) {
+function selectSwatch(el, block) {
+  document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
+  el.classList.add("selected");
+  scene.setSelectedBlock({ name: block.identifier, states: {}, version: 18163713 });
+}
+
+function cyclePalette(dir) {
+  const swatches = [...document.querySelectorAll(".block-swatch")];
+  if (!swatches.length) return;
+  const cur = swatches.findIndex(s => s.classList.contains("selected"));
+  const next = ((cur < 0 ? 0 : cur) + dir + swatches.length) % swatches.length;
+  swatches[next].click();
+}
+
+// renderBlockInspector(positions, entries) — arrays, may be empty (none selected),
+// length 1 (single block), or length N (multi-selection)
+function renderBlockInspector(positions, entries) {
   const insp = $("#inspector");
-  if (!paletteEntry) {
-    insp.innerHTML = `<div class="insp-empty">click a block with no tool selected to inspect it.<br><br>pick a block (or the eraser) from the left panel to start placing/erasing instead.</div>`;
+  if (!positions || positions.length === 0) {
+    insp.innerHTML = `<div class="insp-empty">click a block with no tool selected to select it.<br><br>shift-click to select more than one. pick a block (or the eraser) from the left panel to place/erase instead.</div>`;
     return;
   }
-  const statesHtml = Object.keys(paletteEntry.states || {}).length
-    ? Object.entries(paletteEntry.states).map(([k, v]) => `<div class="state-chip"><span>${escHtml(k)}</span><span>${escHtml(String(v))}</span></div>`).join("")
-    : `<div class="state-chip"><span>no states</span></div>`;
+
+  if (positions.length === 1) {
+    const pos = positions[0], entry = entries[0];
+    const statesHtml = Object.keys(entry.states || {}).length
+      ? Object.entries(entry.states).map(([k, v]) => `<div class="state-chip"><span>${escHtml(k)}</span><span>${escHtml(String(v))}</span></div>`).join("")
+      : `<div class="state-chip"><span>no states</span></div>`;
+    insp.innerHTML = `
+      <div class="panel-section">
+        <div class="panel-label">Selected Block</div>
+        <div class="meta-value" style="margin-bottom:10px;">${escHtml(entry.name)}</div>
+        <div class="meta-value" style="margin-bottom:10px; color:#555;">position: ${pos.join(", ")}</div>
+        <div class="panel-label">States</div>
+        ${statesHtml}
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
+          <button class="sm-btn" id="remove-block-btn" style="color:#ff5555;">Remove this block</button>
+        </div>
+      </div>`;
+    $("#remove-block-btn").onclick = () => scene.removeAt(pos);
+    return;
+  }
+
   insp.innerHTML = `
     <div class="panel-section">
-      <div class="panel-label">Selected Block</div>
-      <div class="meta-value" style="margin-bottom:10px;">${escHtml(paletteEntry.name)}</div>
-      <div class="meta-value" style="margin-bottom:10px; color:#555;">position: ${pos.join(", ")}</div>
-      <div class="panel-label">States</div>
-      ${statesHtml}
-      <div style="margin-top:12px;">
-        <button class="sm-btn" id="remove-block-btn" style="color:#ff5555;">Remove this block</button>
+      <div class="panel-label">Selected Blocks</div>
+      <div class="meta-value" style="margin-bottom:10px;">${positions.length} blocks selected</div>
+      <div class="meta-value" style="margin-bottom:10px; color:#555;">drag the colored arrows in the viewport to move all of them together, or use the arrow keys.</div>
+      <div style="margin-top:4px; display:flex; flex-direction:column; gap:6px;">
+        <button class="sm-btn" id="replace-selection-btn">Replace all with active tool</button>
+        <button class="sm-btn" id="remove-selection-btn" style="color:#ff5555;">Remove all selected</button>
       </div>
     </div>`;
-  $("#remove-block-btn").onclick = () => {
-    scene.removeAt(pos);
-    renderBlockInspector(null, null);
-  };
+  $("#replace-selection-btn").onclick = () => scene.replaceSelectionWithTool();
+  $("#remove-selection-btn").onclick = () => scene.deleteSelection();
 }
 
 // ---------------- model mode ----------------
@@ -240,5 +283,189 @@ $("#tab-model").onclick = () => { if (!window.BeaconProject.fileId) location.sea
 function replaceParam(k, v) { const p = new URLSearchParams(location.search); p.set(k, v); return "?" + p.toString(); }
 
 window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------------- menu bar (File / Edit / View / Tools / Extensions) ----------------
+
+function buildMenuBar() {
+  const bar = document.createElement("div");
+  bar.className = "menu-bar";
+
+  const fileItems = [
+    { label: "Save", action: () => (mode === "structure" ? saveStructure() : $("#save-btn").click()) },
+    { label: "Export .mcstructure", action: () => (mode === "structure" ? exportStructureFile() : alert("export is only available in structure mode.")) }
+  ];
+
+  const editItems = mode === "structure" ? [
+    { label: "Select all blocks (Ctrl+A)", action: () => scene.selectAll() },
+    { label: "Clear selection (Esc)", action: () => scene.clearSelection() },
+    { label: "Delete selection (Del)", action: () => scene.deleteSelection() }
+  ] : [
+    { label: "Add cube", action: () => { model.addCube(); renderCubeList(); } }
+  ];
+
+  const viewItems = mode === "structure" ? [
+    { label: "Toggle grid (G)", action: () => scene.toggleGrid() },
+    { label: "Toggle border outline (B)", action: () => scene.toggleBorder() },
+    { label: "Frame selection (F)", action: () => scene.frameSelection() },
+    { label: "Reset camera (R)", action: () => scene.resetCamera() }
+  ] : [];
+
+  const toolsItems = mode === "structure" ? [
+    { label: "Resize structure...", action: () => promptResize() },
+    { label: "Show keyboard shortcuts (?)", action: () => showShortcutsOverlay() }
+  ] : [
+    { label: "Show keyboard shortcuts (?)", action: () => showShortcutsOverlay() }
+  ];
+
+  bar.appendChild(makeMenu("File", fileItems));
+  bar.appendChild(makeMenu("Edit", editItems));
+  bar.appendChild(makeMenu("View", viewItems));
+  bar.appendChild(makeMenu("Tools", toolsItems));
+  bar.appendChild(makeMenu("Extensions", [{ label: "Coming soon", action: null, disabled: true }]));
+
+  const tabs = $(".mode-tabs");
+  tabs.parentElement.insertBefore(bar, tabs);
+}
+
+function makeMenu(label, items) {
+  const wrap = document.createElement("div");
+  wrap.className = "menu-item";
+  const btn = document.createElement("button");
+  btn.className = "menu-btn";
+  btn.textContent = label;
+  const dropdown = document.createElement("div");
+  dropdown.className = "menu-dropdown";
+  items.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "menu-dropdown-item" + (item.disabled ? " disabled" : "");
+    row.textContent = item.label;
+    if (!item.disabled) row.onclick = () => { closeAllMenus(); item.action(); };
+    dropdown.appendChild(row);
+  });
+  btn.onclick = e => {
+    e.stopPropagation();
+    const wasOpen = wrap.classList.contains("open");
+    closeAllMenus();
+    if (!wasOpen) wrap.classList.add("open");
+  };
+  wrap.appendChild(btn);
+  wrap.appendChild(dropdown);
+  return wrap;
+}
+
+function closeAllMenus() {
+  document.querySelectorAll(".menu-item.open").forEach(m => m.classList.remove("open"));
+}
+document.addEventListener("click", closeAllMenus);
+
+function promptResize() {
+  const [sx, sy, sz] = scene.size;
+  const input = prompt(`new size as "x y z" (currently ${sx} ${sy} ${sz}). growing keeps the (0,0,0) corner fixed, shrinking crops from the far corner.`, `${sx} ${sy} ${sz}`);
+  if (!input) return;
+  const parts = input.trim().split(/\s+/).map(Number);
+  if (parts.length !== 3 || parts.some(n => !Number.isFinite(n) || n < 1)) { alert("enter three numbers, each 1 or greater."); return; }
+  scene.resizeStructure(parts);
+  setStatus(`resized to ${parts.join("x")}`);
+}
+
+function showShortcutsOverlay() {
+  let el = document.getElementById("shortcuts-overlay");
+  if (el) { el.remove(); return; }
+  el = document.createElement("div");
+  el.id = "shortcuts-overlay";
+  el.className = "shortcuts-overlay";
+  el.innerHTML = `<div class="shortcuts-box">
+    <div class="panel-label">Keyboard Shortcuts</div>
+    ${SHORTCUTS.map(([k, d]) => `<div class="shortcut-row"><span class="shortcut-key">${escHtml(k)}</span><span>${escHtml(d)}</span></div>`).join("")}
+    <div style="margin-top:10px; text-align:center; color:#555;">press ? again to close</div>
+  </div>`;
+  el.onclick = () => el.remove();
+  document.body.appendChild(el);
+}
+
+// ---------------- keyboard shortcuts ----------------
+
+const SHORTCUTS = [
+  ["Delete / Backspace", "delete selected block(s)"],
+  ["Escape", "clear selection"],
+  ["1-9", "pick block 1-9 from the palette"],
+  ["0 or E", "pick the eraser tool"],
+  ["Q", "deselect tool (back to click-to-select mode)"],
+  ["Tab", "cycle to next palette swatch"],
+  ["Shift+Tab", "cycle to previous palette swatch"],
+  ["Ctrl/Cmd+S", "save"],
+  ["Ctrl/Cmd+E", "export .mcstructure"],
+  ["Ctrl/Cmd+A", "select all blocks"],
+  ["Ctrl/Cmd+D", "clear selection"],
+  ["Arrow keys", "nudge selection on the X/Z axis"],
+  ["Shift+Up/Down", "nudge selection up/down (Y axis)"],
+  ["G", "toggle grid visibility"],
+  ["B", "toggle structure border outline"],
+  ["F", "frame camera on selection"],
+  ["R", "reset camera"],
+  ["= or +", "grow structure by 1 block each axis"],
+  ["-", "shrink structure by 1 block each axis"],
+  ["H", "toggle left panel (mobile)"],
+  ["I", "toggle right panel (mobile)"],
+  ["Shift+Click block", "add/remove block from multi-selection"],
+  ["Ctrl/Cmd+Click block", "quick-erase, no tool needed"],
+  ["Drag colored arrows", "move the current selection"],
+  ["?", "show/hide this list"],
+];
+
+function bindShortcuts() {
+  window.addEventListener("keydown", e => {
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+    if (e.key === "?") { e.preventDefault(); showShortcutsOverlay(); return; }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); (mode === "structure" ? saveStructure() : $("#save-btn").click()); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") { e.preventDefault(); if (mode === "structure") exportStructureFile(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") { e.preventDefault(); if (mode === "structure") scene.selectAll(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); if (mode === "structure") scene.clearSelection(); return; }
+
+    if (mode !== "structure") return; // rest of the shortcuts are structure-mode only
+
+    if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); scene.deleteSelection(); return; }
+    if (e.key === "Escape") { scene.clearSelection(); return; }
+    if (e.key === "Tab") { e.preventDefault(); cyclePalette(e.shiftKey ? -1 : 1); return; }
+    if (e.key >= "1" && e.key <= "9") { selectPaletteByIndex(+e.key); return; }
+    if (e.key === "0" || e.key.toLowerCase() === "e") { selectEraser(); return; }
+    if (e.key.toLowerCase() === "q") { deselectTool(); return; }
+    if (e.key.toLowerCase() === "g") { scene.toggleGrid(); return; }
+    if (e.key.toLowerCase() === "b") { scene.toggleBorder(); return; }
+    if (e.key.toLowerCase() === "f") { scene.frameSelection(); return; }
+    if (e.key.toLowerCase() === "r") { scene.resetCamera(); return; }
+    if (e.key === "=" || e.key === "+") { e.preventDefault(); growShrink(1); return; }
+    if (e.key === "-") { growShrink(-1); return; }
+    if (e.key.toLowerCase() === "h") { $("#side-panel").classList.toggle("open"); return; }
+    if (e.key.toLowerCase() === "i") { $("#inspector").classList.toggle("open"); return; }
+
+    if (e.key === "ArrowUp") { e.preventDefault(); scene.moveSelection(0, e.shiftKey ? 1 : 0, e.shiftKey ? 0 : -1); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); scene.moveSelection(0, e.shiftKey ? -1 : 0, e.shiftKey ? 0 : 1); return; }
+    if (e.key === "ArrowLeft") { e.preventDefault(); scene.moveSelection(-1, 0, 0); return; }
+    if (e.key === "ArrowRight") { e.preventDefault(); scene.moveSelection(1, 0, 0); return; }
+  });
+}
+
+function selectPaletteByIndex(n) {
+  const swatches = [...document.querySelectorAll(".block-swatch")];
+  // index 0 is the eraser, so palette block "1" is swatches[1]
+  if (swatches[n]) swatches[n].click();
+}
+function selectEraser() {
+  const swatches = [...document.querySelectorAll(".block-swatch")];
+  if (swatches[0]) swatches[0].click();
+}
+function deselectTool() {
+  document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
+  if (scene) scene.setSelectedBlock(null);
+}
+function growShrink(delta) {
+  const [sx, sy, sz] = scene.size;
+  scene.resizeStructure([sx + delta, sy + delta, sz + delta]);
+  setStatus(`resized to ${scene.size.join("x")}`);
+}
 
 boot();
