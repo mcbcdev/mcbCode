@@ -3,7 +3,6 @@
  * Ties together project-api.js (plain script), nbt.js (plain script),
  * and scene.js / models.js (ES modules).
  */
-
 import { BeaconScene } from "./scene.js";
 import { BeaconModel } from "./models.js";
 
