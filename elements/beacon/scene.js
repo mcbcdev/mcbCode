@@ -2,7 +2,6 @@
  * Requires three.js + OrbitControls loaded first (see index.html importmap).
  * This is "structure mode": editing a 3D grid of blocks (.mcstructure).
  */
-
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
