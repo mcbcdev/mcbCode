@@ -84,3 +84,22 @@ g { color: #05ee93; }
   .mobile-panel-triggers { display: flex; gap: 6px; }
 }
 .mobile-panel-triggers { display: none; }
+
+/* --- menu bar (File/Edit/View/Tools/Extensions) --- */
+.menu-bar { display: flex; background: #161719; border-bottom: 1px solid #2a2a2e; flex-shrink: 0; }
+.menu-item { position: relative; }
+.menu-btn { background: none; border: none; color: #999; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 7px 14px; cursor: pointer; }
+.menu-btn:hover { color: #fff; }
+.menu-item.open .menu-btn { color: #05ee93; }
+.menu-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 220px; background: #1a1c1f; border: 1px solid #343438; z-index: 300; }
+.menu-item.open .menu-dropdown { display: block; }
+.menu-dropdown-item { padding: 8px 12px; font-size: 12px; color: #ccc; cursor: pointer; white-space: nowrap; }
+.menu-dropdown-item:hover { background: #222326; color: #05ee93; }
+.menu-dropdown-item.disabled { color: #444; cursor: default; }
+.menu-dropdown-item.disabled:hover { background: none; color: #444; }
+
+/* --- keyboard shortcuts overlay --- */
+.shortcuts-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: flex; align-items: center; justify-content: center; }
+.shortcuts-box { background: #161719; border: 1px solid #2a2a2e; padding: 20px 24px; max-width: 480px; max-height: 80vh; overflow-y: auto; }
+.shortcut-row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #1e1e22; }
+.shortcut-key { color: #05ee93; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
