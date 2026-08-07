@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Editor | v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1e1e1e;
+        }
+        .main-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+        #editor-pane {
+            height: 100%;
+            min-width: 100px;
+            width: 50%;
+        }
+        #preview-pane {
+            flex-grow: 1;
+            height: 100%;
+            background: white;
+            min-width: 100px;
+        }
+        #resizer {
+            width: 8px;
+            cursor: col-resize;
+            background-color: #2d2d2d;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            position: relative;
+        }
+        #resizer:hover, .resizing #resizer {
+            background-color: #3b82f6;
+        }
+        #resizer::after {
+            content: "";
+            width: 2px;
+            height: 30px;
+            background-color: #444;
+            border-radius: 2px;
+        }
+
+        /* Gear Button */
+        #settings-trigger {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 32px;
+            background: #3b82f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 30;
+            transition: transform 0.2s;
+        }
+        #settings-trigger:hover {
+            transform: translateX(-50%) scale(1.1) rotate(45deg);
+        }
+
+        /* Settings Panel */
+        #settings-panel {
+            position: absolute;
+            bottom: 60px;
+            left: -136px; 
+            width: 280px;
+            max-height: 70vh;
+            background: #252526;
+            border: 1px solid #454545;
+            border-radius: 8px;
+            z-index: 40;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            cursor: default;
+        }
+        #settings-panel.active {
+            display: flex;
+        }
+        .settings-content {
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .setting-item {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .setting-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: bold;
+        }
+        select, input {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+        select:focus { border-color: #3b82f6; }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .resizing { cursor: col-resize; user-select: none; }
+        .resizing iframe { pointer-events: none; }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="main-container" id="container">
+        <!-- Code Section -->
+        <div id="editor-pane">
+            <div id="editor-container" class="h-full w-full"></div>
+        </div>
+
+        <!-- Draggable Bar -->
+        <div id="resizer">
+            <div id="settings-trigger" title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </div>
+            
+            <!-- Settings Panel -->
+            <div id="settings-panel">
+                <div class="p-3 border-b border-gray-700 font-bold text-sm bg-[#2d2d2d] flex justify-between items-center">
+                    <span>Editor Settings</span>
+                    <button id="close-settings" class="hover:text-red-400 p-1">✕</button>
+                </div>
+                <div class="settings-content">
+                    <div class="setting-item">
+                        <label class="setting-label">Theme</label>
+                        <select id="set-theme">
+                            <option value="vs-dark">Visual Studio Dark</option>
+                            <option value="vs">Visual Studio Light</option>
+                            <option value="hc-black">High Contrast</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Font Size</label>
+                        <input type="number" id="set-fontsize" value="14" min="8" max="32">
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Word Wrap</label>
+                        <select id="set-wordwrap">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Line Numbers</label>
+                        <select id="set-linenumbers">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                            <option value="relative">Relative</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Minimap</label>
+                        <select id="set-minimap">
+                            <option value="false">Hidden</option>
+                            <option value="true">Visible</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Cursor Style</label>
+                        <select id="set-cursor">
+                            <option value="line">Line</option>
+                            <option value="block">Block</option>
+                            <option value="underline">Underline</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Tab Size</label>
+                        <select id="set-tabsize">
+                            <option value="2">2 Spaces</option>
+                            <option value="4" selected>4 Spaces</option>
+                            <option value="8">8 Spaces</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Cursor Blinking</label>
+                        <select id="set-blinking">
+                            <option value="blink">Blink</option>
+                            <option value="smooth">Smooth</option>
+                            <option value="phase">Phase</option>
+                            <option value="expand">Expand</option>
+                            <option value="solid">Solid</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Auto Closing Brackets</label>
+                        <select id="set-autoclose">
+                            <option value="always">Always</option>
+                            <option value="never">Never</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Semantic Highlighting</label>
+                        <select id="set-semantic">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Scroll Beyond Last Line</label>
+                        <select id="set-scrollpast">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Render Whitespace</label>
+                        <select id="set-whitespace">
+                            <option value="none">None</option>
+                            <option value="boundary">Boundary</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Format On Paste</label>
+                        <select id="set-formatpaste">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="preview-pane">
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+
+        let editor;
+        const editorPane = document.getElementById('editor-pane');
+        const resizer = document.getElementById('resizer');
+        const container = document.getElementById('container');
+        const previewFrame = document.getElementById('preview-frame');
+        const settingsTrigger = document.getElementById('settings-trigger');
+        const settingsPanel = document.getElementById('settings-panel');
+        const closeSettings = document.getElementById('close-settings');
+
+        window.onload = function() {
+            require(['vs/editor/editor.main'], function() {
+                editor = monaco.editor.create(document.getElementById('editor-container'), {
+                    value: "Type markdown to get started",
+                    language: 'markdown',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontFamily: "'Fira Code', monospace",
+                    fontSize: 14,
+                    fontLigatures: true,
+                    minimap: { enabled: false },
+                    padding: { top: 20 },
+                    wordWrap: 'on',
+                    cursorBlinking: 'smooth'
+                });
+
+                editor.onDidChangeModelContent(() => updatePreview());
+                updatePreview();
+                setupResizer();
+                setupSettings();
+            });
+        };
+
+        function updatePreview() {
+            const code = editor.getValue();
+            // Create a preview only if there's actual HTML content
+            const blob = new Blob([code], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+        }
+
+        function setupResizer() {
+            let isResizing = false;
+            
+            resizer.addEventListener('mousedown', (e) => {
+                if (settingsTrigger.contains(e.target) || settingsPanel.contains(e.target)) return;
+                isResizing = true;
+                container.classList.add('resizing');
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const containerWidth = container.offsetWidth;
+                let newWidth = (e.clientX / containerWidth) * 100;
+                if (newWidth < 5) newWidth = 5;
+                if (newWidth > 95) newWidth = 95;
+                editorPane.style.width = `${newWidth}%`;
+                if (editor) editor.layout();
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                container.classList.remove('resizing');
+            });
+        }
+
+        function setupSettings() {
+            settingsPanel.addEventListener('mousedown', (e) => e.stopPropagation());
+            settingsPanel.addEventListener('click', (e) => e.stopPropagation());
+
+            settingsTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsPanel.classList.toggle('active');
+            });
+
+            closeSettings.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsPanel.classList.remove('active');
+            });
+
+            document.addEventListener('mousedown', (e) => {
+                if (!settingsPanel.contains(e.target) && !settingsTrigger.contains(e.target)) {
+                    settingsPanel.classList.remove('active');
+                }
+            });
+
+            const apply = (id, callback) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', (e) => {
+                        callback(e.target.value);
+                    });
+                }
+            };
+
+            apply('set-theme', val => monaco.editor.setTheme(val));
+            apply('set-fontsize', val => editor.updateOptions({ fontSize: parseInt(val) }));
+            apply('set-wordwrap', val => editor.updateOptions({ wordWrap: val }));
+            apply('set-linenumbers', val => editor.updateOptions({ lineNumbers: val }));
+            apply('set-minimap', val => editor.updateOptions({ minimap: { enabled: val === 'true' } }));
+            apply('set-cursor', val => editor.updateOptions({ cursorStyle: val }));
+            apply('set-tabsize', val => editor.getModel().updateOptions({ tabSize: parseInt(val) }));
+            apply('set-blinking', val => editor.updateOptions({ cursorBlinking: val }));
+            apply('set-autoclose', val => editor.updateOptions({ autoClosingBrackets: val }));
+            apply('set-semantic', val => editor.updateOptions({ 'semanticHighlighting.enabled': val === 'true' }));
+            apply('set-scrollpast', val => editor.updateOptions({ scrollBeyondLastLine: val === 'true' }));
+            apply('set-whitespace', val => editor.updateOptions({ renderWhitespace: val }));
+            apply('set-formatpaste', val => editor.updateOptions({ formatOnPaste: val === 'true' }));
+        }
+
+        window.addEventListener('resize', () => { if (editor) editor.layout(); });
+    </script>
+</body>
+</html>
