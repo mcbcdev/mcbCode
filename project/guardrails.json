@@ -26,6 +26,6 @@
     "/RP/"
   ],
   ".mcstructure": [
-    "/BP/structures/"
+    "/BP/structures/**"
   ],
 }
