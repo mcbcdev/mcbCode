@@ -49,7 +49,7 @@ If you do not agree to an updated version of these Terms, you must stop using mc
 
 ## 4. Accounts
 
-Some features of mcbCode require an account.
+Most features of mcbCode require an account.
 
 When creating or using an account, you agree to:
 
@@ -76,6 +76,7 @@ You may not use mcbCode to:
 - Attempt to bypass security measures or access restrictions
 - Abuse APIs, servers, storage, or other infrastructure
 - Intentionally overload the Service
+- Create 18+ content across the Service
 - Impersonate another person or organization
 - Facilitate fraud or other illegal activity
 - Upload content that you do not have the right to use
