@@ -2,12 +2,13 @@
  * Requires three.js + OrbitControls loaded first (see index.html importmap).
  * This is "structure mode": editing a 3D grid of blocks (.mcstructure).
  */
+
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const VANILLA_COLOR = 0x3a3a3e;
 const AIR_NAME = "minecraft:air";
 const UNDEFINED_TEXTURE_URL = "https://mcbcode.com/img/undefined.png";
+const MAX_HISTORY = 50;
 
 export class BeaconScene {
   constructor(canvas) {
@@ -21,9 +22,7 @@ export class BeaconScene {
     this.camera.position.set(10, 10, 14);
 
     this.controls = new OrbitControls(this.camera, canvas);
-    // damping was causing the camera to keep drifting for a bit after you
-    // let go of the mouse button — turning it off makes it stop instantly.
-    this.controls.enableDamping = false;
+    this.controls.enableDamping = false; // no post-release drift
 
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 1.1));
     const dir = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -39,25 +38,31 @@ export class BeaconScene {
     this.scene.add(this.highlightGroup);
 
     this.size = [0, 0, 0];
-    this.palette = []; // [{name, states, version}]
+    this.palette = [];
     this.indices = new Int32Array(0);
-    this.materialCache = new Map(); // identifier -> THREE.Material
+    this.materialCache = new Map();
     this.textureLoader = new THREE.TextureLoader();
 
-    this.selectedPaletteEntry = null; // no tool selected = clicking just inspects/selects
-    this.selected = new Set();        // multi-selection, keys are "x,y,z"
-    this.onChange = null;             // fired after edits, for the save button
-    this.onInspect = null;            // fired on selection change: (positions[], entries[])
+    this.selectedPaletteEntry = null;
+    this.selected = new Set();
+    this.onChange = null;
+    this.onInspect = null;
+    this.onHover = null;
 
-    // raycasting for placing/removing/selecting
+    this._undoStack = [];
+    this._redoStack = [];
+
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     canvas.addEventListener("pointerdown", e => this._onPointerDown(e));
+    canvas.addEventListener("pointerup", e => this._onCanvasPointerUp(e));
+    canvas.addEventListener("pointermove", e => this._onHoverMove(e));
+    canvas.addEventListener("contextmenu", e => e.preventDefault());
 
     this._buildGizmo();
     this._dragState = null;
     window.addEventListener("pointermove", e => this._onPointerMove(e));
-    window.addEventListener("pointerup", () => this._onPointerUp());
+    window.addEventListener("pointerup", () => this._onWindowPointerUp());
 
     this._resize();
     window.addEventListener("resize", () => this._resize());
@@ -74,29 +79,31 @@ export class BeaconScene {
   _animate() {
     requestAnimationFrame(() => this._animate());
     this.controls.update();
-    if (this.borderHelper && this.borderHelper.material.visible !== false) {
+    if (this.borderHelper) {
       this.borderDashOffset -= 0.006;
       this.borderHelper.material.dashOffset = this.borderDashOffset;
     }
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** loads a decoded structure (from BeaconNbt.decodeStructure) into the scene */
   load(structData, customBlockList) {
     this.size = structData.size;
     this.palette = structData.palette;
     this.indices = structData.indices;
     this.customBlocks = customBlockList || [];
+    this._undoStack = [];
+    this._redoStack = [];
     this._rebuildGrid();
     this._rebuildBlocks();
   }
 
-  /** starts a brand new empty structure of the given size, all air */
   createEmpty(sx, sy, sz, customBlockList) {
     this.size = [sx, sy, sz];
     this.palette = [{ name: AIR_NAME, states: {}, version: 18163713 }];
     this.indices = new Int32Array(sx * sy * sz).fill(0);
     this.customBlocks = customBlockList || [];
+    this._undoStack = [];
+    this._redoStack = [];
     this._rebuildGrid();
     this._rebuildBlocks();
   }
@@ -109,10 +116,8 @@ export class BeaconScene {
     this.gridHelper = new THREE.GridHelper(maxDim + 2, maxDim + 2, 0x2a2a2e, 0x1a1a1e);
     this.gridHelper.position.set(sx / 2 - 0.5, -0.51, sz / 2 - 0.5);
     this.scene.add(this.gridHelper);
-    const center = new THREE.Vector3(sx / 2, sy / 4, sz / 2);
-    this.controls.target.copy(center);
+    this.controls.target.set(sx / 2, sy / 4, sz / 2);
 
-    // slow-moving dashed outline around the whole structure, 25% opacity
     const boxGeo = new THREE.BoxGeometry(sx, sy, sz);
     const edges = new THREE.EdgesGeometry(boxGeo);
     const mat = new THREE.LineDashedMaterial({ color: 0x05ee93, dashSize: 0.3, gapSize: 0.2, transparent: true, opacity: 0.25 });
@@ -140,7 +145,6 @@ export class BeaconScene {
 
   _idx(x, y, z) {
     const [sx, sy, sz] = this.size;
-    // Bedrock structure files are stored y-major, then z, then x (matches decode order)
     return (x * sy * sz) + (y * sz) + z;
   }
 
@@ -152,10 +156,8 @@ export class BeaconScene {
     if (custom) {
       mat = this._texturedMaterial(custom.textureUrl);
     } else if (key.includes(":") && key.split(":")[0] !== "minecraft") {
-      // namespaced custom block but no matching texture found under RP — fallback image
       mat = this._texturedMaterial(UNDEFINED_TEXTURE_URL);
     } else {
-      // vanilla block, no texture atlas wired up yet — deterministic pseudo-color
       let hash = 0;
       for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
       const color = new THREE.Color().setHSL((hash % 360) / 360, 0.35, 0.42);
@@ -167,25 +169,15 @@ export class BeaconScene {
 
   _texturedMaterial(url) {
     const mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    this.textureLoader.load(
-      url,
-      tex => {
-        tex.magFilter = THREE.NearestFilter;
-        tex.minFilter = THREE.NearestFilter;
-        mat.map = tex;
-        mat.needsUpdate = true;
-      },
-      undefined,
-      () => {
-        // texture failed to load (broken/missing file) — swap to fallback
-        this.textureLoader.load(UNDEFINED_TEXTURE_URL, tex => {
-          tex.magFilter = THREE.NearestFilter;
-          tex.minFilter = THREE.NearestFilter;
-          mat.map = tex;
-          mat.needsUpdate = true;
-        });
-      }
-    );
+    this.textureLoader.load(url, tex => {
+      tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+      mat.map = tex; mat.needsUpdate = true;
+    }, undefined, () => {
+      this.textureLoader.load(UNDEFINED_TEXTURE_URL, tex => {
+        tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+        mat.map = tex; mat.needsUpdate = true;
+      });
+    });
     return mat;
   }
 
@@ -250,11 +242,19 @@ export class BeaconScene {
     return idx;
   }
 
-  // ---------------- selection ----------------
-
   _entryAt(pos) {
     const pi = this.indices[this._idx(...pos)];
     return this.palette[pi];
+  }
+
+  // if the cell at pos is now air, drop it from the selection so the
+  // highlight box can never outlive the block it was pointing at
+  _dropIfAir(pos) {
+    const entry = this._entryAt(pos);
+    if (!entry || entry.name === AIR_NAME) {
+      const key = pos.join(",");
+      if (this.selected.delete(key)) this._rebuildSelectionHighlight();
+    }
   }
 
   _fireInspect() {
@@ -263,6 +263,49 @@ export class BeaconScene {
     const entries = positions.map(p => this._entryAt(p));
     this.onInspect(positions, entries);
   }
+
+  // ---------------- undo / redo ----------------
+
+  _snapshot() {
+    return {
+      size: [...this.size],
+      palette: this.palette.map(p => ({ name: p.name, states: { ...p.states }, version: p.version })),
+      indices: this.indices.slice(),
+      selected: new Set(this.selected)
+    };
+  }
+
+  _restore(snap) {
+    this.size = [...snap.size];
+    this.palette = snap.palette.map(p => ({ name: p.name, states: { ...p.states }, version: p.version }));
+    this.indices = snap.indices.slice();
+    this.selected = new Set(snap.selected);
+    this._rebuildGrid();
+    this._rebuildBlocks();
+    this._updateGizmoPosition();
+    if (this.onChange) this.onChange();
+    this._fireInspect();
+  }
+
+  _pushHistory() {
+    this._undoStack.push(this._snapshot());
+    if (this._undoStack.length > MAX_HISTORY) this._undoStack.shift();
+    this._redoStack = [];
+  }
+
+  undo() {
+    if (!this._undoStack.length) return;
+    this._redoStack.push(this._snapshot());
+    this._restore(this._undoStack.pop());
+  }
+
+  redo() {
+    if (!this._redoStack.length) return;
+    this._undoStack.push(this._snapshot());
+    this._restore(this._redoStack.pop());
+  }
+
+  // ---------------- selection ----------------
 
   selectAll() {
     this.selected.clear();
@@ -277,6 +320,7 @@ export class BeaconScene {
   }
 
   clearSelection() {
+    if (!this.selected.size) return;
     this.selected.clear();
     this._rebuildSelectionHighlight();
     this._updateGizmoPosition();
@@ -285,6 +329,7 @@ export class BeaconScene {
 
   deleteSelection() {
     if (!this.selected.size) return;
+    this._pushHistory();
     const airIdx = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
     for (const key of this.selected) {
       const [x, y, z] = key.split(",").map(Number);
@@ -297,8 +342,8 @@ export class BeaconScene {
     this._fireInspect();
   }
 
-  /** moves every selected block by (dx,dy,dz) in grid units; no-ops (returns false) on overlap/out of bounds */
-  moveSelection(dx, dy, dz) {
+  /** moves every selected block by (dx,dy,dz). recordHistory=false is used for live gizmo-drag previews. */
+  moveSelection(dx, dy, dz, recordHistory = true) {
     if (!this.selected.size || (dx === 0 && dy === 0 && dz === 0)) return false;
     const [sx, sy, sz] = this.size;
     const moves = [];
@@ -311,10 +356,11 @@ export class BeaconScene {
     const fromSet = new Set(moves.map(m => m.from.join(",")));
     for (const m of moves) {
       const toKey = m.to.join(",");
-      if (fromSet.has(toKey)) continue; // moving block into a cell another selected block is vacating — fine
+      if (fromSet.has(toKey)) continue;
       const pi = this.indices[this._idx(...m.to)];
-      if (pi >= 0 && this.palette[pi]?.name !== AIR_NAME) return false; // overlap with a non-selected block
+      if (pi >= 0 && this.palette[pi]?.name !== AIR_NAME) return false;
     }
+    if (recordHistory) this._pushHistory();
     const airIdx = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
     const carried = moves.map(m => this.indices[this._idx(...m.from)]);
     moves.forEach(m => { this.indices[this._idx(...m.from)] = airIdx; });
@@ -326,22 +372,60 @@ export class BeaconScene {
     return true;
   }
 
+  /** renames the block at pos, keeping its states. used by the editable id field in the inspector. */
+  setBlockIdentifier(pos, newName) {
+    newName = newName.trim();
+    if (!newName) return;
+    this._pushHistory();
+    const cur = this._entryAt(pos);
+    const entry = { name: newName, states: { ...(cur?.states || {}) }, version: cur?.version ?? 18163713 };
+    this.indices[this._idx(...pos)] = this._paletteIndexFor(entry);
+    this._rebuildBlocks();
+    if (this.onChange) this.onChange();
+    this._fireInspect();
+  }
+
+  replaceSelectionWithTool() {
+    if (!this.selectedPaletteEntry || !this.selected.size) return;
+    this._pushHistory();
+    const pi = this._paletteIndexFor(this.selectedPaletteEntry);
+    for (const key of this.selected) {
+      const [x, y, z] = key.split(",").map(Number);
+      this.indices[this._idx(x, y, z)] = pi;
+    }
+    this._rebuildBlocks();
+    if (this.onChange) this.onChange();
+    this._fireInspect();
+  }
+
   // ---------------- move gizmo ----------------
 
   _buildGizmo() {
     this.gizmo = new THREE.Group();
-    const axes = [
-      { dir: [1, 0, 0], color: 0xff5555 },
-      { dir: [0, 1, 0], color: 0x55ff55 },
-      { dir: [0, 0, 1], color: 0x5599ff }
-    ];
     this.gizmoParts = [];
+    const axes = [
+      { dir: new THREE.Vector3(1, 0, 0), color: 0xff5555 },
+      { dir: new THREE.Vector3(0, 1, 0), color: 0x55ff55 },
+      { dir: new THREE.Vector3(0, 0, 1), color: 0x5599ff }
+    ];
     axes.forEach(a => {
-      const arrow = new THREE.ArrowHelper(new THREE.Vector3(...a.dir), new THREE.Vector3(0, 0, 0), 1.6, a.color, 0.4, 0.22);
-      arrow.line.userData.axis = a.dir;
-      arrow.cone.userData.axis = a.dir;
-      this.gizmoParts.push(arrow.line, arrow.cone);
-      this.gizmo.add(arrow);
+      const group = new THREE.Group();
+      const axisArr = [a.dir.x, a.dir.y, a.dir.z];
+
+      // thick real meshes (not thin helper lines) so they're much easier to click on
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 10), new THREE.MeshBasicMaterial({ color: a.color }));
+      shaft.position.y = 0.65;
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 10), new THREE.MeshBasicMaterial({ color: a.color }));
+      head.position.y = 1.3 + 0.25;
+      shaft.userData.axis = axisArr;
+      head.userData.axis = axisArr;
+      group.add(shaft, head);
+
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), a.dir);
+      group.setRotationFromQuaternion(quat);
+
+      this.gizmoParts.push(shaft, head);
+      this.gizmo.add(group);
     });
     this.gizmo.visible = false;
     this.gizmo.renderOrder = 999;
@@ -366,19 +450,25 @@ export class BeaconScene {
     const t = hit.clone().sub(this._dragState.origin).dot(this._dragState.axisVec);
     const delta = Math.round(t);
     if (delta === this._dragState.lastDelta) return;
-    // revert last preview move, apply new one, without touching undo state
     const prevDelta = this._dragState.lastDelta;
-    const undo = [-prevDelta * this._dragState.axisVec.x, -prevDelta * this._dragState.axisVec.y, -prevDelta * this._dragState.axisVec.z];
-    if (prevDelta !== 0) this.moveSelection(...undo.map(Math.round));
+    if (prevDelta !== 0) {
+      const undo = [-prevDelta * this._dragState.axisVec.x, -prevDelta * this._dragState.axisVec.y, -prevDelta * this._dragState.axisVec.z].map(Math.round);
+      this.moveSelection(...undo, false);
+    }
     const apply = [delta * this._dragState.axisVec.x, delta * this._dragState.axisVec.y, delta * this._dragState.axisVec.z].map(Math.round);
     if (apply.some(v => v !== 0)) {
-      const ok = this.moveSelection(...apply);
+      const ok = this.moveSelection(...apply, false);
       this._dragState.lastDelta = ok ? delta : prevDelta;
+    } else {
+      this._dragState.lastDelta = 0;
     }
   }
 
-  _onPointerUp() {
-    this._dragState = null;
+  _onWindowPointerUp() {
+    if (this._dragState) {
+      this.controls.enabled = true;
+      this._dragState = null;
+    }
   }
 
   _tryStartGizmoDrag(e) {
@@ -386,7 +476,6 @@ export class BeaconScene {
     this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    this.raycaster.params.Line.threshold = 0.08;
     const hits = this.raycaster.intersectObjects(this.gizmoParts, false);
     if (!hits.length) return false;
     const axis = hits[0].object.userData.axis;
@@ -396,12 +485,40 @@ export class BeaconScene {
     const planeNormal = new THREE.Vector3().crossVectors(axisVec, camDir).cross(axisVec).normalize();
     const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal, this.gizmo.position);
     this._dragState = { axisVec, plane, origin: this.gizmo.position.clone(), lastDelta: 0 };
+    this._pushHistory(); // one history entry for the whole drag, not per pixel
+    this.controls.enabled = false; // stop orbit from fighting the drag
     return true;
+  }
+
+  // ---------------- click handling ----------------
+
+  _onHoverMove(e) {
+    if (this._dragState || !this.onHover) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const pt = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(pt, this.camera);
+    const hits = this.raycaster.intersectObjects(this.blockGroup.children, false);
+    if (!hits.length) { this.onHover(null, null); return; }
+    const hit = hits[0];
+    const pos = hit.object.userData[`pos_${hit.instanceId}`];
+    if (!pos) { this.onHover(null, null); return; }
+    this.onHover(pos, this._entryAt(pos));
+  }
+
+  _onCanvasPointerUp(e) {
+    if (this._pendingDeselect && this._downClient) {
+      const dx = e.clientX - this._downClient.x, dy = e.clientY - this._downClient.y;
+      if (Math.hypot(dx, dy) < 6) this.clearSelection();
+    }
+    this._pendingDeselect = false;
   }
 
   _onPointerDown(e) {
     if (!this.editable) return;
-    if (this.gizmo.visible && this._tryStartGizmoDrag(e)) return;
+
+    if (e.button === 0 && this.gizmo.visible && this._tryStartGizmoDrag(e)) return;
+
+    this._downClient = { x: e.clientX, y: e.clientY };
 
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -411,17 +528,35 @@ export class BeaconScene {
     const hits = this.raycaster.intersectObjects(this.blockGroup.children, false);
     const [sx, sy, sz] = this.size;
 
-    if (hits.length === 0) return;
+    if (hits.length === 0) { this._pendingDeselect = true; return; }
+    this._pendingDeselect = false;
+
     const hit = hits[0];
     const mesh = hit.object;
     const pos = mesh.userData[`pos_${hit.instanceId}`];
     if (!pos) return;
     const key = pos.join(",");
 
+    // right-click: always selects, never places/erases, works no matter what tool is active
+    if (e.button === 2) {
+      if (e.shiftKey) {
+        if (this.selected.has(key)) this.selected.delete(key); else this.selected.add(key);
+      } else {
+        this.selected.clear();
+        this.selected.add(key);
+      }
+      this._rebuildSelectionHighlight();
+      this._updateGizmoPosition();
+      this._fireInspect();
+      return;
+    }
+    if (e.button !== 0) return;
+
     // ctrl/cmd-click always erases, regardless of tool
     if (e.ctrlKey || e.metaKey) {
+      this._pushHistory();
       this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
-      this.selected.delete(key);
+      this._dropIfAir(pos);
       this._rebuildBlocks();
       this._updateGizmoPosition();
       if (this.onChange) this.onChange();
@@ -438,7 +573,7 @@ export class BeaconScene {
       return;
     }
 
-    // no tool selected: plain click selects just this block (for inspecting/moving)
+    // no tool selected: plain click selects just this block
     if (!this.selectedPaletteEntry) {
       this.selected.clear();
       this.selected.add(key);
@@ -448,7 +583,7 @@ export class BeaconScene {
       return;
     }
 
-    // a tool is selected: place/erase as before
+    // a tool is selected: place/erase
     const erasing = this.selectedPaletteEntry.name === AIR_NAME;
     let target;
     if (erasing) {
@@ -460,7 +595,9 @@ export class BeaconScene {
     const [tx, ty, tz] = target;
     if (tx < 0 || ty < 0 || tz < 0 || tx >= sx || ty >= sy || tz >= sz) return;
 
+    this._pushHistory();
     this.indices[this._idx(tx, ty, tz)] = this._paletteIndexFor(this.selectedPaletteEntry);
+    this._dropIfAir(target);
     this._rebuildBlocks();
     if (this.onChange) this.onChange();
   }
@@ -468,8 +605,8 @@ export class BeaconScene {
   setSelectedBlock(entry) { this.selectedPaletteEntry = entry; }
   setEditable(v) { this.editable = v; }
 
-  /** explicit removal, used by the inspector's "Remove this block" button */
   removeAt(pos) {
+    this._pushHistory();
     this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
     this.selected.delete(pos.join(","));
     this._rebuildBlocks();
@@ -477,23 +614,8 @@ export class BeaconScene {
     if (this.onChange) this.onChange();
   }
 
-  /** replaces every selected block's type with the currently selected palette tool */
-  replaceSelectionWithTool() {
-    if (!this.selectedPaletteEntry || !this.selected.size) return;
-    const pi = this._paletteIndexFor(this.selectedPaletteEntry);
-    for (const key of this.selected) {
-      const [x, y, z] = key.split(",").map(Number);
-      this.indices[this._idx(x, y, z)] = pi;
-    }
-    this._rebuildBlocks();
-    if (this.onChange) this.onChange();
-    this._fireInspect();
-  }
-
-  // ---------------- resize ----------------
-
-  /** grows or shrinks the structure. keeps the (0,0,0) corner fixed; new cells are air. */
   resizeStructure(newSize) {
+    this._pushHistory();
     const [nsx, nsy, nsz] = newSize.map(v => Math.max(1, Math.round(v)));
     const [osx, osy, osz] = this.size;
     const airIdx = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
@@ -512,7 +634,6 @@ export class BeaconScene {
     if (this.onChange) this.onChange();
   }
 
-  /** returns the current state in the shape BeaconNbt.encodeStructure expects */
   exportData() {
     const used = new Set(Array.from(this.indices).filter(i => i >= 0));
     const remap = new Map();
