@@ -1,20 +1,86 @@
 # ✨ mcbCode [✨](https://loaf.mcbcode.com/new)
 
-one of the first dedicated code editors for `.mcfunction`, specifically built for the Minecraft Bedrock Edition command system.
+**mcbCode** is a dedicated development environment for creating Minecraft: Bedrock Edition content.
 
-## moving to its own repository
-this project originally lived over at my [github site](https://xyztoast.github.io). however, as more and more was added, the project grew into a full-scale editor for command blocks and mcfunctions, i decided it needs a dedicated space. 
+built from scratch for creators who would rather write commands and other files in an actual editor than repeatedly opening minecraft just to discover that they forgot one character.
 
-i'm moving development here to keep things organized as i add more.
+## what is mcbCode?
+
+mcbCode started as a simple `.mcfunction` code editor and has grown into a larger toolkit for Minecraft Bedrock creators.
+
+it provides a place to create, edit, organize, and manage files for bedrock projects.
+
+mcbCode is designed to work alongside the tools creators already use, rather than trying to replace the entire bedrock development ecosystem.
+
+## features
+
+* dedicated `.mcfunction` editing
+* minecraft bedrock command syntax support
+* project and file management
+* folders and multiple files within projects
+* project sharing and collaboration
+* project export
+* bedrock pack support
+* account profiles
+* profile customization
+* points system
+* notifications
+* documentation and guides
+* (mostly supported) mobile-friendly interfaces
+* customizable editor settings
+* multiple editor modes
+* minecraft-specific fonts and formatting
+* tools for working with bedrock development resources
+
+and because one feature was never enough, more are being added over time.
 
 ## links
-*   **Official Site:** [mcbcode.com](https://mcbcode.com) (Recommended)
-*   **Welcome Site:** [hello.mcbcode.com](https://hello.mcbcode.com) ("Portfolio" I guess)
 
-## why this exists
-writing bedrock commands in a standard text editor is annoying. having to load a minecraft world to test one command gets annoying. this editor was built from scratch, making it easier for map makers and addon creators to script worlds without the constant syntax errors and testing.
+* **official site:** [mcbcode.com](https://mcbcode.com)
+* **more about mcbCode:** [mcbcode.com/about](https://mcbcode.com/about)
+* **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
 
+## getting started
 
+the easiest way to use mcbCode is through the official website.
 
-## hey! im a solo dev. if you like the project, donations are appreciated!
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/idktoast)
+no installation or development environment is required. create an account, create a project, and start working on your bedrock files.
+
+mcbCode is intended to be accessible to both newer creators and experienced bedrock developers.
+
+## why does this exist?
+
+minecraft bedrock development can involve a lot of repetitive work.
+
+writing commands in a generic text editor means dealing with little to no minecraft-specific tooling. testing commands often means switching back to minecraft, running them, finding the error, going back to the editor, fixing it, and repeating the process until humanity has collectively decided that computers were a mistake.
+
+mcbCode was created to make that process easier.
+
+the goal is to provide a focused workspace for bedrock creators where their projects, files, and development tools can live in one place.
+
+## development
+
+mcbCode is developed independently by a *solo* developer.
+
+the project continues to evolve based on new features, improvements, bug fixes, and feedback from the bedrock community.
+
+some parts of mcbCode are also built around services provided by platforms such as cloudflare and github.
+
+## contributing
+
+mcbCode is primarily developed as an independent project, but bug reports, suggestions, and feedback are appreciated. [discord](https://discord.gg/JbSPDdHTn)
+
+if you find something that is broken or have an idea that could make mcbCode better, opening an issue is a good place to start.
+
+## support the project
+
+mcbCode is independently developed and maintained.
+
+if you enjoy using it and want to support continued development, donations are appreciated. they help support the infrastructure and ongoing development of the project.
+
+<script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support on Ko-fi', '#05ee93', 'X8X51J5WEA');kofiwidget2.draw();</script> 
+
+---
+
+**mcbCode**
+*build bedrock addons without starting from zero.*
