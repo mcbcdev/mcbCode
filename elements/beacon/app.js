@@ -14,6 +14,9 @@ let scene = null;   // BeaconScene, structure mode
 let model = null;   // BeaconModel, model mode
 let customBlocks = [];
 let dirty = false;
+let currentTool = null; // { identifier, displayName } | null, structure mode only
+
+const AIR_TOOL = "minecraft:air";
 
 function setStatus(text) { $(".mode-tabs .status").textContent = text; }
 function markDirty() {
@@ -60,6 +63,7 @@ async function bootStructureMode() {
   scene.setEditable(window.BeaconProject.canEdit);
   scene.onChange = markDirty;
   scene.onInspect = renderBlockInspector;
+  scene.onHover = updateHintHover;
 
   let bytes = null;
   if (window.BeaconProject.currentFile) {
@@ -76,6 +80,7 @@ async function bootStructureMode() {
     markDirty();
   }
 
+  updateHintHover(null, null);
   $("#save-btn").onclick = () => saveStructure();
 }
 
@@ -119,8 +124,6 @@ function buildBlockPalette() {
   renderBlockInspector([], []);
 }
 
-const AIR_TOOL = "minecraft:air";
-
 function makeSwatch(block, kind) {
   const el = document.createElement("div");
   el.className = "block-swatch";
@@ -140,6 +143,8 @@ function selectSwatch(el, block) {
   document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
   el.classList.add("selected");
   scene.setSelectedBlock({ name: block.identifier, states: {}, version: 18163713 });
+  currentTool = block;
+  updateHintHover(null, null);
 }
 
 function cyclePalette(dir) {
@@ -150,12 +155,45 @@ function cyclePalette(dir) {
   swatches[next].click();
 }
 
+function selectPaletteByIndex(n) {
+  const swatches = [...document.querySelectorAll(".block-swatch")];
+  if (swatches[n]) swatches[n].click();
+}
+function selectEraser() {
+  const swatches = [...document.querySelectorAll(".block-swatch")];
+  if (swatches[0]) swatches[0].click();
+}
+function deselectTool() {
+  document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
+  if (scene) scene.setSelectedBlock(null);
+  currentTool = null;
+  updateHintHover(null, null);
+}
+
+// ---------------- viewport hint (tool + hover) ----------------
+
+function baseHintText() {
+  if (!currentTool) return "no tool: click a block to select it, drag the arrows to move it. shift-click to multi-select. right-click always selects.";
+  if (currentTool.identifier === AIR_TOOL) return "eraser tool: click a block to erase it. right-click a block to select it instead.";
+  return `placing: ${currentTool.displayName || currentTool.identifier} — click a face to place. right-click a block to select it instead.`;
+}
+
+let lastHover = null;
+function updateHintHover(pos, entry) {
+  lastHover = (pos && entry) ? entry : null;
+  const el = document.querySelector(".viewport-hint");
+  if (!el) return;
+  let text = baseHintText();
+  if (lastHover && lastHover.name !== "minecraft:air") text += ` | hovering: ${lastHover.name}`;
+  el.textContent = text;
+}
+
 // renderBlockInspector(positions, entries) — arrays, may be empty (none selected),
 // length 1 (single block), or length N (multi-selection)
 function renderBlockInspector(positions, entries) {
   const insp = $("#inspector");
   if (!positions || positions.length === 0) {
-    insp.innerHTML = `<div class="insp-empty">click a block with no tool selected to select it.<br><br>shift-click to select more than one. pick a block (or the eraser) from the left panel to place/erase instead.</div>`;
+    insp.innerHTML = `<div class="insp-empty">click a block to select it.<br><br>shift-click or right-click to select more than one. pick a block (or the eraser) from the left panel to place/erase instead.</div>`;
     return;
   }
 
@@ -167,7 +205,7 @@ function renderBlockInspector(positions, entries) {
     insp.innerHTML = `
       <div class="panel-section">
         <div class="panel-label">Selected Block</div>
-        <div class="meta-value" style="margin-bottom:10px;">${escHtml(entry.name)}</div>
+        <div class="insp-field"><label>Block ID</label><input type="text" id="block-id-input" value="${escHtml(entry.name)}"></div>
         <div class="meta-value" style="margin-bottom:10px; color:#555;">position: ${pos.join(", ")}</div>
         <div class="panel-label">States</div>
         ${statesHtml}
@@ -175,6 +213,7 @@ function renderBlockInspector(positions, entries) {
           <button class="sm-btn" id="remove-block-btn" style="color:#ff5555;">Remove this block</button>
         </div>
       </div>`;
+    $("#block-id-input").onchange = e => scene.setBlockIdentifier(pos, e.target.value);
     $("#remove-block-btn").onclick = () => scene.removeAt(pos);
     return;
   }
@@ -296,6 +335,8 @@ function buildMenuBar() {
   ];
 
   const editItems = mode === "structure" ? [
+    { label: "Undo (Ctrl+Z)", action: () => scene.undo() },
+    { label: "Redo (Ctrl+Y)", action: () => scene.redo() },
     { label: "Select all blocks (Ctrl+A)", action: () => scene.selectAll() },
     { label: "Clear selection (Esc)", action: () => scene.clearSelection() },
     { label: "Delete selection (Del)", action: () => scene.deleteSelection() }
@@ -311,7 +352,7 @@ function buildMenuBar() {
   ] : [];
 
   const toolsItems = mode === "structure" ? [
-    { label: "Resize structure...", action: () => promptResize() },
+    { label: "Resize structure...", action: () => openResizeModal() },
     { label: "Show keyboard shortcuts (?)", action: () => showShortcutsOverlay() }
   ] : [
     { label: "Show keyboard shortcuts (?)", action: () => showShortcutsOverlay() }
@@ -358,14 +399,42 @@ function closeAllMenus() {
 }
 document.addEventListener("click", closeAllMenus);
 
-function promptResize() {
+// ---------------- resize modal (custom, not a system prompt) ----------------
+
+function openResizeModal() {
+  closeModal();
   const [sx, sy, sz] = scene.size;
-  const input = prompt(`new size as "x y z" (currently ${sx} ${sy} ${sz}). growing keeps the (0,0,0) corner fixed, shrinking crops from the far corner.`, `${sx} ${sy} ${sz}`);
-  if (!input) return;
-  const parts = input.trim().split(/\s+/).map(Number);
-  if (parts.length !== 3 || parts.some(n => !Number.isFinite(n) || n < 1)) { alert("enter three numbers, each 1 or greater."); return; }
-  scene.resizeStructure(parts);
-  setStatus(`resized to ${parts.join("x")}`);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "resize-modal";
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="panel-label">Resize Structure</div>
+      <div class="meta-value" style="margin-bottom:12px; color:#888;">growing keeps the (0,0,0) corner fixed. shrinking crops from the far corner — blocks past the new edge are lost.</div>
+      <div class="insp-row3" style="margin-bottom:16px;">
+        <div class="insp-field"><label>X</label><input type="number" id="resize-x" min="1" value="${sx}"></div>
+        <div class="insp-field"><label>Y</label><input type="number" id="resize-y" min="1" value="${sy}"></div>
+        <div class="insp-field"><label>Z</label><input type="number" id="resize-z" min="1" value="${sz}"></div>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="sm-btn" id="resize-cancel">Cancel</button>
+        <button class="primary-btn" id="resize-apply">Apply</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  $("#resize-cancel").onclick = closeModal;
+  $("#resize-apply").onclick = () => {
+    const nx = +$("#resize-x").value, ny = +$("#resize-y").value, nz = +$("#resize-z").value;
+    if (![nx, ny, nz].every(n => Number.isFinite(n) && n >= 1)) { alert("each dimension must be 1 or greater."); return; }
+    scene.resizeStructure([nx, ny, nz]);
+    setStatus(`resized to ${nx}x${ny}x${nz}`);
+    closeModal();
+  };
+}
+
+function closeModal() {
+  document.getElementById("resize-modal")?.remove();
 }
 
 function showShortcutsOverlay() {
@@ -386,6 +455,8 @@ function showShortcutsOverlay() {
 // ---------------- keyboard shortcuts ----------------
 
 const SHORTCUTS = [
+  ["Ctrl/Cmd+Z", "undo"],
+  ["Ctrl/Cmd+Y or Ctrl+Shift+Z", "redo"],
   ["Delete / Backspace", "delete selected block(s)"],
   ["Escape", "clear selection"],
   ["1-9", "pick block 1-9 from the palette"],
@@ -407,8 +478,11 @@ const SHORTCUTS = [
   ["-", "shrink structure by 1 block each axis"],
   ["H", "toggle left panel (mobile)"],
   ["I", "toggle right panel (mobile)"],
-  ["Shift+Click block", "add/remove block from multi-selection"],
+  ["Click block", "select it (only when no tool is active)"],
+  ["Right-click block", "always selects it, even with a tool active"],
+  ["Shift+Click / Shift+Right-click", "add/remove block from multi-selection"],
   ["Ctrl/Cmd+Click block", "quick-erase, no tool needed"],
+  ["Click empty space", "deselect"],
   ["Drag colored arrows", "move the current selection"],
   ["?", "show/hide this list"],
 ];
@@ -417,6 +491,7 @@ function bindShortcuts() {
   window.addEventListener("keydown", e => {
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (document.getElementById("resize-modal")) return; // don't fire shortcuts while modal is open
 
     if (e.key === "?") { e.preventDefault(); showShortcutsOverlay(); return; }
 
@@ -424,6 +499,8 @@ function bindShortcuts() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") { e.preventDefault(); if (mode === "structure") exportStructureFile(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") { e.preventDefault(); if (mode === "structure") scene.selectAll(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); if (mode === "structure") scene.clearSelection(); return; }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); if (mode === "structure") scene.undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); if (mode === "structure") scene.redo(); return; }
 
     if (mode !== "structure") return; // rest of the shortcuts are structure-mode only
 
@@ -449,19 +526,6 @@ function bindShortcuts() {
   });
 }
 
-function selectPaletteByIndex(n) {
-  const swatches = [...document.querySelectorAll(".block-swatch")];
-  // index 0 is the eraser, so palette block "1" is swatches[1]
-  if (swatches[n]) swatches[n].click();
-}
-function selectEraser() {
-  const swatches = [...document.querySelectorAll(".block-swatch")];
-  if (swatches[0]) swatches[0].click();
-}
-function deselectTool() {
-  document.querySelectorAll(".block-swatch.selected").forEach(s => s.classList.remove("selected"));
-  if (scene) scene.setSelectedBlock(null);
-}
 function growShrink(delta) {
   const [sx, sy, sz] = scene.size;
   scene.resizeStructure([sx + delta, sy + delta, sz + delta]);
