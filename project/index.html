@@ -391,6 +391,14 @@
     }
     .creator-qmark:hover .creator-tooltip, .creator-qmark.open .creator-tooltip { display: block; }
     .creator-section-label { font-size: 13px; color: #fff; font-family: 'mcfontb', sans-serif; margin: 22px 0 4px; }
+    .creator-cat { margin-bottom: 6px; border: 1px solid #1e1e22; }
+    .creator-cat-header { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; background: #1a1c1f; font-size: 12px; color: #ccc; user-select: none; transition: color 0.15s; }
+    .creator-cat-header:hover { color: #05ee93; }
+    .creator-cat-arrow { color: #00b2ff; width: 12px; display: inline-block; }
+    .creator-cat-body { padding: 4px 12px 10px; }
+    .recipe-grid { display: grid; grid-template-columns: repeat(3, 70px); gap: 6px; }
+    .recipe-grid textarea { background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'Fira Code', monospace; font-size: 11px; padding: 6px; text-align: center; resize: none; outline: none; }
+    .recipe-grid textarea:focus { border-color: #05ee93; }
   </style>
 </head>
 <body>
@@ -854,12 +862,17 @@
       let parentId = null;
       const resolved = [];
       for (const name of names) {
-        const folder = allFiles.find(f => f.type === "folder" && f.parent_id === parentId && f.name === name);
+        const parentKey = parentId === null ? null : String(parentId);
+        const folder = allFiles.find(f =>
+          f.type === "folder" &&
+          (f.parent_id === null ? null : String(f.parent_id)) === parentKey &&
+          f.name === name
+          );
         if (!folder) break;
         resolved.push({ id: folder.id, name: folder.name });
         parentId = folder.id;
-      }
-      return resolved;
+        }
+     return resolved;
     }
 
     function getFolderNamesFromLocation() {
@@ -1236,32 +1249,25 @@ function qtoolsDef(componentId) {
 }
 
 // ---- component lists (pulled from the block/item component docs) ----
-const BLOCK_COMPONENTS = [
-  "minecraft:chest_obstruction","minecraft:collision_box","minecraft:connection_rule",
-  "minecraft:crafting_table","minecraft:destructible_by_explosion","minecraft:destructible_by_mining",
-  "minecraft:destruction_particles","minecraft:display_name","minecraft:embedded_visual",
-  "minecraft:entity_fall_on","minecraft:flammable","minecraft:flower_pottable","minecraft:friction",
-  "minecraft:geometry","minecraft:item_visual","minecraft:leashable","minecraft:light_dampening",
-  "minecraft:light_emission","minecraft:liquid_detection","minecraft:loot","minecraft:map_color",
-  "minecraft:material_instances","minecraft:movable","minecraft:placement_filter",
-  "minecraft:precipitation_interactions","minecraft:random_offset","minecraft:redstone_conductivity",
-  "minecraft:redstone_consumer","minecraft:redstone_producer","minecraft:replaceable",
-  "minecraft:selection_box","minecraft:support","minecraft:tags","minecraft:tick","minecraft:transformation"
-];
+const BLOCK_COMPONENT_CATEGORIES = {
+  "Appearance": ["minecraft:display_name","minecraft:geometry","minecraft:item_visual","minecraft:embedded_visual","minecraft:material_instances","minecraft:map_color","minecraft:light_emission","minecraft:light_dampening","minecraft:transformation","minecraft:random_offset","minecraft:destruction_particles"],
+  "Physics & Collision": ["minecraft:collision_box","minecraft:selection_box","minecraft:friction","minecraft:movable","minecraft:entity_fall_on","minecraft:support"],
+  "Interaction": ["minecraft:crafting_table","minecraft:flower_pottable","minecraft:chest_obstruction","minecraft:leashable","minecraft:placement_filter","minecraft:connection_rule"],
+  "Redstone": ["minecraft:redstone_conductivity","minecraft:redstone_consumer","minecraft:redstone_producer"],
+  "Durability & Destruction": ["minecraft:destructible_by_explosion","minecraft:destructible_by_mining","minecraft:flammable"],
+  "World Behavior": ["minecraft:liquid_detection","minecraft:precipitation_interactions","minecraft:replaceable","minecraft:tick"],
+  "Misc": ["minecraft:loot","minecraft:tags"]
+};
 
-const ITEM_COMPONENTS = [
-  "minecraft:allow_off_hand","minecraft:block_placer","minecraft:bundle_interaction",
-  "minecraft:can_destroy_in_creative","minecraft:compostable","minecraft:cooldown","minecraft:damage",
-  "minecraft:damage_absorption","minecraft:digger","minecraft:display_name","minecraft:durability",
-  "minecraft:durability_sensor","minecraft:dyeable","minecraft:enchantable","minecraft:entity_placer",
-  "minecraft:fire_resistant","minecraft:food","minecraft:fuel","minecraft:glint","minecraft:hand_equipped",
-  "minecraft:hover_text_color","minecraft:icon","minecraft:interact_button","minecraft:kinetic_weapon",
-  "minecraft:liquid_clipped","minecraft:max_stack_size","minecraft:piercing_weapon","minecraft:projectile",
-  "minecraft:rarity","minecraft:record","minecraft:repairable","minecraft:shooter","minecraft:should_despawn",
-  "minecraft:stacked_by_data","minecraft:storage_item","minecraft:storage_weight_limit",
-  "minecraft:storage_weight_modifier","minecraft:swing_duration","minecraft:swing_sounds","minecraft:tags",
-  "minecraft:throwable","minecraft:use_animation","minecraft:use_modifiers","minecraft:wearable"
-];
+const ITEM_COMPONENT_CATEGORIES = {
+  "Appearance": ["minecraft:display_name","minecraft:icon","minecraft:glint","minecraft:hand_equipped","minecraft:hover_text_color","minecraft:wearable","minecraft:dyeable"],
+  "Usage & Interaction": ["minecraft:interact_button","minecraft:use_animation","minecraft:use_modifiers","minecraft:cooldown","minecraft:food","minecraft:fuel"],
+  "Combat": ["minecraft:damage","minecraft:damage_absorption","minecraft:digger","minecraft:kinetic_weapon","minecraft:piercing_weapon","minecraft:shooter","minecraft:projectile","minecraft:swing_duration","minecraft:swing_sounds","minecraft:throwable"],
+  "Durability & Repair": ["minecraft:durability","minecraft:durability_sensor","minecraft:repairable","minecraft:enchantable"],
+  "Storage & Stacking": ["minecraft:max_stack_size","minecraft:stacked_by_data","minecraft:storage_item","minecraft:storage_weight_limit","minecraft:storage_weight_modifier","minecraft:bundle_interaction"],
+  "Placement": ["minecraft:block_placer","minecraft:entity_placer","minecraft:can_destroy_in_creative","minecraft:compostable","minecraft:fire_resistant","minecraft:liquid_clipped"],
+  "Misc": ["minecraft:allow_off_hand","minecraft:rarity","minecraft:record","minecraft:should_despawn","minecraft:tags"]
+};
 
 let creatorKind = null;
 
@@ -1281,8 +1287,7 @@ function openCreator(kind) {
 
   saveBtn.style.display = "";
   title.textContent = kind === "block" ? "Create Block" : "Create Item";
-  const components = kind === "block" ? BLOCK_COMPONENTS : ITEM_COMPONENTS;
-
+  const categories = kind === "block" ? BLOCK_COMPONENT_CATEGORIES : ITEM_COMPONENT_CATEGORIES;
   const textureFolder = kind === "block" ? "blocks" : "items";
 
   let html = `
@@ -1305,25 +1310,72 @@ function openCreator(kind) {
       <label>Texture Path / Shortname (used if no upload above)</label>
       <textarea id="creator-texture-path" rows="1" placeholder="e.g. wiki:existing_texture"></textarea>
     </div>
+
     <div class="creator-section-label">Components</div>
   `;
 
-  components.forEach(id => {
+  let first = true;
+  Object.keys(categories).forEach(catName => {
+    const ids = categories[catName];
+    const catKey = catName.replace(/[^a-zA-Z0-9]/g, "");
     html += `
-      <div class="creator-comp-row">
-        <div class="creator-comp-name">${esc(id)}</div>
-        <textarea rows="1" data-component-id="${esc(id)}" placeholder="value / json for this component"></textarea>
-        <div class="creator-qmark" tabindex="0">?
-          <div class="creator-tooltip">${esc(qtoolsDef(id))}</div>
+      <div class="creator-cat">
+        <div class="creator-cat-header" onclick="toggleCreatorCat('${catKey}')">
+          <span class="creator-cat-arrow" id="cat-arrow-${catKey}">${first ? "v" : ">"}</span>
+          <span>${esc(catName)}</span>
+        </div>
+        <div class="creator-cat-body" id="cat-body-${catKey}" style="display:${first ? "block" : "none"};">
+    `;
+    ids.forEach(id => {
+      html += `
+        <div class="creator-comp-row">
+          <div class="creator-comp-name">${esc(id)}</div>
+          <textarea rows="1" data-component-id="${esc(id)}" placeholder="value / json for this component"></textarea>
+          <div class="creator-qmark" tabindex="0">?
+            <div class="creator-tooltip">${esc(qtoolsDef(id))}</div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+    first = false;
+  });
+
+  html += `
+    <div class="creator-cat">
+      <div class="creator-cat-header" onclick="toggleCreatorCat('loot')">
+        <span class="creator-cat-arrow" id="cat-arrow-loot">></span>
+        <span>Loot Table (optional)</span>
+      </div>
+      <div class="creator-cat-body" id="cat-body-loot" style="display:none;">
+        <div class="field-hint" style="color:#666; font-size:11px; margin-bottom:10px;">add items this ${kind} should drop. leave empty to skip.</div>
+        <div id="loot-rows"></div>
+        <button class="sm-btn" type="button" onclick="addLootRow()">+ Add Drop</button>
+      </div>
+    </div>
+  `;
+
+  html += `
+    <div class="creator-cat">
+      <div class="creator-cat-header" onclick="toggleCreatorCat('recipe')">
+        <span class="creator-cat-arrow" id="cat-arrow-recipe">></span>
+        <span>Crafting Recipe (optional)</span>
+      </div>
+      <div class="creator-cat-body" id="cat-body-recipe" style="display:none;">
+        <div class="field-hint" style="color:#666; font-size:11px; margin-bottom:10px;">fill in the 3x3 grid with item identifiers (e.g. wiki:ectoplasm). leave a cell empty for no ingredient there.</div>
+        <div id="recipe-grid" class="recipe-grid"></div>
+        <div class="set-field" style="margin-top:12px; max-width:260px;">
+          <label>Result Count</label>
+          <textarea id="recipe-result-count" rows="1" placeholder="1">1</textarea>
         </div>
       </div>
-    `;
-  });
+    </div>
+  `;
 
   body.innerHTML = html;
   document.getElementById("creator-overlay").classList.add("open");
+  buildRecipeGrid();
 
-  // tap-to-open tooltips on mobile (hover doesn't exist there)
   body.querySelectorAll(".creator-qmark").forEach(q => {
     q.addEventListener("click", e => {
       e.stopPropagation();
@@ -1334,6 +1386,41 @@ function openCreator(kind) {
   });
 }
 
+function toggleCreatorCat(key) {
+  const bodyEl = document.getElementById(`cat-body-${key}`);
+  const arrowEl = document.getElementById(`cat-arrow-${key}`);
+  if (!bodyEl) return;
+  const isOpen = bodyEl.style.display !== "none";
+  bodyEl.style.display = isOpen ? "none" : "block";
+  arrowEl.textContent = isOpen ? ">" : "v";
+}
+
+function addLootRow(itemVal, minVal, maxVal, weightVal) {
+  const container = document.getElementById("loot-rows");
+  const rowId = "loot-row-" + Date.now() + Math.floor(Math.random() * 1000);
+  const row = document.createElement("div");
+  row.className = "creator-comp-row";
+  row.id = rowId;
+  row.innerHTML = `
+    <textarea rows="1" class="loot-item" placeholder="item identifier, e.g. wiki:ectoplasm">${esc(itemVal || "")}</textarea>
+    <textarea rows="1" class="loot-min" placeholder="min count" style="max-width:80px;">${esc(minVal || "1")}</textarea>
+    <textarea rows="1" class="loot-max" placeholder="max count" style="max-width:80px;">${esc(maxVal || "1")}</textarea>
+    <textarea rows="1" class="loot-weight" placeholder="weight" style="max-width:80px;">${esc(weightVal || "1")}</textarea>
+    <button class="sm-btn" type="button" onclick="document.getElementById('${rowId}').remove()">remove</button>
+  `;
+  container.appendChild(row);
+}
+
+function buildRecipeGrid() {
+  const grid = document.getElementById("recipe-grid");
+  if (!grid) return;
+  let html = "";
+  for (let i = 0; i < 9; i++) {
+    html += `<textarea rows="1" class="recipe-cell" data-cell="${i}" placeholder=""></textarea>`;
+  }
+  grid.innerHTML = html;
+}
+
 function closeCreator() {
   document.getElementById("creator-overlay").classList.remove("open");
   creatorKind = null;
@@ -1341,15 +1428,9 @@ function closeCreator() {
 document.getElementById("creator-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeCreator(); });
 
 function validateIdentifier(value) {
-  // must look like namespace:identifier — lowercase letters, numbers, underscores on each side
   return /^[a-z0-9_]+:[a-z0-9_]+$/.test(value.trim());
 }
 
-// ---- creator file-writing helpers (real project files, not local-only) ----
-
-// walks/creates a chain of folders (e.g. ["RP","textures","blocks"]) starting
-// from project root, reusing existing folders where they already exist.
-// returns the parent_id to use for a file placed inside the final folder.
 async function ensureFolderPath(segments) {
   let parentId = null;
   for (const seg of segments) {
@@ -1384,7 +1465,6 @@ function findFileInFolder(parentId, filename) {
   );
 }
 
-// reads a file's saved text content (used to merge into existing terrain_texture.json etc)
 async function readFileContent(fileObj) {
   if (!fileObj || !fileObj.save_id) return null;
   try {
@@ -1395,8 +1475,6 @@ async function readFileContent(fileObj) {
   } catch { return null; }
 }
 
-// creates or updates a JSON file inside a folder with real content, via the
-// same /project/file endpoint the rest of the file explorer uses.
 async function writeJSONFile(parentId, filename, obj) {
   const existing = findFileInFolder(parentId, filename);
   const content = JSON.stringify(obj, null, 4);
@@ -1419,7 +1497,6 @@ async function writeJSONFile(parentId, filename, obj) {
   return d;
 }
 
-// uploads a PNG (ArrayBuffer/File) into a folder, same endpoint the "+ Image" button uses
 async function uploadPngFile(parentId, filename, data) {
   const params = new URLSearchParams({ project_code: shareCode, name: filename });
   if (parentId) params.set("parent_id", parentId);
@@ -1518,6 +1595,33 @@ async function creatorSave() {
       }
     }
 
+    const lootRowEls = document.querySelectorAll("#loot-rows .creator-comp-row");
+    if (lootRowEls.length > 0) {
+      status.textContent = "writing loot table...";
+      const entries = [];
+      lootRowEls.forEach(row => {
+        const item = row.querySelector(".loot-item").value.trim();
+        if (!item) return;
+        const min = parseInt(row.querySelector(".loot-min").value, 10) || 1;
+        const max = parseInt(row.querySelector(".loot-max").value, 10) || min;
+        const weight = parseInt(row.querySelector(".loot-weight").value, 10) || 1;
+        entries.push({
+          type: "item",
+          name: item,
+          weight: weight,
+          functions: [{ function: "set_count", count: { min: min, max: max } }]
+        });
+      });
+      if (entries.length > 0) {
+        const lootFolderId = await ensureFolderPath(["BP", "loot_tables", kindFolder]);
+        const lootObj = { pools: [{ rolls: 1, entries: entries }] };
+        await writeJSONFile(lootFolderId, `${idPart}.json`, lootObj);
+        if (!componentValues["minecraft:loot"]) {
+          componentValues["minecraft:loot"] = { table: `loot_tables/${kindFolder}/${idPart}.json` };
+        }
+      }
+    }
+
     const rootKey = creatorKind === "block" ? "minecraft:block" : "minecraft:item";
     const fileObj = {
       format_version: "1.26.30",
@@ -1532,6 +1636,44 @@ async function creatorSave() {
 
     status.textContent = "writing file...";
     await writeJSONFile(bpFolderId, `${idPart}.json`, fileObj);
+
+    const recipeCells = document.querySelectorAll("#recipe-grid .recipe-cell");
+    const cellValues = Array.from(recipeCells).map(c => c.value.trim());
+    const hasRecipe = cellValues.some(v => v);
+    if (hasRecipe) {
+      status.textContent = "writing recipe...";
+      const key = {};
+      const letters = "ABCDEFGHI";
+      let letterIndex = 0;
+      const symbolFor = {};
+      const patternCells = cellValues.map(v => {
+        if (!v) return " ";
+        if (!symbolFor[v]) {
+          const letter = letters[letterIndex++];
+          symbolFor[v] = letter;
+          key[letter] = { item: v };
+        }
+        return symbolFor[v];
+      });
+      const pattern = [
+        patternCells.slice(0, 3).join(""),
+        patternCells.slice(3, 6).join(""),
+        patternCells.slice(6, 9).join("")
+      ];
+      const resultCount = parseInt(document.getElementById("recipe-result-count").value, 10) || 1;
+      const recipeObj = {
+        format_version: "1.20.10",
+        "minecraft:recipe_shaped": {
+          description: { identifier: `${identifier}_recipe` },
+          tags: ["crafting_table"],
+          pattern: pattern,
+          key: key,
+          result: { item: identifier, count: resultCount }
+        }
+      };
+      const recipeFolderId = await ensureFolderPath(["BP", "recipes"]);
+      await writeJSONFile(recipeFolderId, `${idPart}.json`, recipeObj);
+    }
 
     updateStats();
     renderFileList();
