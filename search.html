@@ -22,7 +22,7 @@
 
     /* big search bar up top — deliberately different from the profile page's search */
     .search-header { margin-top: 48px; padding: 28px 24px 20px; border-bottom: 1px solid #2a2a2e; background: #141517; }
-    .search-header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .search-header-inner { margin: 0 auto; display: flex; align-items: center; gap: 12px; }
     .search-icon { font-size: 16px; color: #444; }
     .search-bar { flex: 1; display: flex; align-items: center; background: #1a1c1f; border: 1px solid #343438; padding: 10px 18px; transition: border-color .2s; }
     .search-bar:focus-within { border-color: #05ee93; }
@@ -31,7 +31,7 @@
     .search-count { font-size: 12px; color: #555; margin-top: 10px; max-width: 1100px; margin-left: auto; margin-right: auto; }
 
     /* layout */
-    .layout { max-width: 1100px; margin: 0 auto; display: flex; gap: 28px; padding: 24px; align-items: flex-start; }
+    .layout { margin: 0 auto; display: flex; gap: 28px; padding: 24px; align-items: flex-start; }
 
     /* left sidebar */
     .sidebar { width: 240px; min-width: 240px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 68px; }
@@ -68,6 +68,16 @@
     .result-meta { font-size: 11px; color: #444; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
     .result-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
     .result-tag { font-size: 10px; color: #05ee93; background: rgba(5,238,147,0.1); padding: 2px 8px; }
+
+    /* jumbled layout: profiles show up in a side-by-side row within each chunk */
+    .profile-row-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .profile-mini-card { background: #161719; border: 1px solid #2a2a2e; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; cursor: pointer; transition: border-color .15s; }
+    .profile-mini-card:hover { border-color: #05ee93; }
+    .profile-mini-avatar { width: 44px; height: 44px; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 18px; font-family: 'mcfontb', sans-serif; color: #555; overflow: hidden; }
+    .profile-mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-mini-name { font-size: 13px; color: #00b2ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .profile-mini-badge { font-size: 9px; padding: 2px 6px; border: 1px solid #343438; color: #888; text-transform: uppercase; letter-spacing: .04em; }
+    .profile-mini-bio { font-size: 11px; color: #555; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     .empty-state, .loading-state { text-align: center; color: #444; font-size: 13px; padding: 60px 0; }
     .empty-state strong, .loading-state strong { display: block; color: #666; font-size: 15px; margin-bottom: 6px; }
@@ -123,7 +133,7 @@
 
     <div class="results" id="results">
       <div class="empty-state">
-        <strong>search mcbCode</strong>
+        <h2>search mcbCode</h2>
         type something above to find profiles and projects.
       </div>
     </div>
@@ -220,59 +230,79 @@
       renderResults();
     }
 
+    function profileMiniCardHtml(u) {
+      const cls = rankClass(u.rank);
+      const avatarInner = u.pfp_url
+        ? `<img src="${esc(u.pfp_url)}" alt="">`
+        : u.username[0].toUpperCase();
+      return `
+        <div class="profile-mini-card" onclick="location.href='/profile/${encodeURIComponent(u.username)}'">
+          <div class="profile-mini-avatar">${avatarInner}</div>
+          <div class="profile-mini-name ${cls}">${esc(u.username)}</div>
+          ${u.rank ? `<span class="profile-mini-badge" style="color:${u.rankColor};border-color:${u.rankColor}66">${esc(u.rank.toLowerCase())}</span>` : ""}
+          ${u.bio ? `<div class="profile-mini-bio">${esc(u.bio)}</div>` : ""}
+        </div>`;
+    }
+
+    function projectCardHtml(p) {
+      return `
+        <div class="result-card" onclick="location.href='/project/${esc(p.share_code)}/'">
+          <div class="result-avatar">${p.name[0].toUpperCase()}</div>
+          <div class="result-body">
+            <div class="result-title-row">
+              <span class="result-title">${esc(p.name)}</span>
+            </div>
+            ${p.description ? `<div class="result-desc">${esc(p.description)}</div>` : ""}
+            <div class="result-meta">
+              <span>by ${esc(p.owner_username)}</span>
+              <span>updated ${fmtDate(p.updated_at)}</span>
+            </div>
+            ${p.tags && p.tags.length ? `<div class="result-tags">${p.tags.map(t => `<span class="result-tag">${esc(t)}</span>`).join("")}</div>` : ""}
+          </div>
+        </div>`;
+    }
+
+    // splits an array into chunks of a given size
+    function chunk(arr, size) {
+      const out = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
+    }
+
     function renderResults() {
       const el = document.getElementById("results");
-      const showProfiles = currentFilter === "all" || currentFilter === "profiles";
-      const showProjects = currentFilter === "all" || currentFilter === "projects";
 
-      const profiles = showProfiles ? lastData.profiles : [];
-      const projects = showProjects ? lastData.projects : [];
+      // filtered views (single-type) just show a plain list/grid, no jumbling
+      if (currentFilter === "profiles") {
+        const profiles = lastData.profiles;
+        if (!profiles.length) { el.innerHTML = `<div class="empty-state"><strong>no profiles found</strong>try a different search.</div>`; return; }
+        el.innerHTML = `<div class="profile-row-grid">${profiles.map(profileMiniCardHtml).join("")}</div>`;
+        return;
+      }
+      if (currentFilter === "projects") {
+        const projects = lastData.projects;
+        if (!projects.length) { el.innerHTML = `<div class="empty-state"><strong>no projects found</strong>try a different search.</div>`; return; }
+        el.innerHTML = projects.map(projectCardHtml).join("");
+        return;
+      }
+
+      // "all" filter: jumble it — 5 projects, 5 profiles side by side, 5 projects, etc.
+      const profiles = lastData.profiles;
+      const projects = lastData.projects;
 
       if (!profiles.length && !projects.length) {
         el.innerHTML = `<div class="empty-state"><strong>nothing here</strong>try a different search or filter.</div>`;
         return;
       }
 
+      const projectChunks = chunk(projects, 5);
+      const profileChunks = chunk(profiles, 5);
+      const totalChunks = Math.max(projectChunks.length, profileChunks.length);
+
       let html = "";
-
-      if (profiles.length) {
-        if (currentFilter === "all") html += `<div class="section-label">Profiles</div>`;
-        html += profiles.map(u => {
-          const cls = rankClass(u.rank);
-          const avatarInner = u.pfp_url
-            ? `<img src="${esc(u.pfp_url)}" alt="">`
-            : u.username[0].toUpperCase();
-          return `
-            <div class="result-card" onclick="location.href='/profile/${encodeURIComponent(u.username)}'">
-              <div class="result-avatar">${avatarInner}</div>
-              <div class="result-body">
-                <div class="result-title-row">
-                  <span class="result-title ${cls}">${esc(u.username)}</span>
-                  ${u.rank ? `<span class="result-badge" style="color:${u.rankColor};border-color:${u.rankColor}66">${esc(u.rank.toLowerCase())}</span>` : ""}
-                </div>
-                ${u.bio ? `<div class="result-desc">${esc(u.bio)}</div>` : ""}
-              </div>
-            </div>`;
-        }).join("");
-      }
-
-      if (projects.length) {
-        if (currentFilter === "all") html += `<div class="section-label">Projects</div>`;
-        html += projects.map(p => `
-          <div class="result-card" onclick="location.href='/project/${esc(p.share_code)}/'">
-            <div class="result-avatar">${p.name[0].toUpperCase()}</div>
-            <div class="result-body">
-              <div class="result-title-row">
-                <span class="result-title">${esc(p.name)}</span>
-              </div>
-              ${p.description ? `<div class="result-desc">${esc(p.description)}</div>` : ""}
-              <div class="result-meta">
-                <span>by ${esc(p.owner_username)}</span>
-                <span>updated ${fmtDate(p.updated_at)}</span>
-              </div>
-              ${p.tags && p.tags.length ? `<div class="result-tags">${p.tags.map(t => `<span class="result-tag">${esc(t)}</span>`).join("")}</div>` : ""}
-            </div>
-          </div>`).join("");
+      for (let i = 0; i < totalChunks; i++) {
+        if (projectChunks[i]) html += projectChunks[i].map(projectCardHtml).join("");
+        if (profileChunks[i]) html += `<div class="profile-row-grid">${profileChunks[i].map(profileMiniCardHtml).join("")}</div>`;
       }
 
       el.innerHTML = html;
