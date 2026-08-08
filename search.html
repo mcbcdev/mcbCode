@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <title>mcbCode | Search</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: #111214; color: #c8c8c8; font-family: 'mcfont', sans-serif; }
+    a { text-decoration: none; color: #fff; transition: color 0.2s; }
+    a:hover { color: #05ee93; }
+    g { color: #05ee93; }
+
+    /* topnav (same idea as profile page) */
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
+    .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .nav-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; text-decoration: none; }
+    .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
+
+    /* big search bar up top — deliberately different from the profile page's search */
+    .search-header { margin-top: 48px; padding: 28px 24px 20px; border-bottom: 1px solid #2a2a2e; background: #141517; }
+    .search-header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .search-icon { font-size: 16px; color: #444; }
+    .search-bar { flex: 1; display: flex; align-items: center; background: #1a1c1f; border: 1px solid #343438; padding: 10px 18px; transition: border-color .2s; }
+    .search-bar:focus-within { border-color: #05ee93; }
+    .search-bar input { flex: 1; background: none; border: none; outline: none; color: #fff; font-family: 'mcfont', sans-serif; font-size: 15px; }
+    .search-bar input::placeholder { color: #555; }
+    .search-count { font-size: 12px; color: #555; margin-top: 10px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+
+    /* layout */
+    .layout { max-width: 1100px; margin: 0 auto; display: flex; gap: 28px; padding: 24px; align-items: flex-start; }
+
+    /* left sidebar */
+    .sidebar { width: 240px; min-width: 240px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 68px; }
+    .sidebar-block { background: #161719; border: 1px solid #2a2a2e; padding: 14px 16px; }
+    .sidebar-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: .08em; font-family: 'mcfontb', sans-serif; margin-bottom: 10px; }
+
+    .filter-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 6px; font-size: 13px; color: #999; cursor: pointer; transition: background .12s, color .12s; }
+    .filter-item:hover { color: #fff; background: #1e2024; }
+    .filter-item.active { color: #05ee93; background: #1a2420; }
+    .filter-count { font-size: 11px; color: #444; }
+    .filter-item.active .filter-count { color: #05ee93; }
+
+    .your-projects-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+    .your-project-link { display: block; font-size: 13px; color: #999; padding: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .your-project-link:hover { color: #05ee93; background: #1e2024; }
+    .your-project-empty { font-size: 12px; color: #444; padding: 4px 6px; }
+    .sidebar-signedout { font-size: 12px; color: #444; line-height: 1.6; }
+    .sidebar-signedout a { color: #00b2ff; }
+
+    /* results */
+    .results { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+    .section-label { font-size: 12px; color: #444; text-transform: uppercase; letter-spacing: .08em; font-family: 'mcfontb', sans-serif; margin: 6px 0 -4px; }
+
+    .result-card { background: #161719; border: 1px solid #2a2a2e; padding: 16px 18px; display: flex; gap: 14px; cursor: pointer; transition: border-color .15s; }
+    .result-card:hover { border-color: #05ee93; }
+    .result-avatar { width: 40px; height: 40px; flex-shrink: 0; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 16px; font-family: 'mcfontb', sans-serif; color: #555; overflow: hidden; }
+    .result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .result-body { flex: 1; min-width: 0; }
+    .result-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .result-title { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; }
+    .result-title:hover { text-decoration: underline; }
+    .result-badge { font-size: 10px; padding: 2px 7px; border: 1px solid #343438; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+    .result-desc { font-size: 12px; color: #777; margin-top: 5px; line-height: 1.5; }
+    .result-meta { font-size: 11px; color: #444; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .result-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .result-tag { font-size: 10px; color: #05ee93; background: rgba(5,238,147,0.1); padding: 2px 8px; }
+
+    .empty-state, .loading-state { text-align: center; color: #444; font-size: 13px; padding: 60px 0; }
+    .empty-state strong, .loading-state strong { display: block; color: #666; font-size: 15px; margin-bottom: 6px; }
+
+    @media (max-width: 800px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; min-width: unset; position: static; flex-direction: row; flex-wrap: wrap; }
+      .sidebar-block { flex: 1; min-width: 220px; }
+    }
+  </style>
+  <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
+</head>
+<body>
+
+  <div class="topnav">
+    <a href="/" class="topnav-logo">mcb<g>Code</g></a>
+    <div class="topnav-right">
+      <a href="/dashboard" class="nav-btn">Dashboard</a>
+    </div>
+  </div>
+
+  <div class="search-header">
+    <div class="search-header-inner">
+      <div class="search-bar">
+        <input id="q-input" type="text" placeholder="search profiles, projects..." autocomplete="off" maxlength="64">
+      </div>
+    </div>
+    <div class="search-count" id="result-count"></div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-block">
+        <div class="sidebar-title">Filter</div>
+        <div class="filter-item active" data-filter="all" onclick="setFilter('all')">
+          <span>All results</span><span class="filter-count" id="count-all">0</span>
+        </div>
+        <div class="filter-item" data-filter="profiles" onclick="setFilter('profiles')">
+          <span>Profiles</span><span class="filter-count" id="count-profiles">0</span>
+        </div>
+        <div class="filter-item" data-filter="projects" onclick="setFilter('projects')">
+          <span>Projects</span><span class="filter-count" id="count-projects">0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block" id="your-projects-block">
+        <div class="sidebar-title">Your Projects</div>
+        <div class="your-projects-list" id="your-projects-list">
+          <div class="your-project-empty">loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="empty-state">
+        <strong>search mcbCode</strong>
+        type something above to find profiles and projects.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTH = "https://auth.mcbcode.com";
+
+    let currentFilter = "all";
+    let lastData = { profiles: [], projects: [] };
+    let searchDebounce = null;
+    let myUsername = null;
+
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
+    }
+    function rankClass(rank) {
+      if (!rank) return "";
+      return "username-" + rank.toLowerCase().replace(/[^a-z]/g, "");
+    }
+    function rankBg(color) {
+      if (!color) return "rgba(136,136,136,.2)";
+      return color.startsWith("#") && color.length === 7 ? color + "40" : "rgba(136,136,136,.2)";
+    }
+
+    // read ?q= from url so links to /search?q=foo work
+    const params = new URLSearchParams(location.search);
+    const initialQ = params.get("q") || "";
+    document.getElementById("q-input").value = initialQ;
+
+    // ---- init ----
+    (async () => {
+      try {
+        const r = await fetch(`${AUTH}/me`, { credentials: "include" });
+        if (r.ok) { const d = await r.json(); myUsername = d.username; }
+      } catch {}
+      loadYourProjects();
+      if (initialQ) runSearch(initialQ);
+    })();
+
+    document.getElementById("q-input").addEventListener("input", (e) => {
+      const val = e.target.value.trim();
+      clearTimeout(searchDebounce);
+      const base = location.pathname;
+      history.replaceState({}, "", val ? `${base}?q=${encodeURIComponent(val)}` : base);
+      if (!val) { showEmptyState(); return; }
+      searchDebounce = setTimeout(() => runSearch(val), 250);
+    });
+
+    function showEmptyState() {
+      lastData = { profiles: [], projects: [] };
+      updateCounts();
+      document.getElementById("result-count").textContent = "";
+      document.getElementById("results").innerHTML = `
+        <div class="empty-state">
+          <strong>search mcbCode</strong>
+          type something above to find profiles and projects.
+        </div>`;
+    }
+
+    async function runSearch(q) {
+      const resultsEl = document.getElementById("results");
+      resultsEl.innerHTML = `<div class="loading-state">searching...</div>`;
+      try {
+        const r = await fetch(`${AUTH}/search?q=${encodeURIComponent(q)}`);
+        if (!r.ok) { resultsEl.innerHTML = `<div class="empty-state">something went wrong.</div>`; return; }
+        const d = await r.json();
+        lastData = { profiles: d.profiles || [], projects: d.projects || [] };
+        updateCounts();
+        const total = lastData.profiles.length + lastData.projects.length;
+        document.getElementById("result-count").textContent = total
+          ? `${total} result${total === 1 ? "" : "s"} for "${q}"`
+          : `no results for "${q}"`;
+        renderResults();
+      } catch {
+        resultsEl.innerHTML = `<div class="empty-state">couldn't reach the server.</div>`;
+      }
+    }
+
+    function updateCounts() {
+      document.getElementById("count-all").textContent = lastData.profiles.length + lastData.projects.length;
+      document.getElementById("count-profiles").textContent = lastData.profiles.length;
+      document.getElementById("count-projects").textContent = lastData.projects.length;
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll(".filter-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.filter === f);
+      });
+      renderResults();
+    }
+
+    function renderResults() {
+      const el = document.getElementById("results");
+      const showProfiles = currentFilter === "all" || currentFilter === "profiles";
+      const showProjects = currentFilter === "all" || currentFilter === "projects";
+
+      const profiles = showProfiles ? lastData.profiles : [];
+      const projects = showProjects ? lastData.projects : [];
+
+      if (!profiles.length && !projects.length) {
+        el.innerHTML = `<div class="empty-state"><strong>nothing here</strong>try a different search or filter.</div>`;
+        return;
+      }
+
+      let html = "";
+
+      if (profiles.length) {
+        if (currentFilter === "all") html += `<div class="section-label">Profiles</div>`;
+        html += profiles.map(u => {
+          const cls = rankClass(u.rank);
+          const avatarInner = u.pfp_url
+            ? `<img src="${esc(u.pfp_url)}" alt="">`
+            : u.username[0].toUpperCase();
+          return `
+            <div class="result-card" onclick="location.href='/profile/${encodeURIComponent(u.username)}'">
+              <div class="result-avatar">${avatarInner}</div>
+              <div class="result-body">
+                <div class="result-title-row">
+                  <span class="result-title ${cls}">${esc(u.username)}</span>
+                  ${u.rank ? `<span class="result-badge" style="color:${u.rankColor};border-color:${u.rankColor}66">${esc(u.rank.toLowerCase())}</span>` : ""}
+                </div>
+                ${u.bio ? `<div class="result-desc">${esc(u.bio)}</div>` : ""}
+              </div>
+            </div>`;
+        }).join("");
+      }
+
+      if (projects.length) {
+        if (currentFilter === "all") html += `<div class="section-label">Projects</div>`;
+        html += projects.map(p => `
+          <div class="result-card" onclick="location.href='/project/${esc(p.share_code)}/'">
+            <div class="result-avatar">${p.name[0].toUpperCase()}</div>
+            <div class="result-body">
+              <div class="result-title-row">
+                <span class="result-title">${esc(p.name)}</span>
+              </div>
+              ${p.description ? `<div class="result-desc">${esc(p.description)}</div>` : ""}
+              <div class="result-meta">
+                <span>by ${esc(p.owner_username)}</span>
+                <span>updated ${fmtDate(p.updated_at)}</span>
+              </div>
+              ${p.tags && p.tags.length ? `<div class="result-tags">${p.tags.map(t => `<span class="result-tag">${esc(t)}</span>`).join("")}</div>` : ""}
+            </div>
+          </div>`).join("");
+      }
+
+      el.innerHTML = html;
+    }
+
+    // ---- your projects sidebar ----
+    async function loadYourProjects() {
+      const listEl = document.getElementById("your-projects-list");
+      const blockEl = document.getElementById("your-projects-block");
+
+      if (!myUsername) {
+        blockEl.innerHTML = `
+          <div class="sidebar-title">Your Projects</div>
+          <div class="sidebar-signedout"><a href="/account">log in</a> to see your projects here.</div>`;
+        return;
+      }
+
+      try {
+        const r = await fetch(`${AUTH}/projects`, { credentials: "include" });
+        if (!r.ok) { listEl.innerHTML = `<div class="your-project-empty">couldn't load.</div>`; return; }
+        const d = await r.json();
+        const owned = d.projects || [];
+        const collab = d.collab_projects || [];
+        const all = [...owned, ...collab];
+
+        if (!all.length) {
+          listEl.innerHTML = `<div class="your-project-empty">no projects yet.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = all.map(p => `
+          <a class="your-project-link" href="/project/${esc(p.share_code)}/" title="${esc(p.name)}">${esc(p.name)}</a>
+        `).join("");
+      } catch {
+        listEl.innerHTML = `<div class="your-project-empty">couldn't load.</div>`;
+      }
+    }
+  </script>
+
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
