@@ -2525,24 +2525,135 @@ function renderFileList() {
 
     function highlightPlain(code) { return escHtml(code); }
 
-    function highlightJSON(code) {
-      let out = escHtml(code);
-      out = out.replace(/(&quot;.*?&quot;)(\s*:)/g, '<span class="tok-key">$1</span>$2');
-      out = out.replace(/:(\s*)(&quot;.*?&quot;)/g, ':$1<span class="tok-str">$2</span>');
-      out = out.replace(/\b(true|false|null)\b/g, '<span class="tok-kw">$1</span>');
-      out = out.replace(/\b(-?\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
-      return out;
-    }
+function highlightJSON(code) {
+    let out = "";
+    let i = 0;
+    const n = code.length;
 
-    function highlightJS(code) {
-      let out = escHtml(code);
-      out = out.replace(/(\/\/[^\n]*)/g, '<span class="tok-com">$1</span>');
-      out = out.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`[^`]*`)/g, '<span class="tok-str">$1</span>');
-      out = out.replace(/\b(function|return|const|let|var|if|else|for|while|new|class|extends|import|export|default|async|await|try|catch|typeof|null|true|false|undefined|this)\b/g, '<span class="tok-kw">$1</span>');
-      out = out.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
-      return out;
-    }
+    while (i < n) {
+        const c = code[i];
 
+        // strings (keys get tok-key, values get tok-str)
+        if (c === '"') {
+            let j = i + 1;
+            while (j < n) {
+                if (code[j] === '\\') { j += 2; continue; }
+                if (code[j] === '"') { j++; break; }
+                j++;
+            }
+            let k = j;
+            while (k < n && /\s/.test(code[k])) k++;
+            const isKey = code[k] === ':';
+            out += `<span class="${isKey ? 'tok-key' : 'tok-str'}">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // numbers
+        if (c === '-' || /\d/.test(c)) {
+            let j = i;
+            if (code[j] === '-') j++;
+            while (j < n && /[\d.eE+-]/.test(code[j])) j++;
+            out += `<span class="tok-num">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // true / false / null
+        if (code.startsWith('true', i) || code.startsWith('false', i) || code.startsWith('null', i)) {
+            const word = code.startsWith('true', i) ? 'true' : code.startsWith('false', i) ? 'false' : 'null';
+            out += `<span class="tok-kw">${word}</span>`;
+            i += word.length;
+            continue;
+        }
+
+        out += escHtml(c);
+        i++;
+    }
+    return out;
+}
+
+function highlightJS(code) {
+    let out = "";
+    let i = 0;
+    const n = code.length;
+    const keywords = new Set([
+        "function","return","const","let","var","if","else","for","while","new",
+        "class","extends","import","export","default","async","await","try",
+        "catch","finally","typeof","instanceof","null","true","false","undefined",
+        "this","break","continue","switch","case","in","of","do","yield","static",
+        "get","set","super","void","delete","throw"
+    ]);
+
+    while (i < n) {
+        const c = code[i];
+
+        // line comment
+        if (c === '/' && code[i + 1] === '/') {
+            let j = i;
+            while (j < n && code[j] !== '\n') j++;
+            out += `<span class="tok-com">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // block comment
+        if (c === '/' && code[i + 1] === '*') {
+            const end = code.indexOf('*/', i + 2);
+            const j = end === -1 ? n : end + 2;
+            out += `<span class="tok-com">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // strings (single, double, template literals)
+        if (c === '"' || c === "'" || c === '`') {
+            const quote = c;
+            let j = i + 1;
+            while (j < n) {
+                if (code[j] === '\\') { j += 2; continue; }
+                if (code[j] === quote) { j++; break; }
+                j++;
+            }
+            out += `<span class="tok-str">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // numbers (incl. hex, decimals, exponents)
+        if (/\d/.test(c)) {
+            let j = i;
+            if (c === '0' && (code[j + 1] === 'x' || code[j + 1] === 'X')) {
+                j += 2;
+                while (j < n && /[0-9a-fA-F]/.test(code[j])) j++;
+            } else {
+                while (j < n && /[\d.]/.test(code[j])) j++;
+                if (code[j] === 'e' || code[j] === 'E') {
+                    j++;
+                    if (code[j] === '+' || code[j] === '-') j++;
+                    while (j < n && /\d/.test(code[j])) j++;
+                }
+            }
+            out += `<span class="tok-num">${escHtml(code.slice(i, j))}</span>`;
+            i = j;
+            continue;
+        }
+
+        // identifiers / keywords
+        if (/[a-zA-Z_$]/.test(c)) {
+            let j = i;
+            while (j < n && /[a-zA-Z0-9_$]/.test(code[j])) j++;
+            const word = code.slice(i, j);
+            out += keywords.has(word) ? `<span class="tok-kw">${word}</span>` : escHtml(word);
+            i = j;
+            continue;
+        }
+
+        out += escHtml(c);
+        i++;
+    }
+    return out;
+}
     // basic fallback in case grammar.js/highlight.js don't expose what we expect
     function highlightMcfunctionFallback(code) {
       let out = escHtml(code);
