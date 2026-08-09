@@ -86,6 +86,23 @@
       sessionStorage.setItem("spa-redirect", fullPath);
       location.replace("/profile");
     }
+  } else if (path.startsWith("/s/") && path !== "/s/") {
+  const slug = path.split("/s/")[1].split("/").filter(Boolean)[0];
+
+  if (slug) {
+    fetch(`https://auth.mcbcode.com/project/resolve-slug?slug=${encodeURIComponent(slug)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.share_code) {
+          location.replace(`/project/?code=${data.share_code}`);
+        }
+        // if not found, normal 404 page just stays visible
+      })
+      .catch(() => {
+        // network error, normal 404 stays visible
+      });
+  }
+}
   </script>
 
 </body>
