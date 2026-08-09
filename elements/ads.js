@@ -3,8 +3,8 @@
 
   function loadMonetag() {
     const s = document.createElement('script');
-    s.dataset.zone = '11541954';
-    s.src = 'https://nap5k.com/tag.min.js';
+    s.dataset.zone = '11542124';
+    s.src = 'https://n6wxm.com/vignette.min.js';
     document.body.appendChild(s);
   }
 
