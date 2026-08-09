@@ -78,7 +78,7 @@ mcbCode is independently developed and maintained.
 
 if you enjoy using it and want to support continued development, donations are appreciated. they help support the infrastructure and ongoing development of the project.
 
-<script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support on Ko-fi', '#05ee93', 'X8X51J5WEA');kofiwidget2.draw();</script> 
+[ko-fi.com/idktoast](https://ko-fi.com/idktoast)
 
 ---
 
