@@ -1619,28 +1619,36 @@ function renderFileList() {
       } catch { msg.textContent = "error."; msg.className = "inline-msg err"; }
     }
 
-    async function linkGithub() {
+async function linkGithub() {
+      const input = prompt("paste the github repo url, or type it as owner/repo\n(e.g. https://github.com/yourname/my-addon or yourname/my-addon)");
+      if (!input) return;
+
+      let repoOwner, repoName;
+      const cleaned = input.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/$/, "").replace(/\.git$/, "");
+      const parts = cleaned.split("/").filter(Boolean);
+      if (parts.length !== 2) { alert("couldn't read that as owner/repo. try again."); return; }
+      [repoOwner, repoName] = parts;
+
       const btn = document.getElementById("github-link-btn");
       btn.disabled = true; btn.textContent = "Linking...";
       try {
         const res = await fetch(`${AUTH}/project/github/link`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project_code: shareCode })
+          body: JSON.stringify({ project_code: shareCode, repo_owner: repoOwner, repo_name: repoName })
         });
         const d = await res.json();
-
-        console.log("github link response", res.status, d);        if (res.ok) {
+        if (res.ok) {
           project.github_repo_owner = d.repo_owner; project.github_repo_name = d.repo_name;
           initObsidianFeatures();
-} else {
-  if (d.error === "You haven't installed the mcbCode GitHub App yet.") {
-    window.location.href = "https://github.com/apps/mcbcode-sync/installations/new";
-    return;
-  }
-
-  alert(d.error || "failed to link github.");
-}      } catch { alert("something went wrong."); }
+        } else {
+          if (d.error === "You haven't installed the mcbCode GitHub App yet.") {
+            window.location.href = "https://github.com/apps/mcbcode-sync/installations/new";
+            return;
+          }
+          alert(d.error || "failed to link github.");
+        }
+      } catch { alert("something went wrong."); }
       btn.disabled = false; btn.textContent = "Link to GitHub";
     }
 
