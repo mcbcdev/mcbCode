@@ -22,9 +22,9 @@
     .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
 
     /* ---- SEARCH ---- */
+    .search-stabilizer { width: 100%; min-height: 84px; display: flex; justify-content: center; }
     .search-wrap { transition: all 0.3s ease; }
 
-    /* centered state — normal flow (not fixed), so it scrolls away instead of floating over the grid */
     .search-wrap.centered {
       position: static;
       width: min(440px, calc(100vw - 32px));
@@ -36,7 +36,6 @@
     .search-wrap.centered .search-logo { display: block; }
     .search-wrap.centered .search-input-row { width: 100%; }
 
-    /* sticky-top state (scrolled past search) */
     .search-wrap.sticky-top {
       position: fixed;
       top: 48px;
@@ -51,9 +50,8 @@
       gap: 0;
     }
     .search-wrap.sticky-top .search-logo { display: none; }
-    .search-wrap.sticky-top .search-input-row { width: 100%; max-width: 400px; }
+    .search-wrap.sticky-top .search-input-row { width: 100%; max-width: 400px; margin: 0 auto; }
 
-    /* in-nav state (profile loaded, search in topnav) */
     .search-wrap.in-nav { position: static; transform: none; width: 200px; display: flex; flex-direction: column; gap: 0; }
     .search-wrap.in-nav .search-logo { display: none; }
     .search-wrap.in-nav .search-input-row { width: 100%; }
@@ -73,14 +71,13 @@
     .search-wrap.in-nav .ac-item { padding: 6px 10px; font-size: 12px; }
     .ac-item:hover, .ac-item.selected { background: #222326; color: #fff; }
 
-    /* ---- LANDING (before search) ---- */
-    .landing { margin-top: 48px; min-height: calc(100vh - 48px); padding-top: 120px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+    /* ---- LANDING ---- */
+    .landing { margin-top: 48px; min-height: calc(100vh - 48px); padding-top: 80px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
     .landing.hidden { display: none; }
 
-    /* all-profiles section — bigger cards, section capped to ~80% of viewport width */
-    .recent-section { margin-top: 40px; width: min(1600px, 80vw); }
+    .recent-section { margin-top: 40px; width: min(1200px, 90vw); }
     .recent-label { font-size: 13px; color: #444; font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; text-align: center; }
-    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-height: 65vh;  padding-right: 4px; }
+    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding-right: 4px; }
     .recent-card { background: #161719; border: 1px solid #1e1e22; padding: 22px 24px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
     .recent-card:hover { border-color: #343438; background: #1a1c1f; }
     .recent-avatar { width: 64px; height: 64px; background: #222326; border: 1px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 26px; font-family: 'mcfontb', sans-serif; color: #555; flex-shrink: 0; overflow: hidden; }
@@ -89,61 +86,84 @@
     .recent-rank-badge { font-size: 11px; padding: 3px 9px; width: fit-content; }
     .recent-loading, .recent-empty { font-size: 13px; color: #444; text-align: center; padding: 30px 0; grid-column: 1 / -1; }
 
-    /* ---- PROFILE PAGE ---- */
-    .page { margin-top: 48px; display: none; }
+    /* ---- PROFILE PAGE (REARRANGED UI) ---- */
+    .page { margin-top: 48px; display: none; flex-direction: column; }
     .page.visible { display: flex; }
-    .profile-points { font-size: 11px; color: #05ee93; margin-top: 2px; }
-    .profile-email { font-size: 11px; color: #666; margin-top: 2px; }
-    
-    /* sidebar */
-    .profile-sidebar { width: 280px; min-width: 280px; border-right: 1px solid #2a2a2e; min-height: calc(100vh - 48px); padding: 32px 24px; display: flex; flex-direction: column; gap: 18px; background: #161719; flex-shrink: 0; }
 
-    /* avatar */
-    .profile-avatar-wrap { position: relative; width: 80px; }
-    .profile-avatar { width: 80px; height: 80px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #444; font-family: 'mcfontb', sans-serif; overflow: hidden; transition: border-color 0.2s; }
+    /* Profile Banner (Top) */
+    .profile-banner {
+      background: #161719;
+      border-bottom: 1px solid #2a2a2e;
+      padding: 40px 10vw;
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .profile-avatar-wrap { position: relative; width: 112px; flex-shrink: 0; }
+    .profile-avatar { width: 112px; height: 112px; background: #1e1e22; border: 2px solid #343438; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #444; font-family: 'mcfontb', sans-serif; overflow: hidden; transition: border-color 0.2s; }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-hint { font-size: 10px; color: #444; margin-top: 4px; transition: color 0.2s; display: none; }
+    .avatar-hint { font-size: 11px; color: #444; margin-top: 6px; transition: color 0.2s; display: none; text-align: center; }
 
-    /* clickable avatar (owner only) */
     .profile-avatar-wrap.clickable { cursor: pointer; }
     .profile-avatar-wrap.clickable:hover .profile-avatar { border-color: #00b2ff; }
     .profile-avatar-wrap.clickable:hover .avatar-hint { color: #00b2ff; }
     .profile-avatar-wrap.clickable .avatar-hint { display: block; }
 
-    /* username + rank */
-    .profile-username { font-size: 22px; color: #fff; font-family: 'mcfontb', sans-serif; line-height: 1.1; }
-    .profile-joined { font-size: 11px; color: #444; margin-top: 2px; }
-    .profile-rank { display: none; width: fit-content; padding: 4px 8px; font-size: 13px; font-family: 'mcfont', sans-serif; margin-top: 8px; }
+    .profile-main-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
+    .username-row { display: flex; align-items: center; gap: 12px; }
+    .profile-username { font-size: 28px; color: #fff; font-family: 'mcfontb', sans-serif; line-height: 1.1; }
+    .profile-rank { display: none; width: fit-content; padding: 4px 8px; font-size: 12px; font-family: 'mcfont', sans-serif; }
 
-    .profile-bio { font-size: 13px; color: #888; line-height: 1.6; }
-    .profile-bio-empty { font-size: 13px; color: #333; font-style: italic; }
-
-    /* profile links (below bio) */
-    .profile-links { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-    .profile-link { font-size: 12px; color: #00b2ff; display: flex; align-items: center; gap: 6px; overflow: hidden; }
-    .profile-link img { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.85; }
-    .profile-link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .username-row { display: flex; align-items: center; gap: 8px; }
-    .bio-row { display: flex; align-items: flex-start; gap: 8px; }
+    .bio-row { display: flex; align-items: flex-start; gap: 8px; max-width: 600px; }
     .bio-row-text { flex: 1; min-width: 0; }
+    .profile-bio { font-size: 14px; color: #888; line-height: 1.6; }
+    .profile-bio-empty { font-size: 14px; color: #444; font-style: italic; }
+    
+    .profile-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+    .profile-link { font-size: 12px; color: #00b2ff; display: flex; align-items: center; gap: 6px; background: #1a1c1f; border: 1px solid #2a2a2e; padding: 4px 8px; }
+    .profile-link:hover { border-color: #00b2ff; }
+    .profile-link img { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.85; }
 
+    .profile-side-stats {
+      width: 240px;
+      flex-shrink: 0;
+      border-left: 1px solid #2a2a2e;
+      padding-left: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .profile-points { font-size: 14px; color: #05ee93; font-family: 'mcfontb', sans-serif; }
+    .profile-email { font-size: 12px; color: #888; }
+    .profile-joined { font-size: 12px; color: #555; }
+
+    /* Edit components */
     .icon-edit-btn { display: none; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; padding: 2px; flex-shrink: 0; opacity: 0.45; transition: opacity 0.15s, transform 0.15s; }
     .icon-edit-btn:hover { opacity: 1; }
     .icon-edit-btn.active { opacity: 1; transform: rotate(-8deg); }
-    .icon-edit-btn img { width: 13px; height: 13px; display: block; }
+    .icon-edit-btn img { width: 14px; height: 14px; display: block; }
 
-    .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-    .edit-btn { font-size: 11px; color: #444; cursor: pointer; transition: color 0.15s; background: none; border: none; font-family: 'mcfont', sans-serif; padding: 0; }
-    .edit-btn:hover { color: #00b2ff; }
+    .edit-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+    .edit-btn { font-size: 12px; color: #666; cursor: pointer; transition: color 0.15s; background: none; border: 1px solid #343438; font-family: 'mcfont', sans-serif; padding: 6px 12px; }
+    .edit-btn:hover { color: #00b2ff; border-color: #00b2ff; }
 
-    .edit-area { display: none; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .edit-area { display: none; flex-direction: column; gap: 8px; margin-top: 8px; max-width: 400px; }
     .edit-area.open { display: flex; }
     .edit-input { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
     .edit-input:focus { border-color: #05ee93; }
     .edit-textarea { width: 100%; background: #111214; border: 1px solid #343438; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 10px; outline: none; resize: vertical; min-height: 72px; transition: border-color 0.2s; }
     .edit-textarea:focus { border-color: #05ee93; }
+    
     .edit-save-row { display: flex; gap: 6px; align-items: center; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 4px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
@@ -153,23 +173,23 @@
     .inline-msg.ok { color: #05ee93; }
     .inline-msg.err { color: #ff5555; }
 
-    /* projects panel */
-    .projects-panel { flex: 1; padding: 32px 36px; min-width: 0; }
+    /* projects panel (Bottom) */
+    .projects-panel { padding: 48px 10vw; width: 100%; max-width: 1400px; margin: 0 auto; }
     .projects-panel h2 { font-size: 15px; color: #00b2ff; font-family: 'mcfontb', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #1e1e22; padding-bottom: 10px; }
-    .project-grid { display: flex; flex-direction: column; gap: 10px; }
-    .project-card { background: #161719; border: 1px solid #2a2a2e; padding: 16px 20px; cursor: pointer; transition: border-color 0.2s; }
+    .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .project-card { background: #161719; border: 1px solid #2a2a2e; padding: 20px 24px; cursor: pointer; transition: border-color 0.2s; }
     .project-card:hover { border-color: #05ee93; }
-    .project-card-name { font-size: 15px; color: #fff; font-family: 'mcfontb', sans-serif; margin-bottom: 4px; }
-    .project-card-desc { font-size: 12px; color: #555; line-height: 1.5; }
-    .project-card-date { font-size: 11px; color: #333; margin-top: 10px; }
-    .no-projects { font-size: 13px; color: #333; padding: 40px 0; }
+    .project-card-name { font-size: 16px; color: #fff; font-family: 'mcfontb', sans-serif; margin-bottom: 6px; }
+    .project-card-desc { font-size: 13px; color: #666; line-height: 1.5; }
+    .project-card-date { font-size: 11px; color: #444; margin-top: 14px; }
+    .no-projects { font-size: 13px; color: #444; padding: 40px 0; border: 1px dashed #2a2a2e; text-align: center; }
 
     /* settings stuff */
-    .settings-panel { display: none; flex-direction: column; gap: 18px; max-width: 480px; }
+    .settings-panel { display: none; flex-direction: column; gap: 18px; max-width: 500px; margin: 40px auto; }
     .settings-panel.visible { display: flex; }
-    .setting-row { display: flex; justify-content: space-between; align-items: center; background: #161719; border: 1px solid #2a2a2e; padding: 14px 18px; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; background: #161719; border: 1px solid #2a2a2e; padding: 16px 20px; }
     .setting-label { font-size: 13px; color: #ccc; }
-    .setting-desc { font-size: 11px; color: #555; margin-top: 3px; }
+    .setting-desc { font-size: 11px; color: #555; margin-top: 5px; }
     .toggle { position: relative; width: 40px; height: 22px; background: #222326; border: 1px solid #343438; cursor: pointer; flex-shrink: 0; margin-left: 16px; }
     .toggle.on { background: #05ee93; border-color: #05ee93; }
     .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; transition: left 0.15s; }
@@ -180,12 +200,12 @@
     .leave-collab-btn { align-self: flex-start; }
 
     /* links settings block */
-    .links-settings-block { background: #161719; border: 1px solid #2a2a2e; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .links-settings-block { background: #161719; border: 1px solid #2a2a2e; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
     .links-settings-title { font-size: 13px; color: #ccc; }
     .links-settings-desc { font-size: 11px; color: #555; margin-top: -6px; }
-    .link-edit-row { display: flex; gap: 6px; }
+    .link-edit-row { display: flex; gap: 8px; }
     .link-edit-row .edit-input { flex: 1; }
-    .link-edit-row .edit-input.label-input { flex: 0 0 90px; }
+    .link-edit-row .edit-input.label-input { flex: 0 0 100px; }
     
     /* pfp modal */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center; }
@@ -213,46 +233,31 @@
     .center-msg.err { color: #ff5555; }
 
     /* ---- MOBILE ---- */
-    @media (max-width: 640px) {
+    @media (max-width: 800px) {
       .search-wrap.in-nav { width: 130px; }
       .search-wrap.in-nav .search-input { font-size: 11px; padding: 5px 8px; }
-      .page.visible { flex-direction: column; }
-      .profile-sidebar { width: 100%; min-width: unset; min-height: unset; border-right: none; border-bottom: 1px solid #2a2a2e; padding: 20px 16px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
-      .profile-avatar-wrap { width: 64px; }
-      .profile-avatar { width: 64px; height: 64px; font-size: 24px; }
-      .profile-sidebar-text { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 4px; }
-      .profile-username { font-size: 18px; }
-      .profile-bio-section { width: 100%; }
-      .projects-panel { padding: 16px; }
-      .project-card { padding: 12px 14px; }
-
-      /* all-profiles section on mobile */
-      .landing { padding-top: 100px; }
-      .recent-section { width: 100%; padding: 0 4px; }
-      .recent-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); max-height: 65vh; gap: 10px; }
-      .recent-card { padding: 16px 14px; }
-      .recent-avatar { width: 48px; height: 48px; font-size: 20px; }
-      .recent-name { font-size: 13px; }
+      
+      .profile-banner { flex-direction: column; padding: 32px 20px; gap: 24px; align-items: center; text-align: center; }
+      .profile-side-stats { width: 100%; border-left: none; border-top: 1px solid #2a2a2e; padding-left: 0; padding-top: 20px; align-items: center; }
+      .bio-row { justify-content: center; }
+      .profile-links { justify-content: center; }
+      
+      .projects-panel { padding: 32px 20px; }
+      .project-grid { grid-template-columns: 1fr; }
 
       .pfp-modal { padding: 20px 16px; }
       .link-edit-row { flex-wrap: wrap; }
       .link-edit-row .edit-input.label-input { flex: 1 1 100%; }
     }
-
-
-    
   </style>
-
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
-
 </head>
 <body>
 
-  <!-- pfp modal (ui preview only) -->
   <div class="overlay" id="pfp-overlay">
     <div class="pfp-modal">
       <h3>Profile Picture</h3>
-<br><br>
+      <br><br>
       <div class="pfp-drop-zone" id="pfp-drop-zone" onclick="document.getElementById('pfp-file-input').click()">
         <input type="file" id="pfp-file-input" accept="image/*">
         <div class="pfp-drop-icon">+</div>
@@ -265,14 +270,11 @@
       <div class="pfp-soon" id="pfp-soon">looking good! saving is coming soon.</div>
       <div class="pfp-modal-actions">
         <button class="cancel-btn" onclick="closePfpModal()">Close</button>
-<button class="sm-btn primary" id="pfp-save-btn" onclick="uploadPfp()" style="display:none;">
-  Save
-</button>
+        <button class="sm-btn primary" id="pfp-save-btn" onclick="uploadPfp()" style="display:none;">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- topnav -->
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
     <div id="nav-search-slot"></div>
@@ -281,13 +283,14 @@
     </div>
   </div>
 
-  <!-- centered search + landing -->
   <div class="landing" id="landing">
-    <div class="search-wrap centered" id="search-wrap">
-      <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
-      <div class="search-input-row">
-        <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
-        <div class="autocomplete-list" id="ac-list"></div>
+    <div class="search-stabilizer">
+      <div class="search-wrap centered" id="search-wrap">
+        <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
+        <div class="search-input-row">
+          <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
+          <div class="autocomplete-list" id="ac-list"></div>
+        </div>
       </div>
     </div>
 
@@ -299,26 +302,23 @@
     </div>
   </div>
 
-  <!-- profile page -->
   <div class="page" id="profile-page">
-    <div class="profile-sidebar">
-
+    
+    <div class="profile-banner">
       <div class="profile-avatar-wrap" id="avatar-wrap">
         <div class="profile-avatar" id="prof-avatar">?</div>
         <div class="avatar-hint">change photo</div>
       </div>
 
-      <div class="profile-sidebar-text">
+      <div class="profile-main-info">
         <div class="username-row">
           <button class="icon-edit-btn" id="edit-username-btn" onclick="toggleUsernameEdit()" title="edit username">
             <img src="https://mcbcode.com/img/icons/pencil.png" alt="">
           </button>
           <div class="profile-username" id="prof-username"></div>
+          <div class="profile-rank" id="prof-rank"></div>
         </div>
-        <div class="profile-points" id="prof-points" style="display:none;"></div>
-        <div class="profile-email" id="prof-email" style="display:none;"></div>
-        <div class="profile-rank" id="prof-rank"></div>
-
+        
         <div class="edit-area" id="username-edit-area">
           <input class="edit-input" type="text" id="username-input" maxlength="32" placeholder="new username">
           <div class="edit-save-row">
@@ -328,12 +328,6 @@
           </div>
         </div>
 
-        <div class="edit-row" id="settings-btn-row" style="display:none; margin-top:6px;">
-          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
-        </div>
-      </div>
-
-      <div class="profile-bio-section">
         <div class="bio-row">
           <button class="icon-edit-btn" id="edit-bio-btn" onclick="toggleBioEdit()" title="edit bio">
             <img src="https://mcbcode.com/img/icons/pencil.png" alt="">
@@ -343,6 +337,7 @@
             <div class="profile-bio-empty" id="prof-bio-empty" style="display:none;">no bio yet.</div>
           </div>
         </div>
+        
         <div class="edit-area" id="bio-edit-area">
           <textarea class="edit-textarea" id="bio-textarea" maxlength="256" placeholder="tell people about yourself..."></textarea>
           <div class="edit-save-row">
@@ -352,21 +347,27 @@
           </div>
         </div>
 
-        <!-- joined date now lives below the bio -->
-        <div class="profile-joined" id="prof-joined" style="margin-top:10px;"></div>
-
-        <!-- links show up below the bio -->
         <div class="profile-links" id="prof-links"></div>
       </div>
 
+      <div class="profile-side-stats">
+        <div class="profile-points" id="prof-points" style="display:none;"></div>
+        <div class="profile-email" id="prof-email" style="display:none;"></div>
+        <div class="profile-joined" id="prof-joined"></div>
+        
+        <div class="edit-row" id="settings-btn-row" style="display:none;">
+          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
+        </div>
+      </div>
     </div>
 
     <div class="projects-panel">
       <h2>Owned by me</h2>
       <div class="project-grid" id="project-grid"></div>
 
-      <h2 style="margin-top:40px;">Collaborating with</h2>
+      <h2 style="margin-top:48px;">Collaborating with</h2>
       <div class="project-grid" id="collab-grid"></div>
+      
       <div class="settings-panel" id="settings-panel">
         <h2>Settings</h2>
 
@@ -426,7 +427,6 @@
   <div class="center-msg" id="center-msg" style="display:none;"></div>
 
 
-  
   <script>
     const AUTH = "https://auth.mcbcode.com";
     const params = new URLSearchParams(location.search);
