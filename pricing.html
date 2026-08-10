@@ -4,26 +4,61 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <meta href="https://mcbcode.com/theme/navi.html">
 <style>
-
 .panel-wrapper {
-    max-width: 90%;
-    margin: auto;
-    justify-content: space-between;
+    max-width: 900px;
+    margin: 40px auto;
     display: flex;
-    gap: 4vw;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    align-items: stretch;
 }
+
 .panel {
-    border: 1px solid #bebebe;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
     color: #ffffff;
     text-align: center;
     flex: 1;
-    align-items: center;
-    padding: 12px;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 30px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.panel h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.panel-price {
+    font-size: 24px; 
+    color: #bebebe; 
+    margin-bottom: 25px;
+}
+
+.panel-price span {
+    font-size: 40px; 
+    font-family: mcfontwide;
 }
 
 #perk {
-    font-size: 22px;
-    line-height: 1;
+    font-size: 16px;
+    line-height: 1.8;
+    margin: 4px 0;
+}
+
+.perk-header {
+    margin-bottom: 15px !important;
 }
 </style>
 </head>
@@ -34,37 +69,39 @@
     <h2 style="font-family: mcfont !important; font-weight: normal;">
         Stone
     </h2>
-    <p style="font-size: 24px; color: #bebebe; line-height: 0.1;"><span style="font-size: 32px; font-family: mcfontwide">$0</span> forever.</p>    
-<br>
-    <p id="perk" style="font-family: mcfontb">Tools to get you started</p> 
-    <p id="perk">- 10 Project Max</p> 
-    <p id="perk">- Project Collaborators</p> 
-    <p id="perk">- Project Tags</p> 
-    <p id="perk">- Basic Tools</p> 
+    <div class="panel-price">
+        <span style="font-family: mcfontwide">$0</span> forever.
+    </div>  
+    
+    <p id="perk" class="perk-header" style="font-family: mcfontb">Tools to get you started</p> 
+    <p id="perk">- 10 Project Max</p>  
+    <p id="perk">- Project Collaborators</p>  
+    <p id="perk">- Project Tags</p>  
+    <p id="perk">- Basic Tools</p>  
 
 </div>
 
-<div class="panel">
+<div class="panel" style="border-color: rgba(255, 0, 208, 0.4); background: rgba(255, 0, 208, 0.03);">
     <h2 style="color: #ff00d0; font-family: 'mcfontwide' !important; font-weight: normal;">
         Obsidian
     </h2>
-    <p style="font-size: 24px; color: #c900a5; line-height: 0.1;"><span style="font-size: 32px; font-family: mcfontwide">$4</span> /month.</p>   
-<br>
-    <p id="perk" style="font-family: mcfontb; color: #05ee93;">Everything in Stone and</p> 
-    <p id="perk">- 25 Snapshots</p> 
-    <p id="perk">- 1,000 Project Max</p> 
-    <p id="perk">- GitHub Connections</p> 
-    <p id="perk">- Custom Share Codes</p> 
-    <p id="perk">- 2,500 Points Instantly</p> 
-    <p id="perk">- Profile Badge</p> 
-    <p id="perk">- More Tools</p> 
-    <p id="perk">- AI Builder</p> 
-    <p id="perk">- Private Projects</p> 
+    <div class="panel-price" style="color: #c900a5;">
+        <span style="font-family: mcfontwide">$4</span> /month.
+    </div>   
+    
+    <p id="perk" class="perk-header" style="font-family: mcfontb; color: #05ee93;">Everything in Stone and</p>  
+    <p id="perk">- 25 Snapshots</p>  
+    <p id="perk">- 1,000 Project Max</p>  
+    <p id="perk">- GitHub Connections</p>  
+    <p id="perk">- Custom Share Codes</p>  
+    <p id="perk">- 2,500 Points Instantly</p>  
+    <p id="perk">- Profile Badge</p>  
+    <p id="perk">- More Tools</p>  
+    <p id="perk">- AI Builder</p>  
+    <p id="perk">- Private Projects</p>  
 
 </div>
 </div>
-
-
 
 <script src="https://mcbcode.com/elements/navi.js"></script>
 </body>
