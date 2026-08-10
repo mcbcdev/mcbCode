@@ -421,6 +421,21 @@ function renderToolbar() {
     toolbar.appendChild(createWrap);
   }
 
+   // watch button — visible to any logged-in user, shows total count (identities stay private)
+  if (isLoggedIn()) {
+      const bwatch = document.createElement("button");
+      bwatch.className = "sm-btn";
+      bwatch.id = "watch-btn";
+      bwatch.textContent = `[${project.watcher_count ?? 0} Watching]`;
+      bwatch.style.color = project.is_watching ? "#05ee93" : "";
+      bwatch.style.borderColor = project.is_watching ? "#05ee93" : "";
+      bwatch.title = project.is_watching ? "stop watching this project" : "watch this project for update notifications";
+      bwatch.onclick = toggleWatch;
+      toolbar.appendChild(bwatch);
+  }
+
+  // export button: visible to everyone, but greyed out / disabled if not logged in
+  const bexport = document.createElement("button");
   // export button: visible to everyone, but greyed out / disabled if not logged in
   const bexport = document.createElement("button");
   bexport.id = "export-btn";
@@ -1420,6 +1435,26 @@ function renderFileList() {
         if (res.ok) { const row = document.getElementById(`collab-${userId}`); if (row) row.remove(); await loadCollaborators(); }
       } catch {}
     }
+
+async function toggleWatch() {
+      const btn = document.getElementById("watch-btn");
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${AUTH}/project/watch${project.is_watching ? `?code=${encodeURIComponent(shareCode)}` : ""}`, {
+          method: project.is_watching ? "DELETE" : "POST",
+          credentials: "include",
+          headers: project.is_watching ? {} : { "Content-Type": "application/json" },
+          body: project.is_watching ? undefined : JSON.stringify({ project_code: shareCode })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          project.is_watching = d.is_watching;
+          project.watcher_count = d.watcher_count;
+          renderToolbar();
+        }
+      } catch { alert("something went wrong."); }
+    }
+
 
     // ---- EXPORT ----
     async function startExport() {
