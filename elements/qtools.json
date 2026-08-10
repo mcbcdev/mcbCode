@@ -1,3 +1,21 @@
 {
+  "minecraft:display_name": { "definition": "The name that appears in game" }
+},
+{
+  "minecraft:geometry": { "definition": "Determines the geometry of this block" }
+},
+{
+  "minecraft:item_visual": { "definition": "Determines the geometry of this block" }
+},
+{
+  "minecraft:allow_off_hand": { "definition": "Allows the item to be held in your offhand" }
+},
+{
+  "minecraft:can_destroy_in_creative": { "definition": "Allows the item to be breakable in creative" }
+},
+{
+  "minecraft:geometry": { "definition": "Determines the geometry of this block" }
+},
+{
   "minecraft:geometry": { "definition": "Determines the geometry of this block" }
 }
