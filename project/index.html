@@ -399,6 +399,36 @@
     .recipe-grid { display: grid; grid-template-columns: repeat(3, 70px); gap: 6px; }
     .recipe-grid textarea { background: #1a1c1f; border: 1px solid #343438; color: #fff; font-family: 'Fira Code', monospace; font-size: 11px; padding: 6px; text-align: center; resize: none; outline: none; }
     .recipe-grid textarea:focus { border-color: #05ee93; }
+
+    /* Hide the default checkbox */
+#set-private-toggle {
+  display: none;
+}
+
+/* Style the existing label to act as the square toggle container */
+.custom-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Create the colored square box (Off state: #343434) */
+.custom-toggle-label::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background-color: #343434;
+  border-radius: 4px; /* Optional: remove for sharp corners */
+  margin-right: 8px; /* Space between the square and text "Private project" */
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Checked state: #05ee93 */
+#set-private-toggle:checked + .custom-toggle-label::before {
+  background-color: #05ee93;
+}
   </style>
 </head>
 <body>
@@ -655,9 +685,9 @@
       <div id="obsidian-locked-msg" style="font-size:12px; color:#777; margin-bottom:10px;">these need an Obsidian subscription.</div>
       <div id="obsidian-features" style="display:none;">
         <div class="set-field">
-          <label>
-            <input type="checkbox" id="set-private-toggle" onchange="togglePrivate()">
-            Private project (only you and collaborators can view/edit — hidden from search & your profile)
+          <input type="checkbox" id="set-private-toggle" name="privateproject" onchange="togglePrivate()">
+          <label for="privateproject" class="custom-toggle-label">
+            Private project
           </label>
           <div id="private-msg" class="inline-msg"></div>
         </div>
