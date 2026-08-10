@@ -379,7 +379,7 @@ function renderToolbar() {
       { label: "+ Structure", action: () => document.getElementById("mcstructure-upload-input").click(), needsSubfolder: true },
     ];
     items.forEach(item => {
-      if (item.needsSubfolder && isAtRoot()) return; // same rule as before: files/images/structures need a folder
+      if (item.needsSubfolder && isAtRoot()) return;
       const el = document.createElement("div");
       el.className = "share-menu-item";
       el.textContent = item.label;
@@ -391,7 +391,6 @@ function renderToolbar() {
     addWrap.appendChild(addMenu);
     toolbar.appendChild(addWrap);
 
-    // "+" create dropdown (block/entity/item) — unchanged, sits right after Add Files
     const createWrap = document.createElement("div");
     createWrap.className = "create-wrap";
     const cbtn = document.createElement("button");
@@ -421,21 +420,19 @@ function renderToolbar() {
     toolbar.appendChild(createWrap);
   }
 
-   // watch button — visible to any logged-in user, shows total count (identities stay private)
+  // watch button — visible to any logged-in user, shows total count (identities stay private)
   if (isLoggedIn()) {
-      const bwatch = document.createElement("button");
-      bwatch.className = "sm-btn";
-      bwatch.id = "watch-btn";
-      bwatch.textContent = `[${project.watcher_count ?? 0} Watching]`;
-      bwatch.style.color = project.is_watching ? "#05ee93" : "";
-      bwatch.style.borderColor = project.is_watching ? "#05ee93" : "";
-      bwatch.title = project.is_watching ? "stop watching this project" : "watch this project for update notifications";
-      bwatch.onclick = toggleWatch;
-      toolbar.appendChild(bwatch);
+    const bwatch = document.createElement("button");
+    bwatch.className = "sm-btn";
+    bwatch.id = "watch-btn";
+    bwatch.textContent = `[${project.watcher_count ?? 0} Watching]`;
+    bwatch.style.color = project.is_watching ? "#05ee93" : "";
+    bwatch.style.borderColor = project.is_watching ? "#05ee93" : "";
+    bwatch.title = project.is_watching ? "stop watching this project" : "watch this project for update notifications";
+    bwatch.onclick = toggleWatch;
+    toolbar.appendChild(bwatch);
   }
 
-  // export button: visible to everyone, but greyed out / disabled if not logged in
-  const bexport = document.createElement("button");
   // export button: visible to everyone, but greyed out / disabled if not logged in
   const bexport = document.createElement("button");
   bexport.id = "export-btn";
