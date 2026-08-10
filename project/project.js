@@ -546,6 +546,67 @@ const ITEM_COMPONENT_CATEGORIES = {
   "Misc": ["minecraft:allow_off_hand","minecraft:rarity","minecraft:record","minecraft:should_despawn","minecraft:tags"]
 };
 
+// maps component id -> input type + constraints, based on the docs.
+// anything not listed here falls back to the old json textarea.
+const COMPONENT_SCHEMA = {
+  // booleans
+  "minecraft:allow_off_hand": { type: "boolean" },
+  "minecraft:can_destroy_in_creative": { type: "boolean" },
+  "minecraft:glint": { type: "boolean" },
+  "minecraft:hand_equipped": { type: "boolean" },
+  "minecraft:liquid_clipped": { type: "boolean" },
+  "minecraft:should_despawn": { type: "boolean" },
+  "minecraft:stacked_by_data": { type: "boolean" },
+  "minecraft:collision_box": { type: "boolean" },
+  "minecraft:destructible_by_explosion": { type: "boolean" },
+  "minecraft:destructible_by_mining": { type: "boolean" },
+  "minecraft:flammable": { type: "boolean" },
+  "minecraft:selection_box": { type: "boolean" },
+
+  // integers
+  "minecraft:damage": { type: "integer", min: 0, max: 32767 },
+  "minecraft:max_stack_size": { type: "integer", min: 1, max: 64 },
+  "minecraft:light_dampening": { type: "integer", min: 0, max: 15 },
+  "minecraft:light_emission": { type: "integer", min: 0, max: 15 },
+
+  // floats
+  "minecraft:friction": { type: "float", min: 0.0, max: 0.9 },
+
+  // plain strings
+  "minecraft:hover_text_color": { type: "string" },
+  "minecraft:display_name": { type: "string" },
+  "minecraft:loot": { type: "string" },
+  "minecraft:geometry": { type: "string" },
+
+  // dropdowns w/ fixed options
+  "minecraft:rarity": { type: "select", options: ["common", "uncommon", "rare", "epic"] },
+  "minecraft:use_animation": { type: "select", options: ["eat","drink","bow","block","camera","crossbow","none","brush","spear","spyglass"] },
+};
+
+function componentInputHTML(id) {
+  const schema = COMPONENT_SCHEMA[id];
+  if (!schema) {
+    return `<textarea rows="1" data-component-id="${esc(id)}" data-component-type="json" placeholder="value / json for this component"></textarea>`;
+  }
+  if (schema.type === "boolean") {
+    return `
+      <select data-component-id="${esc(id)}" data-component-type="boolean">
+        <option value="">(not set)</option>
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>`;
+  }
+  if (schema.type === "integer" || schema.type === "float") {
+    const step = schema.type === "integer" ? "1" : "any";
+    return `<input type="number" data-component-id="${esc(id)}" data-component-type="${schema.type}" min="${schema.min}" max="${schema.max}" step="${step}" placeholder="${schema.min} to ${schema.max}">`;
+  }
+  if (schema.type === "select") {
+    const opts = schema.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+    return `<select data-component-id="${esc(id)}" data-component-type="string"><option value="">(not set)</option>${opts}</select>`;
+  }
+  return `<textarea rows="1" data-component-id="${esc(id)}" data-component-type="string" placeholder="value for this component"></textarea>`;
+}
+
 let creatorKind = null;
 
 function openCreator(kind) {
@@ -607,7 +668,7 @@ function openCreator(kind) {
       html += `
         <div class="creator-comp-row">
           <div class="creator-comp-name">${esc(id)}</div>
-          <textarea rows="1" data-component-id="${esc(id)}" placeholder="value / json for this component"></textarea>
+          ${componentInputHTML(id)}
           <div class="creator-qmark" tabindex="0">?
             <div class="creator-tooltip">${esc(qtoolsDef(id))}</div>
           </div>
@@ -812,12 +873,25 @@ async function creatorSave() {
   const idPart = identifier.split(":")[1];
 
   const componentValues = {};
-  document.querySelectorAll("#creator-body textarea[data-component-id]").forEach(ta => {
-    const v = ta.value.trim();
-    if (!v) return;
+  document.querySelectorAll("#creator-body [data-component-id]").forEach(el => {
+    const v = el.value.trim();
+    if (v === "") return;
+    const type = el.dataset.componentType;
     let parsed;
-    try { parsed = JSON.parse(v); } catch { parsed = v; }
-    componentValues[ta.dataset.componentId] = parsed;
+    if (type === "boolean") {
+      parsed = v === "true";
+    } else if (type === "integer") {
+      parsed = parseInt(v, 10);
+      if (isNaN(parsed)) return;
+    } else if (type === "float") {
+      parsed = parseFloat(v);
+      if (isNaN(parsed)) return;
+    } else if (type === "string") {
+      parsed = v;
+    } else {
+      try { parsed = JSON.parse(v); } catch { parsed = v; }
+    }
+    componentValues[el.dataset.componentId] = parsed;
   });
 
   const textureFileEl = document.getElementById("creator-texture-file");
