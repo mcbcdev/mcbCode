@@ -425,7 +425,7 @@ function renderToolbar() {
     const bwatch = document.createElement("button");
     bwatch.className = "sm-btn";
     bwatch.id = "watch-btn";
-    bwatch.textContent = `[${project.watcher_count ?? 0} Watching]`;
+    bwatch.textContent = `${project.watcher_count ?? 0} Watching`;
     bwatch.style.color = project.is_watching ? "#05ee93" : "";
     bwatch.style.borderColor = project.is_watching ? "#05ee93" : "";
     bwatch.title = project.is_watching ? "stop watching this project" : "watch this project for update notifications";
