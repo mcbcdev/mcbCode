@@ -377,6 +377,14 @@
       outline: none; resize: vertical; min-height: 34px; transition: border-color 0.2s;
     }
     .creator-comp-row textarea:focus { border-color: #05ee93; }
+    .creator-comp-row select,
+    .creator-comp-row input[type="number"] {
+      flex: 1; background: #1a1c1f; border: 1px solid #343438; color: #fff;
+      font-family: 'Fira Code', monospace; font-size: 12px; padding: 7px 9px;
+      outline: none; transition: border-color 0.2s;
+    }
+.creator-comp-row select:focus,
+.creator-comp-row input[type="number"]:focus { border-color: #05ee93; }
     .creator-qmark {
       width: 18px; height: 18px; border-radius: 50%; border: 1px solid #343438; color: #888;
       font-size: 11px; display: flex; align-items: center; justify-content: center;
