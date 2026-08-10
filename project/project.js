@@ -288,6 +288,7 @@
       if (isOwner) {
         document.getElementById("tab-settings-btn").style.display = "";
         document.getElementById("set-name").value = project.name;
+        document.getElementById("set-private-toggle").checked = !(project.is_public === 1 || project.is_public === true);
         document.getElementById("set-desc").value = project.description || "";
         currentTags = Array.isArray(project.tags) ? project.tags.slice(0, 10) : [];
         renderTags();
@@ -1536,6 +1537,34 @@ function renderFileList() {
           msg.textContent = d.error || "Failed."; msg.className = "inline-msg err";
         }
       } catch { msg.textContent = "Error."; msg.className = "inline-msg err"; }
+      setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
+    }
+
+    async function togglePrivate() {
+      const checkbox = document.getElementById("set-private-toggle");
+      const msg = document.getElementById("private-msg");
+      const wantPublic = !checkbox.checked; // checked = private, so is_public is the inverse
+      try {
+        const res = await fetch(`${AUTH}/project/settings`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, is_public: wantPublic })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          project.is_public = wantPublic;
+          const badge = document.getElementById("proj-badge");
+          badge.textContent = wantPublic ? "public" : "private";
+          badge.classList.toggle("public", wantPublic);
+          msg.textContent = "saved!"; msg.className = "inline-msg ok";
+        } else {
+          checkbox.checked = !checkbox.checked; // revert the toggle visually
+          msg.textContent = d.error || "failed."; msg.className = "inline-msg err";
+        }
+      } catch {
+        checkbox.checked = !checkbox.checked;
+        msg.textContent = "error."; msg.className = "inline-msg err";
+      }
       setTimeout(() => { msg.textContent = ""; msg.className = "inline-msg"; }, 3000);
     }
 
