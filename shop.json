@@ -18,7 +18,7 @@
     "desc": "A full month of Obsidian perks. Stacks with your current time left, if any."
   },
   {
-    "id": "rank_silly",
+    "id": "rank_choice",
     "name": "Weird Rank of Your Choice",
     "type": "rank",
     "cost": 1000,
