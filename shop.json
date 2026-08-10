@@ -19,7 +19,7 @@
   },
   {
     "id": "rank_silly",
-    "name": "A Silly Little Rank",
+    "name": "Weird Rank of Your Choice",
     "type": "rank",
     "cost": 1000,
     "icon": "tag",
@@ -31,7 +31,7 @@
       "chud",
       "cool guy",
       "bedrockian",
-      "📍 folk valley",
+      "📍folk valley",
       "command dude"
     ]
   }
