@@ -1486,10 +1486,8 @@ function renderFileList() {
           for (const packName of ["BP", "RP"]) {
             const packFolder = rootFolders.find(f => f.name.toUpperCase() === packName);
             if (!packFolder) continue;
-            const packZip = new JSZip();
             files.filter(f => f.type === "file" && isUnderFolder(f, packFolder.id))
-                 .forEach(f => addFileToZip(packZip, getRelativeParts(f, packFolder.id).join("/"), f));
-            addon.file(`${projectName}_${packName}.mcpack`, await packZip.generateAsync({ type: "blob" }));
+                 .forEach(f => addFileToZip(addon, `${packFolder.name}/${getRelativeParts(f, packFolder.id).join("/")}`, f));
           }
           triggerDownload(await addon.generateAsync({ type: "blob" }), `${projectName}.mcaddon`);
         } else {
