@@ -250,6 +250,8 @@
         allFiles = d.files || [];
         isOwner  = window._myId && project.owner_id === window._myId;
         isCollab = !!d.is_collaborator;
+        project.watcher_count = d.watcher_count || 0;
+        project.is_watching = !!d.is_watching;
         resolveInitialPath();
         render();
       } catch { showErr("Failed to load project."); }
