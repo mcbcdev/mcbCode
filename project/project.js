@@ -1594,9 +1594,11 @@ function renderFileList() {
 
       const statusEl = document.getElementById("github-sync-status");
       if (project.github_repo_owner && project.github_repo_name) {
-        statusEl.textContent = `linked to github.com/${project.github_repo_owner}/${project.github_repo_name}`;
+        statusEl.textContent = `linked to github.com/${project.github_repo_owner}/${project.github_repo_name} (auto-syncing)`;
         document.getElementById("github-link-btn").style.display = "none";
         document.getElementById("github-sync-btn").style.display = "";
+        document.getElementById("github-sync-btn").textContent = "Unlink GitHub";
+        document.getElementById("github-sync-btn").onclick = unlinkGithub;
       } else {
         statusEl.textContent = "not linked yet.";
         document.getElementById("github-link-btn").style.display = "";
@@ -1652,20 +1654,21 @@ async function linkGithub() {
       btn.disabled = false; btn.textContent = "Link to GitHub";
     }
 
-    async function syncGithub() {
+    async function unlinkGithub() {
+      if (!confirm("unlink this project from GitHub? your repo on GitHub won't be deleted, but mcbCode will stop auto-syncing to it.")) return;
       const btn = document.getElementById("github-sync-btn");
-      btn.disabled = true; btn.textContent = "Syncing...";
+      btn.disabled = true; btn.textContent = "Unlinking...";
       try {
-        const res = await fetch(`${AUTH}/project/github/sync?code=${encodeURIComponent(shareCode)}`, {
-          method: "POST", credentials: "include"
+        const res = await fetch(`${AUTH}/project/github/link?code=${encodeURIComponent(shareCode)}`, {
+          method: "DELETE", credentials: "include"
         });
         const d = await res.json();
         if (res.ok) {
-          if (d.conflicts && d.conflicts.length) alert("synced, but these files conflicted and were skipped: " + d.conflicts.join(", "));
-          else alert("synced!");
-        } else { alert(d.error || "sync failed."); }
+          project.github_repo_owner = null; project.github_repo_name = null;
+          initObsidianFeatures();
+        } else { alert(d.error || "failed to unlink."); }
       } catch { alert("something went wrong."); }
-      btn.disabled = false; btn.textContent = "Sync Now";
+      btn.disabled = false; btn.textContent = "Unlink GitHub";
     }
 
     // ---- DANGER ZONE ----
