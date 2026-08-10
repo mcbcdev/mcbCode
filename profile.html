@@ -358,6 +358,10 @@
         <div class="edit-row" id="settings-btn-row" style="display:none;">
           <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
         </div>
+        <div class="edit-row" id="settings-btn-row" style="display:none;">
+          <button class="edit-btn" id="watching-btn" onclick="toggleWatchingView()">watching</button>
+          <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
+        </div>
       </div>
     </div>
 
@@ -367,7 +371,10 @@
 
       <h2 style="margin-top:48px;">Collaborating with</h2>
       <div class="project-grid" id="collab-grid"></div>
-      
+      <div class="settings-panel" id="watching-panel">
+        <h2>Projects You're Watching</h2>
+        <div class="project-grid" id="watching-grid"></div>
+      </div>
       <div class="settings-panel" id="settings-panel">
         <h2>Settings</h2>
 
@@ -900,6 +907,37 @@ function renderSettingsToggles() {
       history.replaceState({}, "", showing ? `${base}#settings` : base);
     }
 
+    let watchingLoaded = false;
+
+    function toggleWatchingView(forceOpen) {
+      const panel = document.getElementById("watching-panel");
+      const showing = forceOpen === true ? true : !panel.classList.contains("visible");
+      panel.classList.toggle("visible", showing);
+      document.querySelectorAll(".projects-panel > h2, .projects-panel > .project-grid").forEach(el => {
+        el.style.display = showing ? "none" : "";
+      });
+      document.getElementById("watching-btn").textContent = showing ? "back to projects" : "watching";
+      if (showing && !watchingLoaded) loadWatching();
+    }
+
+    async function loadWatching() {
+      const grid = document.getElementById("watching-grid");
+      try {
+        const r = await fetch(`${AUTH}/me/watching`, { credentials: "include" });
+        if (!r.ok) { grid.innerHTML = `<div class="no-projects">failed to load.</div>`; return; }
+        const d = await r.json();
+        watchingLoaded = true;
+        if (!d.watching.length) { grid.innerHTML = `<div class="no-projects">you're not watching any projects yet.</div>`; return; }
+        grid.innerHTML = d.watching.map(p => `
+          <div class="project-card" onclick="window.location.href='/project/${esc(p.share_code)}/'">
+            <div class="project-card-name">${esc(p.name)}</div>
+            ${p.description ? `<div class="project-card-desc">${esc(p.description)}</div>` : ""}
+            <div class="project-card-date">owner: ${esc(p.owner_username)} • updated ${fmtDate(p.updated_at)}</div>
+          </div>
+        `).join("");
+      } catch { grid.innerHTML = `<div class="no-projects">failed to load.</div>`; }
+    }
+    
     async function toggleSetting(key) {
       if (!currentSettings) return;
       currentSettings[key] = !currentSettings[key];
