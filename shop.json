@@ -1,0 +1,38 @@
+[
+  {
+    "id": "obsidian_forever",
+    "name": "Obsidian, Forever",
+    "type": "obsidian",
+    "duration_days": null,
+    "cost": 100000,
+    "icon": "gem",
+    "desc": "Never see the word 'Obsidian subscription required' again. You deserve it for real."
+  },
+  {
+    "id": "obsidian_month",
+    "name": "Obsidian, One Month",
+    "type": "obsidian",
+    "duration_days": 30,
+    "cost": 10000,
+    "icon": "clock",
+    "desc": "A full month of Obsidian perks. Stacks with your current time left, if any."
+  },
+  {
+    "id": "rank_silly",
+    "name": "A Silly Little Rank",
+    "type": "rank",
+    "cost": 1000,
+    "icon": "tag",
+    "desc": "Pick a badge for your profile. Purely cosmetic. Purely chaotic.",
+    "options": [
+      "hehehe",
+      "coder",
+      "larper",
+      "chud",
+      "cool guy",
+      "bedrockian",
+      "📍 folk valley",
+      "command dude"
+    ]
+  }
+]
