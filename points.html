@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <title>mcbCode | Point Shop</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: #0c0c0c; color: #c8c8c8; font-family: 'mcfont', sans-serif; }
+    a { text-decoration: none; color: #fff; }
+    g { color: #05ee93; }
+    p2 { color: #ff00d0; }
+
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(20,20,20,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 16px; }
+    .topnav-title { font-size: 20px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .nav-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
+
+    .shell { margin-top: 56px; padding: 48px 20px 80px; max-width: 1000px; margin-left: auto; margin-right: auto; }
+
+    .shop-header { text-align: center; margin-bottom: 12px; }
+    .shop-title { font-size: 30px; color: #fff; font-family: 'mcfontb', sans-serif; transform: rotate(-1deg); display: inline-block; }
+    .shop-sub { font-size: 13px; color: #666; margin-top: 8px; max-width: 460px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+    .balance-wrap { display: flex; justify-content: center; margin: 28px 0 44px; }
+    .balance-card {
+      background: #141414; border: 2px dashed #2e2e2e; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px; transform: rotate(0.6deg);
+    }
+    .balance-num { font-size: 30px; color: #dc6bff; font-family: 'mcfontb', sans-serif; }
+    .balance-lbl { font-size: 11px; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; }
+
+    .item-card {
+      background: #141414; border: 1px solid #232323; padding: 22px 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+    .item-card:nth-child(1) { transform: rotate(-0.8deg); }
+    .item-card:nth-child(2) { transform: rotate(0.6deg); }
+    .item-card:nth-child(3) { transform: rotate(-0.4deg); }
+    .item-card:hover { transform: rotate(0deg) scale(1.02); border-color: #05ee93; }
+
+    .item-icon { font-size: 26px; }
+    .item-name { font-size: 16px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .item-desc { font-size: 12px; color: #777; line-height: 1.6; flex: 1; }
+    .item-cost-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .item-cost { font-size: 18px; color: #dc6bff; font-family: 'mcfontb', sans-serif; }
+    .item-cost span { font-size: 11px; color: #555; margin-left: 4px; font-family: 'mcfont', sans-serif; }
+
+    .buy-btn {
+      background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif;
+      font-size: 13px; padding: 8px 0; cursor: pointer; transition: background 0.2s; width: 100%;
+    }
+    .buy-btn:hover { background: #78e3a6; }
+    .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #333; color: #777; }
+
+    .owned-tag { font-size: 10px; color: #05ee93; border: 1px solid #0a3a2a; padding: 2px 6px; align-self: flex-start; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal-box { background: #1a1a1a; border: 2px dashed #2e2e2e; padding: 28px 30px; min-width: 320px; max-width: 420px; width: 100%; transform: rotate(-0.4deg); }
+    .modal-box h3 { color: #fff; font-size: 16px; margin-bottom: 10px; font-family: 'mcfontb', sans-serif; }
+    .modal-box p { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.6; }
+    .modal-select { width: 100%; background: #111; border: 1px solid #2e2e2e; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; margin-bottom: 14px; }
+    .modal-select:focus { border-color: #05ee93; }
+    .modal-err { font-size: 12px; color: #ff5555; margin-bottom: 10px; display: none; }
+    .modal-err.visible { display: block; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .cancel-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; }
+    .cancel-btn:hover { color: #fff; }
+    .confirm-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; transition: background 0.2s; }
+    .confirm-btn:hover { background: #78e3a6; }
+    .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #141414; border: 1px solid #2e2e2e; padding: 12px 20px; font-size: 13px;
+      color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 600;
+    }
+    .toast.ok { border-color: #05ee93; color: #05ee93; }
+    .toast.err { border-color: #ff5555; color: #ff5555; }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .loading-msg, .err-msg { text-align: center; padding: 60px 20px; color: #444; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <div class="topnav">
+    <a href="/" class="topnav-title">mcb<g>Code</g></a>
+    <div class="topnav-right">
+      <button class="nav-btn" onclick="window.location.href='/dashboard'">Dashboard</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="shop-header">
+      <div class="shop-title">The Point Shop</div>
+      <div class="shop-sub">you've been earning points this whole time. might as well blow them on something.</div>
+    </div>
+
+    <div class="balance-wrap">
+      <div class="balance-card">
+        <div>
+          <div class="balance-num" id="balance-num">—</div>
+          <div class="balance-lbl">your points</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="shop-content">
+      <div class="loading-msg">loading the shop...</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="purchase-modal">
+    <div class="modal-box">
+      <h3 id="pm-title">Confirm purchase</h3>
+      <p id="pm-desc"></p>
+      <select class="modal-select" id="pm-choice" style="display:none;"></select>
+      <div class="modal-err" id="pm-err"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closePurchaseModal()">Cancel</button>
+        <button class="confirm-btn" id="pm-confirm" onclick="confirmPurchase()">Buy it</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const AUTH = "https://auth.mcbcode.com";
+    let shopItems = [];
+    let myPoints = 0;
+    let pendingItem = null;
+
+    const ICONS = { gem: "◆", clock: "◷", tag: "★" };
+
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+    function showToast(msg, ok) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast visible " + (ok ? "ok" : "err");
+      setTimeout(() => { t.className = "toast"; }, 3200);
+    }
+
+    (async () => {
+      try {
+        const r = await fetch(`${AUTH}/shop`, { credentials: "include" });
+        if (!r.ok) {
+          if (r.status === 401) { document.getElementById("shop-content").innerHTML = `<div class="err-msg">log in to visit the shop.</div>`; return; }
+          throw new Error();
+        }
+        const d = await r.json();
+        shopItems = d.items || [];
+        myPoints = d.points || 0;
+        document.getElementById("balance-num").textContent = myPoints.toLocaleString();
+        renderShop();
+      } catch {
+        document.getElementById("shop-content").innerHTML = `<div class="err-msg">couldn't load the shop. try again in a bit.</div>`;
+      }
+    })();
+
+    function renderShop() {
+      const wrap = document.getElementById("shop-content");
+      if (!shopItems.length) { wrap.innerHTML = `<div class="err-msg">nothing in the shop right now.</div>`; return; }
+
+      wrap.innerHTML = `<div class="shop-grid">${shopItems.map(item => `
+        <div class="item-card">
+          <div class="item-icon">${ICONS[item.icon] || "•"}</div>
+          <div class="item-name">${esc(item.name)}</div>
+          <div class="item-desc">${esc(item.desc || "")}</div>
+          <div class="item-cost-row">
+            <div class="item-cost">${item.cost.toLocaleString()}<span>pts</span></div>
+          </div>
+          <button class="buy-btn" data-item-id="${esc(item.id)}" ${myPoints < item.cost ? "disabled" : ""}>
+            ${myPoints < item.cost ? "not enough points" : "buy"}
+          </button>
+        </div>
+      `).join("")}</div>`;
+
+      wrap.querySelectorAll(".buy-btn").forEach(btn => {
+        btn.addEventListener("click", () => openPurchaseModal(btn.dataset.itemId));
+      });
+    }
+
+    function openPurchaseModal(itemId) {
+      const item = shopItems.find(i => i.id === itemId);
+      if (!item) return;
+      pendingItem = item;
+
+      document.getElementById("pm-title").textContent = `Buy "${item.name}"?`;
+      document.getElementById("pm-desc").textContent = `this costs ${item.cost.toLocaleString()} points. ${item.type === "obsidian" ? "it applies immediately." : ""}`;
+      document.getElementById("pm-err").textContent = "";
+      document.getElementById("pm-err").classList.remove("visible");
+
+      const choiceEl = document.getElementById("pm-choice");
+      if (item.type === "rank" && Array.isArray(item.options)) {
+        choiceEl.style.display = "";
+        choiceEl.innerHTML = `<option value="">pick a rank...</option>` + item.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+      } else {
+        choiceEl.style.display = "none";
+        choiceEl.innerHTML = "";
+      }
+
+      document.getElementById("purchase-modal").classList.add("visible");
+    }
+
+    function closePurchaseModal() {
+      pendingItem = null;
+      document.getElementById("purchase-modal").classList.remove("visible");
+    }
+
+    async function confirmPurchase() {
+      if (!pendingItem) return closePurchaseModal();
+      const err = document.getElementById("pm-err");
+      const btn = document.getElementById("pm-confirm");
+      err.classList.remove("visible");
+
+      let choice = null;
+      if (pendingItem.type === "rank") {
+        choice = document.getElementById("pm-choice").value;
+        if (!choice) { err.textContent = "pick a rank first."; err.classList.add("visible"); return; }
+      }
+
+      btn.disabled = true; btn.textContent = "buying...";
+      try {
+        const res = await fetch(`${AUTH}/shop/purchase`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ item_id: pendingItem.id, choice })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          myPoints -= pendingItem.cost;
+          document.getElementById("balance-num").textContent = myPoints.toLocaleString();
+          closePurchaseModal();
+          renderShop();
+          showToast(pendingItem.type === "rank" ? `you're now "${d.applied}". congrats, I guess.` : `${pendingItem.name} is yours!`, true);
+        } else {
+          err.textContent = d.error || "purchase failed."; err.classList.add("visible");
+        }
+      } catch { err.textContent = "something went wrong."; err.classList.add("visible"); }
+      btn.disabled = false; btn.textContent = "Buy it";
+    }
+
+    document.getElementById("purchase-modal").addEventListener("click", e => { if (e.target === e.currentTarget) closePurchaseModal(); });
+  </script>
+
+</body>
+</html>
