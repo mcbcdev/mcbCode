@@ -896,7 +896,7 @@ function renderSettingsToggles() {
       document.querySelectorAll(".projects-panel > h2, .projects-panel > .project-grid").forEach(el => {
         el.style.display = showing ? "none" : "";
       });
-      document.getElementById("settings-btn").textContent = showing ? "back to projects" : "settings";
+      document.getElementById("settings-btn").textContent = showing ? "back" : "settings";
       if (showing && !settingsLoaded) loadSettings();
 
       // keep the url in sync so #settings can be shared/bookmarked/deep-linked
@@ -913,7 +913,7 @@ function renderSettingsToggles() {
       document.querySelectorAll(".projects-panel > h2, .projects-panel > .project-grid").forEach(el => {
         el.style.display = showing ? "none" : "";
       });
-      document.getElementById("watching-btn").textContent = showing ? "back to projects" : "watching";
+      document.getElementById("watching-btn").textContent = showing ? "back" : "watching";
       if (showing && !watchingLoaded) loadWatching();
     }
 
