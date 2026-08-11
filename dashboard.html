@@ -1333,6 +1333,19 @@ c {
       await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
       window.location.href = "/account";
     }
+
+	  document.getElementById("get-obsidian-btn").addEventListener("click", async () => {
+    const res = await fetch("https://auth.mcbcode.com/stripe/checkout", {
+        method: "POST",
+        credentials: "include"
+    });
+    const data = await res.json();
+    if (data.ok) {
+        window.location.href = data.checkout_url;
+    } else {
+        alert(data.error || "something went wrong starting checkout");
+    }
+});
   </script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
