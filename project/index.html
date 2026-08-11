@@ -520,6 +520,36 @@
     </div>
   </div>
 
+  <div class="overlay" id="snapshots-overlay">
+    <div class="modal" style="min-width:380px; max-width:460px;">
+      <h3>Snapshots</h3>
+      <div style="font-size:11px; color:#666; margin-bottom:14px;" id="snap-count-label"></div>
+
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" id="snap-label-input" maxlength="64" placeholder="label (optional)" style="flex:1; background:#1a1c1f; border:1px solid #343438; color:#fff; font-family:'mcfont', sans-serif; font-size:13px; padding:7px 10px; outline:none;">
+        <button class="primary-btn" id="snap-take-btn" onclick="takeSnapshot()">Take Snapshot</button>
+      </div>
+      <div class="modal-err" id="snap-take-err"></div>
+
+      <div id="snapshots-list" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;"></div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal('snapshots-overlay')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="snapshot-confirm-overlay">
+    <div class="confirm-modal">
+      <p id="snap-confirm-title">Are you sure?</p>
+      <small id="snap-confirm-sub"></small>
+      <div class="modal-actions">
+        <button class="del-btn" id="snap-confirm-btn" onclick="runSnapshotAction()">Confirm</button>
+        <button class="cancel-btn" onclick="closeModal('snapshot-confirm-overlay')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="overlay share-popup" id="share-popup-overlay">
     <div class="modal">
       <h3>Share this project</h3>
