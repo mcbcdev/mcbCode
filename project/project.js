@@ -435,6 +435,18 @@ function renderToolbar() {
     toolbar.appendChild(bwatch);
   }
 
+// snapshots — obsidian owners only
+  if (isOwner && window._isObsidian) {
+    const bsnap = document.createElement("button");
+    bsnap.className = "sm-btn";
+    bsnap.style.display = "inline-flex";
+    bsnap.style.alignItems = "center";
+    bsnap.style.gap = "6px";
+    bsnap.innerHTML = `<img src="https://mcbcode.com/img/icons/camera.png" alt="" style="width:14px; height:14px;"> Snapshots`;
+    bsnap.onclick = openSnapshotsModal;
+    toolbar.appendChild(bsnap);
+  }
+    
   // export button: visible to everyone, but greyed out / disabled if not logged in
   const bexport = document.createElement("button");
   bexport.id = "export-btn";
@@ -499,6 +511,100 @@ function openSharePopup() {
   document.getElementById("share-popup-overlay").classList.add("open");
 }
 document.getElementById("share-popup-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("share-popup-overlay"); });
+
+let pendingSnapshotAction = null;
+
+    async function openSnapshotsModal() {
+      document.getElementById("snapshots-overlay").classList.add("open");
+      document.getElementById("snap-label-input").value = "";
+      document.getElementById("snap-take-err").textContent = "";
+      document.getElementById("snap-take-err").classList.remove("show");
+      await loadSnapshots();
+    }
+
+    async function loadSnapshots() {
+      const list = document.getElementById("snapshots-list");
+      list.innerHTML = `<div style="font-size:12px; color:#444;">loading...</div>`;
+      try {
+        const r = await fetch(`${AUTH}/project/snapshots?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+        const d = await r.json();
+        if (!r.ok) { list.innerHTML = `<div style="font-size:12px; color:#ff5555;">${esc(d.error || "failed to load.")}</div>`; return; }
+
+        document.getElementById("snap-count-label").textContent = `${d.account_snapshot_count}/${d.max_snapshots} snapshots used across your account`;
+        document.getElementById("snap-take-btn").disabled = d.account_snapshot_count >= d.max_snapshots;
+
+        if (!d.snapshots.length) { list.innerHTML = `<div style="font-size:12px; color:#444;">no snapshots yet.</div>`; return; }
+
+        list.innerHTML = d.snapshots.map(s => `
+          <div style="display:flex; align-items:center; gap:8px; background:#1a1c1f; border:1px solid #343438; padding:8px 10px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:13px; color:#ccc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(s.label || "untitled snapshot")}</div>
+              <div style="font-size:11px; color:#555;" title="${esc(fmtDateTime(s.created_at))}">${esc(timeAgo(s.created_at))}</div>
+            </div>
+            <button class="sm-btn" onclick="askRestoreSnapshot(${s.id}, '${esc(s.label || "untitled snapshot")}')">restore</button>
+            <button class="sm-btn" style="color:#ff5555; border-color:#3a1414;" onclick="askDeleteSnapshot(${s.id}, '${esc(s.label || "untitled snapshot")}')">delete</button>
+          </div>
+        `).join("");
+      } catch { list.innerHTML = `<div style="font-size:12px; color:#ff5555;">something went wrong.</div>`; }
+    }
+
+    async function takeSnapshot() {
+      const label = document.getElementById("snap-label-input").value.trim();
+      const err = document.getElementById("snap-take-err");
+      const btn = document.getElementById("snap-take-btn");
+      err.textContent = ""; err.classList.remove("show");
+      btn.disabled = true; btn.textContent = "Taking...";
+      try {
+        const res = await fetch(`${AUTH}/project/snapshot`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_code: shareCode, label })
+        });
+        const d = await res.json();
+        if (!res.ok) { err.textContent = d.error || "failed."; err.classList.add("show"); }
+        else { document.getElementById("snap-label-input").value = ""; await loadSnapshots(); }
+      } catch { err.textContent = "something went wrong."; err.classList.add("show"); }
+      btn.disabled = false; btn.textContent = "Take Snapshot";
+    }
+
+    function askRestoreSnapshot(id, label) {
+      pendingSnapshotAction = { type: "restore", id };
+      document.getElementById("snap-confirm-title").textContent = `Restore "${label}"?`;
+      document.getElementById("snap-confirm-sub").textContent = "this replaces every current file with what's in the snapshot. anything added since won't survive.";
+      document.getElementById("snapshot-confirm-overlay").classList.add("open");
+    }
+
+    function askDeleteSnapshot(id, label) {
+      pendingSnapshotAction = { type: "delete", id };
+      document.getElementById("snap-confirm-title").textContent = `Delete "${label}"?`;
+      document.getElementById("snap-confirm-sub").textContent = "this snapshot will be gone for good.";
+      document.getElementById("snapshot-confirm-overlay").classList.add("open");
+    }
+
+    async function runSnapshotAction() {
+      if (!pendingSnapshotAction) return closeModal("snapshot-confirm-overlay");
+      const { type, id } = pendingSnapshotAction;
+      closeModal("snapshot-confirm-overlay");
+      pendingSnapshotAction = null;
+      try {
+        if (type === "restore") {
+          const res = await fetch(`${AUTH}/project/snapshot/restore`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_code: shareCode, snapshot_id: id })
+          });
+          if (res.ok) { location.reload(); }
+          else { const d = await res.json(); alert(d.error || "restore failed."); }
+        } else if (type === "delete") {
+          const res = await fetch(`${AUTH}/project/snapshot?id=${encodeURIComponent(id)}`, { method: "DELETE", credentials: "include" });
+          if (res.ok) await loadSnapshots();
+          else { const d = await res.json(); alert(d.error || "delete failed."); }
+        }
+      } catch { alert("something went wrong."); }
+    }
+
+    document.getElementById("snapshots-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("snapshots-overlay"); });
+    document.getElementById("snapshot-confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("snapshot-confirm-overlay"); });
 
 // ---- CREATE dropdown (block/entity/item) ----
 function toggleCreateMenu() {
