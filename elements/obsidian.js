@@ -1,8 +1,9 @@
 console.log("Obsidian Loading...");
+const thisScript = document.currentScript;
+
 fetch("/elements/obsidian.html")
   .then(res => res.text())
   .then(html => {
-    const thisScript = document.currentScript;
     thisScript.insertAdjacentHTML("beforebegin", html);
 
     document.getElementById("get-obsidian-btn").addEventListener("click", async () => {
