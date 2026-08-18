@@ -74,7 +74,7 @@ the app is an additional way to use mcbCode, not a replacement for the website.
 
 yes!
 
-mcbCode is one of the only things that do what it does, and we do not want to remove this ability. the features that require pro will still require pro on the app.
+mcbCode is one of the only things that does what it does, and we do not want to remove this ability. the features that require pro will still require pro on the app.
 
 ---
 
@@ -82,7 +82,7 @@ mcbCode is one of the only things that do what it does, and we do not want to re
 
 yes.
 
-all of them will
+all features of obsidian will
 
 ---
 
