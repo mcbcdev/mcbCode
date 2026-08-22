@@ -549,6 +549,20 @@
       </div>
     </div>
   </div>
+
+<div class="overlay" id="geojson-overlay">
+  <div class="modal" style="min-width:480px; max-width:640px;">
+    <h3 id="geojson-title">geo.json</h3>
+    <div class="modal-field">
+      <textarea id="geojson-textarea" rows="18" style="width:100%; font-family:'Fira Code', monospace; font-size:12px; background:#111214; border:1px solid #343438; color:#fff; padding:10px; outline:none;"></textarea>
+    </div>
+    <div class="modal-err" id="geojson-err"></div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal('geojson-overlay')">Close</button>
+      <button class="primary-btn" id="geojson-save-btn" onclick="saveGeoJson()">Save</button>
+    </div>
+  </div>
+</div>
   
   <div class="overlay share-popup" id="share-popup-overlay">
     <div class="modal">
