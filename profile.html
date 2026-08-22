@@ -229,6 +229,16 @@
     .cancel-btn:hover { color: #fff; }
     .soon-btn { background: #1a1c1f; border: 1px solid #343438; color: #444; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 14px; cursor: not-allowed; }
 
+    .follow-counts { display: flex; gap: 16px; font-size: 12px; color: #888; }
+    .follow-counts b { color: #ccc; }
+    .follow-modal-options { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .follow-option { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid #343438; cursor: pointer; transition: border-color 0.2s; }
+    .follow-option:hover { border-color: #00b2ff; }
+    .follow-option.selected { border-color: #05ee93; }
+    .follow-option input { margin-top: 3px; }
+    .follow-option-title { font-size: 13px; color: #fff; }
+    .follow-option-desc { font-size: 11px; color: #666; margin-top: 2px; }
+    
     .center-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 13px; color: #444; }
     .center-msg.err { color: #ff5555; }
 
@@ -275,6 +285,21 @@
     </div>
   </div>
 
+    <div class="overlay" id="follow-overlay">
+    <div class="pfp-modal">
+      <h3 id="follow-modal-title">Follow</h3>
+      <div class="pfp-modal-sub">choose when you want notifications from this person</div>
+
+      <div class="follow-modal-options" id="follow-options"></div>
+
+      <div class="pfp-modal-actions">
+        <button class="cancel-btn" id="unfollow-btn" onclick="doUnfollow()" style="display:none;">Unfollow</button>
+        <button class="cancel-btn" onclick="closeFollowModal()">Close</button>
+        <button class="sm-btn primary" onclick="doFollow()">Save</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="topnav">
     <a href="/" class="topnav-logo">mcb<g>Code</g></a>
     <div id="nav-search-slot"></div>
@@ -354,7 +379,8 @@
         <div class="profile-points" id="prof-points" style="display:none;"></div>
         <div class="profile-email" id="prof-email" style="display:none;"></div>
         <div class="profile-joined" id="prof-joined"></div>
-        
+        <div class="follow-counts" id="prof-follow-counts"></div>
+        <button class="edit-btn" id="follow-btn" onclick="openFollowModal()" style="display:none;"></button>
         <div class="edit-row" id="settings-btn-row" style="display:none;">
           <button class="edit-btn" id="watching-btn" onclick="toggleWatchingView()">watching</button>
           <button class="edit-btn" id="settings-btn" onclick="toggleSettingsView()">settings</button>
@@ -712,7 +738,15 @@ function renderProfile(data) {
     // settings edit
     document.getElementById("settings-btn-row").style.display = "";
     loadSettings();
+    
+  } else if (myUsername) {
+    // logged in, viewing someone else — show follow button + counts
+    document.getElementById("follow-btn").style.display = "";
+    loadFollowStatus(user.username);
   }
+
+  document.getElementById("prof-follow-counts").innerHTML =
+    `<span><b>${user.follower_count}</b> Followers</span> <span><b>${user.following_count}</b> Following</span>`;
 
   
   // owned projects
@@ -1064,6 +1098,103 @@ async function uploadPfp() {
 
     document.getElementById("pfp-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePfpModal(); });
     document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
+
+      // ---- FOLLOWING ----
+    let followTargetUsername = null;
+    let followSelectedLevel = "nothing";
+    let currentlyFollowing = false;
+
+    const FOLLOW_OPTIONS = [
+      { level: "nothing", title: "Nothing", desc: "don't notify me about this person" },
+      { level: "projects", title: "Project updates", desc: "notify me when their projects change" },
+      { level: "all", title: "All", desc: "notify me about username, bio, pfp, and project updates" },
+    ];
+
+    async function loadFollowStatus(username) {
+      followTargetUsername = username;
+      try {
+        const r = await fetch(`${AUTH}/follow/status?u=${encodeURIComponent(username)}`, { credentials: "include" });
+        if (!r.ok) return;
+        const d = await r.json();
+        currentlyFollowing = d.is_following;
+        followSelectedLevel = d.notify_level || "nothing";
+        updateFollowBtnLabel();
+      } catch {}
+    }
+
+    function updateFollowBtnLabel() {
+      const btn = document.getElementById("follow-btn");
+      btn.textContent = currentlyFollowing ? "following" : "follow";
+    }
+
+    function renderFollowOptions() {
+      const wrap = document.getElementById("follow-options");
+      wrap.innerHTML = FOLLOW_OPTIONS.map(o => `
+        <label class="follow-option${o.level === followSelectedLevel ? " selected" : ""}" onclick="selectFollowLevel('${o.level}')">
+          <input type="radio" name="follow-level" value="${o.level}" ${o.level === followSelectedLevel ? "checked" : ""}>
+          <div>
+            <div class="follow-option-title">${o.title}</div>
+            <div class="follow-option-desc">${o.desc}</div>
+          </div>
+        </label>
+      `).join("");
+    }
+
+    function selectFollowLevel(level) {
+      followSelectedLevel = level;
+      renderFollowOptions();
+    }
+
+    function openFollowModal() {
+      renderFollowOptions();
+      document.getElementById("unfollow-btn").style.display = currentlyFollowing ? "" : "none";
+      document.getElementById("follow-overlay").classList.add("open");
+    }
+
+    function closeFollowModal() {
+      document.getElementById("follow-overlay").classList.remove("open");
+    }
+
+    async function doFollow() {
+      try {
+        const res = await fetch(`${AUTH}/follow`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: followTargetUsername, notify_level: followSelectedLevel })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          currentlyFollowing = true;
+          updateFollowBtnLabel();
+          document.getElementById("prof-follow-counts").innerHTML =
+            `<span><b>${d.follower_count}</b> Followers</span>`;
+          closeFollowModal();
+        } else {
+          alert(d.error || "failed to follow.");
+        }
+      } catch { alert("error following."); }
+    }
+
+    async function doUnfollow() {
+      try {
+        const res = await fetch(`${AUTH}/follow?u=${encodeURIComponent(followTargetUsername)}`, {
+          method: "DELETE", credentials: "include"
+        });
+        const d = await res.json();
+        if (res.ok) {
+          currentlyFollowing = false;
+          updateFollowBtnLabel();
+          document.getElementById("prof-follow-counts").innerHTML =
+            `<span><b>${d.follower_count}</b> Followers</span>`;
+          closeFollowModal();
+        } else {
+          alert(d.error || "failed to unfollow.");
+        }
+      } catch { alert("error unfollowing."); }
+    }
+
+    document.getElementById("follow-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeFollowModal(); });
+    
   </script>
 
 
