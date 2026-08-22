@@ -1197,12 +1197,15 @@ async function creatorSave() {
       const mode = beaconModeFor(file);
       const url = `https://mcbcode.com/editor/beacon?project=${encodeURIComponent(shareCode)}&file=${file.id}&mode=${mode}`;
 
-      preview.innerHTML = `
-        <div class="image-preview-inner" style="flex-direction:column; gap:10px;">
-          <span style="font-size:12px; color:#888;">${mode === "structure" ? "3D block structure" : "3D custom model"}</span>
-          <a class="primary-btn" href="${url}" style="display:inline-block;">Open Beacon Editor</a>
-        </div>
-      `;
+preview.innerHTML = `
+  <div class="image-preview-inner" style="flex-direction:column; gap:10px;">
+    <span style="font-size:12px; color:#888;">${mode === "structure" ? "3D block structure" : "3D custom model"}</span>
+    <div style="display:flex; gap:8px;">
+      <a class="primary-btn" href="${url}" style="display:inline-block;">Open Beacon Editor</a>
+      ${mode === "model" ? `<button class="sm-btn" onclick="openGeoJsonEditor(${file.id})">View as JSON</button>` : ""}
+    </div>
+  </div>
+`;
       row.after(preview);
       requestAnimationFrame(() => preview.classList.add("open"));
       row.querySelector(".file-icon").textContent = "v";
@@ -1306,6 +1309,71 @@ function renderFileList() {
     list.appendChild(row);
   });
 }
+
+let geoJsonFile = null;
+
+async function openGeoJsonEditor(fileId) {
+  const file = allFiles.find(f => f.id === fileId);
+  if (!file) return;
+  geoJsonFile = file;
+  document.getElementById("geojson-title").textContent = file.name;
+  document.getElementById("geojson-textarea").value = "loading...";
+  document.getElementById("geojson-err").textContent = "";
+  document.getElementById("geojson-err").classList.remove("show");
+  document.getElementById("geojson-save-btn").style.display = canEdit() ? "" : "none";
+  document.getElementById("geojson-textarea").readOnly = !canEdit();
+  document.getElementById("geojson-overlay").classList.add("open");
+
+  try {
+    const res = await fetch(`${AUTH}/project/asset?file_id=${file.id}`, { credentials: "include" });
+    if (!res.ok) {
+      document.getElementById("geojson-textarea").value = "";
+      document.getElementById("geojson-err").textContent = "failed to load file.";
+      document.getElementById("geojson-err").classList.add("show");
+      return;
+    }
+    const text = await res.text();
+    document.getElementById("geojson-textarea").value = text;
+  } catch {
+    document.getElementById("geojson-err").textContent = "something went wrong loading the file.";
+    document.getElementById("geojson-err").classList.add("show");
+  }
+}
+
+async function saveGeoJson() {
+  if (!geoJsonFile || !canEdit()) return;
+  const text = document.getElementById("geojson-textarea").value;
+  const err = document.getElementById("geojson-err");
+  err.textContent = ""; err.classList.remove("show");
+
+  try { JSON.parse(text); }
+  catch { err.textContent = "this isn't valid json — fix it before saving."; err.classList.add("show"); return; }
+
+  const btn = document.getElementById("geojson-save-btn");
+  btn.disabled = true; btn.textContent = "Saving...";
+  try {
+    const blob = new Blob([text], { type: "application/json" });
+    const params = new URLSearchParams({ project_code: shareCode, file_id: geoJsonFile.id });
+    const res = await fetch(`${AUTH}/project/structure/save?${params.toString()}`, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: blob
+    });
+    const d = await res.json();
+    if (!res.ok) { err.textContent = d.error || "save failed."; err.classList.add("show"); }
+    else {
+      geoJsonFile.updated_at = new Date().toISOString();
+      renderFileList();
+      closeModal("geojson-overlay");
+    }
+  } catch {
+    err.textContent = "something went wrong saving.";
+    err.classList.add("show");
+  }
+  btn.disabled = false; btn.textContent = "Save";
+}
+
+document.getElementById("geojson-overlay")?.addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("geojson-overlay"); });
 
     // creates a root-level BP or RP folder directly, used by the root hint shortcuts
     async function quickCreateRootFolder(name) {
