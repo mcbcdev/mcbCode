@@ -3,6 +3,8 @@ User-agent: *
 Disallow: /dashboard
 Disallow: /account
 Disallow: /home
+Disallow: /img/icons/*
+Disallow: /img/mc/*
 
 Allow: /docs/*
 Allow: /profile/*
