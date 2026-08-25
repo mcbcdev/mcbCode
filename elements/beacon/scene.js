@@ -43,6 +43,11 @@ export class BeaconScene {
     this.materialCache = new Map();
     this.textureLoader = new THREE.TextureLoader();
 
+    // flat index (same scheme as `indices`) -> parsed block_position_data
+    // entry (command block text etc). kept separate from the palette/indices
+    // since it's per-position, not per-block-type.
+    this.blockPositionData = new Map();
+
     this.selectedPaletteEntry = null;
     this.selected = new Set();
     this.onChange = null;
@@ -91,6 +96,9 @@ export class BeaconScene {
     this.palette = structData.palette;
     this.indices = structData.indices;
     this.customBlocks = customBlockList || [];
+    this.blockPositionData = new Map(
+      Object.entries(structData.blockPositionData || {}).map(([k, v]) => [Number(k), v])
+    );
     this._undoStack = [];
     this._redoStack = [];
     this._rebuildGrid();
@@ -102,6 +110,7 @@ export class BeaconScene {
     this.palette = [{ name: AIR_NAME, states: {}, version: 18163713 }];
     this.indices = new Int32Array(sx * sy * sz).fill(0);
     this.customBlocks = customBlockList || [];
+    this.blockPositionData = new Map();
     this._undoStack = [];
     this._redoStack = [];
     this._rebuildGrid();
@@ -264,6 +273,83 @@ export class BeaconScene {
     this.onInspect(positions, entries);
   }
 
+  // ---------------- command block data ----------------
+
+  _isCommandBlockName(name) {
+    return typeof name === "string" && name.includes("command_block");
+  }
+
+  /** true if the block at pos is some flavor of command block. */
+  isCommandBlockAt(pos) {
+    const entry = this._entryAt(pos);
+    return !!entry && this._isCommandBlockName(entry.name);
+  }
+
+  /** returns the current command text for the block at pos, or "" if none set yet. */
+  getCommandText(pos) {
+    const data = this.blockPositionData.get(this._idx(...pos));
+    return data?.block_entity_data?.Command ?? "";
+  }
+
+  /** sets the command text for the block at pos, creating its data entry if needed. */
+  setCommandText(pos, text) {
+    this._pushHistory();
+    const idx = this._idx(...pos);
+    const old = this.blockPositionData.get(idx);
+    const entry = old ? this._cloneEntryWithCommand(old, text) : this._makeDefaultCommandEntry(text);
+    this.blockPositionData.set(idx, entry);
+    if (this.onChange) this.onChange();
+    this._fireInspect();
+  }
+
+  // makes a new entry object rather than mutating `old` in place, so any
+  // undo snapshot still holding a reference to `old` is unaffected.
+  _cloneEntryWithCommand(old, text) {
+    const bed = { ...old.block_entity_data, Command: text };
+    Object.defineProperty(bed, "__order", { value: old.block_entity_data.__order, enumerable: false });
+    Object.defineProperty(bed, "__types", { value: old.block_entity_data.__types, enumerable: false });
+    const entry = { ...old, block_entity_data: bed };
+    Object.defineProperty(entry, "__order", { value: old.__order, enumerable: false });
+    Object.defineProperty(entry, "__types", { value: old.__types, enumerable: false });
+    return entry;
+  }
+
+  // a from-scratch command block data entry, shaped like what bedrock
+  // actually writes, for a command block that never had data before.
+  _makeDefaultCommandEntry(text) {
+    const TAGT = window.BeaconNbt.TAG;
+    const bed = {
+      id: "CommandBlock", Command: text, CustomName: "",
+      ExecuteOnFirstTick: 1, TickDelay: 0, TrackOutput: 1, SuccessCount: 0,
+      conditionMet: 0, conditionalMode: 0, auto: 1, powered: 0, isMovable: 1, Version: 44
+    };
+    const order = ["id", "Command", "CustomName", "ExecuteOnFirstTick", "TickDelay", "TrackOutput",
+      "SuccessCount", "conditionMet", "conditionalMode", "auto", "powered", "isMovable", "Version"];
+    const types = {
+      id: TAGT.String, Command: TAGT.String, CustomName: TAGT.String,
+      ExecuteOnFirstTick: TAGT.Byte, TickDelay: TAGT.Int, TrackOutput: TAGT.Byte, SuccessCount: TAGT.Int,
+      conditionMet: TAGT.Byte, conditionalMode: TAGT.Byte, auto: TAGT.Byte, powered: TAGT.Byte,
+      isMovable: TAGT.Byte, Version: TAGT.Int
+    };
+    Object.defineProperty(bed, "__order", { value: order, enumerable: false });
+    Object.defineProperty(bed, "__types", { value: types, enumerable: false });
+
+    const entry = { block_entity_data: bed };
+    Object.defineProperty(entry, "__order", { value: ["block_entity_data"], enumerable: false });
+    Object.defineProperty(entry, "__types", { value: { block_entity_data: TAGT.Compound }, enumerable: false });
+    return entry;
+  }
+
+  // called whenever a block at pos is placed/renamed to `newName`. if it's
+  // no longer a command block, any leftover command data for that cell is
+  // dropped so it doesn't silently reappear if a command block goes there later.
+  _syncPositionDataForPlacement(pos, newName) {
+    const idx = this._idx(...pos);
+    if (!this._isCommandBlockName(newName) && this.blockPositionData.has(idx)) {
+      this.blockPositionData.delete(idx);
+    }
+  }
+
   // ---------------- undo / redo ----------------
 
   _snapshot() {
@@ -271,7 +357,10 @@ export class BeaconScene {
       size: [...this.size],
       palette: this.palette.map(p => ({ name: p.name, states: { ...p.states }, version: p.version })),
       indices: this.indices.slice(),
-      selected: new Set(this.selected)
+      selected: new Set(this.selected),
+      // entries are never mutated in place (see setCommandText), so a
+      // shallow copy of the map is enough for undo/redo to be safe.
+      blockPositionData: new Map(this.blockPositionData)
     };
   }
 
@@ -280,6 +369,7 @@ export class BeaconScene {
     this.palette = snap.palette.map(p => ({ name: p.name, states: { ...p.states }, version: p.version }));
     this.indices = snap.indices.slice();
     this.selected = new Set(snap.selected);
+    this.blockPositionData = new Map(snap.blockPositionData);
     this._rebuildGrid();
     this._rebuildBlocks();
     this._updateGizmoPosition();
@@ -334,6 +424,7 @@ export class BeaconScene {
     for (const key of this.selected) {
       const [x, y, z] = key.split(",").map(Number);
       this.indices[this._idx(x, y, z)] = airIdx;
+      this.blockPositionData.delete(this._idx(x, y, z));
     }
     this.selected.clear();
     this._rebuildBlocks();
@@ -363,8 +454,12 @@ export class BeaconScene {
     if (recordHistory) this._pushHistory();
     const airIdx = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
     const carried = moves.map(m => this.indices[this._idx(...m.from)]);
-    moves.forEach(m => { this.indices[this._idx(...m.from)] = airIdx; });
-    moves.forEach((m, i) => { this.indices[this._idx(...m.to)] = carried[i]; });
+    const carriedData = moves.map(m => this.blockPositionData.get(this._idx(...m.from)));
+    moves.forEach(m => { this.indices[this._idx(...m.from)] = airIdx; this.blockPositionData.delete(this._idx(...m.from)); });
+    moves.forEach((m, i) => {
+      this.indices[this._idx(...m.to)] = carried[i];
+      if (carriedData[i]) this.blockPositionData.set(this._idx(...m.to), carriedData[i]);
+    });
     this.selected = new Set(moves.map(m => m.to.join(",")));
     this._rebuildBlocks();
     this._updateGizmoPosition();
@@ -380,6 +475,7 @@ export class BeaconScene {
     const cur = this._entryAt(pos);
     const entry = { name: newName, states: { ...(cur?.states || {}) }, version: cur?.version ?? 18163713 };
     this.indices[this._idx(...pos)] = this._paletteIndexFor(entry);
+    this._syncPositionDataForPlacement(pos, newName);
     this._rebuildBlocks();
     if (this.onChange) this.onChange();
     this._fireInspect();
@@ -392,6 +488,7 @@ export class BeaconScene {
     for (const key of this.selected) {
       const [x, y, z] = key.split(",").map(Number);
       this.indices[this._idx(x, y, z)] = pi;
+      this._syncPositionDataForPlacement([x, y, z], this.selectedPaletteEntry.name);
     }
     this._rebuildBlocks();
     if (this.onChange) this.onChange();
@@ -556,6 +653,7 @@ export class BeaconScene {
     if (e.ctrlKey || e.metaKey) {
       this._pushHistory();
       this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
+      this.blockPositionData.delete(this._idx(...pos));
       this._dropIfAir(pos);
       this._rebuildBlocks();
       this._updateGizmoPosition();
@@ -597,6 +695,7 @@ export class BeaconScene {
 
     this._pushHistory();
     this.indices[this._idx(tx, ty, tz)] = this._paletteIndexFor(this.selectedPaletteEntry);
+    this._syncPositionDataForPlacement(target, this.selectedPaletteEntry.name);
     this._dropIfAir(target);
     this._rebuildBlocks();
     if (this.onChange) this.onChange();
@@ -608,6 +707,7 @@ export class BeaconScene {
   removeAt(pos) {
     this._pushHistory();
     this.indices[this._idx(...pos)] = this._paletteIndexFor({ name: AIR_NAME, states: {}, version: 18163713 });
+    this.blockPositionData.delete(this._idx(...pos));
     this.selected.delete(pos.join(","));
     this._rebuildBlocks();
     this._updateGizmoPosition();
@@ -625,6 +725,16 @@ export class BeaconScene {
     for (let x = 0; x < cx; x++) for (let y = 0; y < cy; y++) for (let z = 0; z < cz; z++) {
       newIndices[idxNew(x, y, z)] = this.indices[this._idx(x, y, z)];
     }
+    // remap command-block data using the OLD size (this.size hasn't been
+    // reassigned yet), dropping anything that lands outside the new bounds
+    const newBlockPositionData = new Map();
+    for (const [oldIdx, entry] of this.blockPositionData) {
+      const z = oldIdx % osz;
+      const y = Math.floor(oldIdx / osz) % osy;
+      const x = Math.floor(oldIdx / (osy * osz));
+      if (x < cx && y < cy && z < cz) newBlockPositionData.set(idxNew(x, y, z), entry);
+    }
+    this.blockPositionData = newBlockPositionData;
     this.size = [nsx, nsy, nsz];
     this.indices = newIndices;
     this.selected.clear();
@@ -640,6 +750,6 @@ export class BeaconScene {
     const newPalette = [];
     used.forEach(oldIdx => { remap.set(oldIdx, newPalette.length); newPalette.push(this.palette[oldIdx]); });
     const newIndices = Int32Array.from(this.indices, i => (i < 0 ? -1 : remap.get(i)));
-    return { size: this.size, palette: newPalette, indices: newIndices, waterLayer: null };
+    return { size: this.size, palette: newPalette, indices: newIndices, waterLayer: null, blockPositionData: this.blockPositionData };
   }
 }
