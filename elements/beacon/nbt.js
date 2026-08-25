@@ -61,6 +61,7 @@ class NbtReader {
       case TAG.Compound: {
         const obj = {};
         const order = [];
+        const types = {};
         while (true) {
           const t = this.u8();
           if (t === TAG.End) break;
@@ -68,8 +69,14 @@ class NbtReader {
           const val = this.payload(t);
           obj[name] = val;
           order.push(name);
+          types[name] = t;
         }
         Object.defineProperty(obj, "__order", { value: order, enumerable: false });
+        // __types remembers the original NBT tag type of every field, so
+        // arbitrary compounds (like a command block's block_entity_data)
+        // can be written back out unchanged even though this reader only
+        // gives you plain JS values.
+        Object.defineProperty(obj, "__types", { value: types, enumerable: false });
         return obj;
       }
       case TAG.IntArray: {
@@ -151,6 +158,16 @@ class NbtWriter {
         for (const v of val) this.i32(v);
         return;
       }
+      case TAG.ByteArray: {
+        this.i32(val.length);
+        this._push(val instanceof Uint8Array ? val : Uint8Array.from(val));
+        return;
+      }
+      case TAG.LongArray: {
+        this.i32(val.length);
+        for (const v of val) this.i64(v);
+        return;
+      }
       default:
         throw new Error("writer: unsupported tag type " + type);
     }
@@ -181,6 +198,28 @@ function compound(fields) {
 }
 function list(elemType, items) { const arr = [...items]; arr.__elemType = elemType; return arr; }
 
+// Turns a value that came out of the plain reader (which only kept __order
+// and __types metadata) back into the {type,value} typed tree the writer
+// needs. Used for block_position_data, since that compound's shape (command
+// block NBT) varies and we don't want to hand-model every possible field.
+function buildTypedFromParsed(type, value) {
+  if (type === TAG.Compound) {
+    const order = value.__order || Object.keys(value);
+    const types = value.__types || {};
+    const fields = {};
+    for (const key of order) {
+      const t = types[key];
+      fields[key] = typed(t, buildTypedFromParsed(t, value[key]));
+    }
+    return compound(fields);
+  }
+  if (type === TAG.List) {
+    const elemType = value.__elemType;
+    return list(elemType, value.map(item => buildTypedFromParsed(elemType, item)));
+  }
+  return value; // primitives, byte/int/long arrays pass through untouched
+}
+
 /**
  * Parses raw .mcstructure bytes into a friendly JS object:
  * { size: [x,y,z], palette: [{name, states, version}], indices: Int32Array (layer 0), waterLayer: Int32Array|null }
@@ -196,12 +235,18 @@ function decodeStructure(arrayBuffer) {
     states: entry.states || {},
     version: entry.version
   }));
+  // keyed by the same flat index used for `indices` (x*sy*sz + y*sz + z),
+  // value -> string -> compound. holds command block text and similar
+  // per-block extra data ("block entity data" / tile entity data).
+  const blockPositionData = struct.palette.default.block_position_data || {};
+
   return {
     size,
     palette,
     indices: Int32Array.from(layers[0]),
     waterLayer: layers[1] ? Int32Array.from(layers[1]) : null,
-    formatVersion: root.format_version
+    formatVersion: root.format_version,
+    blockPositionData
   };
 }
 
@@ -211,7 +256,17 @@ function decodeStructure(arrayBuffer) {
  * NBT-primitive values (we only support byte/int/string states, which covers
  * the vast majority of vanilla + custom blocks).
  */
-function encodeStructure({ size, palette, indices, waterLayer }) {
+function buildBlockPositionDataFields(blockPositionData) {
+  const fields = {};
+  if (!blockPositionData) return fields;
+  const entries = blockPositionData instanceof Map ? blockPositionData.entries() : Object.entries(blockPositionData);
+  for (const [idx, entry] of entries) {
+    fields[String(idx)] = typed(TAG.Compound, buildTypedFromParsed(TAG.Compound, entry));
+  }
+  return fields;
+}
+
+function encodeStructure({ size, palette, indices, waterLayer, blockPositionData }) {
   const paletteList = list(TAG.Compound, palette.map(p => {
     const statesFields = {};
     for (const [k, v] of Object.entries(p.states || {})) {
@@ -241,7 +296,7 @@ function encodeStructure({ size, palette, indices, waterLayer }) {
       palette: typed(TAG.Compound, compound({
         default: typed(TAG.Compound, compound({
           block_palette: typed(TAG.List, paletteList),
-          block_position_data: typed(TAG.Compound, compound({}))
+          block_position_data: typed(TAG.Compound, compound(buildBlockPositionDataFields(blockPositionData)))
         }))
       }))
     }))
