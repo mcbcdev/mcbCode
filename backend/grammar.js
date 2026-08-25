@@ -373,12 +373,13 @@ async function fetchCommandGrammar(cmd) {
     if (commandCache[cmd] || !cmd) return;
     try {
         const response = await fetch(`https://mcbcode.com/backend/commands/${cmd}.json`);
-        if (response.ok) {
-            const data = await response.json();
-            commandCache[cmd] = data;
-            // Re-run highlighting now that we have the data
-            if (typeof updateHighlighting === "function") updateHighlighting();
-        }
+if (response.ok) {
+    const data = await response.json();
+    commandCache[cmd] = data;
+    // Re-run highlighting now that we have the data
+    if (typeof updateHighlighting === "function") updateHighlighting();
+    if (typeof renderHighlight === "function") renderHighlight();
+}
     } catch (e) { /* silent fail */ }
 }
 
