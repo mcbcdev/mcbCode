@@ -202,6 +202,10 @@ function renderBlockInspector(positions, entries) {
     const statesHtml = Object.keys(entry.states || {}).length
       ? Object.entries(entry.states).map(([k, v]) => `<div class="state-chip"><span>${escHtml(k)}</span><span>${escHtml(String(v))}</span></div>`).join("")
       : `<div class="state-chip"><span>no states</span></div>`;
+    const isCommandBlock = scene.isCommandBlockAt(pos);
+    const commandHtml = isCommandBlock ? `
+        <div class="panel-label" style="margin-top:12px;">Command</div>
+        <div class="insp-field"><textarea id="command-input" rows="3" placeholder="/say hello">${escHtml(scene.getCommandText(pos))}</textarea></div>` : "";
     insp.innerHTML = `
       <div class="panel-section">
         <div class="panel-label">Selected Block</div>
@@ -209,12 +213,14 @@ function renderBlockInspector(positions, entries) {
         <div class="meta-value" style="margin-bottom:10px; color:#555;">position: ${pos.join(", ")}</div>
         <div class="panel-label">States</div>
         ${statesHtml}
+        ${commandHtml}
         <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
           <button class="sm-btn" id="remove-block-btn" style="color:#ff5555;">Remove this block</button>
         </div>
       </div>`;
     $("#block-id-input").onchange = e => scene.setBlockIdentifier(pos, e.target.value);
     $("#remove-block-btn").onclick = () => scene.removeAt(pos);
+    if (isCommandBlock) $("#command-input").onchange = e => scene.setCommandText(pos, e.target.value);
     return;
   }
 
