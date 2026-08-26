@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<head>
+<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<style>
+  #master-fb {
+    text-align: center;
+    align-items: center;
+    padding: 16px;
+    background-color: rgb(18, 18, 18, 0.5);
+    border: 3px solid #23232380;
+    backdrop-filter: blur(12px);
+  }
+
+  div[style*="display: flex"] {
+    width: 90%;
+  }
+
+  #fb-box {
+    border: 3px solid #565656;
+    color: #ffffff;
+    background-color: rgb(52, 52, 52, 0);
+    resize: vertical;
+    outline: none;
+    font-size: 18px;
+    width: 90%;
+    font-family: mcfont;
+    padding: 8px;
+    backdrop-filter: blur(12px);
+  }
+
+  #fb-btn {
+    border: 3px solid #00a459;
+    background-color: #05ee93;
+    font-size: 18px;
+    padding: 8px;
+    color: #0c0c0c;
+    transition: all 0.2s ease-in-out;
+  }
+
+  #fb-site {
+    border: 3px solid #ebebeb;
+    background-color: #bebebe;
+    font-size: 18px;
+    padding: 8px;
+    color: #0c0c0c;
+    transition: all 0.2s ease-in-out;
+  }
+
+  #fb-btn:hover {
+    cursor: pointer;
+    background-color: #00a459;
+    border-color: #05ee93;
+    color: #ffffff;
+  }
+
+  #fb-site:hover {
+    cursor: pointer;
+    background-color: #bebebe;
+    border-color: #ebebeb;
+    color: #ffffff;
+  }
+
+
+</style>
+</head>
+<body>
+<div id="master-fb" style="max-width: 500px;">
+    <h1 style="color: #ffffff">Feedback?</h1>
+    <p style="color: #bebebe;">Bug Reports? Feature Ideas?</p>
+    <textarea id="fb-box" placeholder="Feedback..." rows="3"></textarea>
+    <br>
+<div style="display: flex; gap: 8px; margin: auto; width: 95%; justify-content: center;">
+  <button id="fb-btn" style="flex: 1;">Submit</button>
+  <button id="fb-site" style="flex: 3;" onclick="window.location.href='https://feedback.mcbcode.com'">View Feedback Site</button>
+</div>
+</div>
+</body>
+</html>
