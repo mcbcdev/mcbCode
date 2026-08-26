@@ -8,31 +8,153 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <title>mcbCode | 404</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #0c0c0c; color: #bebebe; font-family: 'mcfont', sans-serif; overflow: hidden; }
-    g { color: #05ee93; }
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+html, body { 
+  height: 100%; 
+  color: #bebebe; 
+  font-family: 'mcfont', sans-serif; 
+  overflow: hidden; 
+  position: relative;
+}
 
-    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(20,20,20,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; padding: 0 24px; z-index: 200; }
-    .topnav-title { font-size: 20px; color: #ffffff; font-family: 'mcfontb', sans-serif; }
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    z-index: -1;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(https://mcbcode.com/img/mc/end_pillar.png);
+    background-repeat: no-repeat; 
+    background-position: center center;
+    filter: blur(12px);
+    transform: scale(1.1);
+  }
 
-    .scene { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 0; position: relative; }
+    g {
+        color: #05ee93;
+    }
 
-    .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 24px; }
+    .topnav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: rgba(20,20,20,0.85);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid #1f1f1f;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        z-index: 200;
+    }
+    .topnav-title {
+        font-size: 20px;
+        color: #ffffff;
+        font-family: 'mcfontb', sans-serif;    
+    }
+    
+    .blur-thing {
+        z-index: -1;
+        backdrop-filter: blur(6px;)
+    }
+    .scene {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 0;
+        position: relative;
+        backdrop-filter: blur(6px;)
+    }
 
-    .code { font-size: clamp(80px, 18vw, 160px); color: #05ee93; font-family: 'mcfontb', sans-serif; line-height: 1; letter-spacing: -4px; opacity: 0.15; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0; user-select: none; pointer-events: none; }
+    .content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center; 
+        gap: 16px;
+        text-align: center;
+        padding: 24px;    
+    }
 
-    .icon { font-size: 48px; margin-bottom: 8px; filter: grayscale(0.3); }
-    .headline { font-size: 22px; color: #ffffff; font-family: 'mcfontb', sans-serif; }
-    .sub { font-size: 14px; color: #444; max-width: 380px; line-height: 1.6; margin-top: 4px; }
-    .sub g { color: #05ee93; }
+    .code {
+        font-size: clamp(80px, 18vw, 160px);
+        color: #05ee93;
+        font-family: 'mcfontb', sans-serif;
+        line-height: 1;
+        letter-spacing: -4px;
+        opacity: 0.15;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        user-select: none;
+        pointer-events: none;
+    }
 
-    .actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; justify-content: center; }
-    .btn { background: #141414; border: 1px solid #2a2a2a; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 20px; cursor: pointer; text-decoration: none; transition: color 0.2s, border-color 0.2s; display: inline-block; }
-    .btn:hover { color: #05ee93; border-color: #05ee93; }
-    .btn.primary { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
-    .btn.primary:hover { background: #78e3a6; color: #0c0c0c; }
+    .icon {
+        font-size: 48px;
+        margin-bottom: 8px;
+        filter: grayscale(0.3);
+    }
+    .headline {
+        font-size: 22px;
+        color: #ffffff;
+        font-family: 'mcfontb', sans-serif;
+    }
+    .sub {
+        font-size: 14px;
+        color: #bebebe;
+        max-width: 380px;
+        line-height: 1.6;
+        margin-top: 4px;
+    }
+    .sub g {
+        color: #05ee93;
+    }
 
-    .coords { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #2a2a2a; font-family: 'Fira Code', monospace; letter-spacing: 0.05em; }
+    .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .btn {
+        background: #141414;
+        border: 1px solid #2a2a2a;
+        color: #bebebe;
+        font-family: 'mcfont', sans-serif;
+        font-size: 13px;
+        padding: 8px 20px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.2s, border-color 0.2s;
+        display: inline-block;
+    }
+    .btn:hover {
+        color: #05ee93;
+        border-color: #05ee93;
+    }
+    .btn.primary {
+        background: #05ee93;
+        border-color: #05ee93;
+        color: #0c0c0c;
+    }
+    .btn.primary:hover {
+        background: #78e3a6;
+        color: #0c0c0c;
+    }
   </style>
 </head>
 <body>
@@ -44,14 +166,14 @@
   </div>
 
   <div class="scene">
-    <div class="code">404</div>
     <div class="content">
-      <img src="/img/diamond_pickaxe.png" style="width:48px; height:48px; image-rendering:pixelated;" alt="pickaxe">
-      <div class="headline">You dug too deep.</div>
-      <div class="sub">This page doesn't exist — or it fell into the void.<br>Either way, <g>it's gone</g>.</div>
+      <img src="https://mcbcode.com/img/diamond_pickaxe.png" style="width:48px; height:48px; image-rendering:pixelated;" alt="pickaxe">
+      <div class="headline">this page suffocated in a wall</div>
+      <div class="sub">This page doesn't exist | <c>404</c></div>
       <div class="actions">
-        <a class="btn primary" href="/">Go Home</a>
-        <a class="btn" href="/dashboard">Dashboard</a>
+        <a class="btn primary" href="https://mcbcode.com">home</a>
+        <a class="btn" href="https://mcbcode.com/dashboard">dashboard</a>
+        <a class="btn" href="https://mcbcode.com/search">search</a>
       </div>
     </div>
   </div>
