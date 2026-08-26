@@ -1,5 +1,5 @@
 console.log("navi html loading");
-fetch("/elements/navi.html")
+fetch("https://mcbcode.com/elements/navi.html")
   .then(res => res.text())
   .then(html => {
     document.body.insertAdjacentHTML("afterbegin", html);
