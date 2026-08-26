@@ -1,78 +1,112 @@
-<!DOCTYPE html>
-<head>
-<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
 <style>
   #master-fb {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 340px;
     text-align: center;
     align-items: center;
     padding: 16px;
-    background-color: rgb(18, 18, 18, 0.5);
+    background-color: rgba(18, 18, 18, 0.9);
     border: 3px solid #23232380;
     backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: fb-slide-in 0.25s ease-out;
   }
-
-  div[style*="display: flex"] {
-    width: 90%;
+  @keyframes fb-slide-in {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
-
+  #master-fb h1 {
+    font-size: 22px;
+    margin: 4px 0 6px;
+  }
+  #master-fb p {
+    font-size: 14px;
+    margin: 0 0 12px;
+  }
+  #fb-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  #fb-close:hover {
+    color: #fff;
+  }
   #fb-box {
     border: 3px solid #565656;
     color: #ffffff;
-    background-color: rgb(52, 52, 52, 0);
+    background-color: rgba(52, 52, 52, 0);
     resize: vertical;
     outline: none;
-    font-size: 18px;
+    font-size: 15px;
     width: 90%;
-    font-family: mcfont;
+    font-family: mcfont, sans-serif;
     padding: 8px;
     backdrop-filter: blur(12px);
   }
-
+  #fb-status {
+    font-size: 13px;
+    color: #05ee93;
+    min-height: 18px;
+    margin-top: 6px;
+  }
+  #fb-status.is-error {
+    color: #ff6b6b;
+  }
   #fb-btn {
     border: 3px solid #00a459;
     background-color: #05ee93;
-    font-size: 18px;
+    font-size: 15px;
     padding: 8px;
     color: #0c0c0c;
+    cursor: pointer;
     transition: all 0.2s ease-in-out;
+    font-family: mcfont, sans-serif;
   }
-
   #fb-site {
     border: 3px solid #ebebeb;
     background-color: #bebebe;
-    font-size: 18px;
+    font-size: 15px;
     padding: 8px;
     color: #0c0c0c;
-    transition: all 0.2s ease-in-out;
-  }
-
-  #fb-btn:hover {
     cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-family: mcfont, sans-serif;
+  }
+  #fb-btn:hover {
     background-color: #00a459;
     border-color: #05ee93;
     color: #ffffff;
   }
-
   #fb-site:hover {
-    cursor: pointer;
     background-color: #bebebe;
     border-color: #ebebeb;
     color: #ffffff;
   }
-
-
+  #fb-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 </style>
-</head>
-<body>
-<div id="master-fb" style="max-width: 500px;">
+
+<div id="master-fb">
+    <button id="fb-close" aria-label="close">&times;</button>
     <h1 style="color: #ffffff">Feedback?</h1>
     <p style="color: #bebebe;">Bug Reports? Feature Ideas?</p>
     <textarea id="fb-box" placeholder="Feedback..." rows="3"></textarea>
+    <div id="fb-status"></div>
     <br>
-<div style="display: flex; gap: 8px; margin: auto; width: 95%; justify-content: center;">
-  <button id="fb-btn" style="flex: 1;">Submit</button>
-  <button id="fb-site" style="flex: 3;" onclick="window.location.href='https://feedback.mcbcode.com'">View Feedback Site</button>
+    <div style="display: flex; gap: 8px; margin: auto; width: 95%; justify-content: center;">
+      <button id="fb-btn" style="flex: 1;">Submit</button>
+      <button id="fb-site" style="flex: 3;" onclick="window.location.href='https://feedback.mcbcode.com'">View Feedback Site</button>
+    </div>
 </div>
-</div>
-</body>
-</html>
