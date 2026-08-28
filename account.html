@@ -276,6 +276,12 @@ footer g {
   <script>
     const AUTH = "https://auth.mcbcode.com";
 
+    function getRedirectTarget() {
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get("redirectto");
+      return redirectTo ? redirectTo : "/dashboard";
+    }
+    
     // github now goes through the worker callback, not localStorage
     function doGithub() {
       window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23liveHrlFrvFZgW13&scope=user:email&redirect_uri=https://auth.mcbcode.com/auth/github/callback`;
@@ -285,9 +291,9 @@ footer g {
     (async () => {
       try {
         const res = await fetch(`${AUTH}/me`, { credentials: "include" });
-        if (res.ok) window.location.href = "/dashboard";
-      } catch {}
-    })();
+        if (res.ok) window.location.href = getRedirectTarget();
+    } catch {}
+  })();
 
     function doGoogle() {
   window.location.href =
@@ -339,7 +345,7 @@ function doDiscord() {
       btn.disabled = true; btn.textContent = "Signing in...";
       try {
         const res = await fetch(`${AUTH}/login`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-        if (res.ok) { showMsg("login-msg", "Signed in! Redirecting...", "success"); setTimeout(() => window.location.href = "/dashboard", 800); }
+        if (res.ok) { showMsg("login-msg", "Signed in! Redirecting...", "success"); setTimeout(() => window.location.href = getRedirectTarget(), 800); }
         else { const data = await res.json(); showMsg("login-msg", data.error || "Something went wrong.", "error"); btn.disabled = false; btn.textContent = "Sign In"; }
       } catch { showMsg("login-msg", "Could not reach auth server.", "error"); btn.disabled = false; btn.textContent = "Sign In"; }
     }
@@ -355,7 +361,7 @@ function doDiscord() {
       btn.disabled = true; btn.textContent = "Creating account...";
       try {
         const res = await fetch(`${AUTH}/register`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-        if (res.ok) { showMsg("reg-msg", "Account created! Redirecting...", "success"); setTimeout(() => window.location.href = "/dashboard", 800); }
+        if (res.ok) { showMsg("reg-msg", "Account created! Redirecting...", "success"); setTimeout(() => window.location.href = getRedirectTarget(), 800); }
         else { const data = await res.json(); showMsg("reg-msg", data.error || "Something went wrong.", "error"); btn.disabled = false; btn.textContent = "Create Account"; }
       } catch { showMsg("reg-msg", "Could not reach auth server.", "error"); btn.disabled = false; btn.textContent = "Create Account"; }
     }
