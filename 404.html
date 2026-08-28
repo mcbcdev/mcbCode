@@ -86,6 +86,10 @@ html, body {
         padding: 24px;    
     }
 
+    .content {
+        display: none;
+    }
+    
     .code {
         font-size: clamp(80px, 18vw, 160px);
         color: #05ee93;
@@ -180,50 +184,65 @@ html, body {
 
 <script>
 const path = location.pathname;
-    const fullPath = path + location.hash;
+const fullPath = path + location.hash;
 
-    if (path.startsWith("/docs/")) {
-      // docs page check: if the md exists, redirect to the docs template
-      const parts = path.split("/docs/");
-      const seg = parts[1] ? parts[1].split("/").filter(Boolean).pop() : null;
-      const page = seg ? seg.replace(/\.html$/, "") : null;
+let redirecting = false;
 
-      if (page) {
-        fetch(`https://mcbcode.com/docs/md/${page}.md`, { method: "HEAD" })
-          .then(res => {
-            if (res.ok) {
-              location.replace(`/docs/index.html?page=${page}`);
-            }
-            // if not ok, do nothing — the normal 404 page below just stays visible
-          })
-          .catch(() => {
-            // network error, treat as not found, normal 404 stays visible
-          });
-      }
-    } else if (path.startsWith("/project/") && path !== "/project/") {
-      sessionStorage.setItem("spa-redirect", fullPath);
-      location.replace("/project/");
-    } else if (path.startsWith("/profile/") && path !== "/profile/") {
-      sessionStorage.setItem("spa-redirect", fullPath);
-      location.replace("/profile");
-    } else if (path.startsWith("/s/") && path !== "/s/") {
-      const slug = path.split("/s/")[1].split("/").filter(Boolean)[0];
+if (path.startsWith("/docs/")) {
+  const parts = path.split("/docs/");
+  const seg = parts[1] ? parts[1].split("/").filter(Boolean).pop() : null;
+  const page = seg ? seg.replace(/\.html$/, "") : null;
 
-      if (slug) {
-        fetch(`https://auth.mcbcode.com/project/resolve-slug?slug=${encodeURIComponent(slug)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.ok && data.share_code) {
-              location.replace(`/project/${data.share_code}`);
-            }
-            // if not found, normal 404 page just stays visible
-          })
-          .catch(() => {
-            // network error, normal 404 stays visible
-          });
-      }
-    }
-  </script>
+  if (page) {
+    redirecting = true;
+    fetch(`https://mcbcode.com/docs/md/${page}.md`, { method: "HEAD" })
+      .then(res => {
+        if (res.ok) {
+          location.replace(`/docs/index.html?page=${page}`);
+        } else {
+          showNotFound();
+        }
+      })
+      .catch(() => {
+        showNotFound();
+      });
+  }
+} else if (path.startsWith("/project/") && path !== "/project/") {
+  redirecting = true;
+  sessionStorage.setItem("spa-redirect", fullPath);
+  location.replace("/project/");
+} else if (path.startsWith("/profile/") && path !== "/profile/") {
+  redirecting = true;
+  sessionStorage.setItem("spa-redirect", fullPath);
+  location.replace("/profile");
+} else if (path.startsWith("/s/") && path !== "/s/") {
+  const slug = path.split("/s/")[1].split("/").filter(Boolean)[0];
+
+  if (slug) {
+    redirecting = true;
+    fetch(`https://auth.mcbcode.com/project/resolve-slug?slug=${encodeURIComponent(slug)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.share_code) {
+          location.replace(`/project/${data.share_code}`);
+        } else {
+          showNotFound();
+        }
+      })
+      .catch(() => {
+        showNotFound();
+      });
+  }
+}
+
+if (!redirecting) {
+  showNotFound();
+}
+
+function showNotFound() {
+  document.querySelector(".content").style.display = "flex";
+}
+</script>
 
 </body>
 </html>
