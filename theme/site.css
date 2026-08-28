@@ -6,6 +6,7 @@
     html {
   scrollbar-width: thin; /* firefox */
   scrollbar-color: #05ee93 #0c0c0c; /* thumb track */
+  background-color: #0c0c0c;
 }
 
 /* For Chrome, Edge, and Safari */
@@ -66,10 +67,16 @@ html::-webkit-scrollbar-thumb:hover {
 body {
   background-color: #0c0c0c;
   font-family: 'mcfont', sans-serif;
+  animation: fadeIn 0.15s ease-in;
 }
 
 body::selection {     
   background: #05ee9340 !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 g {
