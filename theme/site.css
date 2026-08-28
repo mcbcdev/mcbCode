@@ -67,7 +67,7 @@ html::-webkit-scrollbar-thumb:hover {
 body {
   background-color: #0c0c0c;
   font-family: 'mcfont', sans-serif;
-  animation: fadeIn 1s ease-in;
+  animation: fadeIn 0.5s ease-in;
 }
 
 body::selection {     
