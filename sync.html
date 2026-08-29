@@ -2,20 +2,32 @@
 <html>
 <head>
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <title>mcbCode | Mobile Sync</title>
   <style>
     h2 {
         color: #ffffff;
         font-size: 50px;
     }
 
+    p {
+        color: #bebebe;
+    }
     #code {
         border: 3px solid #565656;
         background-color: #343434;
         color: #ffffff;
         font-size: 50px;
         max-width: 50%;
-        font-family: 'mcfontb' !important;
+        font-family: 'mcfont' !important;
         outline: none;
+        letter-spacing: 5px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    #code:focus {
+        border-radius: 16px;
+        border-color: #05ee93;
     }
 
     button {
@@ -25,13 +37,25 @@
         border: 3px solid #00a459;
         outline: none;
         font-family: 'mcfont';
+        transition: all 0.2s ease-in-out;
+    }
+
+    button:hover {
+        color: #ffffff;
+        background-color: #00a459;
+        border-color: #05ee93;
+        border-radius: 16px;
     }
     </style>
 </head>
-<body style="font-family:sans-serif;text-align:center;margin-top:80px;">
-  <h2>Enter mcb<span style="color: #05ee93">Code</span> Code</h2>
-  <input id="code" maxlength="4" spellcheck="false" style="text-align:center;" />
-  <br><br>
+<body style="text-align: center; margin-top: 80px;">
+
+  <h2>mcb<span style="color: #05ee93">Code</span> Sync</h2>
+  <p>Sync the mcbCode app with your account.<p>
+
+<br><br><br>
+  <input id="code" maxlength="4" spellcheck="false" style="text-align:center;" placeholder="1234"/>
+  <br><br><br><br>
   <button onclick="approve()">Confirm</button>
   <p id="msg"></p>
   <script>
