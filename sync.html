@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <style>
+    h2 {
+        color: #ffffff;
+        font-size: 50px;
+    }
+
+    #code {
+        border: 3px solid #565656;
+        background-color: #343434;
+        color: #ffffff;
+        font-size: 50px;
+        max-width: 50%;
+        font-family: 'mcfontb' !important;
+        outline: none;
+    }
+
+    button {
+        padding: 8px;
+        font-size: 40px;
+        background-color: #05ee93;
+        border: 3px solid #00a459;
+        outline: none;
+        font-family: 'mcfont';
+    }
+    </style>
+</head>
+<body style="font-family:sans-serif;text-align:center;margin-top:80px;">
+  <h2>Enter mcb<span style="color: #05ee93">Code</span> Code</h2>
+  <input id="code" maxlength="4" spellcheck="false" style="text-align:center;" />
+  <br><br>
+  <button onclick="approve()">Confirm</button>
+  <p id="msg"></p>
+  <script>
+    async function approve() {
+      const code = document.getElementById("code").value.trim();
+      const res = await fetch("https://auth.mcbcode.com/auth/device/approve", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      document.getElementById("msg").textContent = res.ok ? "Device connected! You can close this." : (data.error || "Something went wrong.");
+    }
+  </script>
+</body>
+</html>
