@@ -416,6 +416,10 @@ function renderToolbar() {
         <img src="https://mcbcode.com/img/icons/item.png" alt="">
         <span>Create Item</span>
       </div>
+      <div class="create-menu-item" onclick="closeCreateMenu(); openReplaceTexture();">
+        <img src="https://mcbcode.com/img/icons/texture.png" alt="">
+        <span>Replace Texture</span>
+      </div>
     `;
     createWrap.appendChild(cbtn);
     createWrap.appendChild(cmenu);
