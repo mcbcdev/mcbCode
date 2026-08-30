@@ -1442,6 +1442,18 @@ document.getElementById("geojson-overlay")?.addEventListener("click", e => { if 
         }
       }
 
+      // root folder limit — give a friendly message before even hitting the server
+      if (newFileType === "folder" && isAtRoot()) {
+        const rootFolderCount = allFiles.filter(f => f.parent_id === null && f.type === "folder").length;
+        if (rootFolderCount >= 2) {
+          err.textContent = "";
+          err.classList.remove("show");
+          document.getElementById("guardrail-warn-text").textContent = "Projects can only have 2 folders at the root — that's usually your BP and RP folders. Try creating this folder inside BP or RP instead.";
+          document.getElementById("guardrail-warn-overlay").classList.add("open");
+          return;
+        }
+      }
+
       btn.disabled = true;
       try {
         const res = await fetch(`${AUTH}/project/file`, {
