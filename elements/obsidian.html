@@ -11,7 +11,7 @@
 }
 </style>
 <!-- Parent Container -->
-  <div style="position: relative; overflow: hidden; display: flex; gap: 8vw; align-items: center; justify-content: center; padding-top: 5vh; padding-bottom: 5vh; border-radius: 12px;">
+  <div style="position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; padding-top: 5vh; padding-bottom: 5vh; border-radius: 12px;">
     
     <!-- Blurred & Darkened Background Image Layer -->
     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(https://mcbcode.com/img/mc/nether_forest.png); background-position: center center; background-repeat: no-repeat; background-size: 100%; filter: blur(3px); transform: scale(1.1); z-index: 1;"></div>
@@ -22,4 +22,10 @@
       <p style="color: #00b2ff; background: #00000080; padding: 6px; margin: 0;">$4/month</p>
     </div>
 
+    <!-- Token instructions, hidden until checkout starts -->
+    <div id="obsidian-instructions" style="display: none; position: relative; z-index: 2; text-align: center; color: #fff; background: #00000090; padding: 10px 16px; max-width: 90%;">
+      <p style="margin: 0 0 6px 0;">paste this code into the <b>message</b> box on the ko-fi checkout page before paying:</p>
+      <code id="obsidian-token-display" style="background: #21001b; color: #ff00d0; padding: 4px 8px; display: inline-block;"></code>
+      <p id="obsidian-status-text" style="margin: 10px 0 0 0; font-size: 13px; color: #00b2ff;">waiting for you to complete checkout...</p>
+    </div>
   </div>
