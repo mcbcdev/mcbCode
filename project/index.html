@@ -528,6 +528,33 @@
     </div>
   </div>
 
+  <div class="overlay" id="replace-texture-overlay">
+  <div class="modal" style="min-width:420px; max-width:520px;">
+    <h3>Replace Texture</h3>
+    <div style="font-size:11px; color:#666; margin-bottom:10px;" id="rt-path">textures/</div>
+    <div id="rt-browser" style="max-height:280px; overflow-y:auto; border:1px solid #343438; margin-bottom:12px;"></div>
+    <div id="rt-preview-wrap" style="display:none; flex-direction:column; align-items:center; gap:10px; margin-bottom:12px;">
+      <img id="rt-preview-img" style="max-width:120px; max-height:120px; image-rendering:pixelated; border:1px solid #343438;">
+      <div style="font-size:12px; color:#aaa;" id="rt-preview-label"></div>
+      <button class="primary-btn" onclick="rtConfirmReplace()">Replace Texture</button>
+    </div>
+    <div class="inline-msg" id="rt-status"></div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal('replace-texture-overlay')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rt-picker-overlay">
+  <div class="modal" style="min-width:360px; max-width:460px;">
+    <h3>Pick your replacement image</h3>
+    <div id="rt-picker-list" style="max-height:280px; overflow-y:auto; border:1px solid #343438;"></div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal('rt-picker-overlay')">Cancel</button>
+    </div>
+  </div>
+</div>
+  
   <div class="overlay" id="snapshots-overlay">
     <div class="modal" style="min-width:380px; max-width:460px;">
       <h3>Snapshots</h3>
