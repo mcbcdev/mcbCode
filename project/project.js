@@ -33,6 +33,9 @@
     // beginners often don't realize these are load-bearing for the pack
     const CRITICAL_FILENAMES = ["manifest.json", "pack_icon.png"];
 
+    document.getElementById("replace-texture-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("replace-texture-overlay"); });
+    document.getElementById("rt-picker-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("rt-picker-overlay"); });
+
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     function fmtDate(s) {
       if (!s) return "—";
@@ -2429,6 +2432,133 @@ function highlightJS(code) {
       if (!isLoggedIn()) e.preventDefault();
     });
     document.getElementById("inline-editor-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeInlineEditor(); });
+
+// ---- REPLACE TEXTURE (qTools) ----
+let textureTree = null;
+let textureCurrentPath = [];
+let textureSelectedPath = null;
+
+async function loadTextureIndex() {
+  if (textureTree) return textureTree;
+  const r = await fetch(`${AUTH}/textures/index`);
+  if (!r.ok) throw new Error("failed to load texture list.");
+  const d = await r.json();
+  textureTree = d.tree;
+  return textureTree;
+}
+
+function textureNodeAtPath(pathArr) {
+  let node = textureTree;
+  for (const seg of pathArr) {
+    if (!node || !node.folders || !node.folders[seg]) return null;
+    node = node.folders[seg];
+  }
+  return node;
+}
+
+async function openReplaceTexture() {
+  textureCurrentPath = [];
+  textureSelectedPath = null;
+  document.getElementById("rt-status").textContent = "";
+  document.getElementById("rt-preview-wrap").style.display = "none";
+  document.getElementById("replace-texture-overlay").classList.add("open");
+  document.getElementById("rt-browser").innerHTML = `<div class="loading-msg">Loading...</div>`;
+  try {
+    await loadTextureIndex();
+    renderTextureBrowser();
+  } catch (e) {
+    document.getElementById("rt-browser").innerHTML = `<div class="err-msg">${esc(e.message)}</div>`;
+  }
+}
+
+function renderTextureBrowser() {
+  const el = document.getElementById("rt-browser");
+  const node = textureNodeAtPath(textureCurrentPath) || { folders: {}, files: [] };
+  document.getElementById("rt-path").textContent = "textures/" + textureCurrentPath.join("/");
+  let html = "";
+  if (textureCurrentPath.length) {
+    html += `<div class="file-row" onclick="rtGoUp()"><span class="file-icon folder">^</span><span class="file-name folder">..</span></div>`;
+  }
+  Object.keys(node.folders || {}).sort().forEach(name => {
+    html += `<div class="file-row" onclick="rtOpenFolder('${esc(name)}')"><span class="file-icon folder">+</span><span class="file-name folder">${esc(name)}</span></div>`;
+  });
+  (node.files || []).slice().sort().forEach(name => {
+    html += `<div class="file-row" onclick="rtSelectTexture('${esc(name)}')"><span class="file-icon">&gt;</span><span class="file-name">${esc(name)}</span></div>`;
+  });
+  el.innerHTML = html || `<div class="file-list-empty">Nothing here.</div>`;
+}
+
+function rtGoUp() { textureCurrentPath.pop(); renderTextureBrowser(); }
+function rtOpenFolder(name) { textureCurrentPath.push(name); renderTextureBrowser(); }
+
+function rtSelectTexture(name) {
+  textureSelectedPath = [...textureCurrentPath, name].join("/");
+  document.getElementById("rt-preview-wrap").style.display = "flex";
+  document.getElementById("rt-preview-img").src = `https://asset.mcbcode.com/resource_pack/textures/${textureSelectedPath}`;
+  document.getElementById("rt-preview-label").textContent = textureSelectedPath;
+}
+
+function rtConfirmReplace() {
+  if (!textureSelectedPath) return;
+  openProjectImagePicker(async (chosenFile) => {
+    await performTextureReplace(textureSelectedPath, chosenFile);
+  });
+}
+
+function openProjectImagePicker(onPick) {
+  const pngs = allFiles.filter(f => f.type === "file" && isPng(f));
+  if (!pngs.length) { alert("you don't have any images in this project yet. upload one first, then come back."); return; }
+  document.getElementById("rt-picker-list").innerHTML = pngs.map(f =>
+    `<div class="file-row" data-fid="${f.id}"><span class="file-icon">&gt;</span><span class="file-name">${esc(f.name)}</span></div>`
+  ).join("");
+  document.getElementById("rt-picker-overlay").classList.add("open");
+  document.querySelectorAll("#rt-picker-list .file-row").forEach(row => {
+    row.onclick = () => {
+      const f = pngs.find(x => String(x.id) === row.dataset.fid);
+      closeModal("rt-picker-overlay");
+      onPick(f);
+    };
+  });
+}
+
+async function performTextureReplace(targetPath, sourceFile) {
+  const status = document.getElementById("rt-status");
+  status.textContent = "replacing...";
+  try {
+    const res = await fetch(`${AUTH}/project/asset?file_id=${sourceFile.id}`, { credentials: "include" });
+    if (!res.ok) throw new Error("couldn't read that image.");
+    const buf = await res.arrayBuffer();
+
+    const parts = ("RP/textures/" + targetPath).split("/");
+    const filename = parts.pop();
+    const folderId = await ensureFolderPath(parts);
+    const existing = findFileInFolder(folderId, filename);
+
+    const params = new URLSearchParams({ project_code: shareCode });
+    if (existing) params.set("file_id", existing.id);
+    else { params.set("new", "1"); params.set("name", filename); params.set("parent_id", folderId); }
+
+    const upRes = await fetch(`${AUTH}/project/structure/save?${params.toString()}`, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: buf
+    });
+    const d = await upRes.json();
+    if (!upRes.ok) throw new Error(d.error || "replace failed.");
+
+    if (!existing) {
+      allFiles.push({ id: d.file_id, project_id: project.id, parent_id: folderId, name: filename, type: "file", save_id: null, updated_at: new Date().toISOString() });
+    } else {
+      existing.updated_at = new Date().toISOString();
+    }
+
+    updateStats(); renderFileList();
+    status.textContent = "done! " + targetPath + " is now overridden.";
+    setTimeout(() => closeModal("replace-texture-overlay"), 1200);
+  } catch (e) {
+    status.textContent = e.message || "something went wrong.";
+  }
+}
 
     // ---- FIRST-TIME TUTORIAL ----
     let tutorialActive = false;
