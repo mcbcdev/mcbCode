@@ -5,6 +5,8 @@ fetch("/elements/obsidian.html")
   .then(html => {
     thisScript.insertAdjacentHTML("beforebegin", html);
 
+    let kofiUrl = null;
+
     document.getElementById("get-obsidian-btn").addEventListener("click", async () => {
       const res = await fetch("https://auth.mcbcode.com/obsidian/checkout-start", {
         method: "POST",
@@ -16,11 +18,27 @@ fetch("/elements/obsidian.html")
         return;
       }
 
+      kofiUrl = data.kofi_url;
       document.getElementById("obsidian-token-display").textContent = data.token;
       document.getElementById("obsidian-instructions").style.display = "block";
       document.getElementById("get-obsidian-btn").style.display = "none";
+    });
 
-      window.open(data.kofi_url, "_blank");
+    document.getElementById("obsidian-copy-btn").addEventListener("click", () => {
+      const token = document.getElementById("obsidian-token-display").textContent;
+      navigator.clipboard.writeText(token).then(() => {
+        const btn = document.getElementById("obsidian-copy-btn");
+        const original = btn.textContent;
+        btn.textContent = "copied!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      });
+    });
+
+    document.getElementById("obsidian-continue-btn").addEventListener("click", () => {
+      window.open(kofiUrl, "_blank");
+      document.getElementById("obsidian-continue-btn").style.display = "none";
+      document.getElementById("obsidian-copy-btn").style.display = "none";
+      document.getElementById("obsidian-status-text").style.display = "block";
       pollObsidianStatus();
     });
   });
