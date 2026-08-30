@@ -1,5 +1,5 @@
 <style>
-  #get-obsidian-btn {
+  #get-obsidian-btn, #obsidian-copy-btn, #obsidian-continue-btn {
     padding: 6px;
     background-color: #21001b;
     color: #ff00d0;
@@ -24,8 +24,12 @@
 
     <!-- Token instructions, hidden until checkout starts -->
     <div id="obsidian-instructions" style="display: none; position: relative; z-index: 2; text-align: center; color: #fff; background: #00000090; padding: 10px 16px; max-width: 90%;">
-      <p style="margin: 0 0 6px 0;">paste this code into the <b>message</b> box on the ko-fi checkout page before paying:</p>
+      <p style="margin: 0 0 6px 0;">copy this code — you'll paste it into the <b>message</b> box on the ko-fi checkout page before paying:</p>
       <code id="obsidian-token-display" style="background: #21001b; color: #ff00d0; padding: 4px 8px; display: inline-block;"></code>
-      <p id="obsidian-status-text" style="margin: 10px 0 0 0; font-size: 13px; color: #00b2ff;">waiting for you to complete checkout...</p>
+      <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
+        <button id="obsidian-copy-btn">copy code</button>
+        <button id="obsidian-continue-btn">i've copied it, continue to ko-fi</button>
+      </div>
+      <p id="obsidian-status-text" style="display: none; margin: 10px 0 0 0; font-size: 13px; color: #00b2ff;">waiting for you to complete checkout...</p>
     </div>
   </div>
