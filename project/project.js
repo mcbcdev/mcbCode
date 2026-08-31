@@ -106,7 +106,16 @@
     function beaconModeFor(f) {
       return f.name.toLowerCase().endsWith(".mcstructure") ? "structure" : "model";
     }
-    
+
+    function currentFolderIsPackRoot() {
+  return currentPath.length === 1 && ["BP", "RP"].includes(currentPath[0].name.toUpperCase());
+}
+function findRootFolder(name) {
+  return allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === name);
+}
+function hasPackIcon(folderId) {
+  return allFiles.some(f => f.type === "file" && String(f.parent_id) === String(folderId) && f.name.toLowerCase() === "pack_icon.png");
+}
     // ---- URL <-> folder path helpers ----
     function buildPathUrl(pathArr) {
       const base = `/project/${shareCode}`;
@@ -303,6 +312,8 @@
 
       const pngInput = document.getElementById("png-upload-input");
       if (pngInput) pngInput.addEventListener("change", handlePngUpload);
+      const packIconInput = document.getElementById("pack-icon-upload-input");
+      if (packIconInput) packIconInput.addEventListener("change", handlePackIconUpload);
       const mcsInput = document.getElementById("mcstructure-upload-input");
       if (mcsInput) mcsInput.addEventListener("change", handleMcstructureUpload);
 
@@ -1268,9 +1279,21 @@ function renderFileList() {
     up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
     list.appendChild(up);
   }
-  if (children.length === 0) {
+  const showGhostIcon = currentFolderIsPackRoot() && !hasPackIcon(currentFolderId());
+
+  if (children.length === 0 && !showGhostIcon) {
     list.innerHTML += `<div class="file-list-empty">${canEdit() ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the buttons above to add files.') : 'Nothing here.'}</div>`;
     return;
+  }
+
+  if (showGhostIcon) {
+    const ghost = document.createElement("div");
+    ghost.className = "file-row";
+    ghost.style.opacity = "0.6";
+    ghost.innerHTML = `<span class="file-icon">&gt;</span><span class="file-name">pack_icon.png</span><span class="file-badge" style="color:#ff9900; border-color:#3a2e18;">Add a pack_icon.png</span>`;
+    if (canEdit()) ghost.onclick = () => document.getElementById("pack-icon-upload-input").click();
+    else ghost.style.cursor = "default";
+    list.appendChild(ghost);
   }
   children.forEach(f => {
     const row = document.createElement("div");
@@ -1507,7 +1530,45 @@ document.getElementById("geojson-overlay")?.addEventListener("click", e => { if 
       } catch { alert("Something went wrong uploading the image."); }
     }
 
-    
+async function handlePackIconUpload(e) {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (file.type !== "image/png") { alert("only png files are allowed for pack_icon.png"); return; }
+
+  const bp = findRootFolder("BP");
+  const rp = findRootFolder("RP");
+  const targets = [bp, rp].filter(Boolean);
+  if (!targets.length) { alert("couldn't find your BP/RP folders."); return; }
+
+  const buf = await file.arrayBuffer();
+
+  for (const folder of targets) {
+    const existing = allFiles.find(f => f.type === "file" && String(f.parent_id) === String(folder.id) && f.name.toLowerCase() === "pack_icon.png");
+    const params = new URLSearchParams({ project_code: shareCode });
+    if (existing) params.set("file_id", existing.id);
+    else { params.set("new", "1"); params.set("name", "pack_icon.png"); params.set("parent_id", folder.id); }
+
+    try {
+      const res = await fetch(`${AUTH}/project/structure/save?${params.toString()}`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: buf
+      });
+      const d = await res.json();
+      if (!res.ok) { alert(d.error || `failed to set pack_icon.png in ${folder.name}`); continue; }
+      if (!existing) {
+        allFiles.push({ id: d.file_id, project_id: project.id, parent_id: folder.id, name: "pack_icon.png", type: "file", save_id: null, updated_at: new Date().toISOString() });
+      } else {
+        existing.updated_at = new Date().toISOString();
+      }
+    } catch { alert(`something went wrong uploading to ${folder.name}.`); }
+  }
+
+  updateStats();
+  renderFileList();
+}
+
     async function handleMcstructureUpload(e) {
       const file = e.target.files[0];
       e.target.value = "";
