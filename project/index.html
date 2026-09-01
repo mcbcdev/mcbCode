@@ -16,7 +16,7 @@
     a:hover { color: #05ee93; }
     g { color: #05ee93; }
 
-    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; backdrop-filter: blur(8px); border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 10px; flex-shrink: 0; }
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161719; backdrop-filter: blur(8px); border-bottom: 1px solid #2a2a2e; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 5px; flex-shrink: 0; font-size: 18px;}
     .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
     .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; overflow: hidden; }
     .breadcrumb a { color: #888; transition: color 0.2s; white-space: nowrap; }
@@ -668,12 +668,11 @@
   <div class="drawer-scrim" id="drawer-scrim" onclick="closeMobileDrawer()"></div>
 
   <div class="topnav">
-    <a href="/" class="topnav-logo">mcb<g>Code</g></a>
+    <a href="https://mcbcode.com" class="topnav-logo">mcb<g>Code</g></a>
     <div class="breadcrumb">
-      <span>/</span>
-      <a href="/dashboard">dashboard</a>
-      <span>/</span>
-      <span class="breadcrumb-current" id="bc-project">...</span>
+      <span style="font-size: 18px;">@</span>
+      <span>Project:</span>
+      <span class="breadcrumb-current" id="bc-project">?</span>
     </div>
     <div class="topnav-right">
       <span style="font-size:11px; color:transparent; user-select:none;" id="nav-user"></span>
@@ -689,14 +688,13 @@
 <div class="proj-header-top">
   <span class="proj-title" id="proj-title">Loading...</span>
   <span class="proj-badge" id="proj-badge">public</span>
-  <span style="font-size:10px; color:#555;" title="BP = Behavior Pack (game logic), RP = Resource Pack (textures/sounds)">BP = behavior, RP = resource</span>
         <div class="proj-header-actions">
         </div>
       </div>
       <div class="proj-tabs">
-        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()">Info</div>
-        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)">Files</div>
-        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display:none;">Settings</div>
+        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: -90deg;"> Info</div>
+        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> Files</div>
+        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display:none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> Settings</div>
       </div>
     </div>
 
@@ -705,27 +703,27 @@
       <div class="meta-panel">
         <div class="meta-section">
           <div class="meta-label">About</div>
-          <div class="meta-value" id="m-desc">—</div>
+          <div class="meta-value" id="m-desc">Couldn't load</div>
         </div>
         <div class="meta-section">
           <div class="meta-label">Contributors</div>
           <div class="meta-value">
-            <span class="green" id="m-owner">—</span>
+            <span class="green" id="m-owner">Couldn't load</span>
             <span id="m-collaborators"></span>
           </div>
         </div>
         <div class="meta-section">
           <div class="meta-label">Updated</div>
-          <div class="meta-value" id="m-updated">—</div>
+          <div class="meta-value" id="m-updated">Couldn't load</div>
         </div>
         <div class="meta-section">
           <div class="meta-label">Project ID</div>
-          <div class="meta-value mono" id="m-code" style="cursor:pointer;" onclick="copyProjectLink()" title="click to copy project link">—</div>
+          <div class="meta-value mono" id="m-code" style="cursor:pointer;" onclick="copyProjectLink()" title="click to copy project link">XXXXXXXX</div>
         </div>
         <div class="meta-section">
           <div class="stat-row">
-            <div class="stat"><div class="stat-val" id="s-files">—</div><div class="stat-lbl">Files</div></div>
-            <div class="stat"><div class="stat-val" id="s-folders">—</div><div class="stat-lbl">Folders</div></div>
+            <div class="stat"><div class="stat-val" id="s-files">?</div><div class="stat-lbl">Files</div></div>
+            <div class="stat"><div class="stat-val" id="s-folders">?</div><div class="stat-lbl">Folders</div></div>
           </div>
         </div>
       </div>
