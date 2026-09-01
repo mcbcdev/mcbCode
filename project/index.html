@@ -77,6 +77,8 @@
     .file-row:hover .file-del { opacity: 1; }
     .file-icon { font-size: 13px; color: #555; width: 16px; text-align: center; flex-shrink: 0; }
     .file-icon.folder { color: #00b2ff; }
+    .file-icon img { width: 14px; height: 14px; image-rendering: pixelated; display: block; transition: transform 0.15s; }
+    .file-icon.open img { transform: rotate(90deg); }
     .file-name { flex: 1; color: #c8c8c8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .file-name.folder { color: #fff; font-family: 'mcfontb', sans-serif; }
     .file-badge { font-size: 9px; color: #ff9900; border: 1px solid #3a2e18; padding: 1px 5px; flex-shrink: 0; }
