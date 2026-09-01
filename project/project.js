@@ -1166,9 +1166,7 @@ async function creatorSave() {
 
       // close whatever preview is currently open (if any)
       if (existing) {
-        document.querySelectorAll(".file-icon").forEach(icon => {
-          if (icon.textContent === "v") icon.textContent = ">";
-        });
+        document.querySelectorAll(".file-icon.open").forEach(icon => icon.classList.remove("open"));
         existing.classList.remove("open");
         setTimeout(() => { existing.remove(); }, 180);
         openImagePreview = null;
@@ -1192,7 +1190,7 @@ async function creatorSave() {
         preview.classList.add("open");
       });
 
-      row.querySelector(".file-icon").textContent = "v";
+      row.querySelector(".file-icon").classList.add("open");
       openImagePreview = file.id;
     }
 
@@ -1201,9 +1199,7 @@ async function creatorSave() {
       const wasOpenForThisFile = openImagePreview === file.id;
 
       if (existing) {
-        document.querySelectorAll(".file-icon").forEach(icon => {
-          if (icon.textContent === "v") icon.textContent = ">";
-        });
+        document.querySelectorAll(".file-icon.open").forEach(icon => icon.classList.remove("open"));
         existing.classList.remove("open");
         setTimeout(() => { existing.remove(); }, 180);
         openImagePreview = null;
@@ -1226,8 +1222,8 @@ preview.innerHTML = `
 `;
       row.after(preview);
       requestAnimationFrame(() => preview.classList.add("open"));
-      row.querySelector(".file-icon").textContent = "v";
-      openImagePreview = file.id;
+      row.querySelector(".file-icon").classList.add("open");
+    openImagePreview = file.id;
     }
 function renderFileList() {
   renderPathBar();
@@ -1275,7 +1271,7 @@ function renderFileList() {
   if (currentPath.length > 0) {
     const up = document.createElement("div");
     up.className = "file-row";
-    up.innerHTML = `<span class="file-icon folder">^</span><span class="file-name folder">..</span>`;
+    up.innerHTML = `<span class="file-icon folder"><img src="https://mcbcode.com/img/icons/upfolder.png" alt=""></span><span class="file-name folder">..</span>`;
     up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
     list.appendChild(up);
   }
@@ -1299,12 +1295,11 @@ function renderFileList() {
     const row = document.createElement("div");
     row.className = "file-row";
     row.dataset.fileId = f.id;
-    const icon = f.type === "folder" ? "+" : ">";
-    const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
+    const iconSrc = f.type === "folder" ? "https://mcbcode.com/img/icons/folder.png" : "https://mcbcode.com/img/icons/file.png";    const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
     const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
     row.innerHTML = `
-      <span class="file-icon${f.type === 'folder' ? ' folder' : ''}">${icon}</span>
+      <span class="file-icon${f.type === 'folder' ? ' folder' : ''}"><img src="${iconSrc}" alt=""></span>
       <span class="${nameClass}">${esc(f.name)}</span>
       ${pngBadge}
       ${beaconBadge}
