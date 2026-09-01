@@ -58,11 +58,11 @@
 
     .file-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #111214; }
 
-    .path-bar { display: flex; align-items: center; gap: 0; padding: 0 16px; height: 38px; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; font-size: 12px; flex-wrap: wrap; }
-    .path-crumb { color: #00b2ff; cursor: pointer; transition: color 0.15s; padding: 0 2px; }
+    .path-bar { display: flex; align-items: center; gap: 0; padding: 0 16px; height: 38px; border-bottom: 1px solid #2a2a2e; background: #161719; flex-shrink: 0; font-size: 12px; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: thin; }    .path-crumb { color: #00b2ff; cursor: pointer; transition: color 0.15s; padding: 0 2px; }
+    #path-segments { display: flex; align-items: center; flex-shrink: 0; }
     .path-crumb:hover { color: #66d4ff; }
     .path-sep { color: #343438; padding: 0 4px; }
-    .path-toolbar { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .path-toolbar { margin-left: 12px; flex-shrink: 0; display: flex; gap: 6px; flex-wrap: nowrap; justify-content: flex-end; }
     .sm-btn { background: #222326; border: 1px solid #343438; color: #aaa; font-family: 'mcfont', sans-serif; font-size: 11px; padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
     .sm-btn:hover { color: #05ee93; border-color: #05ee93; }
     .sm-btn.export-highlight { background: #05ee93; border-color: #05ee93; color: #0c0c0c; }
@@ -686,9 +686,10 @@
   <div class="shell">
 
     <div class="proj-header">
-      <div class="proj-header-top">
-        <span class="proj-title" id="proj-title">Loading...</span>
-        <span class="proj-badge" id="proj-badge">public</span>
+<div class="proj-header-top">
+  <span class="proj-title" id="proj-title">Loading...</span>
+  <span class="proj-badge" id="proj-badge">public</span>
+  <span style="font-size:10px; color:#555;" title="BP = Behavior Pack (game logic), RP = Resource Pack (textures/sounds)">BP = behavior, RP = resource</span>
         <div class="proj-header-actions">
         </div>
       </div>
