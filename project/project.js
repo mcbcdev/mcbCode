@@ -2391,7 +2391,10 @@ function highlightJS(code) {
       // the object captured in the row's click closure — it's cheap and avoids
       // ever binding the editor to a stale/renamed copy of the file.
       const f = allFiles.find(x => x.id === fileRef.id) || fileRef;
-
+      if (f.name.toLowerCase() === "manifest.json" && window._editorMode !== "legacy") {
+        return openManifestEditor(f);
+      }
+        
       if (!f.save_id) {
         alert("This file doesn't have any save data yet.");
         return;
@@ -2788,3 +2791,211 @@ async function performTextureReplace(targetPath, sourceFile) {
       _origRender();
       if (shouldShowTutorial()) startTutorial();
     };
+
+// ---- MANIFEST.JSON VISUAL EDITOR ----
+let mfFile = null;
+let mfObj = null;
+let mfRawMode = false;
+let mfCanEdit = false;
+
+function mfNewUUID() { return crypto.randomUUID(); }
+
+async function openManifestEditor(f) {
+  mfFile = f;
+  mfObj = null;
+  mfRawMode = false;
+  mfCanEdit = isOwner || isCollab;
+  document.getElementById("mf-title").textContent = f.name;
+  document.getElementById("mf-err").textContent = "";
+  document.getElementById("mf-err").classList.remove("show");
+  document.getElementById("mf-visual-body").innerHTML = `<div class="loading-msg">Loading...</div>`;
+  document.getElementById("mf-raw-textarea").style.display = "none";
+  document.getElementById("mf-save-btn").style.display = mfCanEdit ? "" : "none";
+  document.getElementById("manifest-editor-overlay").classList.add("open");
+
+  if (!isLoggedIn()) {
+    document.getElementById("mf-visual-body").innerHTML = `<div class="loading-msg">Log in to view this file.</div>`;
+    return;
+  }
+  if (!f.save_id) {
+    document.getElementById("mf-visual-body").innerHTML = `<div class="loading-msg">This file has no data yet.</div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(f.save_id)}`, { credentials: "include" });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error || "failed to load.");
+    try { mfObj = JSON.parse(d.content || "{}"); }
+    catch { throw new Error("this manifest.json isn't valid json — use raw view to fix it."); }
+    renderManifestVisual();
+  } catch (e) {
+    document.getElementById("mf-visual-body").innerHTML = `<div class="err-msg">${esc(e.message)}</div>`;
+  }
+}
+
+function mfModuleExplain(type) {
+  if (type === "data") return "this identifies the behavior side of your pack. minecraft uses it to tell your pack apart from every other behavior pack.";
+  if (type === "resources") return "this identifies the resource (texture/sound) side of your pack, separate from the behavior side.";
+  return "this identifies this specific part (module) of your pack.";
+}
+
+function renderManifestVisual() {
+  if (!mfObj.header) mfObj.header = {};
+  if (!Array.isArray(mfObj.modules)) mfObj.modules = [];
+
+  const dis = mfCanEdit ? "" : "disabled";
+  let html = `
+    <div class="creator-section-label" style="margin-top:0;">Basic Info</div>
+    <div class="set-field">
+      <label>Pack Name</label>
+      <input type="text" id="mf-name" value="${esc(mfObj.header.name || "")}" ${dis}>
+    </div>
+    <div class="set-field">
+      <label>Description</label>
+      <textarea id="mf-desc" rows="2" ${dis}>${esc(mfObj.header.description || "")}</textarea>
+    </div>
+
+    <div class="creator-section-label">UUIDs</div>
+    <div class="set-field">
+      <label>Pack UUID</label>
+      <div style="font-size:11px; color:#777; margin-bottom:4px;">identifies this whole pack to minecraft. changing it makes minecraft treat it as a brand new pack — any world already using it will break unless you update the world too.</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" class="meta-value mono" style="flex:1;" value="${esc(mfObj.header.uuid || "")}" readonly>
+        ${mfCanEdit ? `<button class="sm-btn" onclick="mfRegenHeaderUUID()">Regenerate</button>` : ""}
+      </div>
+    </div>
+  `;
+
+  mfObj.modules.forEach((mod, i) => {
+    html += `
+    <div class="set-field">
+      <label>Module UUID ${mfObj.modules.length > 1 ? `(#${i + 1}, ${esc(mod.type || "?")})` : ""}</label>
+      <div style="font-size:11px; color:#777; margin-bottom:4px;">${esc(mfModuleExplain(mod.type))}</div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" class="meta-value mono" style="flex:1;" value="${esc(mod.uuid || "")}" readonly>
+        ${mfCanEdit ? `<button class="sm-btn" onclick="mfRegenModuleUUID(${i})">Regenerate</button>` : ""}
+      </div>
+    </div>`;
+  });
+
+  html += `<div class="creator-section-label">Subpacks</div>`;
+  if (Array.isArray(mfObj.subpacks) && mfObj.subpacks.length) {
+    mfObj.subpacks.forEach((sp, i) => {
+      html += `
+      <div class="creator-comp-row">
+        <input type="text" style="flex:1;" data-sp-field="folder_name" data-sp-index="${i}" value="${esc(sp.folder_name || "")}" placeholder="folder_name" ${dis}>
+        <input type="text" style="flex:1;" data-sp-field="name" data-sp-index="${i}" value="${esc(sp.name || "")}" placeholder="display name" ${dis}>
+        ${mfCanEdit ? `<button class="sm-btn" onclick="mfRemoveSubpack(${i})">remove</button>` : ""}
+      </div>`;
+    });
+  } else {
+    html += `<div style="font-size:12px; color:#555; margin-bottom:8px;">no subpacks yet. these let players pick between variants of your pack (like "low" / "high" quality).</div>`;
+  }
+  if (mfCanEdit) html += `<button class="sm-btn" onclick="mfAddSubpack()">+ Add Subpack</button>`;
+
+  html += `<div class="creator-section-label">Compatibility</div>`;
+  if (Array.isArray(mfObj.dependencies) && mfObj.dependencies.length) {
+    mfObj.dependencies.forEach((dep, i) => {
+      html += `
+      <div class="creator-comp-row">
+        <input type="text" style="flex:1;" data-dep-field="uuid" data-dep-index="${i}" value="${esc(dep.uuid || "")}" placeholder="other pack's UUID" ${dis}>
+        <input type="text" style="max-width:110px;" data-dep-field="version" data-dep-index="${i}" value="${esc(Array.isArray(dep.version) ? dep.version.join('.') : (dep.version || ''))}" placeholder="1.0.0" ${dis}>
+        ${mfCanEdit ? `<button class="sm-btn" onclick="mfRemoveDependency(${i})">remove</button>` : ""}
+      </div>`;
+    });
+  } else {
+    html += `<div style="font-size:12px; color:#555; margin-bottom:8px;">no compatibility links yet. add one if this pack requires another pack to work (e.g. a matching resource pack's UUID).</div>`;
+  }
+  if (mfCanEdit) html += `<button class="sm-btn" onclick="mfAddDependency()">+ Add Compatibility</button>`;
+
+  document.getElementById("mf-visual-body").innerHTML = html;
+
+  if (mfCanEdit) {
+    document.getElementById("mf-name").addEventListener("input", e => { mfObj.header.name = e.target.value; });
+    document.getElementById("mf-desc").addEventListener("input", e => { mfObj.header.description = e.target.value; });
+    document.querySelectorAll("[data-sp-field]").forEach(el => {
+      el.addEventListener("input", e => { mfObj.subpacks[+e.target.dataset.spIndex][e.target.dataset.spField] = e.target.value; });
+    });
+    document.querySelectorAll("[data-dep-field]").forEach(el => {
+      el.addEventListener("input", e => {
+        const dep = mfObj.dependencies[+e.target.dataset.depIndex];
+        if (e.target.dataset.depField === "version") dep.version = e.target.value.split(".").map(n => parseInt(n, 10) || 0);
+        else dep[e.target.dataset.depField] = e.target.value;
+      });
+    });
+  }
+}
+
+function mfRegenHeaderUUID() { mfObj.header.uuid = mfNewUUID(); renderManifestVisual(); }
+function mfRegenModuleUUID(i) { mfObj.modules[i].uuid = mfNewUUID(); renderManifestVisual(); }
+
+function mfAddSubpack() {
+  if (!Array.isArray(mfObj.subpacks)) mfObj.subpacks = [];
+  mfObj.subpacks.push({ folder_name: "", name: "", memory_tier: 1 });
+  renderManifestVisual();
+}
+function mfRemoveSubpack(i) { mfObj.subpacks.splice(i, 1); renderManifestVisual(); }
+
+function mfAddDependency() {
+  if (!Array.isArray(mfObj.dependencies)) mfObj.dependencies = [];
+  mfObj.dependencies.push({ uuid: "", version: [1, 0, 0] });
+  renderManifestVisual();
+}
+function mfRemoveDependency(i) { mfObj.dependencies.splice(i, 1); renderManifestVisual(); }
+
+function mfToggleRaw() {
+  mfRawMode = !mfRawMode;
+  const btn = document.getElementById("mf-raw-toggle-btn");
+  if (mfRawMode) {
+    document.getElementById("mf-visual-body").style.display = "none";
+    document.getElementById("mf-raw-textarea").style.display = "block";
+    document.getElementById("mf-raw-textarea").value = JSON.stringify(mfObj, null, 4);
+    document.getElementById("mf-raw-textarea").readOnly = !mfCanEdit;
+    btn.textContent = "Back to Visual Editor";
+  } else {
+    try {
+      mfObj = JSON.parse(document.getElementById("mf-raw-textarea").value);
+    } catch {
+      alert("that's not valid json — fix it before switching back, or your edits will be lost.");
+      mfRawMode = true;
+      return;
+    }
+    document.getElementById("mf-visual-body").style.display = "block";
+    document.getElementById("mf-raw-textarea").style.display = "none";
+    btn.textContent = "View Raw JSON";
+    renderManifestVisual();
+  }
+}
+
+async function mfSave() {
+  if (!mfCanEdit || !mfFile) return;
+  const err = document.getElementById("mf-err");
+  err.textContent = ""; err.classList.remove("show");
+
+  if (mfRawMode) {
+    try { mfObj = JSON.parse(document.getElementById("mf-raw-textarea").value); }
+    catch { err.textContent = "not valid json — fix it before saving."; err.classList.add("show"); return; }
+  }
+
+  const btn = document.getElementById("mf-save-btn");
+  btn.disabled = true; btn.textContent = "Saving...";
+  try {
+    const content = JSON.stringify(mfObj, null, 4);
+    const res = await fetch(`${AUTH}/save`, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ save_id: mfFile.save_id, filename: mfFile.name, content })
+    });
+    const d = await res.json();
+    if (!res.ok) { err.textContent = d.error || "save failed."; err.classList.add("show"); }
+    else {
+      mfFile.updated_at = new Date().toISOString();
+      renderFileList();
+      closeModal("manifest-editor-overlay");
+    }
+  } catch { err.textContent = "something went wrong."; err.classList.add("show"); }
+  btn.disabled = false; btn.textContent = "Save";
+}
+
+document.getElementById("manifest-editor-overlay")?.addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("manifest-editor-overlay"); });
