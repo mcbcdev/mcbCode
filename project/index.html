@@ -631,6 +631,22 @@
     </div>
   </div>
 
+  <div class="overlay" id="manifest-editor-overlay">
+  <div class="modal" style="min-width:460px; max-width:600px; max-height:85vh; overflow-y:auto;">
+    <h3 id="mf-title">manifest.json</h3>
+    <div id="mf-visual-body"></div>
+    <textarea id="mf-raw-textarea" style="display:none; width:100%; min-height:400px; font-family:'Fira Code', monospace; font-size:12px; background:#111214; border:1px solid #343438; color:#fff; padding:10px; outline:none;"></textarea>
+    <div class="modal-err" id="mf-err"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="sm-btn" id="mf-raw-toggle-btn" onclick="mfToggleRaw()">View Raw JSON</button>
+      <div style="display:flex; gap:8px;">
+        <button class="cancel-btn" onclick="closeModal('manifest-editor-overlay')">Close</button>
+        <button class="primary-btn" id="mf-save-btn" onclick="mfSave()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+  
   <div class="tut-overlay" id="tut-overlay">
     <div class="tut-dim" id="tut-dim-top"></div>
     <div class="tut-dim" id="tut-dim-bottom"></div>
