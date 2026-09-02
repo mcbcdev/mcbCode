@@ -38,7 +38,9 @@ and because one feature was never enough, more are being added over time.
 
 * **official site:** [mcbcode.com](https://mcbcode.com)
 * **more about mcbCode:** [mcbcode.com/about](https://mcbcode.com/about)
+* **android app** (beta) [mcbcode.com/download](https://mcbcode.com/download)
 * **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
+* **feedback site** [feedback.mcbcode](https://mcbcode.com)
 
 ## getting started
 
@@ -68,7 +70,7 @@ some parts of mcbCode are also built around services provided by platforms such 
 
 ## contributing
 
-mcbCode is primarily developed as an independent project, but bug reports, suggestions, and feedback are appreciated. [discord](https://discord.gg/JbSPDdHTn)
+mcbCode is primarily developed as an independent project, but bug reports, suggestions, and feedback are appreciated. [feedback.mcbcode.com](https://feedback.mcbcode.com)
 
 if you find something that is broken or have an idea that could make mcbCode better, opening an issue is a good place to start.
 
