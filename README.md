@@ -41,6 +41,7 @@ and because one feature was never enough, more are being added over time.
 * **android app** (beta) [mcbcode.com/download](https://mcbcode.com/download)
 * **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
 * **feedback site** [feedback.mcbcode](https://mcbcode.com)
+* **bedrock ide** [studio.mcbcode](https://studio.mcbcode.com)
 
 ## getting started
 
