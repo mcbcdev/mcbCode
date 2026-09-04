@@ -1,8 +1,0 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.mcbcode.app",
-    "sha256_cert_fingerprints": ["9E:05:C2:0B:F8:0C:91:C1:9C:3A:5D:CD:DA:8A:7C:2E:14:E8:C3:9F:06:B9:0A:9F:8B:21:14:8D:53:13:70:94"]
-  }
-}]
