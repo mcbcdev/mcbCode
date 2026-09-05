@@ -3,726 +3,393 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DripstoneAI | Bedrock Modding Assistant</title>
+  <title>mcbCode | Dripstone</title>
   
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   
   <style>
-    :root {
-      --accent-color: #05ee93;
-      --accent-dark: #00a459;
-      --bg-color: #0c0c0c;
-      --text-main: #ffffff;
-      --text-muted: #bebebe;
-      --code-bg: #141414;
-      --card-bg: rgba(255, 255, 255, 0.02);
-      --border-color: rgba(255, 255, 255, 0.05);
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+        background: transparent;
     }
 
-    /* --- Global & Animations --- */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
+    .bg-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        filter: blur(6px);
+        transform: scale(1.05);
+        z-index: -999;
     }
 
-    @keyframes blink {
-      50% { opacity: 0; }
+    .bg-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.65);
+        z-index: -998;
+        pointer-events: none;
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background-color: var(--bg-color);
-      background-image: 
-        linear-gradient(to bottom, rgba(12, 12, 12, 0) 600px, var(--bg-color) 1200px),
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 30px 30px, 30px 30px;
-      color: var(--text-muted);
-      overflow: hidden;
+    .sidebar {
+        background-color: #232323;
+        color: #ffffff;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 250px;
+        box-sizing: border-box;
+        border-left: 2px solid #05ee93;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.3s ease;
+        z-index: 100;
+        border-radius: 0;
     }
-
-    h1, h2, h3 {
-      color: var(--text-main);
-      margin: 0;
+    .sidebar.hidden {
+        transform: translateX(100%);
     }
-
-    a {
-      text-decoration: none;
-      color: var(--text-main);
-      transition: color 0.3s ease-in-out, text-shadow 0.3s ease;
+    .toggle-btn {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background-color: #232323;
+        color: #05ee93;
+        border: 1px solid #05ee93;
+        border-radius: 0;
+        padding: 8px 12px;
+        cursor: pointer;
+        z-index: 101;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'mcfontb', sans-serif;
     }
-
-    a:hover {
-      color: var(--accent-color);
-      text-shadow: 0 0 8px rgba(5, 238, 147, 0.4);
+    .toggle-btn:hover {
+        background-color: #05ee93;
+        color: #181818;
     }
-
-    c { color: #e7007b; }
-    g { color: #008e4c; }
-
-    /* --- Navigation Bar --- */
-    .navi {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 75px;
-      background-color: rgba(12, 12, 12, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-sizing: border-box;
-      padding: 0 5%;
-      z-index: 1000;
-    }
-
-    .navi-brand a {
-      display: flex;
-      align-items: center;
-    }
-
-    .navi-logo {
-      height: 35px;
-      margin-right: 12px;
-      filter: drop-shadow(0 0 5px rgba(5, 238, 147, 0.2));
-    }
-
-    .navi-brand h2 {
-      font-size: 24px;
-    }
-
-    .quick-links {
-      display: flex;
-      align-items: center;
-      gap: 30px;
-    }
-
-    /* --- Dropdown --- */
-    .dropdown-btn {
-      width: 18px;
-      height: 18px;
-      background-image: url('https://mcbcode.com/img/icons/dropdown.png');
-      background-size: cover;
-      transition: transform 0.3s ease, filter 0.3s ease;
-      cursor: pointer;
-    }
-
-    .dropdown-btn:hover, .dropdown-btn.active {
-      background-image: url('https://mcbcode.com/img/icons/dropdown-selected.png');
-      filter: drop-shadow(0 0 5px var(--accent-color));
-    }
-
-    .dropdown-btn.active {
-      transform: rotate(180deg);
-    }
-
-    .dropdown {
-      position: fixed;
-      width: 90%;
-      max-width: 600px;
-      background-color: rgba(20, 20, 20, 0.85);
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 999;
-      top: 85px;
-      left: 50% !important;
-      transform: translateX(-50%) translateY(-10px);
-      padding: 20px;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      opacity: 0;
-      visibility: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .dropdown-btn.active ~ .dropdown, .dropdown.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .dropdown-content {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px 30px;
-      width: 100%;
-    }
-
-    .dropdown-content a {
-      flex: 1 1 auto;
-      min-width: 100px;
-      padding: 10px;
-      transition: background-color 0.2s ease, color 0.2s ease;
+    .sidebar-close-btn {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        align-self: flex-end;
     }
     
-    .dropdown-content a:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+    .main-container {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        transition: margin-right 0.3s ease;
     }
 
-    /* --- Buttons --- */
-    button {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 1rem;
-      padding: 12px 24px;
-      color: var(--text-main);
-      transition: all 0.3s ease;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      border-radius: 0;
+    @media (min-width: 769px) {
+        body:not(.sidebar-hidden) .main-container {
+            margin-right: 250px;
+        }
     }
 
-    button:hover {
-      border-color: var(--text-muted);
-      transform: translateY(-2px);
+    .hero-title {
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+        font-family: 'mcfontb', sans-serif;
+        text-align: center;
+        padding: 0 10px;
+        color: #ffffff;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .hero-title span {
+        color: #05ee93;
     }
 
-    .accent-btn {
-      background-color: var(--accent-dark);
-      border: 1px solid var(--accent-color);
-      color: #ffffff;
-      box-shadow: 0 0 15px rgba(5, 238, 147, 0.2);
+    /* When active, transition the chat box wrapper to the bottom, anchoring its bottom edge so it expands upwards */
+    .main-container.chat-active .hero-title {
+        opacity: 0;
+        transform: translateY(-20px);
+        pointer-events: none;
+        position: absolute;
     }
 
-    .accent-btn:hover {
-      background-color: var(--accent-color);
-      color: var(--bg-color);
-      box-shadow: 0 0 25px rgba(5, 238, 147, 0.5);
-      transform: translateY(-2px);
+    .chat-box-wrapper {
+        width: 100%;
+        max-width: 700px;
+        background-color: #232323;
+        border: 1px solid #333333;
+        border-radius: 0;
+        padding: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        position: relative;
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* --- Fullscreen Chat Workspace Layout --- */
-    .workspace-wrapper {
-      width: 100%;
-      height: calc(100vh - 75px);
-      margin-top: 75px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      position: relative;
+    .main-container.chat-active .chat-box-wrapper {
+        position: absolute;
+        bottom: 20px;
     }
 
-    .chat-history-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 40px 0;
-      width: 100%;
+    .selected-files-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .file-chip {
+        background-color: #181818;
+        border: 1px solid #05ee93;
+        color: #ffffff;
+        padding: 4px 8px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 0;
+        font-family: 'mcfont', sans-serif;
+    }
+    .file-chip span {
+        cursor: pointer;
+        color: #05ee93;
+        font-family: 'mcfontb', sans-serif;
+    }
+    
+    /* Textarea with strict zero padding to prevent premature scrollHeight triggers */
+    .chat-textarea {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 1rem;
+        resize: none;
+        outline: none;
+        height: 24px;
+        min-height: 24px;
+        max-height: 200px;
+        font-family: 'mcfont', sans-serif;
+        line-height: 24px;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        overflow-y: hidden;
     }
 
-    .chat-history {
-      max-width: 850px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 30px;
-      box-sizing: border-box;
+    .chat-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        border-top: 1px solid #333333;
+        padding-top: 10px;
     }
-
-    .chat-message {
-      max-width: 100%;
-      padding: 8px 0;
-      line-height: 1.7;
-      animation: fadeIn 0.4s ease-out forwards;
-      white-space: pre-wrap;
+    .extra-tools {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-
-    .chat-message.assistant {
-      align-self: flex-start;
-      color: var(--text-main);
-      width: 100%;
+    .file-upload-icon {
+        height: 20px;
+        width: 20px;
+        cursor: pointer;
+        filter: invert(1);
+        display: block;
     }
-
-    .chat-message.user {
-      align-self: flex-end;
-      color: var(--accent-color);
-      background: rgba(5, 238, 147, 0.03);
-      border: 1px solid rgba(5, 238, 147, 0.1);
-      padding: 16px 20px;
-      border-radius: 0;
-      max-width: 85%;
+    .file-upload-icon:hover {
+        opacity: 0.8;
     }
-
-    .chat-message p {
-      margin: 0 0 12px 0;
-    }
-    .chat-message p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* --- Inline Generated Code Blocks --- */
-    .chat-code-block {
-      background: var(--code-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 0;
-      margin-top: 15px;
-      overflow: hidden;
-      font-family: monospace;
-    }
-
-    .chat-code-header {
-      background: rgba(10, 10, 10, 0.8);
-      padding: 10px 18px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
-    }
-
-    .chat-copy-btn {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-muted);
-      padding: 5px 12px;
-      font-size: 0.8rem;
-      border-radius: 0;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .chat-copy-btn:hover {
-      border-color: var(--accent-color);
-      color: var(--text-main);
-    }
-
-    .chat-code-content {
-      padding: 20px;
-      margin: 0;
-      overflow-x: auto;
-      font-size: 0.9rem;
-      line-height: 1.55;
-      white-space: pre;
-      text-align: left;
-    }
-
-    /* Floating input tray at bottom */
-    .chat-input-wrapper {
-      background: linear-gradient(180deg, transparent, rgba(12, 12, 12, 0.95) 30%);
-      padding: 30px 20px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .chat-input-area {
-      max-width: 850px;
-      margin: 0 auto;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      background: rgba(20, 20, 20, 0.85);
-      border: 1px solid var(--border-color);
-      border-radius: 0;
-      padding: 10px 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      backdrop-filter: blur(8px);
-    }
-
-    .chat-textbox {
-      flex: 1;
-      background: transparent;
-      border: none;
-      padding: 10px 5px;
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 1rem;
-      resize: none;
-      outline: none;
-    }
-
     .send-btn {
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0;
+        background-color: #05ee93;
+        color: #181818;
+        border: none;
+        padding: 8px 16px;
+        font-family: 'mcfontb', sans-serif;
+        border-radius: 0;
+        cursor: pointer;
+    }
+    .send-btn:hover {
+        opacity: 0.9;
+    }
+    h3 {
+        font-family: 'mcfontb', sans-serif;
     }
 
-    .send-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 85%;
+            max-width: 320px;
+        }
     }
-
-    .send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Syntax Highlighting */
-    .sc-cmd { color: #e7007b; }
-    .sc-sel { color: #00ffcc; }
-    .sc-str { color: #f1c40f; }
-    .sc-num { color: #3498db; }
-    .sc-key { color: #9b59b6; }
-    .sc-comment { color: #5a5a5a; font-style: italic; }
-
-    /* Typing cursor */
-    .typing-cursor::after {
-      content: "█";
-      animation: blink 0.8s step-start infinite;
-      color: var(--accent-color);
-    }
-
-    /* --- Toast Notifications --- */
-    .toast-container {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .toast {
-      background: rgba(15, 15, 15, 0.9);
-      border-left: 3px solid var(--accent-color);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-      padding: 12px 20px;
-      border-radius: 0;
-      font-size: 0.9rem;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      animation: fadeIn 0.3s ease-out forwards;
-    }
-
-    /* Startup Loading Overlay */
-    #startup-loading {
-      position: fixed;
-      inset: 0;
-      background: #0c0c0c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999999;
-      opacity: 1;
-      transition: opacity 0.5s ease;
-    }
-
-    #startup-loading.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #startup-loading img {
-      width: 96px;
-      height: 96px;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    /* Custom Scrollbars to keep UI clean */
-    .chat-history-container::-webkit-scrollbar {
-      width: 6px;
-    }
-    .chat-history-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .chat-history-container::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 0;
-    }
-    .chat-history-container::-webkit-scrollbar-thumb:hover {
-      background: var(--accent-color);
-    }
-
-    .chat-message strong,
-    .chat-message b {
-      font-family: "mcfontb", sans-serif;
-      font-weight: normal;
-}
   </style>
 </head>
 <body>
 
-  <!-- Startup Loading Screen -->
-  <div id="startup-loading">
-    <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="Loading" onerror="this.src='https://mcbcode.com/theme/favicon.png'">
-  </div>
+<img id="bgImage" class="bg-image" alt="Background">
+<div class="bg-overlay"></div>
 
-  <!-- Navigation Bar -->
-  <div class="navi">
-    <div class="navi-brand">
-      <a href="#">
-        <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="DripstoneAI Logo" class="navi-logo" onerror="this.style.display='none'">
-        <h2><span style="color: #fff; font-family: 'mcfontb', sans-serif;">Dripstone</span><g>AI</g></h2>
-      </a>
-    </div>
-    <div class="quick-links">
-      <a href="https://github.com/xyztoast/mcbCode" target="_blank">Source Code</a>
-      <a href="https://mcbcode.com/account" target="_blank">Account</a>
-      <div class="dropdown-btn" id="dd"></div>
-      <div class="dropdown">
-        <div class="dropdown-content">
-          <a href="#">AI Terminals</a>
-          <a href="#">Custom Models</a>
-          <a href="#">API Settings</a>
-          <a href="#">Modding Documentation</a>
-        </div>
-      </div>
-    </div>
-  </div>
+<button class="toggle-btn" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
-  <!-- Interactive Fullscreen AI Workspace Interface -->
-  <div class="workspace-wrapper">
-    <div class="chat-history-container" id="chatHistoryContainer">
-      <div class="chat-history" id="chatHistory">
-        <!-- Welcoming Assistant message -->
-        <div class="chat-message assistant">
-          <p>Greetings! I am <span style="font-family: 'mcfontb', sans-serif;">DripstoneAI</span>, your integrated Bedrock assistant. Tell me what mod elements, manifests, or mcfunction loops you need generated.</p>
-          <p style="font-size: 0.95rem; color: var(--text-muted);">Type your requirements in the input console below. Example prompt: <span style="color: var(--accent-color);">"Generate diamond sword"</span> or <span style="color: var(--accent-color);">"Make a lightning spell"</span>.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Floating Bottom Bar -->
-    <div class="chat-input-wrapper">
-      <div class="chat-input-area">
-        <textarea class="chat-textbox" id="userInput" rows="1" placeholder="Describe what you want to build in Minecraft Bedrock..."></textarea>
-        <button class="send-btn accent-btn" id="sendBtn" onclick="handleUserMessage()">
-          <svg viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
-
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- Scripts -->
-  <script>
-    // The worker endpoint DripstoneAI is served from
-    const DRIPSTONE_API_URL = "https://dripstone-ai.mcbcode.com";
-
-    // Holds the full back-and-forth so the worker/model has context.
-    // Format matches what OpenRouter/OpenAI expects: [{role, content}, ...]
-    const conversationHistory = [];
-
-    // --- Navigation Dropdown logic ---
-    const dropdownBtn = document.getElementById('dd');
-    const dropdownMenu = document.querySelector('.dropdown');
-
-    dropdownBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdownBtn.classList.toggle('active');
-      dropdownMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
-        dropdownBtn.classList.remove('active');
-        dropdownMenu.classList.remove('active');
-      }
-    });
-
-    // --- Loading overlay animation ---
-    window.addEventListener('load', () => {
-      const loading = document.getElementById("startup-loading");
-      setTimeout(() => {
-        loading.classList.add("fade-out");
-        setTimeout(() => loading.remove(), 500);
-      }, 750);
-    });
-
-    // --- Custom UI Toast system ---
-    function showToast(message) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = message;
-      container.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    // --- Copy Helper ---
-    function copyMessageCode(button) {
-      const codeBlock = button.closest('.chat-code-block');
-      const codeContent = codeBlock.querySelector('.chat-code-content');
-      
-      const tempElement = document.createElement('textarea');
-      tempElement.value = codeContent.textContent || codeContent.innerText || "";
-      
-      document.body.appendChild(tempElement);
-      tempElement.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempElement);
-      
-      showToast("Copied code to clipboard!");
-    }
-
-    // --- Special Code Block Parser Engine (@@@ to /@@@) ---
-    function parseCustomCodeBlocks(text) {
-      // Regex to find @@@ [optional filename] \n [code block] \n /@@@
-      const regex = /@@@([\s\S]*?)\/@@@/g;
-      
-      return text.replace(regex, (match, blockContent) => {
-        const lines = blockContent.trim().split('\n');
-        let filename = "generate.mcfunction";
-        let codeLines = [];
-        
-        if (lines.length > 0) {
-          const firstLine = lines[0].trim();
-          // Check if first line resembles a filename (e.g. contains an extension without spaces)
-          if (firstLine.includes('.') && !firstLine.includes(' ')) {
-            filename = firstLine;
-            codeLines = lines.slice(1);
-          } else {
-            codeLines = lines;
-          }
-        }
-        
-        const codeString = codeLines.join('\n');
-        const highlightedCode = highlightMinecraftSyntax(codeString, filename);
-
-        return `
-          <div class="chat-code-block">
-            <div class="chat-code-header">
-              <span style="font-family: 'mcfont', sans-serif;">${filename}</span>
-              <button class="chat-copy-btn" onclick="copyMessageCode(this)">Copy Code</button>
+<div class="main-container" id="mainContainer">
+    <div class="hero-title" id="heroTitle">what are we building?</div>
+    
+    <div class="chat-box-wrapper" id="chatBoxWrapper">
+        <div class="selected-files-container" id="selectedFilesContainer"></div>
+        <textarea class="chat-textarea" placeholder="Ask DripstoneAI anything... (Shift+Enter for new line)" id="autoGrowInput"></textarea>
+        <div class="chat-controls">
+            <div class="extra-tools">
+                <label for="fileInput" title="Attach file">
+                    <img src="https://mcbcode.com/img/icons/file.png" class="file-upload-icon" alt="Attach file">
+                </label>
+                <input type="file" id="fileInput" style="display: none;" multiple onchange="handleFileSelect(event)">
             </div>
-            <pre class="chat-code-content">${highlightedCode}</pre>
-          </div>
-        `;
-      });
+            <button class="send-btn" id="sendBtn">Send</button>
+        </div>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://mcbcode.com/img/icons/default-transparent.png" style="height: 18px;">
+                <h3 style="margin: 0;">DripstoneAI</h3>
+            </div>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+        <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: #05ee93;">Code</span></p>
+    </div>
+    
+    <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #333; padding-top: 12px;">
+        Session: Active
+    </div>
+</div>
+
+<script>
+    // Background renderer
+    (function() {
+        const bgImages = [
+            'https://mcbcode.com/img/mc/nether_forest.png',
+            'https://mcbcode.com/img/mc/end_city_one.png',
+            'https://mcbcode.com/img/mc/end_city_two.png'
+        ];
+        const randomBg = bgImages[Math.floor(Math.random() * bgImages.length)];
+        const imgElement = document.getElementById('bgImage');
+        if (imgElement) imgElement.src = randomBg;
+    })();
+
+    let attachedFiles = [];
+    const textarea = document.getElementById('autoGrowInput');
+    const mainContainer = document.getElementById('mainContainer');
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('hidden');
+        document.body.classList.toggle('sidebar-hidden', sidebar.classList.contains('hidden'));
     }
 
-    // Highlighting parser
-    function highlightMinecraftSyntax(code, filename) {
-      // Simple custom Minecraft coloring dictionary
-      if (filename.endsWith('.json')) {
-        return code
-          .replace(/"([^"]+)":/g, '<span class="sc-key">"$1"</span>:')
-          .replace(/: ("[^"]+")/g, ': <span class="sc-str">$1</span>')
-          .replace(/: (\d+)/g, ': <span class="sc-num">$1</span>');
-      } else {
-        return code
-          .replace(/(#[^\n]*)/g, '<span class="sc-comment">$1</span>')
-          .replace(/(execute|summon|particle|playsound|give|tellraw|effect|run)/g, '<span class="sc-cmd">$1</span>')
-          .replace(/(@a|@s|@p|@e|@r)/g, '<span class="sc-sel">$1</span>')
-          .replace(/(\s\d+)/g, '<span class="sc-num">$1</span>');
-      }
-    }
-
-    // Handling input height resizing & Enter keys
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-
-    userInput.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-    });
-
-    userInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleUserMessage();
-      }
-    });
-
-    async function handleUserMessage() {
-      const query = userInput.value.trim();
-      if (!query) return;
-
-      const chatHistory = document.getElementById('chatHistory');
-      const chatHistoryContainer = document.getElementById('chatHistoryContainer');
-
-      // User Message
-      const userMessageDiv = document.createElement('div');
-      userMessageDiv.className = 'chat-message user';
-      userMessageDiv.innerHTML = `<p>${escapeHTML(query)}</p>`;
-      chatHistory.appendChild(userMessageDiv);
-
-      // Track in conversation history sent to the worker
-      conversationHistory.push({ role: "user", content: query });
-
-      // Reset Textbox
-      userInput.value = '';
-      userInput.style.height = 'auto';
-      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
-
-      // Thinking State placeholder
-      const loaderDiv = document.createElement('div');
-      loaderDiv.className = 'chat-message assistant';
-      loaderDiv.innerHTML = `<p><span class="typing-cursor">DripstoneAI is drafting code</span></p>`;
-      chatHistory.appendChild(loaderDiv);
-      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
-
-      // Disable send while waiting so people can't double-fire requests
-      sendBtn.disabled = true;
-
-      try {
-        const response = await fetch(DRIPSTONE_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: conversationHistory }),
-        });
-
-        const data = await response.json();
-
-        loaderDiv.remove();
-
-        if (!response.ok) {
-          showToast("DripstoneAI ran into an error. Try again.");
-          console.error("Worker error:", data);
-          sendBtn.disabled = false;
-          return;
+    // Strict auto-resize: only expands when scrollHeight exceeds a single 24px line
+    function autoGrow() {
+        textarea.style.height = '24px';
+        const scrollH = textarea.scrollHeight;
+        
+        if (scrollH > 24) {
+            textarea.style.height = scrollH + 'px';
+            textarea.style.overflowY = 'auto';
+        } else {
+            textarea.style.height = '24px';
+            textarea.style.overflowY = 'hidden';
         }
-
-        const replyText = data.reply || "(no response received)";
-
-        // Keep it in history so future messages have context
-        conversationHistory.push({ role: "assistant", content: replyText });
-
-        // Parse custom code strings inside the AI response, then wrap
-        // markdown lines in <p> tags so formatting matches the old UI.
-        const parsedReply = parseCustomCodeBlocks(replyText);
-
-        const compiledMessageHTML = marked.parse(parsedReply);
-
-        const aiMessageDiv = document.createElement('div');
-        aiMessageDiv.className = 'chat-message assistant';
-        aiMessageDiv.innerHTML = compiledMessageHTML;
-        chatHistory.appendChild(aiMessageDiv);
-
-        chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
-      } catch (err) {
-        loaderDiv.remove();
-        showToast("Couldn't reach DripstoneAI. Check your connection.");
-        console.error(err);
-      } finally {
-        sendBtn.disabled = false;
-      }
     }
 
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, 
-        tag => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          "'": '&#39;',
-          '"': '&quot;'
-        }[tag] || tag)
-      );
+    textarea.addEventListener('input', autoGrow);
+
+    // Keyboard handlers: Enter to send, Shift+Enter for new line
+    textarea.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+    function sendMessage() {
+        let text = textarea.value.trim();
+        if (!text && attachedFiles.length === 0) return;
+
+        // Slide down to the bottom of the page
+        mainContainer.classList.add('chat-active');
+
+        console.log("Sending message:", text);
+
+        // Reset input state, shrink back to single line, and clear text
+        textarea.value = '';
+        textarea.style.height = '24px';
+        textarea.style.overflowY = 'hidden';
+        attachedFiles = [];
+        renderFiles();
     }
-  </script>
+
+    // Handle File Selection
+    function handleFileSelect(event) {
+        const files = Array.from(event.target.files);
+        attachedFiles = [...attachedFiles, ...files];
+        renderFiles();
+        event.target.value = '';
+    }
+
+    // Remove specific file from array
+    function removeFile(index) {
+        attachedFiles.splice(index, 1);
+        renderFiles();
+    }
+
+    // Render selected files dynamically above textarea
+    function renderFiles() {
+        const container = document.getElementById('selectedFilesContainer');
+        container.innerHTML = '';
+        
+        attachedFiles.forEach((file, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'file-chip';
+            chip.innerHTML = `
+                <span>📄</span>
+                <span>${file.name}</span>
+                <span onclick="removeFile(${index})" title="Remove file">✕</span>
+            `;
+            container.appendChild(chip);
+        });
+    }
+
+    // Initialize layout state based on screen width
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.add('hidden');
+            document.body.classList.add('sidebar-hidden');
+        }
+    });
+</script>
+
 </body>
 </html>
