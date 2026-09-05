@@ -1,4 +1,4 @@
-    // ---- restore real url after 404.html spa redirect ----
+// ---- restore real url after 404.html spa redirect ----
     // this MUST run before shareCode/path parsing below
     (function restoreSpaPath() {
       const saved = sessionStorage.getItem("spa-redirect");
@@ -240,6 +240,11 @@ function hasPackIcon(folderId) {
       if (!shareCode) return showErr("No project ID in URL.");
       loadGuardrails();
       loadQtools();
+      // beginner-friendly loading text while we check login status and load the
+      // project, so the file panel never looks like it silently vanished
+      // (usability fix: save/UI controls can look like they disappeared while
+      // auth is being checked — now there's always a visible status)
+      document.getElementById("file-list").innerHTML = `<div class="loading-msg">checking your account...</div>`;
       try {
         const r = await fetch(`${AUTH}/me`, { credentials: "include" });
         if (r.ok) {
@@ -254,6 +259,7 @@ function hasPackIcon(folderId) {
         }
       } catch {}
       if (!window._editorMode) window._editorMode = "inline"; // default, also covers logged-out viewers
+      document.getElementById("file-list").innerHTML = `<div class="loading-msg">loading your project...</div>`;
       try {
         const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
         if (!r.ok) { const d = await r.json(); return showErr(d.error || "Not found."); }
@@ -306,6 +312,7 @@ function hasPackIcon(folderId) {
         document.getElementById("set-desc").value = project.description || "";
         currentTags = Array.isArray(project.tags) ? project.tags.slice(0, 10) : [];
         renderTags();
+        renderVisibilityExplainer();
         loadCollaborators();
         initObsidianFeatures();
       }
@@ -348,6 +355,21 @@ function renderContributors() {
   document.getElementById("m-collaborators").innerHTML =
     collabs.length ? `, ${collabHTML}` : "";
 }
+
+    // beginner-friendly, plain-language explanation of the current visibility
+    // setting — the toggle itself lives further down in "Advanced", but people
+    // should be able to tell what "public" vs "private" means right away.
+    // (usability fix: default visibility is easy to miss / not explained)
+    function renderVisibilityExplainer() {
+      const el = document.getElementById("visibility-explainer-text");
+      if (!el) return;
+      const isPublic = project.is_public === 1 || project.is_public === true;
+      if (isPublic) {
+        el.innerHTML = `<b style="color:#05ee93;">Public</b> — anyone with the link can view this project. this is the default for new projects. want to make it private instead? that's an Obsidian feature further down this page.`;
+      } else {
+        el.innerHTML = `<b style="color:#ff9900;">Private</b> — only you and your collaborators can view this project.`;
+      }
+    }
 
     async function copyProjectLink() {
       const url = `https://mcbcode.com/project/${project.share_code}/`;
@@ -1239,14 +1261,22 @@ function renderFileList() {
     .sort((a, b) => { if (a.type !== b.type) return a.type === "folder" ? -1 : 1; return a.name.localeCompare(b.name); });
 
   // beginner hint at the project root explaining BP/RP structure, plus
-  // quick-create shortcuts, if those folders don't exist yet
+  // quick-create shortcuts, if those folders don't exist yet. once both
+  // folders exist, swap this out for a "what's next" nudge instead, so
+  // beginners always have an answer to "ok, now what do i do?"
+  // (usability fixes: unexplained BP/RP abbreviations, unclear project
+  // structure, and new projects with no obvious next step)
   if (isAtRoot()) {
     const hasBP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "BP");
     const hasRP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "RP");
+    const hint = document.createElement("div");
+    hint.className = "root-hint";
+
     if (!hasBP || !hasRP) {
-      const hint = document.createElement("div");
-      hint.className = "root-hint";
-      hint.innerHTML = `most addons are made of a <b>BP</b> (Behavior Pack) folder and an <b>RP</b> (Resource Pack) folder at the root. ${canEdit() ? "create whichever ones you're missing:" : ""}`;
+      hint.innerHTML = `
+        <div style="margin-bottom:6px;"><b>Behavior Pack (BP)</b> — the gameplay code/behavior for your addon.</div>
+        <div style="margin-bottom:6px;"><b>Resource Pack (RP)</b> — the textures, models, and sounds for your addon.</div>
+        most addons need both, sitting at the root of your project. ${canEdit() ? "create whichever ones you're missing:" : ""}`;
       if (canEdit()) {
         const actions = document.createElement("div");
         actions.className = "hint-actions";
@@ -1264,8 +1294,18 @@ function renderFileList() {
         }
         hint.appendChild(actions);
       }
-      list.appendChild(hint);
+    } else {
+      // both folders exist — this is the "your addon is ready, what now?" moment.
+      // count real files (not folders) anywhere in the project to guess whether
+      // this looks like a brand-new, still-empty project.
+      const totalFiles = allFiles.filter(f => f.type === "file").length;
+      if (totalFiles === 0 && canEdit()) {
+        hint.innerHTML = `<b>your addon is ready.</b> mcbcode set up a <b>BP</b> (Behavior Pack) and <b>RP</b> (Resource Pack) for you — you don't need to understand every folder inside them yet. <b>next:</b> open the BP or RP folder and create your first file, or use the create button above to make a block or item.`;
+      } else {
+        return; // normal case, no hint needed once the project has real content
+      }
     }
+    list.appendChild(hint);
   }
 
   if (currentPath.length > 0) {
@@ -1278,7 +1318,7 @@ function renderFileList() {
   const showGhostIcon = currentFolderIsPackRoot() && !hasPackIcon(currentFolderId());
 
   if (children.length === 0 && !showGhostIcon) {
-    list.innerHTML += `<div class="file-list-empty">${canEdit() ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the buttons above to add files.') : 'Nothing here.'}</div>`;
+    list.innerHTML += `<div class="file-list-empty">${canEdit() ? (isAtRoot() ? 'No folders yet. Add one above.' : 'Empty. Use the "+ Add Files" button above to create your first file here.') : 'Nothing here.'}</div>`;
     return;
   }
 
@@ -1782,7 +1822,7 @@ async function toggleWatch() {
     async function startExport() {
       if (!isLoggedIn()) return;
       const btn = document.getElementById("export-btn");
-      btn.disabled = true; btn.textContent = "Loading...";
+      btn.disabled = true; btn.textContent = "Checking files...";
       try {
         const res = await fetch(`${AUTH}/project/export?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
         if (!res.ok) { alert("Failed to fetch project data."); return; }
@@ -1808,7 +1848,10 @@ async function toggleWatch() {
     async function doExport() {
       closeModal("export-warn-overlay");
       const btn = document.getElementById("export-btn");
-      btn.disabled = true; btn.textContent = "Zipping...";
+      // beginner-friendly staged status text instead of a single unexplained
+      // "Loading..." — lets people see what export is actually doing
+      // (usability fix: unexplained export loading state)
+      btn.disabled = true; btn.textContent = "Packing BP/RP...";
       try {
         const files = exportFileData.files;
         const projectName = exportFileData.project_name.replace(/[^a-zA-Z0-9_\- ]/g, "").trim() || "project";
@@ -1846,6 +1889,7 @@ async function toggleWatch() {
             files.filter(f => f.type === "file" && isUnderFolder(f, packFolder.id))
                  .forEach(f => addFileToZip(addon, `${packFolder.name}/${getRelativeParts(f, packFolder.id).join("/")}`, f));
           }
+          btn.textContent = "Building .mcaddon...";
           triggerDownload(await addon.generateAsync({ type: "blob" }), `${projectName}.mcaddon`);
         } else {
           const zip = new JSZip();
@@ -1856,6 +1900,7 @@ async function toggleWatch() {
             files.filter(f => f.type === "file" && isUnderFolder(f, onlyPack.id))
                  .forEach(f => addFileToZip(zip, getRelativeParts(f, onlyPack.id).join("/"), f));
           }
+          btn.textContent = "Building .mcpack...";
           triggerDownload(await zip.generateAsync({ type: "blob" }), `${projectName}.mcpack`);
         }
       } catch(e) { alert("Export failed: " + e.message); }
@@ -1911,6 +1956,7 @@ async function toggleWatch() {
           const badge = document.getElementById("proj-badge");
           badge.textContent = wantPublic ? "public" : "private";
           badge.classList.toggle("public", wantPublic);
+          renderVisibilityExplainer();
           msg.textContent = "saved!"; msg.className = "inline-msg ok";
         } else {
           checkbox.checked = !checkbox.checked; // revert the toggle visually
@@ -2639,14 +2685,14 @@ async function performTextureReplace(targetPath, sourceFile) {
 
     const TUT_STEPS = [
       null,
-      { text: "This is your project's file tree. Create a file or folder to continue.",
+      { text: "This is your project's file tree — it already has a BP (Behavior Pack) and RP (Resource Pack) folder set up for you. Create a file or folder to continue.",
         target: () => unionRect(document.querySelector(".proj-header-actions"), document.querySelector(".file-panel")) },
       { text: "Click files here to open them.",
         target: () => document.querySelector(`.file-row[data-file-id="${tutorialCreatedId}"]`) || document.querySelector(".file-row") },
       { text: "This is where you'll write your file.", target: () => document.querySelector(".inline-editor") },
       { text: "Save stores your changes to your project.", target: () => document.querySelector(".ie-toolbar-actions .export-highlight") },
       { text: "Close the editor when you're done with it.", target: () => document.getElementById("ie-close-btn") },
-      { text: "Project Settings lets you manage collaborators, tags, and danger-zone actions.", target: () => document.getElementById("tab-settings-btn") },
+      { text: "Project Settings lets you manage collaborators, tags, visibility, and danger-zone actions. Advanced stuff like GitHub sync lives here too, but you don't need it to get started.", target: () => document.getElementById("tab-settings-btn") },
     ];
 
     // combines two elements' bounding boxes into one rect, so a highlight
@@ -2841,17 +2887,23 @@ function renderManifestVisual() {
 
   const dis = mfCanEdit ? "" : "disabled";
   let html = `
+    <div style="font-size:11px; color:#888; margin:-4px 0 16px; line-height:1.5;">
+      manifest.json is what tells minecraft this is a pack, and what's inside it. mcbcode fills in the technical bits (like uuids) for you — you mainly just need the name and description below.
+    </div>
     <div class="creator-section-label" style="margin-top:0;">Basic Info</div>
     <div class="set-field">
       <label>Pack Name</label>
+      <div style="font-size:11px; color:#777; margin-bottom:4px;">shows up as the name of your pack in minecraft's pack list.</div>
       <input type="text" id="mf-name" value="${esc(mfObj.header.name || "")}" ${dis}>
     </div>
     <div class="set-field">
       <label>Description</label>
+      <div style="font-size:11px; color:#777; margin-bottom:4px;">a short blurb minecraft shows under the pack name.</div>
       <textarea id="mf-desc" rows="2" ${dis}>${esc(mfObj.header.description || "")}</textarea>
     </div>
 
     <div class="creator-section-label">UUIDs</div>
+    <div style="font-size:11px; color:#777; margin-bottom:10px;">a UUID is just a unique id minecraft uses to tell packs apart. mcbcode already generated these for you — you almost never need to touch them.</div>
     <div class="set-field">
       <label>Pack UUID</label>
       <div style="font-size:11px; color:#777; margin-bottom:4px;">identifies this whole pack to minecraft. changing it makes minecraft treat it as a brand new pack — any world already using it will break unless you update the world too.</div>
@@ -2885,11 +2937,12 @@ function renderManifestVisual() {
       </div>`;
     });
   } else {
-    html += `<div style="font-size:12px; color:#555; margin-bottom:8px;">no subpacks yet. these let players pick between variants of your pack (like "low" / "high" quality).</div>`;
+    html += `<div style="font-size:12px; color:#555; margin-bottom:8px;">no subpacks yet. these let players pick between variants of your pack (like "low" / "high" quality). you don't need these to make a normal addon.</div>`;
   }
   if (mfCanEdit) html += `<button class="sm-btn" onclick="mfAddSubpack()">+ Add Subpack</button>`;
 
-  html += `<div class="creator-section-label">Compatibility</div>`;
+  html += `<div class="creator-section-label">Compatibility (Dependencies)</div>`;
+  html += `<div style="font-size:11px; color:#777; margin-bottom:10px;">a dependency tells minecraft "this pack needs that other pack's UUID to work." most beginner addons don't need any.</div>`;
   if (Array.isArray(mfObj.dependencies) && mfObj.dependencies.length) {
     mfObj.dependencies.forEach((dep, i) => {
       html += `
