@@ -1301,11 +1301,14 @@ function renderFileList() {
       const totalFiles = allFiles.filter(f => f.type === "file").length;
       if (totalFiles === 0 && canEdit()) {
         hint.innerHTML = `<b>your addon is ready.</b> mcbcode set up a <b>BP</b> (Behavior Pack) and <b>RP</b> (Resource Pack) for you — you don't need to understand every folder inside them yet. <b>next:</b> open the BP or RP folder and create your first file, or use the create button above to make a block or item.`;
-      } else {
-        return; // normal case, no hint needed once the project has real content
+        list.appendChild(hint);
       }
+      // else: project already has real content, no hint needed — fall through
+      // and keep rendering the actual file list below (this used to `return`
+      // early here by mistake, which hid every file/folder — fixed)
+    } else {
+      list.appendChild(hint);
     }
-    list.appendChild(hint);
   }
 
   if (currentPath.length > 0) {
