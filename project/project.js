@@ -1272,6 +1272,7 @@ function renderFileList() {
     const hint = document.createElement("div");
     hint.className = "root-hint";
 
+    let showHint = true;
     if (!hasBP || !hasRP) {
       hint.innerHTML = `
         <div style="margin-bottom:6px;"><b>Behavior Pack (BP)</b> — the gameplay code/behavior for your addon.</div>
@@ -1297,18 +1298,17 @@ function renderFileList() {
     } else {
       // both folders exist — this is the "your addon is ready, what now?" moment.
       // count real files (not folders) anywhere in the project to guess whether
-      // this looks like a brand-new, still-empty project.
+      // this looks like a brand-new, still-empty project. if the project already
+      // has real content, skip the hint entirely (but keep rendering the file
+      // list below no matter what — that's the part that was broken before).
       const totalFiles = allFiles.filter(f => f.type === "file").length;
       if (totalFiles === 0 && canEdit()) {
         hint.innerHTML = `<b>your addon is ready.</b> mcbcode set up a <b>BP</b> (Behavior Pack) and <b>RP</b> (Resource Pack) for you — you don't need to understand every folder inside them yet. <b>next:</b> open the BP or RP folder and create your first file, or use the create button above to make a block or item.`;
-        list.appendChild(hint);
+      } else {
+        showHint = false;
       }
-      // else: project already has real content, no hint needed — fall through
-      // and keep rendering the actual file list below (this used to `return`
-      // early here by mistake, which hid every file/folder — fixed)
-    } else {
-      list.appendChild(hint);
     }
+    if (showHint) list.appendChild(hint);
   }
 
   if (currentPath.length > 0) {
