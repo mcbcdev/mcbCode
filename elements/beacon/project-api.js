@@ -60,7 +60,8 @@ const BeaconProject = {
     const byId = {};
     this.allFiles.forEach(f => byId[f.id] = f);
     const rp = this.allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === "RP");
-    if (!rp) return [];
+    const bp = this.allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === "BP");
+    if (!rp || !bp) return [];
 
     const isUnder = (f, ancestorId) => {
       let cur = f;
@@ -73,7 +74,7 @@ const BeaconProject = {
     };
 
     const pngs = this.allFiles.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".png") && isUnder(f, rp.id));
-    const blockJsons = this.allFiles.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".json") && isUnder(f, rp.id));
+    const blockJsons = this.allFiles.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".json") && isUnder(f, bp.id));
 
     // quick lookup: png "short name" (filename without extension) -> png file
     const pngByShortName = {};
