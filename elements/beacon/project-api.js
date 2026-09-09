@@ -52,7 +52,11 @@ const BeaconProject = {
   // (case-insensitive) — used to populate the custom block texture picker.
   // also picks up any *.json under a "blocks" folder, matching name -> texture
   // when the json has a "texture" or "textures.up"/"textures.all" field.
-  findCustomBlocks() {
+  // recursively finds every block json under any root folder literally named RP
+  // (case-insensitive), reads each one to get its REAL identifier and the
+  // texture short-name it references, then matches that to the matching png
+  // (also under RP) to build the custom block picker.
+  async findCustomBlocks() {
     const byId = {};
     this.allFiles.forEach(f => byId[f.id] = f);
     const rp = this.allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === "RP");
@@ -71,19 +75,55 @@ const BeaconProject = {
     const pngs = this.allFiles.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".png") && isUnder(f, rp.id));
     const blockJsons = this.allFiles.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".json") && isUnder(f, rp.id));
 
-    // naive namespace guess: use the project's manifest header name if we can
-    // find one, else fall back to a generic "custom" namespace.
-    const namespace = "custom";
-
-    return pngs.map(png => {
-      const baseName = png.name.replace(/\.png$/i, "");
-      return {
-        identifier: `${namespace}:${baseName}`,
-        displayName: baseName,
-        fileId: png.id,
-        textureUrl: `${AUTH}/project/asset?file_id=${png.id}`
-      };
+    // quick lookup: png "short name" (filename without extension) -> png file
+    const pngByShortName = {};
+    pngs.forEach(png => {
+      const shortName = png.name.replace(/\.png$/i, "").toLowerCase();
+      pngByShortName[shortName] = png;
     });
+
+    const results = [];
+
+    for (const jsonFile of blockJsons) {
+      try {
+        const res = await fetch(`${AUTH}/project/asset?file_id=${jsonFile.id}&_=${Date.now()}`, { credentials: "include", cache: "no-store" });
+        if (!res.ok) continue;
+        const text = await res.text();
+        const data = JSON.parse(text);
+
+        const block = data["minecraft:block"];
+        if (!block) continue; // not a block json (could be some other json under RP)
+
+        const identifier = block.description && block.description.identifier;
+        if (!identifier) continue;
+
+        // grab the texture reference out of material_instances (usually under "*")
+        const mats = block.components && block.components["minecraft:material_instances"];
+        let textureRef = null;
+        if (mats) {
+          const firstKey = Object.keys(mats)[0];
+          if (firstKey) textureRef = mats[firstKey].texture;
+        }
+        if (!textureRef) continue;
+
+        // textureRef looks like "pa:ceiling_tile_two" - we only need the part after the colon
+        const textureShortName = textureRef.includes(":") ? textureRef.split(":")[1] : textureRef;
+        const png = pngByShortName[textureShortName.toLowerCase()];
+        if (!png) continue; // no matching texture found, skip it
+
+        results.push({
+          identifier: identifier,
+          displayName: identifier.includes(":") ? identifier.split(":")[1] : identifier,
+          fileId: png.id,
+          textureUrl: `${AUTH}/project/asset?file_id=${png.id}`
+        });
+      } catch {
+        // bad/unreadable json, just skip that one instead of breaking the whole picker
+        continue;
+      }
+    }
+
+    return results;
   },
 
   // fetches the raw bytes of the current file (mcstructure binary, or geo.json text).
