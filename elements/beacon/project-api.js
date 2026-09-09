@@ -86,10 +86,11 @@ const BeaconProject = {
 
     for (const jsonFile of blockJsons) {
       try {
-        const res = await fetch(`${AUTH}/project/asset?file_id=${jsonFile.id}&_=${Date.now()}`, { credentials: "include", cache: "no-store" });
+        if (!jsonFile.save_id) continue; // json file with no content saved yet, skip
+        const res = await fetch(`${AUTH}/save?id=${jsonFile.save_id}&_=${Date.now()}`, { credentials: "include", cache: "no-store" });
         if (!res.ok) continue;
-        const text = await res.text();
-        const data = JSON.parse(text);
+        const saveData = await res.json();
+        const data = JSON.parse(saveData.content);
 
         const block = data["minecraft:block"];
         if (!block) continue; // not a block json (could be some other json under RP)
