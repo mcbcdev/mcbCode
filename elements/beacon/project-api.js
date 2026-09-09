@@ -83,6 +83,7 @@ const BeaconProject = {
     });
 
     const results = [];
+    console.log("[findCustomBlocks] found", blockJsons.length, "json files under RP:", blockJsons.map(f => f.name));
 
     for (const jsonFile of blockJsons) {
       try {
@@ -93,10 +94,10 @@ const BeaconProject = {
         const data = JSON.parse(saveData.content);
 
         const block = data["minecraft:block"];
-        if (!block) continue; // not a block json (could be some other json under RP)
+        if (!block) { console.log("[findCustomBlocks] skipped", jsonFile.name, "- no minecraft:block key"); continue; }
 
         const identifier = block.description && block.description.identifier;
-        if (!identifier) continue;
+        if (!identifier) { console.log("[findCustomBlocks] skipped", jsonFile.name, "- no identifier"); continue; }
 
         // grab the texture reference out of material_instances (usually under "*")
         const mats = block.components && block.components["minecraft:material_instances"];
@@ -105,13 +106,16 @@ const BeaconProject = {
           const firstKey = Object.keys(mats)[0];
           if (firstKey) textureRef = mats[firstKey].texture;
         }
-        if (!textureRef) continue;
+        if (!textureRef) { console.log("[findCustomBlocks] skipped", jsonFile.name, "- no textureRef, mats was", mats); continue; }
 
         // textureRef looks like "pa:ceiling_tile_two" - we only need the part after the colon
         const textureShortName = textureRef.includes(":") ? textureRef.split(":")[1] : textureRef;
         const png = pngByShortName[textureShortName.toLowerCase()];
-        if (!png) continue; // no matching texture found, skip it
+        if (!png) { console.log("[findCustomBlocks] skipped", jsonFile.name, "- textureShortName", textureShortName, "not found in pngByShortName", Object.keys(pngByShortName)); continue; }
 
+        console.log("[findCustomBlocks] matched", identifier);
+
+        
         results.push({
           identifier: identifier,
           displayName: identifier.includes(":") ? identifier.split(":")[1] : identifier,
