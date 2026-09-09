@@ -36,9 +36,9 @@ and because one feature was never enough, more are being added over time.
 
 ## links
 
-* **official site:** [mcbcode.com](https://mcbcode.com)
-* **more about mcbCode:** [mcbcode.com/about](https://mcbcode.com/about)
-* **android app** (beta) [mcbcode.com/download](https://mcbcode.com/download)
+* **official site:** [mcbcode](https://mcbcode.com)
+* **more about mcbCode:** [mcbcode/about](https://mcbcode.com/about)
+* **android app** (beta) [mcbcode/download](https://mcbcode.com/download)
 * **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
 * **feedback site** [feedback.mcbcode](https://mcbcode.com)
 * **bedrock ide** [studio.mcbcode](https://studio.mcbcode.com)
