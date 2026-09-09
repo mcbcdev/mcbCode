@@ -40,7 +40,7 @@ and because one feature was never enough, more are being added over time.
 * **more about mcbCode:** [mcbcode/about](https://mcbcode.com/about)
 * **android app** (beta) [mcbcode/download](https://mcbcode.com/download)
 * **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
-* **feedback site** [feedback.mcbcode](https://mcbcode.com)
+* **feedback site** [feedback.mcbcode](https://feedback.mcbcode.com)
 * **bedrock ide** [studio.mcbcode](https://studio.mcbcode.com)
 
 ## getting started
