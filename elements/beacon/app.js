@@ -34,7 +34,12 @@ async function boot() {
   }
 
   mode = window.BeaconProject.mode;
-  const customBlocks = await BeaconProject.findCustomBlocks();
+  let customBlocks = [];
+try {
+  customBlocks = await BeaconProject.findCustomBlocks();
+} catch (e) {
+  console.error("findCustomBlocks failed:", e);
+}
 
   $(".beacon-crumb").innerHTML =
     `<a href="https://mcbcode.com/project/${window.BeaconProject.shareCode}">${escHtml(window.BeaconProject.project.name)}</a> <span style="color:#3a3a3e;">/</span> <b>beacon</b>`;
