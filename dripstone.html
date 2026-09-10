@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>mcbCode | Dripstone</title>
-  
+
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
-  
+
   <style>
     body {
         margin: 0;
@@ -94,7 +94,7 @@
         cursor: pointer;
         align-self: flex-end;
     }
-    
+
     .main-container {
         width: 100%;
         height: 100%;
@@ -127,7 +127,6 @@
         color: #05ee93;
     }
 
-    /* When active, transition the chat box wrapper to the bottom, anchoring its bottom edge so it expands upwards */
     .main-container.chat-active .hero-title {
         opacity: 0;
         transform: translateY(-20px);
@@ -150,6 +149,51 @@
     .main-container.chat-active .chat-box-wrapper {
         position: absolute;
         bottom: 20px;
+    }
+
+    /* the actual conversation log. hidden until there's at least one message */
+    .chat-messages {
+        display: none;
+        flex-direction: column;
+        gap: 14px;
+        max-height: 55vh;
+        overflow-y: auto;
+        margin-bottom: 12px;
+        padding-right: 4px;
+    }
+    .chat-messages.has-messages {
+        display: flex;
+    }
+
+    /* user messages: a bubble, right aligned, matches the sidebar accent */
+    .msg-user {
+        align-self: flex-end;
+        max-width: 85%;
+        background-color: #181818;
+        border: 1px solid #05ee93;
+        color: #ffffff;
+        padding: 8px 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: 'mcfont', sans-serif;
+    }
+
+    /* ai messages: just text, no bubble, left aligned */
+    .msg-ai {
+        align-self: flex-start;
+        max-width: 100%;
+        color: #dddddd;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: 'mcfont', sans-serif;
+        line-height: 1.5;
+    }
+    .msg-ai.pending {
+        color: #888888;
+        font-style: italic;
+    }
+    .msg-ai.error-msg {
+        color: #ff6b6b;
     }
 
     .selected-files-container {
@@ -175,8 +219,7 @@
         color: #05ee93;
         font-family: 'mcfontb', sans-serif;
     }
-    
-    /* Textarea with strict zero padding to prevent premature scrollHeight triggers */
+
     .chat-textarea {
         width: 100%;
         background: transparent;
@@ -194,6 +237,24 @@
         margin: 0;
         box-sizing: border-box;
         overflow-y: hidden;
+    }
+    .chat-textarea:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .login-notice {
+        display: none;
+        color: #ff9900;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    .login-notice a {
+        color: #05ee93;
+    }
+    .login-notice.show {
+        display: block;
     }
 
     .chat-controls {
@@ -231,6 +292,10 @@
     .send-btn:hover {
         opacity: 0.9;
     }
+    .send-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
     h3 {
         font-family: 'mcfontb', sans-serif;
     }
@@ -252,8 +317,14 @@
 
 <div class="main-container" id="mainContainer">
     <div class="hero-title" id="heroTitle">what are we building?</div>
-    
+
     <div class="chat-box-wrapper" id="chatBoxWrapper">
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="login-notice" id="loginNotice">
+            you need to be logged in to use DripstoneAI. <a href="https://mcbcode.com/account">log in here</a>
+        </div>
+
         <div class="selected-files-container" id="selectedFilesContainer"></div>
         <textarea class="chat-textarea" placeholder="Ask DripstoneAI anything... (Shift+Enter for new line)" id="autoGrowInput"></textarea>
         <div class="chat-controls">
@@ -279,14 +350,14 @@
         </div>
         <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: #05ee93;">Code</span></p>
     </div>
-    
+
     <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #333; padding-top: 12px;">
-        Session: Active
+        Session: <span id="sessionStatus">Checking...</span>
     </div>
 </div>
 
 <script>
-    // Background renderer
+    // ---- background renderer ----
     (function() {
         const bgImages = [
             'https://mcbcode.com/img/mc/nether_forest.png',
@@ -298,9 +369,20 @@
         if (imgElement) imgElement.src = randomBg;
     })();
 
+    const DRIPSTONE_API = "https://dripstone-ai.mcbcode.com";
+    const AUTH_ME_URL = "https://auth.mcbcode.com/me";
+
     let attachedFiles = [];
+    let conversation = []; // [{role: "user"|"assistant", content: "..."}]
+    let isLoggedIn = false;
+    let isSending = false;
+
     const textarea = document.getElementById('autoGrowInput');
     const mainContainer = document.getElementById('mainContainer');
+    const chatMessages = document.getElementById('chatMessages');
+    const loginNotice = document.getElementById('loginNotice');
+    const sendBtn = document.getElementById('sendBtn');
+    const sessionStatus = document.getElementById('sessionStatus');
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -308,11 +390,9 @@
         document.body.classList.toggle('sidebar-hidden', sidebar.classList.contains('hidden'));
     }
 
-    // Strict auto-resize: only expands when scrollHeight exceeds a single 24px line
     function autoGrow() {
         textarea.style.height = '24px';
         const scrollH = textarea.scrollHeight;
-        
         if (scrollH > 24) {
             textarea.style.height = scrollH + 'px';
             textarea.style.overflowY = 'auto';
@@ -321,10 +401,8 @@
             textarea.style.overflowY = 'hidden';
         }
     }
-
     textarea.addEventListener('input', autoGrow);
 
-    // Keyboard handlers: Enter to send, Shift+Enter for new line
     textarea.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
@@ -332,26 +410,100 @@
         }
     });
 
-    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    sendBtn.addEventListener('click', sendMessage);
 
-    function sendMessage() {
+    // ---- login check ----
+    // this ONLY controls what the ui lets you do. the worker checks again
+    // on its own, so someone hitting the api directly still gets blocked.
+    async function checkLogin() {
+        try {
+            const res = await fetch(AUTH_ME_URL, { credentials: 'include' });
+            isLoggedIn = res.ok;
+        } catch {
+            isLoggedIn = false;
+        }
+
+        if (isLoggedIn) {
+            loginNotice.classList.remove('show');
+            textarea.disabled = false;
+            sendBtn.disabled = false;
+            sessionStatus.textContent = "Logged in";
+        } else {
+            loginNotice.classList.add('show');
+            textarea.disabled = true;
+            sendBtn.disabled = true;
+            sessionStatus.textContent = "Not logged in";
+        }
+    }
+
+    // ---- rendering messages ----
+    function renderMessage(role, text, opts = {}) {
+        const el = document.createElement('div');
+        el.className = role === 'user' ? 'msg-user' : 'msg-ai';
+        if (opts.pending) el.classList.add('pending');
+        if (opts.error) el.classList.add('error-msg');
+        el.textContent = text;
+        chatMessages.appendChild(el);
+        chatMessages.classList.add('has-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return el;
+    }
+
+    async function sendMessage() {
+        if (isSending) return;
+        if (!isLoggedIn) {
+            await checkLogin();
+            return;
+        }
+
         let text = textarea.value.trim();
-        if (!text && attachedFiles.length === 0) return;
+        if (!text) return;
 
-        // Slide down to the bottom of the page
         mainContainer.classList.add('chat-active');
 
-        console.log("Sending message:", text);
+        conversation.push({ role: 'user', content: text });
+        renderMessage('user', text);
 
-        // Reset input state, shrink back to single line, and clear text
         textarea.value = '';
         textarea.style.height = '24px';
         textarea.style.overflowY = 'hidden';
         attachedFiles = [];
         renderFiles();
+
+        isSending = true;
+        sendBtn.disabled = true;
+        const pendingEl = renderMessage('assistant', 'thinking...', { pending: true });
+
+        try {
+            const res = await fetch(DRIPSTONE_API, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: conversation }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                pendingEl.remove();
+                renderMessage('assistant', data.error || 'something went wrong.', { error: true });
+                if (res.status === 401) await checkLogin();
+                return;
+            }
+
+            pendingEl.remove();
+            conversation.push({ role: 'assistant', content: data.reply });
+            renderMessage('assistant', data.reply);
+        } catch (err) {
+            pendingEl.remove();
+            renderMessage('assistant', 'could not reach DripstoneAI. check your connection.', { error: true });
+        } finally {
+            isSending = false;
+            sendBtn.disabled = !isLoggedIn;
+        }
     }
 
-    // Handle File Selection
+    // ---- file attachments (ui only for now, not sent to the ai yet) ----
     function handleFileSelect(event) {
         const files = Array.from(event.target.files);
         attachedFiles = [...attachedFiles, ...files];
@@ -359,17 +511,14 @@
         event.target.value = '';
     }
 
-    // Remove specific file from array
     function removeFile(index) {
         attachedFiles.splice(index, 1);
         renderFiles();
     }
 
-    // Render selected files dynamically above textarea
     function renderFiles() {
         const container = document.getElementById('selectedFilesContainer');
         container.innerHTML = '';
-        
         attachedFiles.forEach((file, index) => {
             const chip = document.createElement('div');
             chip.className = 'file-chip';
@@ -382,12 +531,12 @@
         });
     }
 
-    // Initialize layout state based on screen width
     window.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth <= 768) {
             document.getElementById('sidebar').classList.add('hidden');
             document.body.classList.add('sidebar-hidden');
         }
+        checkLogin();
     });
 </script>
 
