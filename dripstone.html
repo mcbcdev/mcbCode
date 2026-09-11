@@ -9,15 +9,24 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
 
   <style>
-    body {
+    :root {
+        --accent: #05ee93;
+        --accent-dim: #05ee9333;
+        --panel: #1c1c1cdd;
+        --panel-solid: #232323;
+        --border: #333333;
+        --text: #ffffff;
+        --text-dim: #b8b8b8;
+        --error: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
         margin: 0;
         padding: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        height: 100%;
         overflow: hidden;
-        position: relative;
         background: transparent;
     }
 
@@ -44,187 +53,192 @@
         pointer-events: none;
     }
 
+    /* ---------- sidebar ---------- */
     .sidebar {
-        background-color: #232323;
-        color: #ffffff;
+        background-color: var(--panel-solid);
+        color: var(--text);
         height: 100%;
         position: fixed;
         top: 0;
         right: 0;
         width: 250px;
-        box-sizing: border-box;
-        border-left: 2px solid #05ee93;
+        border-left: 2px solid var(--accent);
         padding: 18px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         transition: transform 0.3s ease;
         z-index: 100;
-        border-radius: 0;
     }
-    .sidebar.hidden {
-        transform: translateX(100%);
-    }
+    .sidebar.hidden { transform: translateX(100%); }
     .toggle-btn {
         position: fixed;
         top: 15px;
         right: 15px;
-        background-color: #232323;
-        color: #05ee93;
-        border: 1px solid #05ee93;
-        border-radius: 0;
+        background-color: var(--panel-solid);
+        color: var(--accent);
+        border: 1px solid var(--accent);
         padding: 8px 12px;
         cursor: pointer;
         z-index: 101;
         font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         font-family: 'mcfontb', sans-serif;
     }
-    .toggle-btn:hover {
-        background-color: #05ee93;
-        color: #181818;
-    }
+    .toggle-btn:hover { background-color: var(--accent); color: #181818; }
     .sidebar-close-btn {
         background: transparent;
         border: none;
-        color: #ffffff;
+        color: var(--text);
         font-size: 1.2rem;
         cursor: pointer;
         align-self: flex-end;
     }
+    h3 { font-family: 'mcfontb', sans-serif; }
 
-    .main-container {
+    @media (min-width: 769px) {
+        body:not(.sidebar-hidden) .app { margin-right: 250px; }
+    }
+    @media (max-width: 768px) {
+        .sidebar { width: 85%; max-width: 320px; }
+    }
+
+    /* ---------- main app layout ---------- */
+    /* normal top-to-bottom flex column: messages grow to fill space,
+       input bar just sits after it in flow. no fixed/absolute fighting. */
+    .app {
+        height: 100vh;
         width: 100%;
-        height: 100%;
-        position: absolute;
+        max-width: 760px;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        box-sizing: border-box;
+        padding: 24px 20px;
         transition: margin-right 0.3s ease;
     }
 
-    @media (min-width: 769px) {
-        body:not(.sidebar-hidden) .main-container {
-            margin-right: 250px;
-        }
+    .messages-area {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow-y: auto;
+        gap: 20px;
+        padding: 10px 4px 24px 4px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-dim) transparent;
     }
+    .messages-area.has-messages { justify-content: flex-start; }
 
     .hero-title {
         font-size: 2.2rem;
-        margin-bottom: 20px;
         font-family: 'mcfontb', sans-serif;
         text-align: center;
+        color: var(--text);
         padding: 0 10px;
-        color: #ffffff;
-        transition: opacity 0.4s ease, transform 0.4s ease;
     }
-    .hero-title span {
-        color: #05ee93;
-    }
+    .hero-title span { color: var(--accent); }
+    .hero-title.gone { display: none; }
 
-    .main-container.chat-active .hero-title {
-        opacity: 0;
-        transform: translateY(-20px);
-        pointer-events: none;
-        position: absolute;
-    }
+    .msg-row { display: flex; }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.ai { justify-content: flex-start; }
 
-    .chat-box-wrapper {
-        width: 100%;
-        max-width: 700px;
-        background-color: #232323;
-        border: 1px solid #333333;
-        border-radius: 0;
-        padding: 15px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        position: relative;
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .main-container.chat-active .chat-box-wrapper {
-        position: absolute;
-        bottom: 20px;
-    }
-
-    /* the actual conversation log. hidden until there's at least one message */
-    .chat-messages {
-        display: none;
-        flex-direction: column;
-        gap: 14px;
-        max-height: 55vh;
-        overflow-y: auto;
-        margin-bottom: 12px;
-        padding-right: 4px;
-    }
-    .chat-messages.has-messages {
-        display: flex;
-    }
-
-    /* user messages: a bubble, right aligned, matches the sidebar accent */
     .msg-user {
-        align-self: flex-end;
-        max-width: 85%;
-        background-color: #181818;
-        border: 1px solid #05ee93;
-        color: #ffffff;
-        padding: 8px 12px;
+        max-width: 82%;
+        background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+        border: 1px solid var(--accent);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 14px 14px 2px 14px;
         white-space: pre-wrap;
         word-break: break-word;
         font-family: 'mcfont', sans-serif;
     }
 
-    /* ai messages: just text, no bubble, left aligned */
     .msg-ai {
-        align-self: flex-start;
-        max-width: 100%;
-        color: #dddddd;
+        max-width: 92%;
+        color: var(--text-dim);
         white-space: pre-wrap;
         word-break: break-word;
         font-family: 'mcfont', sans-serif;
-        line-height: 1.5;
+        line-height: 1.55;
+        padding-top: 2px;
     }
     .msg-ai.pending {
-        color: #888888;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #777;
         font-style: italic;
     }
-    .msg-ai.error-msg {
-        color: #ff6b6b;
+    .msg-ai.error-msg { color: var(--error); }
+
+    .dot-pulse {
+        display: inline-flex;
+        gap: 3px;
     }
+    .dot-pulse span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 1.2s infinite ease-in-out;
+    }
+    .dot-pulse span:nth-child(2) { animation-delay: 0.15s; }
+    .dot-pulse span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes pulse {
+        0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+        40% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* ---------- input bar ---------- */
+    .input-bar {
+        flex-shrink: 0;
+        background-color: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px 14px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    }
+    .input-bar.focused { border-color: var(--accent); }
+
+    .login-notice {
+        display: none;
+        color: #ff9900;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+    .login-notice a { color: var(--accent); }
+    .login-notice.show { display: block; }
 
     .selected-files-container {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .file-chip {
         background-color: #181818;
-        border: 1px solid #05ee93;
-        color: #ffffff;
+        border: 1px solid var(--accent);
+        color: var(--text);
         padding: 4px 8px;
         font-size: 0.85rem;
         display: flex;
         align-items: center;
         gap: 6px;
-        border-radius: 0;
+        border-radius: 8px;
         font-family: 'mcfont', sans-serif;
     }
-    .file-chip span {
-        cursor: pointer;
-        color: #05ee93;
-        font-family: 'mcfontb', sans-serif;
-    }
+    .file-chip span { cursor: pointer; color: var(--accent); font-family: 'mcfontb', sans-serif; }
 
     .chat-textarea {
         width: 100%;
         background: transparent;
         border: none;
-        color: #ffffff;
+        color: var(--text);
         font-size: 1rem;
         resize: none;
         outline: none;
@@ -235,77 +249,36 @@
         line-height: 24px;
         padding: 0;
         margin: 0;
-        box-sizing: border-box;
         overflow-y: hidden;
     }
-    .chat-textarea:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    .login-notice {
-        display: none;
-        color: #ff9900;
-        font-family: 'mcfont', sans-serif;
-        font-size: 0.85rem;
-        margin-bottom: 10px;
-    }
-    .login-notice a {
-        color: #05ee93;
-    }
-    .login-notice.show {
-        display: block;
-    }
+    .chat-textarea:disabled { opacity: 0.4; cursor: not-allowed; }
+    .chat-textarea::placeholder { color: #777; }
 
     .chat-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 10px;
-        border-top: 1px solid #333333;
+        border-top: 1px solid var(--border);
         padding-top: 10px;
     }
-    .extra-tools {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .file-upload-icon {
-        height: 20px;
-        width: 20px;
-        cursor: pointer;
-        filter: invert(1);
-        display: block;
-    }
-    .file-upload-icon:hover {
-        opacity: 0.8;
-    }
+    .extra-tools { display: flex; align-items: center; gap: 10px; }
+    .file-upload-icon { height: 20px; width: 20px; cursor: pointer; filter: invert(1); display: block; }
+    .file-upload-icon:hover { opacity: 0.8; }
+
     .send-btn {
-        background-color: #05ee93;
+        background-color: var(--accent);
         color: #181818;
         border: none;
-        padding: 8px 16px;
+        padding: 8px 18px;
         font-family: 'mcfontb', sans-serif;
-        border-radius: 0;
+        border-radius: 10px;
         cursor: pointer;
+        transition: transform 0.1s ease, opacity 0.15s ease;
     }
-    .send-btn:hover {
-        opacity: 0.9;
-    }
-    .send-btn:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-    h3 {
-        font-family: 'mcfontb', sans-serif;
-    }
-
-    @media (max-width: 768px) {
-        .sidebar {
-            width: 85%;
-            max-width: 320px;
-        }
-    }
+    .send-btn:hover:not(:disabled) { opacity: 0.9; }
+    .send-btn:active:not(:disabled) { transform: scale(0.96); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -315,18 +288,20 @@
 
 <button class="toggle-btn" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
-<div class="main-container" id="mainContainer">
-    <div class="hero-title" id="heroTitle">what are we building?</div>
+<div class="app" id="app">
+    <div class="messages-area" id="messagesArea">
+        <div class="hero-title" id="heroTitle">what are we building?</div>
+    </div>
 
-    <div class="chat-box-wrapper" id="chatBoxWrapper">
-        <div class="chat-messages" id="chatMessages"></div>
-
+    <div class="input-bar" id="inputBar">
         <div class="login-notice" id="loginNotice">
             you need to be logged in to use DripstoneAI. <a href="https://mcbcode.com/account">log in here</a>
         </div>
 
         <div class="selected-files-container" id="selectedFilesContainer"></div>
+
         <textarea class="chat-textarea" placeholder="Ask DripstoneAI anything... (Shift+Enter for new line)" id="autoGrowInput"></textarea>
+
         <div class="chat-controls">
             <div class="extra-tools">
                 <label for="fileInput" title="Attach file">
@@ -348,7 +323,7 @@
             </div>
             <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
         </div>
-        <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: #05ee93;">Code</span></p>
+        <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: var(--accent);">Code</span></p>
     </div>
 
     <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #333; padding-top: 12px;">
@@ -378,10 +353,11 @@
     let isSending = false;
 
     const textarea = document.getElementById('autoGrowInput');
-    const mainContainer = document.getElementById('mainContainer');
-    const chatMessages = document.getElementById('chatMessages');
+    const messagesArea = document.getElementById('messagesArea');
+    const heroTitle = document.getElementById('heroTitle');
     const loginNotice = document.getElementById('loginNotice');
     const sendBtn = document.getElementById('sendBtn');
+    const inputBar = document.getElementById('inputBar');
     const sessionStatus = document.getElementById('sessionStatus');
 
     function toggleSidebar() {
@@ -402,6 +378,8 @@
         }
     }
     textarea.addEventListener('input', autoGrow);
+    textarea.addEventListener('focus', () => inputBar.classList.add('focused'));
+    textarea.addEventListener('blur', () => inputBar.classList.remove('focused'));
 
     textarea.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -413,8 +391,8 @@
     sendBtn.addEventListener('click', sendMessage);
 
     // ---- login check ----
-    // this ONLY controls what the ui lets you do. the worker checks again
-    // on its own, so someone hitting the api directly still gets blocked.
+    // this only controls what the UI lets you do. the worker checks again
+    // on its own server-side, so hitting the api directly still gets blocked.
     async function checkLogin() {
         try {
             const res = await fetch(AUTH_ME_URL, { credentials: 'include' });
@@ -438,15 +416,27 @@
 
     // ---- rendering messages ----
     function renderMessage(role, text, opts = {}) {
-        const el = document.createElement('div');
-        el.className = role === 'user' ? 'msg-user' : 'msg-ai';
-        if (opts.pending) el.classList.add('pending');
-        if (opts.error) el.classList.add('error-msg');
-        el.textContent = text;
-        chatMessages.appendChild(el);
-        chatMessages.classList.add('has-messages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return el;
+        if (!heroTitle.classList.contains('gone')) heroTitle.classList.add('gone');
+        messagesArea.classList.add('has-messages');
+
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + (role === 'user' ? 'user' : 'ai');
+
+        const bubble = document.createElement('div');
+        bubble.className = role === 'user' ? 'msg-user' : 'msg-ai';
+        if (opts.error) bubble.classList.add('error-msg');
+
+        if (opts.pending) {
+            bubble.classList.add('pending');
+            bubble.innerHTML = '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+        } else {
+            bubble.textContent = text;
+        }
+
+        row.appendChild(bubble);
+        messagesArea.appendChild(row);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+        return bubble;
     }
 
     async function sendMessage() {
@@ -459,8 +449,6 @@
         let text = textarea.value.trim();
         if (!text) return;
 
-        mainContainer.classList.add('chat-active');
-
         conversation.push({ role: 'user', content: text });
         renderMessage('user', text);
 
@@ -472,7 +460,7 @@
 
         isSending = true;
         sendBtn.disabled = true;
-        const pendingEl = renderMessage('assistant', 'thinking...', { pending: true });
+        const pendingEl = renderMessage('assistant', '', { pending: true });
 
         try {
             const res = await fetch(DRIPSTONE_API, {
@@ -485,18 +473,20 @@
             const data = await res.json();
 
             if (!res.ok) {
-                pendingEl.remove();
-                renderMessage('assistant', data.error || 'something went wrong.', { error: true });
+                pendingEl.classList.remove('pending');
+                pendingEl.classList.add('error-msg');
+                pendingEl.textContent = data.error || 'something went wrong.';
                 if (res.status === 401) await checkLogin();
                 return;
             }
 
-            pendingEl.remove();
+            pendingEl.classList.remove('pending');
+            pendingEl.textContent = data.reply;
             conversation.push({ role: 'assistant', content: data.reply });
-            renderMessage('assistant', data.reply);
         } catch (err) {
-            pendingEl.remove();
-            renderMessage('assistant', 'could not reach DripstoneAI. check your connection.', { error: true });
+            pendingEl.classList.remove('pending');
+            pendingEl.classList.add('error-msg');
+            pendingEl.textContent = 'could not reach DripstoneAI. check your connection.';
         } finally {
             isSending = false;
             sendBtn.disabled = !isLoggedIn;
