@@ -454,14 +454,13 @@
 
     .drip-msg.user {
       align-self: flex-end;
-      background: rgba(255,255,255,0.06);
+      background: rgba(176, 107, 255, 0.12);
+      border: 1px solid rgba(176, 107, 255, 0.35);
       color: var(--text-main);
     }
 
     .drip-msg.ai {
       align-self: flex-start;
-      background: rgba(176, 107, 255, 0.12);
-      border: 1px solid rgba(176, 107, 255, 0.35);
       color: #e6d6ff;
     }
 
@@ -863,14 +862,15 @@
 
     <div class="showcase-block">
       <div class="showcase-info">
-        <span class="badge-inline" style="color: var(--amethyst);">DripstoneAI</span>
+        <span class="badge-inline" style="color: var(--amethyst);">DripstoneAI <span style="color: #c02cad; font-family: mcfontwide">[COMING SOON]</span></span>
         <h2>An AI That Actually Knows Bedrock</h2>
         <p>DripstoneAI is built specifically around Bedrock addon development. Ask it to explain a chunk of code, fix a broken component group, or scaffold a whole new item — it works inside your project, not against it.</p>
       </div>
       <div class="drip-chat">
-        <div class="drip-msg user">why isn't my custom sword showing the enchant glint?</div>
-        <div class="drip-msg ai"><span class="drip-tag">DripstoneAI</span>your item component is missing "minecraft:enchantable" — add it with a value and the glint will render. want me to patch the JSON for you?</div>
-        <div class="drip-msg user">yeah do it</div>
+        <div class="drip-msg user">can you edit my guide book item to add a crafting recipe?</div>
+        <div class="drip-msg ai"><span class="drip-tag">■ DripstoneAI</span><br><span style="color: #454545;">Finding guide_book.json</span><br><br>for sure. doing that now.<br><br><span style="color: #454545;">Editing guide_book.json</span><br><span style="color: #454545;">Saving it to project...</span></div>
+        <div class="drip-msg user">thanks!</div>
+        <textarea style="background-color: #343434; color: #ffffff; padding: 8px; outline: none; resize: none; border-color: #565656;" rows="1" disabled placeholder="Ask another question..."></textarea>
       </div>
     </div>
 
