@@ -70,33 +70,10 @@
         transition: transform 0.3s ease;
         z-index: 100;
     }
-    .sidebar.hidden { transform: translateX(100%); }
-    .toggle-btn {
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        background-color: var(--panel-solid);
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        padding: 8px 12px;
-        cursor: pointer;
-        z-index: 101;
-        font-size: 1rem;
-        font-family: 'mcfontb', sans-serif;
-    }
-    .toggle-btn:hover { background-color: var(--accent); color: #181818; }
-    .sidebar-close-btn {
-        background: transparent;
-        border: none;
-        color: var(--text);
-        font-size: 1.2rem;
-        cursor: pointer;
-        align-self: flex-end;
-    }
     h3 { font-family: 'mcfontb', sans-serif; }
 
     @media (min-width: 769px) {
-        body:not(.sidebar-hidden) .app { margin-right: 250px; }
+        .app { margin-right: 250px; }
     }
     @media (max-width: 768px) {
         .sidebar { width: 85%; max-width: 320px; }
@@ -114,6 +91,7 @@
         flex-direction: column;
         padding: 24px 20px;
         transition: margin-right 0.3s ease;
+        position: relative;
     }
 
     .messages-area {
@@ -142,7 +120,7 @@
 
     .msg-row { display: flex; }
     .msg-row.user { justify-content: flex-end; }
-    .msg-row.ai { justify-content: flex-start; }
+    .msg-row.ai { flex-direction: column; align-items: flex-start; }
 
     .msg-user {
         max-width: 82%;
@@ -174,22 +152,154 @@
     }
     .msg-ai.error-msg { color: var(--error); }
 
+    /* markdown styling inside ai replies */
+    .msg-ai h1, .msg-ai h2, .msg-ai h3 {
+        color: var(--accent);
+        font-family: 'mcfontb', sans-serif;
+        margin: 10px 0 6px;
+        font-size: 1.1em;
+    }
+    .msg-ai strong { font-family: 'mcfontb', sans-serif; font-weight: normal; color: #ffffff; }
+    .msg-ai em { color: var(--text-dim); }
+    .msg-ai code.md-inline-code {
+        background: #111;
+        color: #bebebe;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
+    .md-code-wrap {
+        margin: 10px 0;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .md-code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #141414;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border);
+    }
+    .md-code-lang {
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.75rem;
+        color: #888;
+    }
+    .code-copy-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: transparent;
+        border: none;
+        color: #aaa;
+        cursor: pointer;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.75rem;
+        padding: 3px 7px;
+        border-radius: 5px;
+    }
+    .code-copy-btn:hover { color: var(--accent); background: #1f1f1f; }
+    .code-copy-btn img { width: 12px; height: 12px; filter: invert(1); opacity: 0.85; }
+
+    .msg-ai pre.md-code-block {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: #111;
+        padding: 10px 12px;
+        overflow-x: auto;
+    }
+    .msg-ai pre.md-code-block code {
+        color: #bebebe;
+        font-family: monospace;
+        font-size: 0.85em;
+        white-space: pre;
+    }
+    .msg-ai ul.md-list {
+        margin: 4px 0 4px 20px;
+        padding: 0;
+    }
+    .msg-ai ul.md-list li::marker { color: #00b2ff; }
+    .msg-ai a.md-link { color: var(--accent); text-decoration: underline; }
+
+    /* the copy button + timestamp that sit below every finished ai reply */
+    .msg-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+    }
+    .msg-copy-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        opacity: 0.55;
+        transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    }
+    .msg-copy-btn:hover { opacity: 1; background: #1f1f1f; }
+    .msg-copy-btn:active { transform: scale(0.9); }
+    .msg-copy-btn img { width: 14px; height: 14px; filter: invert(1); display: block; }
+    .msg-timestamp {
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.72rem;
+        color: #666;
+    }
+
+    /* jumps you back to the newest message when you've scrolled up */
+    .scroll-bottom-btn {
+        position: absolute;
+        bottom: 130px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background-color: var(--panel-solid);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-family: 'mcfontb', sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+        z-index: 20;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+    .scroll-bottom-btn.show { display: flex; }
+    .scroll-bottom-btn:hover { background-color: var(--accent); color: #181818; }
+
     .dot-pulse {
         display: inline-flex;
-        gap: 3px;
+        gap: 4px;
     }
     .dot-pulse span {
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
+        width: 6px;
+        height: 6px;
         background: var(--accent);
         animation: pulse 1.2s infinite ease-in-out;
     }
     .dot-pulse span:nth-child(2) { animation-delay: 0.15s; }
     .dot-pulse span:nth-child(3) { animation-delay: 0.3s; }
     @keyframes pulse {
-        0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
-        40% { opacity: 1; transform: scale(1.15); }
+        0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) rotate(0deg); }
+        40% { opacity: 1; transform: scale(1.15) rotate(15deg); }
+    }
+
+    /* word-by-word fade-in-down for ai replies */
+    .word-fade {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(-8px);
+        animation: fadeInDown 0.35s ease forwards;
+    }
+    @keyframes fadeInDown {
+        to { opacity: 1; transform: translateY(0); }
     }
 
     /* ---------- input bar ---------- */
@@ -286,12 +396,12 @@
 <img id="bgImage" class="bg-image" alt="Background">
 <div class="bg-overlay"></div>
 
-<button class="toggle-btn" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
-
 <div class="app" id="app">
     <div class="messages-area" id="messagesArea">
         <div class="hero-title" id="heroTitle">what are we building?</div>
     </div>
+
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" type="button">↓ latest</button>
 
     <div class="input-bar" id="inputBar">
         <div class="login-notice" id="loginNotice">
@@ -321,7 +431,6 @@
                 <img src="https://mcbcode.com/img/icons/default-transparent.png" style="height: 18px;">
                 <h3 style="margin: 0;">DripstoneAI</h3>
             </div>
-            <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
         </div>
         <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: var(--accent);">Code</span></p>
     </div>
@@ -334,14 +443,8 @@
 <script>
     // ---- background renderer ----
     (function() {
-        const bgImages = [
-            'https://mcbcode.com/img/mc/nether_forest.png',
-            'https://mcbcode.com/img/mc/end_city_one.png',
-            'https://mcbcode.com/img/mc/end_city_two.png'
-        ];
-        const randomBg = bgImages[Math.floor(Math.random() * bgImages.length)];
         const imgElement = document.getElementById('bgImage');
-        if (imgElement) imgElement.src = randomBg;
+        if (imgElement) imgElement.src = 'https://mcbcode.com/img/mc/end_city_two.png';
     })();
 
     const DRIPSTONE_API = "https://dripstone-ai.mcbcode.com";
@@ -359,12 +462,6 @@
     const sendBtn = document.getElementById('sendBtn');
     const inputBar = document.getElementById('inputBar');
     const sessionStatus = document.getElementById('sessionStatus');
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('hidden');
-        document.body.classList.toggle('sidebar-hidden', sidebar.classList.contains('hidden'));
-    }
 
     function autoGrow() {
         textarea.style.height = '24px';
@@ -414,6 +511,106 @@
         }
     }
 
+    // very small markdown subset -> html. escapes html first so the ai
+    // can't accidentally (or on purpose) inject real tags into the page.
+    function markdownToHtml(text) {
+        let html = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        // pull fenced code blocks out first and stash the real html for
+        // them, replacing with a placeholder token. this is what stops
+        // things like "# comment" inside mcfunction code from turning
+        // into a heading later on.
+        const codeBlocks = [];
+        html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+            const label = lang || 'code';
+            codeBlocks.push(
+                `<div class="md-code-wrap">` +
+                `<div class="md-code-header">` +
+                `<span class="md-code-lang">${label}</span>` +
+                `<button class="code-copy-btn" type="button">` +
+                `<img src="https://mcbcode.com/img/icons/copy.png" alt=""><span>Copy</span>` +
+                `</button>` +
+                `</div>` +
+                `<pre class="md-code-block"><code>${code.trim()}</code></pre>` +
+                `</div>`
+            );
+            return `\u0000CB${codeBlocks.length - 1}\u0000`;
+        });
+
+        // same idea for inline code, so `# not a heading` stays literal
+        const inlineCodes = [];
+        html = html.replace(/`([^`]+)`/g, (m, code) => {
+            inlineCodes.push(`<code class="md-inline-code">${code}</code>`);
+            return `\u0001IC${inlineCodes.length - 1}\u0001`;
+        });
+
+        // headers
+        html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+
+        // bold + italic
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+        // links
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener" class="md-link">$1</a>');
+
+        // unordered list items, then wrap consecutive ones in a <ul>
+        html = html.replace(/(^|\n)-\s+(.*)/g, '$1<li>$2</li>');
+        html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul class="md-list">${m}</ul>`);
+
+        html = html.replace(/\n{2,}/g, '<br><br>');
+        html = html.replace(/\n/g, '<br>');
+
+        // put the protected code back in
+        html = html.replace(/\u0001IC(\d+)\u0001/g, (m, i) => inlineCodes[i]);
+        html = html.replace(/\u0000CB(\d+)\u0000/g, (m, i) => codeBlocks[i]);
+
+        return html;
+    }
+
+    // walks the rendered markdown, wraps each word of plain text in a
+    // fade-in span, but leaves code blocks alone so indentation/spacing
+    // inside them isn't chopped up by the animation wrapping.
+    function animateWordsPreservingHtml(el) {
+        let wordIndex = 0;
+        function walk(node) {
+            Array.from(node.childNodes).forEach((child) => {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    if (child.textContent.trim() === '') return;
+                    const frag = document.createDocumentFragment();
+                    child.textContent.split(/(\s+)/).forEach((part) => {
+                        if (part.trim() === '') {
+                            frag.appendChild(document.createTextNode(part));
+                            return;
+                        }
+                        const span = document.createElement('span');
+                        span.className = 'word-fade';
+                        span.textContent = part;
+                        span.style.animationDelay = (wordIndex * 0.035) + 's';
+                        wordIndex++;
+                        frag.appendChild(span);
+                    });
+                    node.replaceChild(frag, child);
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    if (child.tagName === 'PRE' || child.tagName === 'CODE' || child.classList.contains('md-code-wrap')) return;
+                    walk(child);
+                }
+            });
+        }
+        walk(el);
+    }
+
+    function renderReply(el, text) {
+        el.innerHTML = markdownToHtml(text);
+        animateWordsPreservingHtml(el);
+    }
+
     // ---- rendering messages ----
     function renderMessage(role, text, opts = {}) {
         if (!heroTitle.classList.contains('gone')) heroTitle.classList.add('gone');
@@ -434,6 +631,19 @@
         }
 
         row.appendChild(bubble);
+
+        if (role !== 'user') {
+            const actions = document.createElement('div');
+            actions.className = 'msg-actions';
+            actions.style.display = opts.pending ? 'none' : 'flex';
+            const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            actions.innerHTML =
+                `<button class="msg-copy-btn" type="button" title="Copy"><img src="https://mcbcode.com/img/icons/copy.png" alt="Copy"></button>` +
+                `<span class="msg-timestamp">${time}</span>`;
+            row.appendChild(actions);
+            bubble._actionsEl = actions;
+        }
+
         messagesArea.appendChild(row);
         messagesArea.scrollTop = messagesArea.scrollHeight;
         return bubble;
@@ -451,6 +661,7 @@
 
         conversation.push({ role: 'user', content: text });
         renderMessage('user', text);
+        const userRow = messagesArea.lastElementChild;
 
         textarea.value = '';
         textarea.style.height = '24px';
@@ -461,6 +672,14 @@
         isSending = true;
         sendBtn.disabled = true;
         const pendingEl = renderMessage('assistant', '', { pending: true });
+
+        // snap-scroll so the message you just sent sits at the top of the
+        // visible area, leaving room below it for the reply to fill in.
+        requestAnimationFrame(() => {
+            const containerRect = messagesArea.getBoundingClientRect();
+            const rowRect = userRow.getBoundingClientRect();
+            messagesArea.scrollTop += (rowRect.top - containerRect.top) - 10;
+        });
 
         try {
             const res = await fetch(DRIPSTONE_API, {
@@ -481,7 +700,8 @@
             }
 
             pendingEl.classList.remove('pending');
-            pendingEl.textContent = data.reply;
+            renderReply(pendingEl, data.reply);
+            if (pendingEl._actionsEl) pendingEl._actionsEl.style.display = 'flex';
             conversation.push({ role: 'assistant', content: data.reply });
         } catch (err) {
             pendingEl.classList.remove('pending');
@@ -521,11 +741,45 @@
         });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        if (window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.add('hidden');
-            document.body.classList.add('sidebar-hidden');
+    // handles both the per-code-block copy buttons and the per-message
+    // copy button. delegated on the whole page since these buttons get
+    // created dynamically as replies come in.
+    document.addEventListener('click', (e) => {
+        const codeBtn = e.target.closest('.code-copy-btn');
+        if (codeBtn) {
+            const wrap = codeBtn.closest('.md-code-wrap');
+            const codeEl = wrap.querySelector('code');
+            navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                const label = codeBtn.querySelector('span');
+                const original = label.textContent;
+                label.textContent = 'Copied!';
+                setTimeout(() => { label.textContent = original; }, 1200);
+            });
+            return;
         }
+
+        const msgBtn = e.target.closest('.msg-copy-btn');
+        if (msgBtn) {
+            const bubble = msgBtn.closest('.msg-row').querySelector('.msg-ai');
+            navigator.clipboard.writeText(bubble.innerText).then(() => {
+                msgBtn.title = 'Copied!';
+                setTimeout(() => { msgBtn.title = 'Copy'; }, 1200);
+            });
+        }
+    });
+
+    // shows a "jump to latest" button whenever you've scrolled up away
+    // from the bottom of the conversation.
+    const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+    messagesArea.addEventListener('scroll', () => {
+        const distanceFromBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight;
+        scrollBottomBtn.classList.toggle('show', distanceFromBottom > 120);
+    });
+    scrollBottomBtn.addEventListener('click', () => {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
         checkLogin();
     });
 </script>
