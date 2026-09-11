@@ -72,6 +72,96 @@
     }
     h3 { font-family: 'mcfontb', sans-serif; }
 
+    /* ---------- usage bar ---------- */
+    .usage-bar-wrap { margin-bottom: 14px; }
+    .usage-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.75rem;
+        color: #999;
+        margin-bottom: 6px;
+    }
+    .usage-bar-track {
+        width: 100%;
+        height: 6px;
+        background: #101010;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .usage-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 100%;
+        transition: width 0.3s ease, background 0.3s ease;
+    }
+    .usage-bar-fill.low { background: #ff9900; }
+    .usage-bar-fill.empty { background: var(--error); }
+
+    /* ---------- account menu ---------- */
+    .account-menu-wrap {
+        position: relative;
+        border-top: 1px solid #333;
+        padding-top: 12px;
+    }
+    .account-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        cursor: pointer;
+        padding: 6px 4px;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        text-align: left;
+    }
+    .account-btn:hover { background: #1a1a1a; }
+    .account-btn:disabled { cursor: default; opacity: 0.6; }
+    .account-pfp {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+    .account-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .account-dropup {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 0;
+        width: 100%;
+        background-color: var(--panel-solid);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.45);
+        z-index: 200;
+    }
+    .account-dropup.show { display: flex; }
+    .account-dropup a, .account-dropup button {
+        display: block;
+        padding: 10px 12px;
+        color: var(--text);
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+        text-align: left;
+        cursor: pointer;
+    }
+    .account-dropup a:hover, .account-dropup button:hover { background: #1a1a1a; color: var(--accent); }
+    .account-dropup button.logout-item { color: var(--error); border-top: 1px solid #333; }
+    .account-dropup button.logout-item:hover { color: var(--error); background: #2a1414; }
+
     @media (min-width: 769px) {
         .app { margin-right: 250px; }
     }
@@ -435,8 +525,25 @@
         <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: var(--accent);">Code</span></p>
     </div>
 
-    <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #333; padding-top: 12px;">
-        Session: <span id="sessionStatus">Checking...</span>
+    <div class="usage-bar-wrap">
+        <div class="usage-bar-label">
+            <span>Global usage today</span>
+            <span id="usageText">-- / --</span>
+        </div>
+        <div class="usage-bar-track"><div class="usage-bar-fill" id="usageFill"></div></div>
+    </div>
+
+    <div class="account-menu-wrap">
+        <button class="account-btn" id="accountBtn" type="button">
+            <img class="account-pfp" id="accountPfp" src="https://mcbcode.com/img/icons/default-transparent.png" alt="">
+            <span class="account-name" id="accountName">Checking...</span>
+        </button>
+        <div class="account-dropup" id="accountDropup">
+            <a href="https://mcbcode.com/dashboard">Dashboard</a>
+            <a href="#" id="settingsLink">Settings</a>
+            <a href="https://studio.mcbcode.com">Studio</a>
+            <button type="button" class="logout-item" id="logoutBtn">Logout</button>
+        </div>
     </div>
 </div>
 
@@ -461,7 +568,14 @@
     const loginNotice = document.getElementById('loginNotice');
     const sendBtn = document.getElementById('sendBtn');
     const inputBar = document.getElementById('inputBar');
-    const sessionStatus = document.getElementById('sessionStatus');
+    const usageText = document.getElementById('usageText');
+    const usageFill = document.getElementById('usageFill');
+    const accountBtn = document.getElementById('accountBtn');
+    const accountPfp = document.getElementById('accountPfp');
+    const accountName = document.getElementById('accountName');
+    const accountDropup = document.getElementById('accountDropup');
+    const settingsLink = document.getElementById('settingsLink');
+    const logoutBtn = document.getElementById('logoutBtn');
 
     function autoGrow() {
         textarea.style.height = '24px';
@@ -490,26 +604,82 @@
     // ---- login check ----
     // this only controls what the UI lets you do. the worker checks again
     // on its own server-side, so hitting the api directly still gets blocked.
+    let currentUsername = null;
+
     async function checkLogin() {
         try {
             const res = await fetch(AUTH_ME_URL, { credentials: 'include' });
             isLoggedIn = res.ok;
+
+            if (isLoggedIn) {
+                const me = await res.json();
+                currentUsername = me.username || null;
+                const shortName = currentUsername
+                    ? (currentUsername.length > 12 ? currentUsername.slice(0, 12) + '…' : currentUsername)
+                    : 'Account';
+                accountName.textContent = shortName;
+                if (me.pfp_url) accountPfp.src = me.pfp_url;
+                settingsLink.href = currentUsername
+                    ? `https://mcbcode.com/profile/${encodeURIComponent(currentUsername)}#settings`
+                    : 'https://mcbcode.com/account';
+                accountBtn.disabled = false;
+            } else {
+                accountName.textContent = 'Not logged in';
+                accountBtn.disabled = true;
+            }
         } catch {
             isLoggedIn = false;
+            accountName.textContent = 'Not logged in';
+            accountBtn.disabled = true;
         }
 
         if (isLoggedIn) {
             loginNotice.classList.remove('show');
             textarea.disabled = false;
             sendBtn.disabled = false;
-            sessionStatus.textContent = "Logged in";
         } else {
             loginNotice.classList.add('show');
             textarea.disabled = true;
             sendBtn.disabled = true;
-            sessionStatus.textContent = "Not logged in";
         }
     }
+
+    // ---- usage bar ----
+    async function refreshUsage() {
+        try {
+            const res = await fetch(DRIPSTONE_API + '/usage');
+            if (!res.ok) return;
+            const data = await res.json();
+            usageText.textContent = `${data.remaining} / ${data.limit} left`;
+            const pct = data.limit > 0 ? (data.remaining / data.limit) * 100 : 0;
+            usageFill.style.width = pct + '%';
+            usageFill.classList.toggle('low', pct <= 30 && pct > 0);
+            usageFill.classList.toggle('empty', pct <= 0);
+        } catch {
+            usageText.textContent = 'unavailable';
+        }
+    }
+
+    // ---- account dropup ----
+    accountBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (accountBtn.disabled) return;
+        accountDropup.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+        if (!accountDropup.contains(e.target) && e.target !== accountBtn) {
+            accountDropup.classList.remove('show');
+        }
+    });
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await fetch('https://auth.mcbcode.com/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } catch {}
+        window.location.href = 'https://mcbcode.com';
+    });
 
     // very small markdown subset -> html. escapes html first so the ai
     // can't accidentally (or on purpose) inject real tags into the page.
@@ -703,6 +873,7 @@
             renderReply(pendingEl, data.reply);
             if (pendingEl._actionsEl) pendingEl._actionsEl.style.display = 'flex';
             conversation.push({ role: 'assistant', content: data.reply });
+            refreshUsage();
         } catch (err) {
             pendingEl.classList.remove('pending');
             pendingEl.classList.add('error-msg');
@@ -781,6 +952,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         checkLogin();
+        refreshUsage();
     });
 </script>
 
