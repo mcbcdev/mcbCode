@@ -833,24 +833,50 @@ c {
   </div>
 
   <!-- new project modal -->
-  <div class="modal-overlay" id="new-project-modal">
-    <div class="modal-box">
-      <h3>New Project</h3>
-      <div class="modal-field">
-        <label>Project Name</label>
-        <input type="text" id="np-name" maxlength="72" placeholder="My Awesome Addon">
-      </div>
-      <div class="modal-field">
-        <label>Description<span style="color:#333">(optional)</span></label>
-        <textarea id="np-desc" rows="3" maxlength="256" placeholder="What does this addon do?"></textarea>
-      </div>
-      <div class="modal-err" id="np-err"></div>
-      <div class="modal-actions">
-        <button class="confirm-no" onclick="closeNewProject()">Cancel</button>
-        <button class="save-btn" id="np-submit" onclick="submitNewProject()">Create</button>
+<div class="modal-overlay" id="new-project-modal">
+  <div class="modal-box">
+    <h3>New Project</h3>
+    <div class="modal-field">
+      <label>Project Name</label>
+      <input type="text" id="np-name" maxlength="72" placeholder="My Awesome Addon">
+    </div>
+    <div class="modal-field">
+      <label>Description<span style="color:#333">(optional)</span></label>
+      <textarea id="np-desc" rows="3" maxlength="256" placeholder="What does this addon do?"></textarea>
+    </div>
+
+    <div class="modal-field">
+      <label>Start With</label>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="proj-btn" id="np-mode-blank" onclick="setNpMode('blank')" style="flex:1;">Start blank</button>
+        <button type="button" class="proj-btn" id="np-mode-import" onclick="setNpMode('import')" style="flex:1;">Import pack</button>
       </div>
     </div>
+
+    <div class="modal-field hidden" id="np-import-field">
+      <label>.mcpack / .mcaddon file</label>
+      <div id="np-drop-zone" style="border:1px dashed #2e2e2e; padding:20px; text-align:center; font-size:13px; color:#555; cursor:pointer;">
+        drag a file here, or click to browse
+      </div>
+      <input type="file" id="np-file-input" accept=".mcpack,.mcaddon,.zip" class="hidden">
+      <div id="np-file-name" style="font-size:12px; color:#05ee93; margin-top:6px;"></div>
+    </div>
+
+    <div class="modal-field hidden" id="np-progress-field">
+      <div style="background:#111; border:1px solid #2e2e2e; height:10px; width:100%;">
+        <div id="np-progress-bar" style="background:#05ee93; height:100%; width:0%; transition:width 0.15s;"></div>
+      </div>
+      <div id="np-progress-text" style="font-size:12px; color:#555; margin-top:6px;">0% Complete</div>
+      <div id="np-progress-status" style="font-size:12px; color:#555;"></div>
+    </div>
+
+    <div class="modal-err" id="np-err"></div>
+    <div class="modal-actions" id="np-actions">
+      <button class="confirm-no" onclick="closeNewProject()">Cancel</button>
+      <button class="save-btn" id="np-submit" onclick="submitNewProject()">Create</button>
+    </div>
   </div>
+</div>
 
   <!-- generic confirm modal — used for delete project AND leave collaboration -->
   <div class="confirm-overlay" id="confirm-overlay">
@@ -1205,36 +1231,136 @@ c {
 
     function openProject(shareCode) { window.location.href = `/project/${shareCode}/`; }
 
+    let npMode = "blank";
+    let npFile = null;
+
+    function setNpMode(mode) {
+      npMode = mode;
+      document.getElementById("np-mode-blank").style.borderColor = mode === "blank" ? "#05ee93" : "#2e2e2e";
+      document.getElementById("np-mode-blank").style.color = mode === "blank" ? "#05ee93" : "#bebebe";
+      document.getElementById("np-mode-import").style.borderColor = mode === "import" ? "#05ee93" : "#2e2e2e";
+      document.getElementById("np-mode-import").style.color = mode === "import" ? "#05ee93" : "#bebebe";
+      document.getElementById("np-import-field").classList.toggle("hidden", mode !== "import");
+    }
+
     function openNewProject() {
       document.getElementById("np-name").value = "";
       document.getElementById("np-desc").value = "";
       document.getElementById("np-err").textContent = "";
       document.getElementById("np-err").classList.remove("visible");
+      document.getElementById("np-progress-field").classList.add("hidden");
+      document.getElementById("np-actions").classList.remove("hidden");
+      document.getElementById("np-file-name").textContent = "";
+      npFile = null;
+      setNpMode("blank");
       document.getElementById("new-project-modal").classList.add("visible");
       setTimeout(() => document.getElementById("np-name").focus(), 50);
     }
 
     function closeNewProject() { document.getElementById("new-project-modal").classList.remove("visible"); }
 
+    const npDropZone = document.getElementById("np-drop-zone");
+    const npFileInput = document.getElementById("np-file-input");
+    npDropZone.addEventListener("click", () => npFileInput.click());
+    npDropZone.addEventListener("dragover", e => { e.preventDefault(); npDropZone.style.borderColor = "#05ee93"; });
+    npDropZone.addEventListener("dragleave", () => { npDropZone.style.borderColor = "#2e2e2e"; });
+    npDropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      npDropZone.style.borderColor = "#2e2e2e";
+      if (e.dataTransfer.files.length) setNpFile(e.dataTransfer.files[0]);
+    });
+    npFileInput.addEventListener("change", () => { if (npFileInput.files.length) setNpFile(npFileInput.files[0]); });
+
+    function setNpFile(file) {
+      const validExt = /\.(mcpack|mcaddon|zip)$/i.test(file.name);
+      if (!validExt) {
+        document.getElementById("np-file-name").style.color = "#ff5555";
+        document.getElementById("np-file-name").textContent = "that's not a .mcpack or .mcaddon file";
+        npFile = null;
+        return;
+      }
+      npFile = file;
+      document.getElementById("np-file-name").style.color = "#05ee93";
+      document.getElementById("np-file-name").textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+    }
+
     async function submitNewProject() {
       const name = document.getElementById("np-name").value.trim();
       const desc = document.getElementById("np-desc").value.trim();
       const err  = document.getElementById("np-err");
-      const btn  = document.getElementById("np-submit");
+      err.textContent = ""; err.classList.remove("visible");
+
       if (!name) { err.textContent = "Project name is required."; err.classList.add("visible"); return; }
-      btn.disabled = true; btn.textContent = "Creating...";
+      if (npMode === "import" && !npFile) { err.textContent = "Pick a .mcpack or .mcaddon file first, or switch to Start blank."; err.classList.add("visible"); return; }
+
+      document.getElementById("np-submit").disabled = true;
+
       try {
         const res = await fetch(`${AUTH}/projects`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description: desc })
+          body: JSON.stringify({ name, description: desc, skip_defaults: npMode === "import" })
         });
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.error || "Failed to create project."; err.classList.add("visible"); return; }
-        closeNewProject();
-        window.location.href = `/project/${data.share_code}/`;
-      } catch { err.textContent = "Something went wrong."; err.classList.add("visible"); }
-      finally { btn.disabled = false; btn.textContent = "Create"; }
+        if (!res.ok) { err.textContent = data.error || "Failed to create project."; err.classList.add("visible"); document.getElementById("np-submit").disabled = false; return; }
+
+        if (npMode === "blank") {
+          closeNewProject();
+          window.location.href = `/project/${data.share_code}/`;
+          return;
+        }
+
+        // import mode: show progress bar, stream the upload
+        document.getElementById("np-actions").classList.add("hidden");
+        document.getElementById("np-import-field").classList.add("hidden");
+        document.getElementById("np-progress-field").classList.remove("hidden");
+
+        const importRes = await fetch(`${AUTH}/project/import?project_code=${encodeURIComponent(data.share_code)}`, {
+          method: "POST", credentials: "include", body: npFile
+        });
+
+        if (!importRes.ok || !importRes.body) {
+          err.textContent = "Import failed to start."; err.classList.add("visible");
+          return;
+        }
+
+        const reader = importRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const msg = JSON.parse(line);
+            if (msg.error) {
+              err.textContent = msg.error; err.classList.add("visible");
+              document.getElementById("np-progress-field").classList.add("hidden");
+              document.getElementById("np-actions").classList.remove("hidden");
+              document.getElementById("np-submit").disabled = false;
+              return;
+            }
+            if (typeof msg.progress === "number") {
+              document.getElementById("np-progress-bar").style.width = msg.progress + "%";
+              document.getElementById("np-progress-text").textContent = `${msg.progress}% Complete`;
+              document.getElementById("np-progress-status").textContent = msg.status || "";
+            }
+            if (msg.done) {
+              if (msg.well_formed === false) {
+                alert("heads up: this pack's folder structure looked unusual (expected 2 folders each with a manifest.json), so some things might be out of place. everything got imported anyway though.");
+              }
+              window.location.href = `/project/${data.share_code}/`;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        err.textContent = "Something went wrong."; err.classList.add("visible");
+        document.getElementById("np-submit").disabled = false;
+      }
     }
 
     // ---- GENERIC CONFIRM MODAL (delete project / leave collaboration) ----
