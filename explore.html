@@ -1,4 +1,4 @@
-<!doctype html>
+=<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -384,6 +384,75 @@
 
     .modal-box { position: relative; }
 
+    .modal-msg {
+      margin: 10px 0 18px 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    #generic-modal-textarea {
+      display: none;
+      width: 100%;
+      min-height: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px;
+      margin-bottom: 16px;
+      resize: vertical;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 9px 18px;
+      cursor: pointer;
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.85rem;
+    }
+
+    .modal-btn:hover { color: var(--text-main); border-color: rgba(255,255,255,0.3); }
+
+    .modal-btn.primary {
+      background-color: var(--accent-dark);
+      border-color: var(--accent-color);
+      color: #fff;
+    }
+    .modal-btn.primary:hover { background-color: var(--accent-color); color: var(--bg-color); }
+
+    .modal-btn.danger { border-color: var(--danger-color); color: var(--danger-color); }
+    .modal-btn.danger:hover { background-color: var(--danger-color); color: #fff; }
+
+    /* profile links on avatars/usernames */
+    .profile-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: inherit;
+    }
+    .profile-link:hover .post-username { color: var(--accent-color); }
+
+    .mention { color: var(--accent-color); }
+    .mention:hover { text-decoration: underline; }
+    .mention-everyone { color: var(--accent-color); font-style: italic; }
+
+    /* fight bar only as wide as the like/dislike buttons combined */
+    .react-block {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
     #project-picker-list {
       overflow-y: auto;
       display: flex;
@@ -449,6 +518,19 @@
     <button id="compose-send">post</button>
   </div>
 
+  <div class="modal-overlay" id="generic-modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" id="generic-modal-close">x</button>
+      <h3 id="generic-modal-title"></h3>
+      <p class="modal-msg" id="generic-modal-message" style="display:none;"></p>
+      <textarea id="generic-modal-textarea" maxlength="2000"></textarea>
+      <div class="modal-btn-row">
+        <button class="modal-btn" id="generic-modal-cancel">cancel</button>
+        <button class="modal-btn primary" id="generic-modal-confirm">confirm</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="project-picker-overlay">
     <div class="modal-box">
       <button class="modal-close" id="project-picker-close">x</button>
@@ -463,6 +545,58 @@
     let currentSort = "trending";
     let myProjects = [];
 
+    // ---- custom modal (replaces browser confirm()/prompt()) ----
+    function showModal({ title, message = "", showTextarea = false, textValue = "", confirmLabel = "confirm", danger = false }) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById("generic-modal-overlay");
+        const titleEl = document.getElementById("generic-modal-title");
+        const messageEl = document.getElementById("generic-modal-message");
+        const textarea = document.getElementById("generic-modal-textarea");
+        const confirmBtn = document.getElementById("generic-modal-confirm");
+        const cancelBtn = document.getElementById("generic-modal-cancel");
+        const closeBtn = document.getElementById("generic-modal-close");
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        messageEl.style.display = message ? "block" : "none";
+        textarea.style.display = showTextarea ? "block" : "none";
+        textarea.value = textValue;
+        confirmBtn.textContent = confirmLabel;
+        confirmBtn.classList.toggle("danger", danger);
+        overlay.style.display = "flex";
+        if (showTextarea) setTimeout(() => textarea.focus(), 50);
+
+        function cleanup(result) {
+          overlay.style.display = "none";
+          confirmBtn.removeEventListener("click", onConfirm);
+          cancelBtn.removeEventListener("click", onCancel);
+          closeBtn.removeEventListener("click", onCancel);
+          overlay.removeEventListener("click", onOverlayClick);
+          resolve(result);
+        }
+        function onConfirm() { cleanup(showTextarea ? textarea.value : true); }
+        function onCancel() { cleanup(showTextarea ? null : false); }
+        function onOverlayClick(e) { if (e.target === overlay) onCancel(); }
+
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+        closeBtn.addEventListener("click", onCancel);
+        overlay.addEventListener("click", onOverlayClick);
+      });
+    }
+
+    function customConfirm(message, { danger = false, confirmLabel = "delete" } = {}) {
+      return showModal({ title: "are you sure?", message, showTextarea: false, confirmLabel, danger });
+    }
+
+    function customPrompt(title, defaultValue) {
+      return showModal({ title, showTextarea: true, textValue: defaultValue, confirmLabel: "save" });
+    }
+
+    function profileUrl(username) {
+      return "https://mcbcode.com/profile/" + encodeURIComponent(username || "");
+    }
+
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
     }
@@ -476,7 +610,10 @@
       s = s.replace(/(^|[^*])\*([^*\n]{1,300})\*(?!\*)/g, '$1<em>$2</em>');
       s = s.replace(/(^|[^_])_([^_\n]{1,300})_(?!_)/g, '$1<em>$2</em>');
       s = s.replace(/`([^`\n]{1,300})`/g, '<code>$1</code>');
-      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, (m, name) => {
+        if (name.toLowerCase() === "everyone") return `<span class="mention mention-everyone">@${name}</span>`;
+        return `<a class="mention" href="${profileUrl(name)}">@${name}</a>`;
+      });
       return s;
     }
 
@@ -534,23 +671,27 @@
       return `
         <div class="post-card" data-post-id="${post.id}">
           <div class="post-head">
-            <img class="post-pfp" src="${pfpUrl(post)}" alt="">
-            <div class="post-head-text">
-              <span class="post-username">${escapeHtml(post.author_username || "unknown")}</span>
-              <span class="post-time">${timeAgo(post.created_at)}${post.updated_at !== post.created_at ? " (edited)" : ""}</span>
-            </div>
+            <a class="profile-link" href="${profileUrl(post.author_username)}">
+              <img class="post-pfp" src="${pfpUrl(post)}" alt="">
+              <div class="post-head-text">
+                <span class="post-username">${escapeHtml(post.author_username || "unknown")}</span>
+                <span class="post-time">${timeAgo(post.created_at)}${post.updated_at !== post.created_at ? " (edited)" : ""}</span>
+              </div>
+            </a>
             ${projectChip}
           </div>
           <div class="post-content">${renderContent(post.content)}</div>
           <div class="post-actions">
-            <div class="react-group">
-              <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
-              <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+            <div class="react-block">
+              <div class="react-group">
+                <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
+                <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+              </div>
+              ${renderFightBar(post.likes, post.dislikes)}
             </div>
             <a class="post-link-btn" href="https://mcbcode.com/post?id=${post.id}">${post.reply_count} ${post.reply_count === 1 ? "reply" : "replies"}</a>
             ${isOwner ? `<button class="post-edit-btn">edit</button><button class="post-delete-btn">delete</button>` : ""}
           </div>
-          ${renderFightBar(post.likes, post.dislikes)}
         </div>
       `;
     }
@@ -615,7 +756,7 @@
         if (editBtn) editBtn.addEventListener("click", async () => {
           const contentEl = card.querySelector(".post-content");
           const current = contentEl.textContent;
-          const updated = prompt("edit your post:", current);
+          const updated = await customPrompt("edit your post", current);
           if (updated === null || !updated.trim()) return;
           const res = await fetch(API + "/post", {
             method: "POST", credentials: "include",
@@ -629,7 +770,8 @@
 
         const deleteBtn = card.querySelector(".post-delete-btn");
         if (deleteBtn) deleteBtn.addEventListener("click", async () => {
-          if (!confirm("delete this post? this can't be undone.")) return;
+          const ok = await customConfirm("delete this post? this can't be undone.", { danger: true });
+          if (!ok) return;
           const res = await fetch(API + "/post?id=" + encodeURIComponent(postId), {
             method: "DELETE", credentials: "include"
           });
