@@ -1251,6 +1251,7 @@ c {
       document.getElementById("np-progress-field").classList.add("hidden");
       document.getElementById("np-actions").classList.remove("hidden");
       document.getElementById("np-file-name").textContent = "";
+      document.getElementById("np-submit").disabled = false;   // <-- add this line
       npFile = null;
       setNpMode("blank");
       document.getElementById("new-project-modal").classList.add("visible");
@@ -1321,6 +1322,9 @@ c {
 
         if (!importRes.ok || !importRes.body) {
           err.textContent = "Import failed to start."; err.classList.add("visible");
+          document.getElementById("np-progress-field").classList.add("hidden");
+          document.getElementById("np-actions").classList.remove("hidden");
+          document.getElementById("np-submit").disabled = false;
           return;
         }
 
@@ -1359,6 +1363,8 @@ c {
         }
       } catch (e) {
         err.textContent = "Something went wrong."; err.classList.add("visible");
+        document.getElementById("np-progress-field").classList.add("hidden");
+        document.getElementById("np-actions").classList.remove("hidden");
         document.getElementById("np-submit").disabled = false;
       }
     }
@@ -1390,21 +1396,43 @@ c {
       const { type, code, row } = pendingAction;
       closeConfirm();
       try {
+        let res;
         if (type === "delete_project") {
-          const res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
-          if (res.ok) { row && row.remove(); await loadProjects(); }
+          res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
         } else if (type === "leave_collab") {
-          const res = await fetch(`${AUTH}/project/collaborators?code=${encodeURIComponent(code)}&user_id=${encodeURIComponent(window._myId || "")}`, {
-            method: "DELETE", credentials: "include"
-          });
-          // fallback in case the collaborators endpoint requires the owner: use the "leave all" self-service route instead
-          if (!res.ok) {
-            await fetch(`${AUTH}/me/collaborations`, { method: "DELETE", credentials: "include" });
-          }
-          row && row.remove();
-          await loadProjects();
+          res = await fetch(`${AUTH}/project/leave?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
         }
-      } catch {}
+        if (res && res.ok) {
+          // update the dom directly instead of refetching — avoids a race
+          // where the list refetch happens before the delete is fully visible
+          if (row) row.remove();
+
+          const list = document.getElementById("project-list");
+          const empty = document.getElementById("projects-empty");
+          if (!list.querySelector(".project-row")) {
+            empty.textContent = "No projects yet. Hit \"New Project\" to get started.";
+            empty.style.display = "";
+          }
+
+          if (type === "delete_project") {
+            const statEl = document.getElementById("stat-projects");
+            const label = document.getElementById("projects-limit-label");
+            const btn = document.getElementById("new-proj-btn");
+            const newCount = Math.max(0, parseInt(statEl.textContent, 10) - 1);
+            statEl.textContent = newCount;
+            const match = label.textContent.match(/\/\s*(\d+)/);
+            const max = match ? parseInt(match[1], 10) : null;
+            if (max !== null) {
+              label.textContent = `${newCount} / ${max} projects used`;
+              btn.disabled = newCount >= max;
+            }
+          }
+        } else if (res) {
+          alert("Something went wrong, that action didn't go through.");
+        }
+      } catch {
+        alert("Network error, try again.");
+      }
     }
 
     document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm(); });
