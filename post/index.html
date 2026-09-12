@@ -150,15 +150,37 @@
 
     #reply-input {
       width: 100%;
-      resize: vertical;
-      min-height: 70px;
+      resize: none;
+      height: 46px;
+      max-height: 200px;
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--card-border);
       color: var(--text-main);
       font-family: 'mcfont', sans-serif;
       font-size: 0.9rem;
       padding: 12px;
+      transition: height 0.15s ease;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) transparent;
     }
+
+    #reply-input::-webkit-scrollbar { width: 6px; }
+    #reply-input::-webkit-scrollbar-track { background: transparent; }
+    #reply-input::-webkit-scrollbar-thumb { background: var(--accent-color); }
+
+    .post-content strong, .reply-content strong { font-weight: bold !important; }
+    .post-content em, .reply-content em { font-style: italic; }
+    .post-content code, .reply-content code {
+      background: #1c1c1c;
+      padding: 1px 5px;
+      font-family: monospace;
+    }
+
+    #replies-list { max-height: 60vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent-color) transparent; }
+    #replies-list::-webkit-scrollbar { width: 6px; }
+    #replies-list::-webkit-scrollbar-track { background: transparent; }
+    #replies-list::-webkit-scrollbar-thumb { background: var(--accent-color); }
 
     #reply-send {
       margin-top: 8px;
@@ -219,7 +241,14 @@
       return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
     }
     function renderContent(raw) {
-      return escapeHtml(raw).replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      let s = escapeHtml(raw);
+      s = s.replace(/\[([^\]\n]{1,100})\]\((https?:\/\/[^\s)]{1,300})\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:underline;">$1</a>');
+      s = s.replace(/\*\*([^\*\n]{1,300})\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/(^|[^*])\*([^*\n]{1,300})\*(?!\*)/g, '$1<em>$2</em>');
+      s = s.replace(/(^|[^_])_([^_\n]{1,300})_(?!_)/g, '$1<em>$2</em>');
+      s = s.replace(/`([^`\n]{1,300})`/g, '<code>$1</code>');
+      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      return s;
     }
     function timeAgo(dateStr) {
       const then = new Date(dateStr + "Z").getTime();
@@ -391,6 +420,7 @@
         const data = await res.json();
         if (!data.ok) { alert(data.error || "couldn't reply"); return; }
         replyInput.value = "";
+        replyInput.style.height = "46px";
         loadPost();
       } finally {
         replySend.disabled = false;
@@ -401,7 +431,17 @@
     const mentionPopup = document.getElementById("mention-popup");
     let mentionTimer = null;
 
+    function growReplyInput() {
+      replyInput.style.height = "46px";
+      replyInput.style.height = Math.max(46, Math.min(replyInput.scrollHeight, 200)) + "px";
+    }
+    replyInput.addEventListener("focus", growReplyInput);
+    replyInput.addEventListener("blur", () => {
+      if (!replyInput.value.trim()) replyInput.style.height = "46px";
+    });
+
     replyInput.addEventListener("input", () => {
+      growReplyInput();
       const val = replyInput.value;
       const cursor = replyInput.selectionStart;
       const upToCursor = val.slice(0, cursor);
@@ -438,7 +478,5 @@
       await loadPost();
     })();
   </script>
-
-  <script src="https://mcbcode.com/elements/navi.js"></script>
 </body>
 </html>
