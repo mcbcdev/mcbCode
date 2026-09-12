@@ -263,7 +263,24 @@
       font-family: 'mcfont', sans-serif;
       font-size: 0.9rem;
       padding: 10px 12px;
-      max-height: 120px;
+      height: 42px;
+      max-height: 160px;
+      transition: height 0.15s ease;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) transparent;
+    }
+
+    #compose-input::-webkit-scrollbar { width: 6px; }
+    #compose-input::-webkit-scrollbar-track { background: transparent; }
+    #compose-input::-webkit-scrollbar-thumb { background: var(--accent-color); }
+
+    .post-content strong, .reply-content strong { font-weight: bold !important; }
+    .post-content em, .reply-content em { font-style: italic; }
+    .post-content code, .reply-content code {
+      background: #1c1c1c;
+      padding: 1px 5px;
+      font-family: monospace;
     }
 
     #compose-project-chip {
@@ -407,6 +424,7 @@
 
     <div id="sort-bar">
       <button class="sort-btn active" data-sort="trending">trending</button>
+      <button class="sort-btn" data-sort="relevant">relevant</button>
       <button class="sort-btn" data-sort="newest">newest</button>
       <button class="sort-btn" data-sort="oldest">oldest</button>
       <button class="sort-btn" data-sort="most_liked">most likes</button>
@@ -449,10 +467,17 @@
       return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
     }
 
-    // turns "@username" tokens into styled spans, after the rest of the text is escaped
+    // escapes the raw text first (so nothing typed can inject real html), then
+    // layers on a small safe subset of markdown, then styles @mentions last.
     function renderContent(raw) {
-      const escaped = escapeHtml(raw);
-      return escaped.replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      let s = escapeHtml(raw);
+      s = s.replace(/\[([^\]\n]{1,100})\]\((https?:\/\/[^\s)]{1,300})\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:underline;">$1</a>');
+      s = s.replace(/\*\*([^\*\n]{1,300})\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/(^|[^*])\*([^*\n]{1,300})\*(?!\*)/g, '$1<em>$2</em>');
+      s = s.replace(/(^|[^_])_([^_\n]{1,300})_(?!_)/g, '$1<em>$2</em>');
+      s = s.replace(/`([^`\n]{1,300})`/g, '<code>$1</code>');
+      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      return s;
     }
 
     function timeAgo(dateStr) {
@@ -536,8 +561,19 @@
       try {
         const res = await fetch(API + "/posts?sort=" + currentSort, { credentials: "include" });
         const data = await res.json();
-        if (!data.ok || !data.posts.length) {
-          feed.innerHTML = '<div class="empty-state">nothing here yet. be the first to post something!</div>';
+        if (!data.ok) {
+          if (res.status === 401) {
+            feed.innerHTML = '<div class="empty-state">sign in to see posts from people you follow and projects you watch.</div>';
+          } else {
+            feed.innerHTML = '<div class="empty-state">couldn\'t load posts.</div>';
+          }
+          return;
+        }
+        if (!data.posts.length) {
+          const msg = currentSort === "relevant"
+            ? "nothing here yet — follow some people or watch some projects to see their posts."
+            : "nothing here yet. be the first to post something!";
+          feed.innerHTML = `<div class="empty-state">${msg}</div>`;
           return;
         }
         feed.innerHTML = data.posts.map(postCardHtml).join("");
@@ -548,7 +584,10 @@
     }
 
     function attachFeedListeners() {
-      document.querySelectorAll(".post-card").forEach(card => {
+      document.querySelectorAll(".post-card").forEach(attachCardListeners);
+    }
+
+    function attachCardListeners(card) {
         const postId = card.dataset.postId;
 
         card.querySelectorAll(".react-btn").forEach(btn => {
@@ -598,7 +637,6 @@
           if (!data.ok) { alert(data.error || "couldn't delete"); return; }
           card.remove();
         });
-      });
     }
 
     // ---- sort bar ----
@@ -616,10 +654,19 @@
     const composeSend = document.getElementById("compose-send");
     let attachedProjectCode = null;
 
+    function growComposeInput() {
+      composeInput.style.height = "42px";
+      composeInput.style.height = Math.max(42, Math.min(composeInput.scrollHeight, 160)) + "px";
+    }
+
     composeInput.addEventListener("input", () => {
-      composeInput.style.height = "auto";
-      composeInput.style.height = Math.min(composeInput.scrollHeight, 120) + "px";
+      growComposeInput();
       handleMentionTyping();
+    });
+
+    composeInput.addEventListener("focus", growComposeInput);
+    composeInput.addEventListener("blur", () => {
+      if (!composeInput.value.trim()) composeInput.style.height = "42px";
     });
 
     composeSend.addEventListener("click", async () => {
@@ -635,10 +682,29 @@
         });
         const data = await res.json();
         if (!data.ok) { alert(data.error || "couldn't post"); return; }
+
+        // show it right away instead of waiting on a re-fetch
+        const feed = document.getElementById("feed");
+        const emptyState = feed.querySelector(".empty-state");
+        if (emptyState) feed.innerHTML = "";
+        const newPost = {
+          id: data.id,
+          author_id: ME.id,
+          author_username: ME.username,
+          author_pfp: ME.pfp_url,
+          project_share_code: attachedProjectCode || null,
+          project_name: document.getElementById("compose-project-name").textContent || null,
+          content,
+          created_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+          updated_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+          likes: 0, dislikes: 0, reply_count: 0, my_reaction: null,
+        };
+        feed.insertAdjacentHTML("afterbegin", postCardHtml(newPost));
+        attachCardListeners(feed.querySelector(`.post-card[data-post-id="${data.id}"]`));
+
         composeInput.value = "";
-        composeInput.style.height = "auto";
+        composeInput.style.height = "42px";
         clearAttachedProject();
-        loadFeed();
       } finally {
         composeSend.disabled = false;
       }
@@ -728,7 +794,5 @@
     loadMe();
     loadFeed();
   </script>
-
-  <script src="https://mcbcode.com/elements/navi.js"></script>
 </body>
 </html>
