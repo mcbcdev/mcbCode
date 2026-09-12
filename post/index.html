@@ -113,6 +113,77 @@
     .fight-bar .side-like { background: var(--accent-color); height: 100%; }
     .fight-bar .side-dislike { background: var(--danger-color); height: 100%; }
 
+    .react-block { display: inline-flex; flex-direction: column; align-items: stretch; }
+
+    .profile-link { display: flex; align-items: center; gap: 10px; color: inherit; }
+    .profile-link:hover .post-username, .profile-link:hover .reply-username { color: var(--accent-color); }
+
+    .mention-everyone { color: var(--accent-color); font-style: italic; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: #141414;
+      border: 1px solid var(--card-border);
+      width: min(480px, 90vw);
+      padding: 20px;
+      position: relative;
+    }
+
+    .modal-box h3 { margin-bottom: 14px; }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-msg { margin: 10px 0 18px 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
+
+    #generic-modal-textarea {
+      display: none;
+      width: 100%;
+      min-height: 100px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px;
+      margin-bottom: 16px;
+      resize: vertical;
+    }
+
+    .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .modal-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 9px 18px;
+      cursor: pointer;
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.85rem;
+    }
+    .modal-btn:hover { color: var(--text-main); border-color: rgba(255,255,255,0.3); }
+    .modal-btn.primary { background-color: var(--accent-dark); border-color: var(--accent-color); color: #fff; }
+    .modal-btn.primary:hover { background-color: var(--accent-color); color: var(--bg-color); }
+    .modal-btn.danger { border-color: var(--danger-color); color: var(--danger-color); }
+    .modal-btn.danger:hover { background-color: var(--danger-color); color: #fff; }
+
     .post-edit-btn, .post-delete-btn {
       background: transparent; border: none; color: var(--text-muted);
       cursor: pointer; font-size: 0.85rem; font-family: 'mcfont', sans-serif; padding: 0;
