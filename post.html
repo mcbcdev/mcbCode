@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>post | mcbcode</title>
+
+  <link rel="icon" href="https://mcbcode.com/img/icons/default.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+
+  <style>
+    :root {
+      --accent-color: #05ee93;
+      --accent-dark: #00a459;
+      --danger-color: #f72f2f;
+      --bg-color: #0c0c0c;
+      --card-bg: rgba(18, 18, 18, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-muted: #bebebe;
+    }
+
+    *, *::before, *::after {
+      font-weight: normal !important;
+      border-radius: 0px !important;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      font-family: 'mcfont', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-muted);
+    }
+
+    a { text-decoration: none; color: inherit; }
+    h1, h2, h3 { color: var(--text-main); margin: 0; font-family: 'mcfontb', 'mcfont', sans-serif; }
+
+    #page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 16px 80px 16px;
+    }
+
+    #back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    #back-link:hover { color: var(--accent-color); }
+
+    .post-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+
+    .post-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+    .post-pfp {
+      width: 40px; height: 40px;
+      object-fit: cover;
+      background: #222;
+      image-rendering: pixelated;
+    }
+
+    .post-head-text { display: flex; flex-direction: column; line-height: 1.3; }
+    .post-username { color: var(--text-main); font-family: 'mcfontb', sans-serif; font-size: 1rem; }
+    .post-time { font-size: 0.75rem; color: #777; }
+
+    .post-project-chip {
+      margin-left: auto;
+      font-size: 0.75rem;
+      background: rgba(5,238,147,0.08);
+      border: 1px solid rgba(5,238,147,0.3);
+      color: var(--accent-color);
+      padding: 4px 10px;
+      font-family: monospace;
+      white-space: nowrap;
+    }
+
+    .post-content {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e5e5e5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 14px;
+    }
+
+    .post-content .mention { color: var(--accent-color); }
+
+    .post-actions { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+
+    .react-group { display: flex; align-items: center; gap: 2px; }
+
+    .react-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+    .react-btn.like.active { color: var(--accent-color); border-color: var(--accent-color); }
+    .react-btn.dislike.active { color: var(--danger-color); border-color: var(--danger-color); }
+
+    .fight-bar { height: 4px; width: 100%; background: #222; display: flex; margin-top: 10px; overflow: hidden; }
+    .fight-bar .side-like { background: var(--accent-color); height: 100%; }
+    .fight-bar .side-dislike { background: var(--danger-color); height: 100%; }
+
+    .post-edit-btn, .post-delete-btn {
+      background: transparent; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 0.85rem; font-family: 'mcfont', sans-serif; padding: 0;
+    }
+    .post-edit-btn:hover { color: var(--accent-color); }
+    .post-delete-btn:hover { color: var(--danger-color); }
+
+    /* replies */
+    #replies-heading { margin-bottom: 14px; font-size: 1.1rem; }
+
+    .reply-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--card-border);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .reply-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .reply-pfp { width: 26px; height: 26px; object-fit: cover; background: #222; image-rendering: pixelated; }
+    .reply-username { color: var(--text-main); font-family: 'mcfontb', sans-serif; font-size: 0.85rem; }
+    .reply-time { font-size: 0.7rem; color: #777; margin-left: 4px; }
+    .reply-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; white-space: pre-wrap; word-break: break-word; }
+    .reply-content .mention { color: var(--accent-color); }
+    .reply-delete-btn {
+      margin-left: auto; background: transparent; border: none; color: #777;
+      cursor: pointer; font-size: 0.8rem; font-family: 'mcfont', sans-serif;
+    }
+    .reply-delete-btn:hover { color: var(--danger-color); }
+
+    /* reply composer */
+    #reply-box {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    #reply-input {
+      width: 100%;
+      resize: vertical;
+      min-height: 70px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.9rem;
+      padding: 12px;
+    }
+
+    #reply-send {
+      margin-top: 8px;
+      background-color: var(--accent-dark);
+      border: 1px solid var(--accent-color);
+      color: #fff;
+      font-family: 'mcfontb', sans-serif;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    #reply-send:hover { background-color: var(--accent-color); color: var(--bg-color); }
+    #reply-send:disabled { opacity: 0.4; cursor: default; }
+
+    .mention-popup {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 4px;
+      background: #161616;
+      border: 1px solid var(--card-border);
+      width: 220px;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      z-index: 50;
+    }
+    .mention-popup .mention-option { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); }
+    .mention-popup .mention-option:hover { background: rgba(5,238,147,0.1); color: var(--accent-color); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #666; }
+  </style>
+</head>
+<body>
+
+  <div id="page">
+    <a id="back-link" href="https://mcbcode.com/explore">&larr; back to explore</a>
+    <div id="post-container"><div class="empty-state">loading post...</div></div>
+
+    <div id="replies-section" style="display:none;">
+      <h3 id="replies-heading"></h3>
+      <div id="replies-list"></div>
+
+      <div id="reply-box">
+        <textarea id="reply-input" placeholder="write a reply... (@ to mention)" maxlength="1000"></textarea>
+        <div class="mention-popup" id="mention-popup"></div>
+        <br>
+        <button id="reply-send">reply</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://auth.mcbcode.com";
+    let ME = null;
+    let POST_ID = new URLSearchParams(window.location.search).get("id");
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+    function renderContent(raw) {
+      return escapeHtml(raw).replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+    }
+    function timeAgo(dateStr) {
+      const then = new Date(dateStr + "Z").getTime();
+      const diff = Math.max(0, Date.now() - then);
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return mins + "m ago";
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return hours + "h ago";
+      const days = Math.floor(hours / 24);
+      if (days < 30) return days + "d ago";
+      return new Date(dateStr + "Z").toLocaleDateString();
+    }
+    function pfpUrl(p) { return p || "https://mcbcode.com/img/icons/default.png"; }
+
+    function renderFightBar(likes, dislikes) {
+      const total = likes + dislikes;
+      const likePct = total === 0 ? 50 : (likes / total) * 100;
+      const dislikePct = 100 - likePct;
+      return `<div class="fight-bar"><div class="side-like" style="width:${likePct}%"></div><div class="side-dislike" style="width:${dislikePct}%"></div></div>`;
+    }
+
+    async function loadMe() {
+      try {
+        const res = await fetch(API + "/me", { credentials: "include" });
+        if (res.ok) { const data = await res.json(); if (data.ok) ME = data; }
+      } catch {}
+    }
+
+    async function loadPost() {
+      if (!POST_ID) {
+        document.getElementById("post-container").innerHTML = '<div class="empty-state">no post id given.</div>';
+        return;
+      }
+      const res = await fetch(API + "/post?id=" + encodeURIComponent(POST_ID), { credentials: "include" });
+      const data = await res.json();
+      if (!data.ok) {
+        document.getElementById("post-container").innerHTML = `<div class="empty-state">${escapeHtml(data.error || "post not found")}</div>`;
+        return;
+      }
+      renderPost(data.post);
+      renderReplies(data.replies);
+      document.getElementById("replies-section").style.display = "block";
+    }
+
+    function renderPost(post) {
+      const isOwner = ME && ME.id === post.author_id;
+      const projectChip = post.project_share_code
+        ? `<a class="post-project-chip" href="https://mcbcode.com/project?code=${encodeURIComponent(post.project_share_code)}">${escapeHtml(post.project_name || "project")}</a>`
+        : "";
+      document.getElementById("post-container").innerHTML = `
+        <div class="post-card" data-post-id="${post.id}">
+          <div class="post-head">
+            <img class="post-pfp" src="${pfpUrl(post.author_pfp)}" alt="">
+            <div class="post-head-text">
+              <span class="post-username">${escapeHtml(post.author_username || "unknown")}</span>
+              <span class="post-time">${timeAgo(post.created_at)}${post.updated_at !== post.created_at ? " (edited)" : ""}</span>
+            </div>
+            ${projectChip}
+          </div>
+          <div class="post-content">${renderContent(post.content)}</div>
+          <div class="post-actions">
+            <div class="react-group">
+              <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
+              <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+            </div>
+            ${isOwner ? `<button class="post-edit-btn">edit</button><button class="post-delete-btn">delete</button>` : ""}
+          </div>
+          ${renderFightBar(post.likes, post.dislikes)}
+        </div>
+      `;
+
+      document.querySelectorAll(".react-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!ME) { alert("sign in to react."); return; }
+          const type = btn.dataset.type;
+          const res = await fetch(API + "/post/react", {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ post_id: post.id, type })
+          });
+          const data = await res.json();
+          if (!data.ok) { alert(data.error || "couldn't react"); return; }
+          const likeBtn = document.querySelector(".react-btn.like");
+          const dislikeBtn = document.querySelector(".react-btn.dislike");
+          likeBtn.innerHTML = "&#9650; " + data.likes;
+          dislikeBtn.innerHTML = "&#9660; " + data.dislikes;
+          likeBtn.classList.toggle("active", data.my_reaction === "like");
+          dislikeBtn.classList.toggle("active", data.my_reaction === "dislike");
+          document.querySelector(".fight-bar").outerHTML = renderFightBar(data.likes, data.dislikes);
+        });
+      });
+
+      const editBtn = document.querySelector(".post-edit-btn");
+      if (editBtn) editBtn.addEventListener("click", async () => {
+        const current = document.querySelector(".post-content").textContent;
+        const updated = prompt("edit your post:", current);
+        if (updated === null || !updated.trim()) return;
+        const res = await fetch(API + "/post", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: post.id, content: updated.trim() })
+        });
+        const data = await res.json();
+        if (!data.ok) { alert(data.error || "couldn't edit"); return; }
+        loadPost();
+      });
+
+      const deleteBtn = document.querySelector(".post-delete-btn");
+      if (deleteBtn) deleteBtn.addEventListener("click", async () => {
+        if (!confirm("delete this post? this can't be undone.")) return;
+        const res = await fetch(API + "/post?id=" + encodeURIComponent(post.id), { method: "DELETE", credentials: "include" });
+        const data = await res.json();
+        if (!data.ok) { alert(data.error || "couldn't delete"); return; }
+        window.location.href = "https://mcbcode.com/explore";
+      });
+    }
+
+    function renderReplies(replies) {
+      document.getElementById("replies-heading").textContent = replies.length + (replies.length === 1 ? " reply" : " replies");
+      const list = document.getElementById("replies-list");
+      if (!replies.length) {
+        list.innerHTML = '<div class="empty-state">no replies yet. say something!</div>';
+        return;
+      }
+      list.innerHTML = replies.map(r => {
+        const canDelete = ME && (ME.id === r.author_id);
+        return `
+          <div class="reply-card" data-reply-id="${r.id}">
+            <div class="reply-head">
+              <img class="reply-pfp" src="${pfpUrl(r.author_pfp)}" alt="">
+              <span class="reply-username">${escapeHtml(r.author_username || "unknown")}</span>
+              <span class="reply-time">${timeAgo(r.created_at)}</span>
+              ${canDelete ? `<button class="reply-delete-btn">delete</button>` : ""}
+            </div>
+            <div class="reply-content">${renderContent(r.content)}</div>
+          </div>
+        `;
+      }).join("");
+
+      list.querySelectorAll(".reply-delete-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const card = btn.closest(".reply-card");
+          const id = card.dataset.replyId;
+          if (!confirm("delete this reply?")) return;
+          const res = await fetch(API + "/post/reply?id=" + encodeURIComponent(id), { method: "DELETE", credentials: "include" });
+          const data = await res.json();
+          if (!data.ok) { alert(data.error || "couldn't delete"); return; }
+          card.remove();
+        });
+      });
+    }
+
+    // ---- reply composer ----
+    const replyInput = document.getElementById("reply-input");
+    const replySend = document.getElementById("reply-send");
+
+    replySend.addEventListener("click", async () => {
+      if (!ME) { alert("sign in to reply."); return; }
+      const content = replyInput.value.trim();
+      if (!content) return;
+      replySend.disabled = true;
+      try {
+        const res = await fetch(API + "/post/reply", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ post_id: POST_ID, content })
+        });
+        const data = await res.json();
+        if (!data.ok) { alert(data.error || "couldn't reply"); return; }
+        replyInput.value = "";
+        loadPost();
+      } finally {
+        replySend.disabled = false;
+      }
+    });
+
+    // ---- @mention autocomplete for replies ----
+    const mentionPopup = document.getElementById("mention-popup");
+    let mentionTimer = null;
+
+    replyInput.addEventListener("input", () => {
+      const val = replyInput.value;
+      const cursor = replyInput.selectionStart;
+      const upToCursor = val.slice(0, cursor);
+      const match = upToCursor.match(/@([a-zA-Z0-9_.]{1,32})$/);
+      if (!match) { mentionPopup.style.display = "none"; return; }
+      const partial = match[1];
+      clearTimeout(mentionTimer);
+      mentionTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(API + "/profile/search?q=" + encodeURIComponent(partial));
+          const data = await res.json();
+          if (!data.ok || !data.results.length) { mentionPopup.style.display = "none"; return; }
+          mentionPopup.innerHTML = data.results.map(name => `<div class="mention-option" data-name="${escapeHtml(name)}">@${escapeHtml(name)}</div>`).join("");
+          mentionPopup.style.display = "block";
+          mentionPopup.querySelectorAll(".mention-option").forEach(opt => {
+            opt.addEventListener("click", () => {
+              const before = upToCursor.slice(0, match.index);
+              const after = val.slice(cursor);
+              replyInput.value = before + "@" + opt.dataset.name + " " + after;
+              mentionPopup.style.display = "none";
+              replyInput.focus();
+            });
+          });
+        } catch { mentionPopup.style.display = "none"; }
+      }, 150);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!mentionPopup.contains(e.target) && e.target !== replyInput) mentionPopup.style.display = "none";
+    });
+
+    (async () => {
+      await loadMe();
+      await loadPost();
+    })();
+  </script>
+
+  <script src="https://mcbcode.com/elements/navi.js"></script>
+</body>
+</html>
