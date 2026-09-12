@@ -233,6 +233,15 @@ if (path.startsWith("/docs/")) {
         showNotFound();
       });
   }
+} else if (path === "/post") {
+  // someone hit /post with no trailing slash (or a query string tacked on).
+  // /post/index.html is the real file — bounce there and keep ?id=... and any hash.
+  redirecting = true;
+  location.replace("/post/" + location.search + location.hash);
+} else if (path === "/explore") {
+  // same deal for /explore
+  redirecting = true;
+  location.replace("/explore/" + location.search + location.hash);
 }
 
 if (!redirecting) {
