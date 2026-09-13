@@ -248,6 +248,16 @@
       font-family: monospace;
     }
 
+    .md-h1, .md-h2, .md-h3 {
+      display: inline-block;
+      color: var(--text-main);
+      font-family: 'mcfontb', sans-serif;
+      font-weight: bold !important;
+    }
+    .md-h1 { font-size: 1.35em; }
+    .md-h2 { font-size: 1.18em; }
+    .md-h3 { font-size: 1.05em; }
+
     #replies-list { max-height: 60vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent-color) transparent; }
     #replies-list::-webkit-scrollbar { width: 6px; }
     #replies-list::-webkit-scrollbar-track { background: transparent; }
@@ -303,22 +313,93 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="generic-modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" id="generic-modal-close">x</button>
+      <h3 id="generic-modal-title"></h3>
+      <p class="modal-msg" id="generic-modal-message" style="display:none;"></p>
+      <textarea id="generic-modal-textarea" maxlength="2000"></textarea>
+      <div class="modal-btn-row">
+        <button class="modal-btn" id="generic-modal-cancel">cancel</button>
+        <button class="modal-btn primary" id="generic-modal-confirm">confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API = "https://auth.mcbcode.com";
     let ME = null;
     let POST_ID = new URLSearchParams(window.location.search).get("id");
+
+    // ---- custom modal (replaces browser confirm()/prompt()) ----
+    function showModal({ title, message = "", showTextarea = false, textValue = "", confirmLabel = "confirm", danger = false }) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById("generic-modal-overlay");
+        const titleEl = document.getElementById("generic-modal-title");
+        const messageEl = document.getElementById("generic-modal-message");
+        const textarea = document.getElementById("generic-modal-textarea");
+        const confirmBtn = document.getElementById("generic-modal-confirm");
+        const cancelBtn = document.getElementById("generic-modal-cancel");
+        const closeBtn = document.getElementById("generic-modal-close");
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        messageEl.style.display = message ? "block" : "none";
+        textarea.style.display = showTextarea ? "block" : "none";
+        textarea.value = textValue;
+        confirmBtn.textContent = confirmLabel;
+        confirmBtn.classList.toggle("danger", danger);
+        overlay.style.display = "flex";
+        if (showTextarea) setTimeout(() => textarea.focus(), 50);
+
+        function cleanup(result) {
+          overlay.style.display = "none";
+          confirmBtn.removeEventListener("click", onConfirm);
+          cancelBtn.removeEventListener("click", onCancel);
+          closeBtn.removeEventListener("click", onCancel);
+          overlay.removeEventListener("click", onOverlayClick);
+          resolve(result);
+        }
+        function onConfirm() { cleanup(showTextarea ? textarea.value : true); }
+        function onCancel() { cleanup(showTextarea ? null : false); }
+        function onOverlayClick(e) { if (e.target === overlay) onCancel(); }
+
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+        closeBtn.addEventListener("click", onCancel);
+        overlay.addEventListener("click", onOverlayClick);
+      });
+    }
+
+    function customConfirm(message, { danger = false, confirmLabel = "delete" } = {}) {
+      return showModal({ title: "are you sure?", message, showTextarea: false, confirmLabel, danger });
+    }
+
+    function customPrompt(title, defaultValue) {
+      return showModal({ title, showTextarea: true, textValue: defaultValue, confirmLabel: "save" });
+    }
+
+    function profileUrl(username) {
+      return "https://mcbcode.com/profile/" + encodeURIComponent(username || "");
+    }
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
     }
     function renderContent(raw) {
       let s = escapeHtml(raw);
+      s = s.replace(/^### (.+)$/gm, '<span class="md-h3">$1</span>');
+      s = s.replace(/^## (.+)$/gm, '<span class="md-h2">$1</span>');
+      s = s.replace(/^# (.+)$/gm, '<span class="md-h1">$1</span>');
       s = s.replace(/\[([^\]\n]{1,100})\]\((https?:\/\/[^\s)]{1,300})\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color);text-decoration:underline;">$1</a>');
       s = s.replace(/\*\*([^\*\n]{1,300})\*\*/g, '<strong>$1</strong>');
       s = s.replace(/(^|[^*])\*([^*\n]{1,300})\*(?!\*)/g, '$1<em>$2</em>');
       s = s.replace(/(^|[^_])_([^_\n]{1,300})_(?!_)/g, '$1<em>$2</em>');
       s = s.replace(/`([^`\n]{1,300})`/g, '<code>$1</code>');
-      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, '<span class="mention">@$1</span>');
+      s = s.replace(/@([a-zA-Z0-9_.]{1,32})/g, (m, name) => {
+        if (name.toLowerCase() === "everyone") return `<span class="mention mention-everyone">@${name}</span>`;
+        return `<a class="mention" href="${profileUrl(name)}">@${name}</a>`;
+      });
       return s;
     }
     function timeAgo(dateStr) {
@@ -373,22 +454,26 @@
       document.getElementById("post-container").innerHTML = `
         <div class="post-card" data-post-id="${post.id}">
           <div class="post-head">
-            <img class="post-pfp" src="${pfpUrl(post.author_pfp)}" alt="">
-            <div class="post-head-text">
-              <span class="post-username">${escapeHtml(post.author_username || "unknown")}</span>
-              <span class="post-time">${timeAgo(post.created_at)}${post.updated_at !== post.created_at ? " (edited)" : ""}</span>
-            </div>
+            <a class="profile-link" href="${profileUrl(post.author_username)}">
+              <img class="post-pfp" src="${pfpUrl(post.author_pfp)}" alt="">
+              <div class="post-head-text">
+                <span class="post-username">${escapeHtml(post.author_username || "unknown")}</span>
+                <span class="post-time">${timeAgo(post.created_at)}${post.updated_at !== post.created_at ? " (edited)" : ""}</span>
+              </div>
+            </a>
             ${projectChip}
           </div>
-          <div class="post-content">${renderContent(post.content)}</div>
+          <div class="post-content" data-raw="${encodeURIComponent(post.content)}">${renderContent(post.content)}</div>
           <div class="post-actions">
-            <div class="react-group">
-              <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
-              <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+            <div class="react-block">
+              <div class="react-group">
+                <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
+                <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+              </div>
+              ${renderFightBar(post.likes, post.dislikes)}
             </div>
             ${isOwner ? `<button class="post-edit-btn">edit</button><button class="post-delete-btn">delete</button>` : ""}
           </div>
-          ${renderFightBar(post.likes, post.dislikes)}
         </div>
       `;
 
@@ -415,8 +500,8 @@
 
       const editBtn = document.querySelector(".post-edit-btn");
       if (editBtn) editBtn.addEventListener("click", async () => {
-        const current = document.querySelector(".post-content").textContent;
-        const updated = prompt("edit your post:", current);
+        const current = decodeURIComponent(document.querySelector(".post-content").dataset.raw);
+        const updated = await customPrompt("edit your post", current);
         if (updated === null || !updated.trim()) return;
         const res = await fetch(API + "/post", {
           method: "POST", credentials: "include",
@@ -430,7 +515,8 @@
 
       const deleteBtn = document.querySelector(".post-delete-btn");
       if (deleteBtn) deleteBtn.addEventListener("click", async () => {
-        if (!confirm("delete this post? this can't be undone.")) return;
+        const ok = await customConfirm("delete this post? this can't be undone.", { danger: true });
+        if (!ok) return;
         const res = await fetch(API + "/post?id=" + encodeURIComponent(post.id), { method: "DELETE", credentials: "include" });
         const data = await res.json();
         if (!data.ok) { alert(data.error || "couldn't delete"); return; }
@@ -450,8 +536,10 @@
         return `
           <div class="reply-card" data-reply-id="${r.id}">
             <div class="reply-head">
-              <img class="reply-pfp" src="${pfpUrl(r.author_pfp)}" alt="">
-              <span class="reply-username">${escapeHtml(r.author_username || "unknown")}</span>
+              <a class="profile-link" href="${profileUrl(r.author_username)}">
+                <img class="reply-pfp" src="${pfpUrl(r.author_pfp)}" alt="">
+                <span class="reply-username">${escapeHtml(r.author_username || "unknown")}</span>
+              </a>
               <span class="reply-time">${timeAgo(r.created_at)}</span>
               ${canDelete ? `<button class="reply-delete-btn">delete</button>` : ""}
             </div>
@@ -464,7 +552,8 @@
         btn.addEventListener("click", async () => {
           const card = btn.closest(".reply-card");
           const id = card.dataset.replyId;
-          if (!confirm("delete this reply?")) return;
+          const ok = await customConfirm("delete this reply?", { danger: true });
+          if (!ok) return;
           const res = await fetch(API + "/post/reply?id=" + encodeURIComponent(id), { method: "DELETE", credentials: "include" });
           const data = await res.json();
           if (!data.ok) { alert(data.error || "couldn't delete"); return; }
