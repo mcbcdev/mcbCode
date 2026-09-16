@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  
+
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mcbcode.com">
   <meta property="og:title" content="mcbCode | Minecraft Bedrock Addon Development Tools">
@@ -20,7 +20,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>mcbCode | The Beginner-Friendly Bedrock Editor</title>
-  
+
   <style>
     :root {
       --hero-width: 10vh;
@@ -33,12 +33,14 @@
       --text-main: #ffffff;
       --text-muted: #bebebe;
       --code-bg: #111111;
+      /* new: a couple of accent friends for the playful bits, used sparingly */
+      --gold: #ffd23f;
+      --amethyst: #b06bff;
     }
 
-    /* --- Strict Reset & Font Enforcement --- */
     *, *::before, *::after {
       font-weight: normal !important;
-      border-radius: 0px !important; /* Strictly no rounded corners */
+      border-radius: 0px !important;
       box-sizing: border-box;
     }
 
@@ -58,6 +60,11 @@
       50% { box-shadow: 0 0 35px rgba(5, 238, 147, 0.45); }
     }
 
+    @keyframes floatBlock {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(3deg); }
+    }
+
     html, body {
       min-height: 100%;
       margin: 0;
@@ -69,28 +76,36 @@
       overflow-x: hidden;
     }
 
-    h1, h2, h3, h4 { 
-      color: var(--text-main); 
-      margin: 0; 
+    h1, h2, h3, h4 {
+      color: var(--text-main);
+      margin: 0;
       font-family: 'mcfontb', 'mcfont', sans-serif;
     }
 
-    a { 
-      text-decoration: none; 
-      color: var(--text-main); 
-      transition: all 0.2s ease; 
+    a {
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.2s ease;
       font-family: 'mcfont', sans-serif;
     }
 
-    a:hover { 
-      color: var(--accent-color); 
+    a:hover {
+      color: var(--accent-color);
       text-shadow: 0 0 8px var(--accent-glow);
     }
 
     c { color: #e7007b; }
     g { color: #008e4c; }
 
-    /* --- Status Badges & CTAs --- */
+    /* pixel-strip divider, stands in for the usual hairline rule */
+    .pixel-divider {
+      height: 6px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background-image: repeating-linear-gradient(90deg, var(--accent-color) 0 10px, transparent 10px 20px);
+      opacity: 0.35;
+    }
+
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -105,6 +120,7 @@
       font-family: 'mcfontwide', 'mcfont', sans-serif;
       text-transform: uppercase;
       backdrop-filter: blur(8px);
+      transform: rotate(-1deg);
     }
 
     .status-dot {
@@ -149,11 +165,11 @@
       transform: translateY(-2px);
     }
 
-    /* --- Hero Section with Minecraft Background --- */
+    /* --- Hero --- */
     .hero-wrapper {
       position: relative;
       width: 100%;
-      background-image: 
+      background-image:
         linear-gradient(180deg, rgba(12, 12, 12, 0.5) 40%, rgba(12, 12, 12, 1) 100%),
         url('https://mcbcode.com/img/mc/end_city_one.png');
       background-size: cover;
@@ -167,7 +183,22 @@
       flex-direction: column;
       align-items: center;
       animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
     }
+
+    /* floating little block icons around the hero, purely decorative */
+    .float-deco {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      image-rendering: pixelated;
+      opacity: 0.85;
+      animation: floatBlock 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .float-deco.d1 { top: 14%; left: 8%; animation-delay: 0s; }
+    .float-deco.d2 { top: 62%; right: 10%; animation-delay: 1.5s; width: 26px; height: 26px; }
+    .float-deco.d3 { top: 30%; right: 20%; animation-delay: 3s; width: 22px; height: 22px; }
 
     #tagline {
       font-size: clamp(2.2rem, 5.5vw, 4rem);
@@ -186,7 +217,7 @@
 
     .hero-subtext {
       font-size: 1.15rem;
-      font-family:, 'mcfont', sans-serif;
+      font-family: 'mcfont', sans-serif;
       max-width: 780px;
       line-height: 1.7;
       margin-bottom: 40px;
@@ -201,12 +232,17 @@
       flex-wrap: wrap;
     }
 
-    /* --- Editors Matrix (Suite Launcher) --- */
+    /* --- Section headers, now a little less "report cover" --- */
     .section-header {
       max-width: 1200px;
       margin: 90px auto 35px auto;
       padding: 0 5%;
       text-align: left;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
     }
 
     .section-header h2 {
@@ -220,9 +256,21 @@
       color: var(--text-muted);
       font-size: 1rem;
       font-family: 'mcfontwide', sans-serif;
+      max-width: 480px;
     }
 
+    .section-header .header-mark {
+      font-size: 3rem;
+      color: var(--accent-color);
+      opacity: 0.25;
+      font-family: 'mcfontb', sans-serif;
+      line-height: 1;
+    }
+
+    /* --- Editors matrix --- */
     .editor-matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 24px;
       max-width: 1200px;
       margin: 0 auto;
@@ -252,7 +300,7 @@
     }
 
     .editor-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-4px) rotate(-0.4deg);
       border-color: rgba(5, 238, 147, 0.45);
       background: rgba(24, 24, 24, 0.9);
       box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 0 25px rgba(5, 238, 147, 0.03);
@@ -297,7 +345,7 @@
       margin: 0;
     }
 
-    /* --- Value & Showcase Section --- */
+    /* --- Value & showcase --- */
     .showcase-container {
       max-width: 1200px;
       margin: 120px auto;
@@ -383,7 +431,138 @@
     .sc-num { color: #3498db; font-family: monospace !important; }
     .sc-key { color: #a29bfe; font-family: monospace !important; }
 
-    /* --- Banner Section --- */
+    /* --- DripstoneAI chat mock --- */
+    .drip-chat {
+      flex: 1.1;
+      background-color: var(--code-bg);
+      border: 1px solid rgba(176, 107, 255, 0.3);
+      padding: 22px;
+      text-align: left;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drip-msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .drip-msg.user {
+      align-self: flex-end;
+      background: rgba(176, 107, 255, 0.12);
+      border: 1px solid rgba(176, 107, 255, 0.35);
+      color: var(--text-main);
+    }
+
+    .drip-msg.ai {
+      align-self: flex-start;
+      color: #e6d6ff;
+    }
+
+    .drip-msg.ai .drip-tag {
+      display: block;
+      color: var(--amethyst);
+      font-family: 'mcfontb', sans-serif;
+      font-size: 0.75rem;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* --- Pricing / Obsidian tiers --- */
+    .tier-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 5%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      text-align: left;
+    }
+
+    .tier-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .tier-card.tier-plus {
+      border-color: rgba(176, 107, 255, 0.4);
+      background: linear-gradient(160deg, rgba(18,18,18,0.9), rgba(176, 107, 255, 0.06));
+      position: relative;
+    }
+
+    .tier-card.tier-plus::before {
+      content: 'MOST FUN';
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: var(--amethyst);
+      color: #14001f;
+      font-family: 'mcfontb', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+    }
+
+    .tier-name {
+      font-family: 'mcfontb', sans-serif;
+      color: var(--text-main);
+      font-size: 1.4rem;
+    }
+
+    .tier-price {
+      font-family: 'mcfontb', sans-serif;
+      color: var(--accent-color);
+      font-size: 2rem;
+    }
+
+    .tier-card.tier-plus .tier-price { color: var(--amethyst); }
+
+    .tier-price span {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-family: 'mcfont', sans-serif;
+    }
+
+    .tier-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tier-list li {
+      font-family: 'mcfont', sans-serif;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tier-list li::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent-color);
+      flex-shrink: 0;
+    }
+
+    .tier-card.tier-plus .tier-list li::before {
+      background: var(--amethyst);
+    }
+
+    /* --- Banner --- */
     .cloud-banner {
       max-width: 1200px;
       margin: 80px auto;
@@ -403,16 +582,16 @@
       box-shadow: 0 20px 50px rgba(0,0,0,0.6);
     }
 
-    .cloud-banner h3 { 
-      font-size: 1.8rem; 
-      margin-bottom: 10px; 
+    .cloud-banner h3 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
       font-family: 'mcfontb', sans-serif;
     }
 
-    .cloud-banner p { 
-      margin: 0; 
-      color: var(--text-muted); 
-      font-size: 1.05rem; 
+    .cloud-banner p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 1.05rem;
       font-family: 'mcfont', sans-serif;
     }
 
@@ -501,8 +680,10 @@
     /* Responsiveness */
     @media (max-width: 900px) {
       .showcase-block, .showcase-block:nth-child(even) { flex-direction: column; text-align: center; }
-      .showcase-code, .showcase-image-wrapper { width: 100%; box-sizing: border-box; }
+      .showcase-code, .showcase-image-wrapper, .drip-chat { width: 100%; box-sizing: border-box; }
       .cloud-banner-inner { flex-direction: column; text-align: center; }
+      .float-deco { display: none; }
+      .section-header { flex-direction: column; align-items: flex-start; }
     }
 
     @media (max-width: 600px) {
@@ -518,40 +699,52 @@
   <!-- Main Hero Section with Background -->
   <div class="hero-wrapper">
     <main class="hero-container">
-      <div style="margin-top: 10%"></div>
-      <h1 id="tagline">Build Bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h1>
-      
+      <img class="float-deco d1" src="https://mcbcode.com/img/icons/wrench.png" alt="">
+      <img class="float-deco d2" src="https://mcbcode.com/img/icons/slashdot.png" alt="">
+      <img class="float-deco d3" src="https://mcbcode.com/img/icons/search.png" alt="">
+
+      <div style="margin-top: 6%"></div>
+
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        built for bedrock, not java
+      </div>
+
+      <h1 id="tagline">build bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h1>
+
       <p class="hero-subtext">
-        The fast, lightweight web editor built specifically for Minecraft Bedrock creators. Craft manifests, write commands, and paint textures—all in browser.
+        the fast, lightweight web editor built specifically for minecraft bedrock creators. craft manifests, write commands, and paint textures — all in your browser, no setup required.
       </p>
 
       <div class="hero-buttons">
-        <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">Get Started</button>
-        <button class="btn" onclick="window.location.href='https://mcbcode.com/dashboard'">Go to Dashboard</button>
-        </div>
-        <br>
-        <div style="display: flex; gap: 16px;">
+        <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">get started</button>
+        <button class="btn" onclick="window.location.href='https://mcbcode.com/dashboard'">go to dashboard</button>
+      </div>
+      <br>
+      <div style="display: flex; gap: 16px;">
         <button class="btn" onclick="window.location.href='https://mcbcode.com/download'" style="border-color: #d138d9; color: #d138d9; background-color: #d138d959;">
-            Android app
-            <p style="line-height 0.1; margin-bottom: 0;">Download now! <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
-            </button>
+          android app
+          <p style="line-height 0.1; margin-bottom: 0;">download now! <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
+        </button>
         <button class="btn" onclick="window.location.href='https://studio.mcbcode.com'" style="border-color: #8338d9; color: #8338d9; background-color: #8338d959;">
-            studio.mcbc
-            <p style="line-height 0.1; margin-bottom: 0;">[Beta] Open <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
-            </button>
-            </div>
+          studio.mcbc
+          <p style="line-height 0.1; margin-bottom: 0;">[beta] open <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
+        </button>
       </div>
     </main>
   </div>
 
   <!-- obsidian snippet -->
   <script src="https://mcbcode.com/elements/obsidian.js"></script>
-  
+
   <!-- Interactive Suite Launcher / Editors Matrix -->
   <section>
     <div class="section-header">
-      <h2>Editor Workspaces</h2>
-      <p>Select a dedicated tool to start creating immediately.</p>
+      <div>
+        <h2>editor workspaces</h2>
+        <p>pick a tool and start creating immediately — no folder-diving required.</p>
+      </div>
+      <div class="header-mark">/give</div>
     </div>
 
     <div class="editor-matrix">
@@ -561,8 +754,8 @@
             <img src="https://mcbcode.com/img/icons/wrench.png" alt="Manifest Tool">
             <span class="editor-tag">manifest.json</span>
           </div>
-          <h3>Pack Setup</h3>
-          <p>Generate valid UUIDs, pack manifests, and addon configurations in seconds.</p>
+          <h3>pack setup</h3>
+          <p>generate uuids, pack manifests, and addon configurations in seconds.</p>
         </div>
       </a>
 
@@ -572,19 +765,19 @@
             <img src="https://mcbcode.com/img/icons/slashdot.png" alt="Command Editor">
             <span class="editor-tag">.mcfunction</span>
           </div>
-          <h3>Command Suite</h3>
-          <p>Write clean commands with high-visibility syntax highlight and error checking.</p>
+          <h3>command suite</h3>
+          <p>write clean commands with high-visibility syntax highlight and error checking.</p>
         </div>
       </a>
 
       <a href="https://mcbcode.com/pixel" class="editor-card">
         <div>
           <div class="editor-card-header">
-            <img src="https://mcbcode.com/img/icons/search.png" alt="JSON Editor">
+            <img src="https://mcbcode.com/img/icons/search.png" alt="Pixel Editor">
             <span class="editor-tag">.png</span>
           </div>
-          <h3>Pixel Editor</h3>
-          <p>Helpful tools that make creating pixel art easy.</p>
+          <h3>pixel editor</h3>
+          <p>helpful tools that make creating pixel art and textures easy.</p>
         </div>
       </a>
 
@@ -594,8 +787,8 @@
             <img src="https://mcbcode.com/img/icons/search.png" alt="JSON Editor">
             <span class="editor-tag">.json</span>
           </div>
-          <h3>JSON Editor</h3>
-          <p>Easily edit entity structures, component groups, and item definitions.</p>
+          <h3>json editor</h3>
+          <p>easily edit entity structures, component groups, and item definitions.</p>
         </div>
       </a>
 
@@ -605,20 +798,23 @@
             <img src="https://mcbcode.com/img/icons/default-transparent-selected.png" alt="Scripting Suite">
             <span class="editor-tag">.js</span>
           </div>
-          <h3>Write Scripts</h3>
-          <p>Develop modern GameTest & Bedrock Script API scripts directly online.</p>
+          <h3>write scripts</h3>
+          <p>develop modern gametest & bedrock script api scripts directly online.</p>
         </div>
       </a>
     </div>
   </section>
 
+  <div class="pixel-divider" style="margin-top: 100px;"></div>
+
   <!-- Core Showcase Sections -->
   <div class="showcase-container">
-    
+
     <div class="showcase-block">
       <div class="showcase-info">
-        <h2>A Friendlier Way to Mod</h2>
-        <p>Forget heavy desktop IDEs and overcomplicated setups like <a href="https://bridge-core.app" target="_blank">bridge.</a> You shouldn't need a computer science degree to create custom items, custom blocks, or new entity behaviors.</p>
+        <span class="badge-inline">Why mcbCode</span>
+        <h2>a friendlier way to mod</h2>
+        <p>Forget heavy desktop IDEs and overcomplicated setups like <a href="https://bridge-core.app" target="_blank" title="dont get me wrong, great site">bridge.</a> you shouldn't need a computer science degree to create custom items, custom blocks, or new entity behaviors.</p>
       </div>
       <div class="showcase-image-wrapper">
         <img src="https://mcbcode.com/img/project-preview.png" alt="mcbCode Editor Preview">
@@ -627,8 +823,9 @@
 
     <div class="showcase-block">
       <div class="showcase-info">
-        <h2>Skip the Boring Stuff</h2>
-        <p>Setting up your pack structure from scratch is tedious. Input your pack name, choose your targets, and mcbCode formats valid Minecraft Bedrock code immediately.</p>
+        <span class="badge-inline">Pack Setup</span>
+        <h2>skip the boring Stuff</h2>
+        <p>setting up your pack structure from scratch is tedious. input your pack name, choose your targets, and mcbCode formats valid minecraft bedrock code immediately.</p>
       </div>
       <div class="showcase-code"><span>{</span>
   <span class="sc-key">"format_version"</span>: <span class="sc-num">2</span>,
@@ -643,8 +840,9 @@
 
     <div class="showcase-block">
       <div class="showcase-info">
-        <h2>Pixel Art & Texture Editor</h2>
-        <p>Design pixel textures right in your browser. No third-party image editor needed—export 16x16 or 32x32 PNG assets directly into your active project workspace.</p>
+        <span class="badge-inline">textures</span>
+        <h2>pixel art & texture editor</h2>
+        <p>design pixel textures right in your browser. no third-party image editor needed — export 16x16-512x512 png assets directly into your active project workspace.</p>
       </div>
       <div class="showcase-image-wrapper">
         <img src="https://mcbcode.com/img/pixel-preview.png" alt="Pixel Art Tool Preview">
@@ -653,25 +851,78 @@
 
     <div class="showcase-block">
       <div class="showcase-info">
-        <h2>Write Commands Faster</h2>
-        <p>No more syntax guesswork or unseen typos. The command script editor color-codes target selectors, coordinates, and arguments for max clarity.</p>
+        <span class="badge-inline">Commands</span>
+        <h2>write commands faster</h2>
+        <p>no more syntax guesswork or unseen typos. the command script editor color-codes target selectors, coordinates, and arguments for max clarity.</p>
       </div>
       <div class="showcase-code"><span class="sc-cmd">execute</span> as <span class="sc-sel">@a</span> at <span class="sc-sel">@s</span> run particle minecraft:basic_smoke_particle ~ ~1 ~
 <span class="sc-cmd">give</span> <span class="sc-sel">@s</span> diamond_sword <span class="sc-num">1</span> <span class="sc-num">0</span> {<span class="sc-str">"minecraft:item_lock"</span>: {<span class="sc-str">"mode"</span>: <span class="sc-str">"lock_in_slot"</span>}}
 <span class="sc-cmd">playsound</span> random.levelup <span class="sc-sel">@s</span> ~ ~ ~</div>
     </div>
 
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <span class="badge-inline" style="color: var(--amethyst);">DripstoneAI <span style="color: #c02cad; font-family: mcfontwide">[COMING SOON]</span></span>
+        <h2>an ai that actually knows bedrock</h2>
+        <p>dripstoneAI is built specifically around bedrock addon development. ask it to explain a chunk of code, fix a broken component group, or outline a whole new item — it works inside your project, not against it.</p>
+      </div>
+      <div class="drip-chat">
+        <div class="drip-msg user">can you edit my guide book item to add a crafting recipe?</div>
+        <div class="drip-msg ai"><span style="color: #454545;">Finding guide_book.json</span><br><br>for sure. doing that now.<br><br><span style="color: #454545;">Editing guide_book.json</span><br><span style="color: #454545;">Saving it to project...</span></div>
+        <textarea style="background-color: #343434; color: #ffffff; padding: 8px; outline: none; resize: none; border-color: #565656;" rows="1" disabled placeholder="Ask another question...">thanks, can you create me a template page that i can go in and edit later?</textarea>
+      </div>
+    </div>
+
   </div>
+
+  <!-- Obsidian pricing --> 
+  <section>
+    <div class="section-header">
+      <div>
+        <h2>free vs obsidian</h2>
+        <p>everything you need to build addons is free. obsidian unlocks the tools for sharing, syncing, and working with a team.</p>
+      </div>
+      <div class="header-mark">$4</div>
+    </div>
+
+    <div class="tier-wrap">
+      <div class="tier-card">
+        <div>
+          <div class="tier-name">free</div>
+          <div class="tier-price">$0 <span>forever</span></div>
+        </div>
+        <ul class="tier-list">
+          <li>full code editors & syntax highlighting</li>
+          <li>pixel art / texture editor</li>
+          <li>limited projects</li>
+          <li>export finished packs for minecraft</li>
+        </ul>
+      </div>
+
+      <div class="tier-card tier-plus">
+        <div>
+          <div class="tier-name">obsidian</div>
+          <div class="tier-price">$4 <span>/ month</span></div>
+        </div>
+        <ul class="tier-list">
+          <li>private projects</li>
+          <li>custom share codes</li>
+          <li>github sync</li>
+          <li>project snapshots/backups</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <!-- Cloud Sync / Call to Action Banner -->
   <section class="cloud-banner">
     <div class="cloud-banner-inner">
       <div>
-        <h3>Ready to build your next addon?</h3>
-        <p>Save your projects safely in the cloud and work from anywhere.</p>
+        <h3>ready to build your first addon?</h3>
+        <p>save your projects safely in the cloud and work from anywhere.</p>
       </div>
       <div>
-        <button class="btn-primary" onclick="window.location.href='https://mcbcode.com/account'">Create Free Account</button>
+        <button class="btn-primary" onclick="window.location.href='https://mcbcode.com/account'">create your account today</button>
       </div>
     </div>
   </section>
@@ -681,42 +932,43 @@
     <div class="footer-grid">
       <div class="footer-col">
         <h4>mcbCode</h4>
-        <p style="font-size: 0.85rem; line-height: 1.5;">The web-first development workspace tailored specifically for Bedrock Edition creators.</p>
+        <p style="font-size: 0.85rem; line-height: 1.5;">the web-first development workspace tailored specifically for bedrock creators.</p>
       </div>
       <div class="footer-col">
-        <h4>Editors</h4>
+        <h4>tools</h4>
         <ul>
-          <li><a href="https://mcbcode.com/editor/mcfunction">Command Editor</a></li>
-          <li><a href="https://mcbcode.com/editor/manifest">Manifest Creator</a></li>
-          <li><a href="https://mcbcode.com/pixel">Pixel Editor</a></li>
-          <li><a href="https://mcbcode.com/editor/json">JSON Editor</a></li>
-          <li><a href="https://mcbcode.com/editor/javascript">Javascript Editor</a></li>
+          <li><a href="https://mcbcode.com/editor/mcfunction">command editor</a></li>
+          <li><a href="https://mcbcode.com/editor/manifest">manifest creator</a></li>
+          <li><a href="https://mcbcode.com/pixel">pixel editor</a></li>
+          <li><a href="https://mcbcode.com/editor/json">json editor</a></li>
+          <li><a href="https://mcbcode.com/editor/javascript">javascript editor</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Account</h4>
+        <h4>account</h4>
         <ul>
-          <li><a href="https://mcbcode.com/dashboard">Dashboard</a></li>
-          <li><a href="https://mcbcode.com/profile">Profile</a></li>
-          <li><a href="https://mcbcode.com/home">Home</a></li>
+          <li><a href="https://mcbcode.com/dashboard">dashboard</a></li>
+          <li><a href="https://mcbcode.com/search">search</a></li>
+          <li><a href="https://mcbcode.com/home">home</a></li>
+        </ul>
       </div>
       <div class="footer-col">
-        <h4>Resources</h4>
+        <h4>resources</h4>
         <ul>
-          <li><a href="https://mcbcode.com/about">About</a></li>
-          <li><a href="https://mcbcode.com/docs/getting-started">Documentation</a></li>
-          <li><a href="https://roadmap.mcbcode.com">Roadmap</a></li>
-          <li><a href="https://mcbcode.com/terms-of-use">Terms of Use</a></li>
+          <li><a href="https://mcbcode.com/about">about</a></li>
+          <li><a href="https://mcbcode.com/docs/getting-started">documentation</a></li>
+          <li><a href="https://roadmap.mcbcode.com">roadmap</a></li>
+          <li><a href="https://mcbcode.com/terms-of-use">terms of use</a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
       <div>
-        Not affiliated with Microsoft or Mojang AB.
+        not affiliated with Microsoft or Mojang AB.
       </div>
       <div>
-        <a href="https://admin.mcbcode.com" style="color: #bebebe; text-decoration: none; user-select: none;">©</a> Copyright 2026 mcb<g>Code</g><br><span style="color: #333333; text-align: right;">Created by: <a href="https://hello.mcbcode.com" style="color: #454545; font-family: mcfontb">idktoast</a></span>
+        <a href="https://admin.mcbcode.com" style="color: #bebebe; text-decoration: none; user-select: none;">©</a> Copyright 2026 mcb<g>Code</g><br><span style="color: #333333; text-align: right;">created by: <a href="https://hello.mcbcode.com" style="color: #454545; font-family: mcfontb">idktoast</a>, a solo dev</span>
       </div>
     </div>
   </footer>
@@ -724,8 +976,6 @@
   <textarea id="search-tabs" rows="1" placeholder="Search..." style="display:none;"></textarea>
   <div id="search-results" class="results-panel" style="display:none;"></div>
 
-
-  
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
   <script src="https://mcbcode.com/elements/navi.js"></script>
