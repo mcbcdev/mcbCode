@@ -4,6 +4,7 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <title>mcbCode | Mobile Sync</title>
+
   <style>
     h2 {
         color: #ffffff;
@@ -13,6 +14,7 @@
     p {
         color: #bebebe;
     }
+
     #code {
         border: 3px solid #565656;
         background-color: #343434;
@@ -46,29 +48,68 @@
         border-color: #05ee93;
         border-radius: 16px;
     }
-    </style>
+  </style>
 </head>
+
 <body style="text-align: center; margin-top: 80px;">
 
   <h2>mcb<span style="color: #05ee93">Code</span> Sync</h2>
-  <p>Sync the mcbCode app with your account.<p>
+  <p>Sync the mcbCode app with your account.</p>
 
-<br><br><br>
-  <input id="code" maxlength="4" spellcheck="false" style="text-align:center;" placeholder="1234"/>
+  <br><br><br>
+
+  <input
+    id="code"
+    maxlength="4"
+    spellcheck="false"
+    style="text-align:center;"
+    placeholder="1234"
+  />
+
   <br><br><br><br>
+
   <button onclick="approve()">Confirm</button>
+
   <p id="msg"></p>
+
   <script>
+    // get the code from ?code=1234
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get("code");
+
+    if (urlCode && /^\d{4}$/.test(urlCode)) {
+      document.getElementById("code").value = urlCode;
+    }
+
     async function approve() {
       const code = document.getElementById("code").value.trim();
-      const res = await fetch("https://auth.mcbcode.com/auth/device/approve", {
-        method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code })
-      });
-      const data = await res.json();
-      document.getElementById("msg").textContent = res.ok ? "Device connected! You can close this." : (data.error || "Something went wrong.");
+      const msg = document.getElementById("msg");
+
+      if (!/^\d{4}$/.test(code)) {
+        msg.textContent = "Please enter a valid 4-digit code.";
+        return;
+      }
+
+      try {
+        const res = await fetch("https://auth.mcbcode.com/auth/device/approve", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const data = await res.json();
+
+        msg.textContent = res.ok
+          ? "Device connected! You can close this."
+          : (data.error || "Something went wrong.");
+      } catch (error) {
+        msg.textContent = "Could not connect to the auth server.";
+      }
     }
   </script>
+
 </body>
 </html>
