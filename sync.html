@@ -72,44 +72,43 @@
 
   <p id="msg"></p>
 
-  <script>
-    // get the code from ?code=1234
-    const params = new URLSearchParams(window.location.search);
-    const urlCode = params.get("code");
+<script>
+  // get the code directly after the ?
+  const query = window.location.search.substring(1);
 
-    if (urlCode && /^\d{4}$/.test(urlCode)) {
-      document.getElementById("code").value = urlCode;
+  if (/^\d{4}$/.test(query)) {
+    document.getElementById("code").value = query;
+  }
+
+  async function approve() {
+    const code = document.getElementById("code").value.trim();
+    const msg = document.getElementById("msg");
+
+    if (!/^\d{4}$/.test(code)) {
+      msg.textContent = "Please enter a valid 4-digit code.";
+      return;
     }
 
-    async function approve() {
-      const code = document.getElementById("code").value.trim();
-      const msg = document.getElementById("msg");
+    try {
+      const res = await fetch("https://auth.mcbcode.com/auth/device/approve", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code })
+      });
 
-      if (!/^\d{4}$/.test(code)) {
-        msg.textContent = "Please enter a valid 4-digit code.";
-        return;
-      }
+      const data = await res.json();
 
-      try {
-        const res = await fetch("https://auth.mcbcode.com/auth/device/approve", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ code })
-        });
-
-        const data = await res.json();
-
-        msg.textContent = res.ok
-          ? "Device connected! You can close this."
-          : (data.error || "Something went wrong.");
-      } catch (error) {
-        msg.textContent = "Could not connect to the auth server.";
-      }
+      msg.textContent = res.ok
+        ? "Device connected! You can close this."
+        : (data.error || "Something went wrong.");
+    } catch (error) {
+      msg.textContent = "Could not connect to the auth server.";
     }
-  </script>
+  }
+</script>
 
 </body>
 </html>
