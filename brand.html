@@ -8,6 +8,7 @@
         html, body {
             height: 100%;
             margin: 0;
+            color: #bebebe;
         }
 
         body {
@@ -46,7 +47,45 @@
             padding: 30px;
             flex: 1;
         }
+
+        /* You can customize the rendered markdown appearance here */
+        .markdown-content h1 {
+            font-size: 2.2em;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.8em;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .markdown-content p {
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 1em;
+        }
+
+        .markdown-content a {
+            color: #05ee93;
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-content code {
+            background-color: #f5f5f5;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: monospace;
+        }
     </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -78,54 +117,39 @@
 <main id="content"></main>
 
 
-<!-- logos -->
-<template id="page-logos">
-    <h1>logos</h1>
-    <p>mcbCode logo assets and usage.</p>
-</template>
-
-
-<!-- colors -->
-<template id="page-colors">
-    <h1>colors</h1>
-    <p>mcbCode brand colors and gradients.</p>
-</template>
-
-
-<!-- fonts -->
-<template id="page-fonts">
-    <h1>fonts</h1>
-    <p>fonts used throughout the mcbCode brand.</p>
-</template>
-
-
-<!-- screenshots -->
-<template id="page-pages">
-    <h1>screenshots</h1>
-    <p>screenshots of mcbCode pages and interfaces.</p>
-</template>
-
-
 <script>
 const content = document.getElementById("content");
 
-function showPage(page, addToHistory = true) {
-    let template = document.getElementById("page-" + page);
+async function showPage(page, addToHistory = true) {
+    let url = `https://mcbcode.com/docs/md/brand/${page}.md`;
+    
+    try {
+        let response = await fetch(url);
 
-    if (!template) {
-        page = "logos";
-        template = document.getElementById("page-logos");
+        // Fallback to logos if the markdown file doesn't exist (404)
+        if (!response.ok) {
+            page = "logos";
+            url = `https://mcbcode.com/docs/md/brand/${page}.md`;
+            response = await fetch(url);
+        }
+
+        if (response.ok) {
+            const markdownText = await response.text();
+            // Parse markdown and wrap it in our custom styled div
+            content.innerHTML = `<div class="markdown-content">${marked.parse(markdownText)}</div>`;
+        } else {
+            // Failsafe error display
+            content.innerHTML = `<div class="markdown-content"><h1>Error</h1><p>Failed to load documentation.</p></div>`;
+        }
+    } catch (error) {
+        content.innerHTML = `<div class="markdown-content"><h1>Network Error</h1><p>Could not connect to fetch markdown.</p></div>`;
     }
-
-    content.replaceChildren(
-        template.content.cloneNode(true)
-    );
 
     if (addToHistory) {
         history.pushState(
             { page: page },
             "",
-            "?page=" + page
+            "/brand/" + page
         );
     }
 }
@@ -138,19 +162,27 @@ document.querySelectorAll(".item").forEach(item => {
 });
 
 
+function getPageFromURL() {
+    const pathParts = window.location.pathname.split('/');
+    const lastPart = pathParts.pop();
+    
+    if (!lastPart || lastPart === "brand" || lastPart.includes(".html")) {
+        return "logos";
+    }
+    
+    return lastPart;
+}
+
 window.addEventListener("popstate", event => {
     const page =
         event.state?.page ||
-        new URLSearchParams(location.search).get("page") ||
-        "logos";
+        getPageFromURL();
 
     showPage(page, false);
 });
 
 
-const initialPage =
-    new URLSearchParams(location.search).get("page") || "logos";
-
+const initialPage = getPageFromURL();
 showPage(initialPage, false);
 </script>
 
