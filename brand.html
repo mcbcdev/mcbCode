@@ -728,27 +728,14 @@
     }
 
     function getPageFromUrl() {
-        const match = window.location.pathname.match(
-            /^\/brand\/([^/]+)\/?$/i
-        );
-
-        if (!match) {
-            return "logos";
-        }
-
-        let page;
-
-        try {
-            page = decodeURIComponent(match[1]).toLowerCase();
-        } catch {
-            return "logos";
-        }
+        const params = new URLSearchParams(window.location.search);
+        const page = params.keys().next().value;
 
         return validPages.has(page) ? page : "logos";
     }
 
     function getPageUrl(page) {
-        return "/brand/" + encodeURIComponent(page);
+        return "?"+ encodeURIComponent(page);
     }
 
     function setActivePage(page) {
@@ -810,37 +797,9 @@
         `;
     }
 
-    async function showPage(page, options = {}) {
-        const {
-            historyMode = "none"
-        } = options;
-
+    async function showPage(page) {
         if (!validPages.has(page)) {
             page = "logos";
-        }
-
-        /*
-         * update history immediately.
-         *
-         * your old code waited for fetch() to finish before pushState().
-         * that means network timing could determine the order of your
-         * browser history. humanity invented asynchronous requests and
-         * immediately regretted it.
-         */
-        if (historyMode === "push" && page !== currentPage) {
-            history.pushState(
-                { page },
-                "",
-                getPageUrl(page)
-            );
-        }
-
-        if (historyMode === "replace") {
-            history.replaceState(
-                { page },
-                "",
-                getPageUrl(page)
-            );
         }
 
         currentPage = page;
@@ -862,13 +821,10 @@
 
             if (!response.ok) {
                 if (page !== "logos") {
-                    /*
-                     * keep the old fallback behavior, but fix the url too.
-                     */
                     currentPage = "logos";
 
                     history.replaceState(
-                        { page: "logos" },
+                        null,
                         "",
                         getPageUrl("logos")
                     );
@@ -993,9 +949,13 @@
                 return;
             }
 
-            showPage(page, {
-                historyMode: "push"
-            });
+            history.pushState(
+                null,
+                "",
+                getPageUrl(page)
+            );
+
+            showPage(page);
         });
     });
 
@@ -1018,14 +978,7 @@
     });
 
     window.addEventListener("popstate", () => {
-        /*
-         * always trust the actual url when going back/forward.
-         * relying only on event.state can leave the ui stale when the
-         * url was changed by another source.
-         */
-        showPage(getPageFromUrl(), {
-            historyMode: "none"
-        });
+        showPage(getPageFromUrl());
     });
 
     /*
@@ -1033,16 +986,20 @@
      *
      * /brand
      * /brand/
-     * /brand/anything-invalid
+     * /brand?anything-invalid
      *
-     * all get a real page state instead of leaving the app with a null
-     * history state and hoping for the best.
+     * all get a real page state instead of leaving the app
+     * with an invalid page.
      */
     const initialPage = getPageFromUrl();
 
-    showPage(initialPage, {
-        historyMode: "replace"
-    });
+    history.replaceState(
+        null,
+        "",
+        getPageUrl(initialPage)
+    );
+
+    showPage(initialPage);
 </script>
 
 </body>
