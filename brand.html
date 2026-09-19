@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+    <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            border-right: 2px solid #bebebe;
+            color: #bebebe;
+            min-height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .item {
+            padding: 6px;
+            margin-left: 12px;
+            margin-right: 12px;
+            user-select: none;
+            color: #ffffff;
+        }
+
+        .item:hover {
+            background-color: #343434;
+            cursor: pointer;
+        }
+
+        #group {
+            font-size: 12px;
+            margin-left: 3px;
+            padding: 6px;
+            line-height: 0em;
+        }
+
+        #content {
+            padding: 30px;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <div style="display: flex; align-items: center; color: #ffffff; justify-content: center;">
+        <img src="https://mcbcode.com/img/icons/default-transparent.png" style="height: 36px;">
+        <p style="font-size: 18px; font-family: mcfontb;">
+            mcb<span style="color: #05ee93;">Code</span>
+        </p>
+    </div>
+
+    <p id="group">style</p>
+
+    <div class="item" data-page="logos">logos</div>
+    <div class="item" data-page="colors">colors</div>
+    <div class="item" data-page="fonts">fonts</div>
+
+    <br>
+
+    <p id="group">screenshots</p>
+
+    <div class="item" data-page="pages">pages</div>
+
+</div>
+
+
+<main id="content"></main>
+
+
+<!-- logos -->
+<template id="page-logos">
+    <h1>logos</h1>
+    <p>mcbCode logo assets and usage.</p>
+</template>
+
+
+<!-- colors -->
+<template id="page-colors">
+    <h1>colors</h1>
+    <p>mcbCode brand colors and gradients.</p>
+</template>
+
+
+<!-- fonts -->
+<template id="page-fonts">
+    <h1>fonts</h1>
+    <p>fonts used throughout the mcbCode brand.</p>
+</template>
+
+
+<!-- screenshots -->
+<template id="page-pages">
+    <h1>screenshots</h1>
+    <p>screenshots of mcbCode pages and interfaces.</p>
+</template>
+
+
+<script>
+const content = document.getElementById("content");
+
+function showPage(page, addToHistory = true) {
+    let template = document.getElementById("page-" + page);
+
+    if (!template) {
+        page = "logos";
+        template = document.getElementById("page-logos");
+    }
+
+    content.replaceChildren(
+        template.content.cloneNode(true)
+    );
+
+    if (addToHistory) {
+        history.pushState(
+            { page: page },
+            "",
+            "?page=" + page
+        );
+    }
+}
+
+
+document.querySelectorAll(".item").forEach(item => {
+    item.addEventListener("click", () => {
+        showPage(item.dataset.page);
+    });
+});
+
+
+window.addEventListener("popstate", event => {
+    const page =
+        event.state?.page ||
+        new URLSearchParams(location.search).get("page") ||
+        "logos";
+
+    showPage(page, false);
+});
+
+
+const initialPage =
+    new URLSearchParams(location.search).get("page") || "logos";
+
+showPage(initialPage, false);
+</script>
+
+</body>
+</html>
