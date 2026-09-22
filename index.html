@@ -40,7 +40,6 @@
 
     *, *::before, *::after {
       font-weight: normal !important;
-      border-radius: 0px !important;
       box-sizing: border-box;
     }
 
@@ -140,6 +139,7 @@
       font-family: 'mcfontb', sans-serif;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
+      border-radius: 6px;
       backdrop-filter: blur(8px);
       box-sizing: border-box;
       letter-spacing: 0.5px;
@@ -147,7 +147,6 @@
 
     button:hover, .btn:hover {
       border-color: rgba(255, 255, 255, 0.4);
-      transform: translateY(-2px);
       background-color: rgba(255, 255, 255, 0.1);
       box-shadow: 0 6px 20px rgba(0,0,0,0.5);
     }
@@ -162,7 +161,6 @@
     #tryitout:hover, .btn-primary:hover {
       background-color: var(--accent-color);
       color: var(--bg-color);
-      transform: translateY(-2px);
     }
 
     /* --- Hero --- */
@@ -287,6 +285,7 @@
       flex-direction: column;
       justify-content: space-between;
       transition: all 0.25s ease;
+      border-radius: 12px;
       backdrop-filter: blur(12px);
     }
 
@@ -300,10 +299,7 @@
     }
 
     .editor-card:hover {
-      transform: translateY(-4px) rotate(-0.4deg);
-      border-color: rgba(5, 238, 147, 0.45);
-      background: rgba(24, 24, 24, 0.9);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 0 25px rgba(5, 238, 147, 0.03);
+      border-color: #05ee93 !important;
     }
 
     .editor-card:hover::after { opacity: 1; }
@@ -325,7 +321,6 @@
       font-size: 0.8rem;
       background: rgba(255,255,255,0.05);
       padding: 4px 10px;
-      border: 1px solid rgba(255,255,255,0.12);
       color: var(--accent-color);
       font-family: monospace;
     }
@@ -402,6 +397,7 @@
       font-size: 0.95rem;
       text-align: left;
       overflow-x: auto;
+      border-radius: 12px;
       box-shadow: 0 20px 45px rgba(0,0,0,0.7);
       white-space: pre;
     }
@@ -409,6 +405,7 @@
     .showcase-image-wrapper {
       flex: 1.1;
       overflow: hidden;
+      border-radius: 12px;
       box-shadow: 0 20px 45px rgba(0,0,0,0.7);
       border: 1px solid var(--card-border);
       transition: border-color 0.3s ease;
@@ -441,6 +438,7 @@
       box-shadow: 0 20px 45px rgba(0,0,0,0.7);
       display: flex;
       flex-direction: column;
+      border-radius: 12px;
       gap: 14px;
     }
 
@@ -457,6 +455,8 @@
       background: rgba(176, 107, 255, 0.12);
       border: 1px solid rgba(176, 107, 255, 0.35);
       color: var(--text-main);
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
     }
 
     .drip-msg.ai {
@@ -491,6 +491,7 @@
       display: flex;
       flex-direction: column;
       gap: 18px;
+      border-radius: 12px;
     }
 
     .tier-card.tier-plus {
@@ -703,7 +704,6 @@
       background-color: #08872B;
       border-radius: 6px !important;
       border: 2px solid #0E4A2E;
-      transform: translateY(0px);
     }
 
   </style>
@@ -929,19 +929,7 @@
       </div>
     </div>
   </section>
-
-  <!-- Cloud Sync / Call to Action Banner -->
-  <section class="cloud-banner">
-    <div class="cloud-banner-inner">
-      <div>
-        <h3>ready to build your first addon?</h3>
-        <p>save your projects safely in the cloud and work from anywhere.</p>
-      </div>
-      <div>
-        <button class="btn-primary" onclick="window.location.href='https://mcbcode.com/account'">create your account today</button>
-      </div>
-    </div>
-  </section>
+  <br><br><br>
 
   <!-- Structured Footer -->
   <footer>
