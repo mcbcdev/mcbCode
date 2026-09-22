@@ -446,7 +446,11 @@
             <span class="inline-msg" id="links-msg"></span>
           </div>
         </div>
-
+        <div class="links-settings-block">
+          <div class="links-settings-title">Connected apps</div>
+          <div class="links-settings-desc">AI tools you've given read access to your projects via MCP</div>
+          <div id="connected-apps-list"></div>
+        </div>
         <span class="settings-msg" id="settings-msg"></span>
 
         <button class="sm-btn leave-collab-btn" onclick="leaveAllCollaborations()">Remove me from all projects I'm collaborating on</button>
@@ -865,6 +869,7 @@ function renderProfile(data) {
         settingsLoaded = true;
         renderSettingsToggles();
         renderLinkEditRows();
+        loadConnectedApps();
       } catch {}
     }
 
@@ -899,7 +904,46 @@ function renderSettingsToggles() {
       }).join("");
       container.innerHTML = rows;
     }
+    // ---- MCP CONNECTED APPS ----
+    async function loadConnectedApps() {
+      const wrap = document.getElementById("connected-apps-list");
+      wrap.innerHTML = `<div class="setting-desc">loading...</div>`;
+      try {
+        const r = await fetch(`${AUTH}/mcp-oauth/connections`, { credentials: "include" });
+        if (!r.ok) { wrap.innerHTML = `<div class="setting-desc">couldn't load connections.</div>`; return; }
+        const d = await r.json();
+        renderConnectedApps(d.connections || []);
+      } catch { wrap.innerHTML = `<div class="setting-desc">couldn't load connections.</div>`; }
+    }
 
+    function renderConnectedApps(connections) {
+      const wrap = document.getElementById("connected-apps-list");
+      if (!connections.length) {
+        wrap.innerHTML = `<div class="setting-desc">nothing connected yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = connections.map(c => `
+        <div class="setting-row" style="margin-top:8px;">
+          <div>
+            <div class="setting-label">${esc(c.client_name || "Unnamed app")}</div>
+            <div class="setting-desc">connected ${fmtDate(c.connected_at)}</div>
+          </div>
+          <button class="sm-btn" onclick="revokeConnectedApp('${esc(c.client_id)}')">Revoke</button>
+        </div>
+      `).join("");
+    }
+
+    async function revokeConnectedApp(clientId) {
+      if (!confirm("Revoke this app's access to your mcbCode projects? It'll need to reconnect and get your approval again to use mcbCode after this.")) return;
+      try {
+        const res = await fetch(`${AUTH}/mcp-oauth/connections?client_id=${encodeURIComponent(clientId)}`, {
+          method: "DELETE", credentials: "include"
+        });
+        if (res.ok) loadConnectedApps();
+        else alert("failed to revoke.");
+      } catch { alert("error revoking."); }
+    }
+    
     async function saveLinks() {
       const msg = document.getElementById("links-msg");
       const links = [];
