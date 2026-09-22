@@ -282,12 +282,7 @@ footer g {
       const redirectTo = params.get("redirectto");
       return redirectTo ? redirectTo : "/dashboard";
     }
-    
-    // github now goes through the worker callback, not localStorage
-    function doGithub() {
-      window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23liveHrlFrvFZgW13&scope=user:email&redirect_uri=https://auth.mcbcode.com/auth/github/callback`;
-    }
-    
+        
     // check if already logged in via cookie
     (async () => {
       try {
@@ -295,8 +290,24 @@ footer g {
         if (res.ok) window.location.href = getRedirectTarget();
     } catch {}
   })();
+    
+    // github now goes through the worker callback, not localStorage
+    function buildLoginState() {
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get("redirectto");
+      if (!redirectTo) return "";
+      const b64 = btoa(redirectTo).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      return "return_" + b64;
+    }
+
+    // github now goes through the worker callback, not localStorage
+    function doGithub() {
+      const state = buildLoginState();
+      window.location.href = `https://github.com/login/oauth/authorize?client_id=Ov23liveHrlFrvFZgW13&scope=user:email&redirect_uri=https://auth.mcbcode.com/auth/github/callback&state=${state}`;
+    }
 
     function doGoogle() {
+  const state = buildLoginState();
   window.location.href =
     "https://accounts.google.com/o/oauth2/v2/auth" +
     "?client_id=494331876591-r860t073hcar5in4hm15usj30jd1lfrm.apps.googleusercontent.com" +
@@ -304,16 +315,19 @@ footer g {
     "&response_type=code" +
     "&scope=openid%20email%20profile" +
     "&access_type=offline" +
-    "&prompt=consent";
+    "&prompt=consent" +
+    "&state=" + state;
 }
 
 function doDiscord() {
+  const state = buildLoginState();
   window.location.href =
     "https://discord.com/oauth2/authorize" +
     "?client_id=1523744647942508544" +
     "&response_type=code" +
     "&redirect_uri=" + encodeURIComponent("https://auth.mcbcode.com/discord/callback") +
-    "&scope=identify%20email";
+    "&scope=identify%20email" +
+    "&state=" + state;
 }
 
     function switchTab(tab) {
