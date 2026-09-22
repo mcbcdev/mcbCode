@@ -471,71 +471,93 @@ hr {
   </script>
 
 <script>
-    // ---- figure out which page to load ----
-    function getPageName() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has("page")) {
-        return params.get("page");
-      }
-      // fallback: last segment after /docs/
-      const parts = window.location.pathname.split("/docs/");
-      if (parts.length > 1) {
-        const seg = parts[1].split("/").filter(Boolean).pop();
-        if (seg && seg !== "index.html") {
-          return seg.replace(/\.html$/, "");
-        }
-      }
-      return "getting-started"; // default fallback page
+  // ---- figure out which page to load ----
+  function getPageName() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.has("page")) {
+      return params.get("page");
     }
 
-    const pageName = getPageName();
-    const mdFile = `https://mcbcode.com/docs/md/${pageName}.md`;
+    // fallback: last segment after /docs/
+    const parts = window.location.pathname.split("/docs/");
 
-    let rawMarkdown = "";
+    if (parts.length > 1) {
+      const seg = parts[1].split("/").filter(Boolean).pop();
 
-    fetch(mdFile)
-      .then(res => {
-        if (!res.ok) throw new Error("not found");
-        return res.text();
-      })
-      .then(text => {
-        rawMarkdown = text;
-        document.getElementById("docs-content").innerHTML = marked.parse(text);
-        document.title = `mcbCode Docs | ${pageName}`;
-        // clean up the url bar so it shows /docs/[page] instead of ?page=
-        history.replaceState(null, "", `/docs/${pageName}`);
-      })
-      .catch(err => {
-        rawMarkdown = "";
-        document.getElementById("docs-content").innerHTML =
-          "<h1>Documentation not found</h1><p>the page youre looking for doesnt exist.</p>";
-        document.title = "mcbCode Docs | Not Found";
-        console.log("failed to load markdown:", err);
-      });
+      if (seg && seg !== "index.html") {
+        return seg.replace(/\.html$/, "");
+      }
+    }
 
-    document.getElementById("btn-copy").onclick = () => {
-      if (!rawMarkdown) return;
-      navigator.clipboard.writeText(rawMarkdown)
-        .then(() => console.log("markdown copied"))
-        .catch(err => console.log("copy failed:", err));
-    };
+    return "getting-started";
+  }
 
-    document.getElementById("btn-download").onclick = () => {
-      if (!rawMarkdown) return;
-      const blob = new Blob([rawMarkdown], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${pageName}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-    };
+  const pageName = getPageName();
+  const mdFile = `https://mcbcode.com/docs/md/${pageName}.md`;
 
-    document.getElementById("btn-view").onclick = () => {
-      if (!rawMarkdown) return;
-      window.open(mdFile, "_blank");
-    };
-  </script>
+  let rawMarkdown = "";
+
+  fetch(mdFile)
+    .then(res => {
+      if (!res.ok) throw new Error("not found");
+      return res.text();
+    })
+    .then(text => {
+      rawMarkdown = text;
+
+      document.getElementById("docs-content").innerHTML =
+        marked.parse(text);
+
+      document.title = `mcbCode Docs | ${pageName}`;
+
+      // keep the URL as ?page=...
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", pageName);
+      window.history.replaceState(null, "", url);
+    })
+    .catch(err => {
+      rawMarkdown = "";
+
+      document.getElementById("docs-content").innerHTML =
+        "<h1>Documentation not found</h1><p>the page youre looking for doesnt exist.</p>";
+
+      document.title = "mcbCode Docs | Not Found";
+
+      console.log("failed to load markdown:", err);
+    });
+
+  document.getElementById("btn-copy").onclick = () => {
+    if (!rawMarkdown) return;
+
+    navigator.clipboard.writeText(rawMarkdown)
+      .then(() => console.log("markdown copied"))
+      .catch(err => console.log("copy failed:", err));
+  };
+
+  document.getElementById("btn-download").onclick = () => {
+    if (!rawMarkdown) return;
+
+    const blob = new Blob([rawMarkdown], {
+      type: "text/markdown"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = `${pageName}.md`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById("btn-view").onclick = () => {
+    if (!rawMarkdown) return;
+
+    window.open(mdFile, "_blank");
+  };
+</script>
 
   <script src="/docs/elements/sidebar.js"></script>
   <script src="/docs/elements/navi.js"></script>
