@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mcbcode.com/mcp">
+  <meta property="og:title" content="mcbCode | MCP">
+  <meta property="og:description" content="Connect mcbCode to Claude, ChatGPT, and other AI tools">
+  <meta property="og:image" content="https://mcbcode.com/theme/favicon.png">
+  <meta property="og:site_name" content="mcbCode">
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>mcbCode | MCP</title>
+  <style>
+html, body {
+  min-height: 100%;
+  margin: 0;
+  font-family: "mcfont", sans-serif;
+  background: #0c0c0c;
+  color: #bebebe;
+}
+a { color: #ffffff; text-decoration: none; transition: color .2s ease-in-out; }
+a:hover { color: #05ee93; }
+g { color: #05ee93; }
+c { color: #e7007b; }
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 80px 24px 60px; }
+
+h1 {
+  font-family: "mcfontb", sans-serif;
+  font-size: 34px;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+p.subtitle { color: #888; font-size: 15px; margin: 0 0 40px; }
+
+h2 {
+  font-family: "mcfontb", sans-serif;
+  font-size: 20px;
+  color: #ffffff;
+  margin: 40px 0 12px;
+  border-bottom: 2px solid #2e2e2e;
+  padding-bottom: 8px;
+}
+p { line-height: 1.6; font-size: 15px; }
+ul { line-height: 1.7; font-size: 15px; padding-left: 20px; }
+code {
+  background: #1a1a1a;
+  border: 1px solid #2e2e2e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #05ee93;
+}
+pre {
+  background: #111;
+  border: 2px solid #2e2e2e;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  color: #ddd;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 2px solid #2e2e2e;
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.card h3 { margin: 0 0 6px; color: #ffffff; font-size: 16px; }
+.card p { margin: 0; color: #999; font-size: 14px; }
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.tag.tested { background: #0a2a1a; color: #05ee93; border: 1px solid #05ee93; }
+.tag.untested { background: #2a2410; color: #e0b34d; border: 1px solid #6b5a1f; }
+
+.two-col { display: flex; gap: 16px; flex-wrap: wrap; }
+.two-col .card { flex: 1; min-width: 220px; }
+
+.endpoint {
+  background: #111;
+  border: 2px solid #2e2e2e;
+  padding: 16px 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+.endpoint code { font-size: 15px; padding: 6px 10px; }
+
+footer { color: #343434; margin-top: 60px; text-align: center; padding-bottom: 40px; }
+footer g { color: #008e4c; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>mcb<g>Code</g> MCP</h1>
+    <p class="subtitle">Connect your mcbCode projects to Claude, ChatGPT, and other AI tools.</p>
+
+    <h2>What is this?</h2>
+    <p>
+      mcbCode MCP lets AI assistants read your Minecraft Bedrock addon projects directly —
+      no copy-pasting files back and forth. Once connected, an AI tool can look up your
+      project info, list your files, read specific files, and search across a project,
+      the same way it would use any other tool you give it access to.
+    </p>
+    <p>
+      This is a <b>read-only</b> connection right now. Nothing it does can edit, delete, or
+      create anything in your projects.
+    </p>
+
+    <h2>The endpoint</h2>
+    <div class="endpoint">
+      <code>https://mcp.mcbcode.com/mcp</code>
+    </div>
+    <p>
+      Paste that URL into any MCP-compatible client's connector settings. You'll be sent to
+      mcbCode to log in (if you aren't already) and approve access — you never give the AI
+      tool your mcbCode password.
+    </p>
+
+    <h2>What it can access</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>get_project</h3>
+        <p>Basic project info — name, description, owner, visibility, tags.</p>
+      </div>
+      <div class="card">
+        <h3>list_files</h3>
+        <p>The file/folder tree of a project. Paths and names only, no contents.</p>
+      </div>
+      <div class="card">
+        <h3>read_file</h3>
+        <p>The contents of one specific file you (or the AI) pick.</p>
+      </div>
+      <div class="card">
+        <h3>search_files</h3>
+        <p>Text search across a project's files, with matching lines and context.</p>
+      </div>
+    </div>
+    <p>
+      An AI tool can only reach projects you own, projects you collaborate on, or public
+      projects — same rules as everywhere else on mcbCode. It can't see anyone else's
+      private projects, and it can't see your account info beyond what's needed to check
+      those permissions.
+    </p>
+
+    <h2>How authentication works</h2>
+    <p>This uses standard OAuth, the same kind of "Connect with X" flow you've used elsewhere:</p>
+    <ul>
+      <li>You click connect in your AI client</li>
+      <li>You're sent to mcbCode to log in (if needed)</li>
+      <li>You see exactly what access is being requested and approve or deny it</li>
+      <li>mcbCode gives the AI client a scoped, revocable token — never your password or session</li>
+    </ul>
+    <p>
+      That token can be revoked at any time (see "Disconnecting" below), and it only grants
+      the read-only access described above.
+    </p>
+
+    <h2>Supported clients</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>Claude <span class="tag tested">tested</span></h3>
+        <p>Add mcbCode as a custom connector in Claude's connector settings.</p>
+      </div>
+      <div class="card">
+        <h3>ChatGPT, Cursor, VS Code, others <span class="tag untested">untested</span></h3>
+        <p>Built against the standard MCP spec, so these should work, but haven't been verified yet. If you try one and hit an issue, let us know.</p>
+      </div>
+    </div>
+
+    <h2>Free vs <g>Obsidian</g></h2>
+    <p>
+      Read-only MCP access works the same for everyone right now — project visibility and
+      collaborator permissions apply exactly like they do on the site. <g>Obsidian</g>
+      members will get higher request limits and, later, additional capabilities (editing
+      files, creating projects, exporting) as those are added.
+    </p>
+
+    <h2>Privacy &amp; security</h2>
+    <ul>
+      <li>Your mcbCode password is never shared with any AI client.</li>
+      <li>Access tokens are scoped to read-only project access and expire automatically.</li>
+      <li>Every request is checked against the same ownership/collaborator rules as the normal site — an AI client can't see anything you couldn't see yourself.</li>
+      <li>You can revoke access at any time; it takes effect immediately.</li>
+    </ul>
+
+    <h2>Disconnecting</h2>
+    <p>
+      Go to your <a href="https://mcbcode.com/account">account settings</a> to see everything
+      connected to your mcbCode account and revoke access for any of them. Revoking access
+      immediately invalidates that connection — the AI client will need to reconnect and get
+      your approval again to use mcbCode after that.
+    </p>
+
+    <footer>Not affiliated with Microsoft or Mojang AB.<br><br>© Copyright 2026 mcb<g>Code</g></footer>
+  </div>
+</body>
+</html>
