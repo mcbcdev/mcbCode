@@ -120,7 +120,7 @@
       font-family: 'mcfontwide', 'mcfont', sans-serif;
       text-transform: uppercase;
       backdrop-filter: blur(8px);
-      transform: rotate(-1deg);
+      transform: rotate(-5deg);
     }
 
     .status-dot {
@@ -1078,6 +1078,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       z-index: 999;
       top: 85px;
+      border-radius: 24px !important;
       left: 50% !important;
       transform: translateX(-50%) translateY(-10px);
       padding: 20px;
@@ -1106,6 +1107,7 @@
       min-width: 100px;
       padding: 10px;
       transition: background-color 0.2s ease, color 0.2s ease;
+      border-radius: 12px !important;
     }
     
     .dropdown-content a:hover {
@@ -1129,8 +1131,26 @@
   .navi-brand h2 {
     display: none;
     font-size: 21px;
+    gap: 4px !important;
   }
 
+}
+
+  .quick-links-2 a {
+    padding: 8px;
+    background-color: #00b2ff1a;
+    color: #00b2ff !important;
+    border-radius: 6px !important;
+    align-items: center;
+    display: flex;
+  }
+
+@media (max-width: 899px) {
+  .quick-links-2 a {
+    display: none !important;
+    padding: 0 0 !important;
+    background-color: #00000000 !important;
+  }
 }
 </style>
 <div class="navi">
@@ -1143,18 +1163,21 @@
     </a>
   </div>
   <div class="quick-links">
+    <div class="quick-links-2">
+    <a href="https://mcbcode.com/explore">explore <img src="https://mcbcode.com/img/icons/link.png" style="margin-left: 6px; height: 14px;"></a>
+    </div>
     <a href="https://github.com/xyztoast/mcbCode">source code</a>
     <a href="https://mcbcode.com/dashboard">dashboard</a>
     <div class="dropdown-btn" id="dd"></div>
     <div class="dropdown">
       <div class="dropdown-content">
         <a href="https://mcbcode.com/terms-of-use">terms</a>
-        <a href="https://roadmap.mcbcode.com">roadmap</a>
+        <a href="https://mcbcode.com/docs/mcp">mcp</a>
         <a href="https://mcbcode.com/docs/">documentation</a>
         <a href="https://mcbcode.com/about">about</a>
         <a href="https://mcbcode.com/profile">profiles</a>
         <a href="https://mcbcode.com/search">search</a>
-        <a href="https://mcbcode.com/explore" style="color: #d7b9f0;">explore</a>
+        <a href="https://mcbcode.com/explore" style="color: #00b2ff !important; background-color: #00b2ff1a;">explore</a>
         <a href="https://mcbcode.com/download">download</a>
       </div>
     </div>
