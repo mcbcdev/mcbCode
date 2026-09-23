@@ -199,6 +199,7 @@ standard buttons use dark translucent backgrounds with subtle borders.
 background-color: rgba(255, 255, 255, 0.04);
 border: 1px solid rgba(255, 255, 255, 0.1);
 color: #ffffff;
+border-radius: 6px;
 ```
 
 on hover, buttons become brighter and may move slightly upward.
@@ -209,6 +210,7 @@ primary buttons use the mcbcode green accent:
 background-color: #00a459;
 border: 1px solid #05ee93;
 color: #ffffff;
+border-radius: 6px;
 ```
 
 primary buttons may also use the site's green glow animation.
@@ -220,12 +222,14 @@ cards are usually dark, translucent surfaces with thin borders.
 ```css
 background: rgba(18, 18, 18, 0.75);
 border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 6px;
 ```
 
 cards may use:
 
 ```css
 backdrop-filter: blur(12px);
+border-radius: 6px;
 ```
 
 for a subtle glass effect.
