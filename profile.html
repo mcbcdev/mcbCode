@@ -633,17 +633,36 @@
     function goToProfile(u) { window.location.href = `/profile/${encodeURIComponent(u)}`; }
 
     // ---- LOAD PROFILE ----
-    async function loadProfile(username) {
-      const msg = document.getElementById("center-msg");
-      msg.textContent = "Loading..."; msg.style.display = ""; msg.className = "center-msg";
-      try {
-        const r = await fetch(`${AUTH}/profile?u=${encodeURIComponent(username)}`);
-        if (!r.ok) { const d = await r.json(); msg.textContent = d.error || "User not found."; msg.className = "center-msg err"; return; }
-        const d = await r.json();
-        msg.style.display = "none";
-        renderProfile(d);
-      } catch { msg.textContent = "Failed to load profile."; msg.className = "center-msg err"; }
+async function loadProfile(username) {
+  const msg = document.getElementById("center-msg");
+  const ssr = document.getElementById("ssr-profile");
+
+  if (!ssr) {
+    msg.textContent = "Loading...";
+    msg.style.display = "";
+    msg.className = "center-msg";
+  }
+
+  try {
+    const r = await fetch(`${AUTH}/profile?u=${encodeURIComponent(username)}`);
+    if (!r.ok) {
+      const d = await r.json();
+      if (ssr) ssr.remove();
+      msg.textContent = d.error || "User not found.";
+      msg.style.display = "";
+      msg.className = "center-msg err";
+      return;
     }
+    const d = await r.json();
+    msg.style.display = "none";
+    renderProfile(d);
+  } catch {
+    if (ssr) ssr.remove();
+    msg.textContent = "Failed to load profile.";
+    msg.style.display = "";
+    msg.className = "center-msg err";
+  }
+}
 
 function renderProfile(data) {
   const ssr = document.getElementById("ssr-profile");
