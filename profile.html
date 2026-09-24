@@ -646,6 +646,8 @@
     }
 
 function renderProfile(data) {
+  const ssr = document.getElementById("ssr-profile");
+  if (ssr) ssr.remove();
   const {
     user,
     projects,
