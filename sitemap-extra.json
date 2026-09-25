@@ -1,0 +1,19 @@
+[
+  { "path": "/", "changefreq": "daily" },
+  { "path": "/about", "changefreq": "monthly" },
+  { "path": "/explore", "changefreq": "daily" },
+  { "path": "/dashboard", "changefreq": "monthly" },
+  { "path": "/docs/index.html", "changefreq": "monthly" },
+  { "path": "/account", "changefreq": "monthly" },
+  { "path": "/pixel", "changefreq": "monthly" },
+  { "path": "/editor/mcfunction", "changefreq": "monthly" },
+  { "path": "/editor/json", "changefreq": "monthly" },
+  { "path": "/editor/manifest", "changefreq": "monthly" },
+  { "path": "/editor/javascript", "changefreq": "monthly" },
+  { "path": "/points", "changefreq": "monthly" },
+  { "path": "/search", "changefreq": "monthly" },
+  { "path": "/profile", "changefreq": "monthly" },
+  { "path": "/sync", "changefreq": "monthly" },
+  { "path": "/terms-of-use", "changefreq": "monthly" },
+  { "path": "/privacy-policy", "changefreq": "monthly" }
+]
