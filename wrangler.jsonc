@@ -1,4 +1,11 @@
 {
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
   "name": "mcbcode",
   "compatibility_date": "2026-09-01",
   "assets": {
