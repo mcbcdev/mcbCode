@@ -3,1507 +3,440 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="robots" content="noindex">
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
   <title>mcbCode | Dashboard</title>
   <style>
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
-}
-
-html,
-body {
-	height: 100%;
-	background: #0c0c0c;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	overflow-x: hidden;
-}
-
-a {
-	text-decoration: none;
-	color: #ffffff;
-	transition: color 0.2s;
-}
-
-a:hover {
-	color: #05ee93;
-}
-
-g {
-	color: #05ee93;
-}
-
-c {
-	color: #e7007b;
-}
-
-.topnav {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 56px;
-	background: rgba(20, 20, 20, 0.85);
-	backdrop-filter: blur(8px);
-	border-bottom: 1px solid #1f1f1f;
-	display: flex;
-	align-items: center;
-	padding: 0 16px;
-	z-index: 300;
-	gap: 16px;
-}
-
-.topnav-title {
-	font-size: 20px;
-	color: #ffffff;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.topnav-right {
-	margin-left: auto;
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	font-size: 14px;
-}
-
-#user-email {
-	color: #88888800;
-	font-size: 13px;
-    user-select: none;
-}
-
-.logout-btn {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 13px;
-	padding: 6px 12px;
-	cursor: pointer;
-	transition: color 0.2s, border-color 0.2s;
-}
-
-.logout-btn:hover {
-	color: #ff5555;
-	border-color: #ff5555;
-}
-
-.sidebar-toggle {
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 6px;
-	color: #888;
-	font-size: 20px;
-	line-height: 1;
-	transition: color 0.2s;
-	flex-shrink: 0;
-}
-
-.sidebar-toggle:hover {
-	color: #05ee93;
-}
-
-.layout {
-	margin-top: 56px;
-	min-height: calc(100vh - 56px);
-}
-
-/* ---- SIDEBAR: always an overlay, never pushes content ---- */
-.sidebar {
-	width: 220px;
-	background: #101010;
-	border-right: 1px solid #1f1f1f;
-	display: flex;
-	flex-direction: column;
-	position: fixed;
-	top: 56px;
-	bottom: 0;
-	left: 0;
-	transform: translateX(-100%);
-	transition: transform 0.22s ease;
-	z-index: 250;
-	box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-}
-
-.sidebar.expanded {
-	transform: translateX(0);
-}
-
-.sidebar-scrim {
-	display: none;
-	position: fixed;
-	top: 56px;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0,0,0,0.55);
-	backdrop-filter: blur(3px);
-	z-index: 200;
-}
-
-.sidebar-scrim.visible {
-	display: block;
-}
-
-.sidebar-nav {
-	display: flex;
-	flex-direction: column;
-	padding: 12px 0;
-	gap: 2px;
-	flex: 1;
-	overflow-y: auto;
-}
-
-.sidebar-item {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 10px 14px;
-	cursor: pointer;
-	color: #888;
-	font-size: 14px;
-	white-space: nowrap;
-	transition: background 0.2s, color 0.2s;
-	border-left: 3px solid transparent;
-}
-
-.sidebar-item:hover {
-	background: #1a1a1a;
-	color: #ffffff;
-}
-
-.sidebar-item.active {
-	background: #1a1a1a;
-	color: #05ee93;
-	border-left-color: #05ee93;
-}
-
-.sidebar-item img {
-	width: 24px;
-	height: 24px;
-	flex-shrink: 0;
-	image-rendering: pixelated;
-	opacity: 0.7;
-	transition: opacity 0.2s;
-}
-
-.sidebar-item:hover img,
-.sidebar-item.active img {
-	opacity: 1;
-}
-
-.sidebar-label {
-	font-size: 12px;
-	color: #444;
-	line-height: 0.4em;
-	font-family: mcfontb;
-	padding: 16px 14px 4px;
-	white-space: nowrap;
-}
-
-.sidebar-bottom {
-	border-top: 1px solid #1f1f1f;
-	padding: 8px 0;
-}
-
-.main {
-    padding: 40px 48px;
-    max-width: 1100px;
-    margin: 0 auto;
-    transition: filter 0.22s ease;
-}
-
-.main.blurred {
-	filter: blur(4px);
-	pointer-events: none;
-	user-select: none;
-}
-
-.dash-section {
-	margin-bottom: 64px;
-	scroll-margin-top: 80px;
-}
-
-.dash-section h2 {
-	font-size: 22px;
-	color: #ffffff;
-	margin-bottom: 6px;
-	border-bottom: 1px solid #1f1f1f;
-	padding-bottom: 10px;
-}
-
-.dash-section p {
-	font-size: 14px;
-	color: #666;
-	margin-top: 8px;
-}
-
-.card-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 16px;
-	margin-top: 20px;
-}
-
-.card {
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 20px;
-	transition: border-color 0.2s;
-	cursor: pointer;
-}
-
-.card:hover {
-	border-color: #05ee93;
-}
-
-.card h3 {
-	color: #ffffff;
-	font-size: 15px;
-	margin-bottom: 8px;
-}
-
-.card p {
-	font-size: 13px;
-	color: #555;
-	margin: 0;
-}
-
-.stat-row {
-	display: flex;
-	gap: 16px;
-	margin-top: 20px;
-	flex-wrap: wrap;
-}
-
-.stat {
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 20px 28px;
-	flex: 1;
-	min-width: 120px;
-}
-
-.stat-value {
-	font-size: 28px;
-	color: #05ee93;
-	font-family: 'mcfontb', sans-serif;
-}
-
-#stat-points {
-	font-size: 28px;
-	color: #dc6bff;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.stat-label {
-	font-size: 12px;
-	color: #555;
-	margin-top: 4px;
-}
-
-.empty {
-	margin-top: 20px;
-	padding: 40px;
-	background: #111;
-	border: 1px dashed #2a2a2a;
-	text-align: center;
-	color: #bebebe;
-	font-size: 14px;
-}
-
-.text-input {
-	background-color: #111;
-	border: 1px solid #2e2e2e;
-	outline: none;
-	padding: 6px 10px;
-	color: #ffffff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	transition: border-color 0.2s;
-}
-
-.text-input:focus {
-	border-color: #05ee93;
-}
-
-.save-btn {
-	padding: 6px 8px;
-	background-color: #05ee93;
-	border: none;
-	outline: none;
-	font-size: 18px;
-	font-family: 'mcfont', sans-serif;
-	cursor: pointer;
-	transition: all 0.2s ease-in-out;
-}
-
-.save-btn:hover {
-	background-color: #78e3a6;
-}
-
-.save-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.save-msg {
-	font-size: 13px;
-	margin-left: 10px;
-	display: none;
-}
-
-.save-msg.ok {
-	color: #05ee93;
-	display: inline;
-}
-
-.save-msg.err {
-	color: #ff5555;
-	display: inline;
-}
-
-.project-toolbar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-top: 16px;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.project-list-header {
-	font-size: 12px;
-	color: #444;
-}
-
-.new-project-btn {
-	background: #05ee93;
-	border: none;
-	color: #0c0c0c;
-	font-family: 'mcfont', sans-serif;
-	font-size: 13px;
-	padding: 6px 14px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.new-project-btn:hover {
-	background: #78e3a6;
-}
-
-.new-project-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.project-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	margin-top: 12px;
-}
-
-.project-row {
-	display: flex;
-	align-items: center;
-	background: #141414;
-	border: 1px solid #1f1f1f;
-	padding: 12px 16px;
-	gap: 16px;
-	transition: border-color 0.2s, background 0.2s;
-	cursor: pointer;
-}
-
-.project-row:hover {
-	border-color: #05ee93;
-	background: #171717;
-}
-
-.project-info {
-	flex: 1;
-	min-width: 0;
-}
-
-.project-name {
-	color: #ffffff;
-	font-size: 14px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.project-name span {
-	color: #444;
-	font-size: 12px;
-	margin-left: 6px;
-}
-
-.project-desc {
-	font-size: 12px;
-	color: #444;
-	margin-top: 2px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.project-date {
-	font-size: 12px;
-	color: #444;
-	white-space: nowrap;
-	flex-shrink: 0;
-}
-
-.project-actions {
-	display: flex;
-	gap: 8px;
-	flex-shrink: 0;
-}
-
-.proj-btn {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 12px;
-	padding: 4px 10px;
-	cursor: pointer;
-	transition: color 0.2s, border-color 0.2s;
-}
-
-.proj-btn:hover {
-	color: #05ee93;
-	border-color: #05ee93;
-}
-
-.proj-btn.danger:hover {
-	color: #ff5555;
-	border-color: #ff5555;
-}
-
-.proj-badge {
-	font-size: 10px;
-	padding: 2px 6px;
-	background-color: #2a2a2a;
-	color: #444;
-	margin-left: 6px;
-}
-
-.proj-badge.public {
-	background-color: #05ee931a;
-	color: #05ee93;
-}
-
-.modal-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.75);
-	z-index: 500;
-	align-items: center;
-	justify-content: center;
-}
-
-.modal-overlay.visible {
-	display: flex;
-}
-
-.modal-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 28px 32px;
-	min-width: 360px;
-	max-width: 480px;
-	width: 100%;
-}
-
-.modal-box h3 {
-	color: #fff;
-	font-size: 16px;
-	margin-bottom: 20px;
-}
-
-.modal-field {
-	margin-bottom: 16px;
-}
-
-.modal-field label {
-	display: block;
-	font-size: 12px;
-	color: #555;
-	margin-bottom: 6px;
-}
-
-.modal-field input,
-.modal-field textarea {
-	width: 100%;
-	background: #111;
-	border: 1px solid #2e2e2e;
-	color: #fff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 8px 10px;
-	outline: none;
-	transition: border-color 0.2s;
-	resize: none;
-}
-
-.modal-field input:focus,
-.modal-field textarea:focus {
-	border-color: #05ee93;
-}
-
-.modal-actions {
-	display: flex;
-	gap: 10px;
-	margin-top: 20px;
-	justify-content: flex-end;
-}
-
-.modal-err {
-	font-size: 12px;
-	color: #ff5555;
-	margin-top: 8px;
-	display: none;
-}
-
-.modal-err.visible {
-	display: block;
-}
-
-.confirm-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.75);
-	z-index: 500;
-	align-items: center;
-	justify-content: center;
-}
-
-.confirm-overlay.visible {
-	display: flex;
-}
-
-.confirm-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 28px 32px;
-	min-width: 320px;
-	text-align: center;
-}
-
-.confirm-box p {
-	font-size: 15px;
-	color: #ffffff;
-	margin-bottom: 8px;
-}
-
-.confirm-box small {
-	font-size: 12px;
-	color: #555;
-}
-
-.confirm-actions {
-	display: flex;
-	gap: 10px;
-	margin-top: 20px;
-	justify-content: center;
-}
-
-.confirm-yes {
-	background: #ff5555;
-	border: none;
-	color: #ffffff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 6px 18px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.confirm-yes:hover {
-	background: #cc0000;
-}
-
-.confirm-no {
-	background: #1e1e1e;
-	border: 1px solid #2e2e2e;
-	color: #bebebe;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 6px 18px;
-	cursor: pointer;
-}
-
-.confirm-no:hover {
-	color: #ffffff;
-}
-
-.account-field {
-	margin-bottom: 24px;
-}
-
-.account-field label {
-	display: block;
-	font-size: 12px;
-	color: #555;
-	margin-bottom: 6px;
-}
-
-.account-badge {
-	display: inline-block;
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 3px 8px;
-	font-size: 12px;
-	color: #888;
-	margin-left: 8px;
-}
-
-.account-badge.github {
-	border-color: #444;
-	color: #aaa;
-}
-
-.account-link-row {
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-	margin-top: 4px;
-}
-
-.danger-zone {
-	margin-top: 40px;
-	border-top: 1px solid #1f1f1f;
-	padding-top: 24px;
-}
-
-.danger-zone h3 {
-	color: #ff5555;
-	font-size: 15px;
-	margin-bottom: 12px;
-}
-
-.delete-account-btn {
-	background: transparent;
-	border: 1px solid #ff5555;
-	color: #ff5555;
-	font-family: 'mcfont', sans-serif;
-	font-size: 14px;
-	padding: 7px 16px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.delete-account-btn:hover {
-	background: #ff5555;
-	color: #ffffff;
-}
-
-/* username gate modal — no close button, blocking */
-.gate-overlay {
-	display: none;
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.92);
-	z-index: 999;
-	align-items: center;
-	justify-content: center;
-}
-
-.gate-overlay.visible {
-	display: flex;
-}
-
-.gate-box {
-	background: #1a1a1a;
-	border: 1px solid #2e2e2e;
-	padding: 36px 40px;
-	min-width: 360px;
-	max-width: 460px;
-	width: 100%;
-}
-
-.gate-box h3 {
-	color: #fff;
-	font-size: 18px;
-	margin-bottom: 8px;
-	font-family: 'mcfontb', sans-serif;
-}
-
-.gate-box p {
-	font-size: 13px;
-	color: #555;
-	margin-bottom: 24px;
-	line-height: 1.5;
-}
-
-.gate-box label {
-	display: block;
-	font-size: 11px;
-	color: #555;
-	margin-bottom: 6px;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-}
-
-.gate-input {
-	width: 100%;
-	background: #111;
-	border: 1px solid #2e2e2e;
-	color: #fff;
-	font-family: 'mcfont', sans-serif;
-	font-size: 15px;
-	padding: 10px 12px;
-	outline: none;
-	transition: border-color 0.2s;
-}
-
-.gate-input:focus {
-	border-color: #05ee93;
-}
-
-.gate-hint {
-	font-size: 11px;
-	color: #333;
-	margin-top: 5px;
-}
-
-.gate-err {
-	font-size: 12px;
-	color: #ff5555;
-	margin-top: 8px;
-	display: none;
-}
-
-.gate-err.visible {
-	display: block;
-}
-
-.gate-btn {
-	margin-top: 20px;
-	width: 100%;
-	padding: 10px;
-	background: #05ee93;
-	border: none;
-	color: #0c0c0c;
-	font-family: 'mcfontb', sans-serif;
-	font-size: 15px;
-	cursor: pointer;
-	transition: background 0.2s;
-}
-
-.gate-btn:hover {
-	background: #78e3a6;
-}
-
-.gate-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.hidden {
-    display: none !important;
-}
+    :root {
+      --bg: #0c0c0c;
+      --bg-soft: #111214;
+      --panel: #141414;
+      --panel-alt: #161719;
+      --border: #232323;
+      --border-alt: #2a2a2e;
+      --text: #c8c8c8;
+      --dim: #888;
+      --dimmer: #666;
+      --faint: #444;
+      --white: #fff;
+      --green: #05ee93;
+      --green-soft: rgba(5, 238, 147, 0.1);
+      --pink: #ff00d0;
+      --purple: #dc6bff;
+      --blue: #00b2ff;
+      --red: #ff5555;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'mcfont', sans-serif; }
+    a { text-decoration: none; color: var(--white); transition: color .15s; }
+    a:hover { color: var(--green); }
+    button { font-family: 'mcfont', sans-serif; cursor: pointer; }
+    g { color: var(--green); }
+
+    /* ---- topnav ---- */
+    .topnav {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: rgba(20, 20, 20, .85); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-alt);
+      display: flex; align-items: center; padding: 0 20px; gap: 16px; z-index: 200;
+    }
+    .topnav-title { font-size: 20px; color: var(--white); font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+    .topnav-search {
+      flex: 1; max-width: 360px; display: flex; align-items: center;
+      background: #1a1c1f; border: 1px solid var(--border-alt); padding: 7px 12px;
+      transition: border-color .15s;
+    }
+    .topnav-search:focus-within { border-color: var(--green); }
+    .topnav-search input { flex: 1; background: none; border: none; outline: none; color: var(--white); font-family: 'mcfont', sans-serif; font-size: 13px; }
+    .topnav-search input::placeholder { color: var(--faint); }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .icon-btn {
+      width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+      background: #1e1e1e; border: 1px solid var(--border-alt); color: var(--dim);
+      font-size: 15px; position: relative; transition: color .15s, border-color .15s;
+    }
+    .icon-btn:hover { color: var(--green); border-color: var(--green); }
+    .icon-btn .dot {
+      position: absolute; top: -4px; right: -4px; min-width: 15px; height: 15px; padding: 0 3px;
+      background: var(--pink); color: #111; font-size: 9px; font-family: 'mcfontb', sans-serif;
+      display: flex; align-items: center; justify-content: center; display: none;
+    }
+    .icon-btn .dot.visible { display: flex; }
+    .avatar-link { width: 34px; height: 34px; border: 1px solid var(--border-alt); overflow: hidden; background: #222326; display: flex; align-items: center; justify-content: center; font-family: 'mcfontb', sans-serif; color: var(--dim); font-size: 13px; }
+    .avatar-link img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-link:hover { border-color: var(--green); }
+
+    /* ---- page shell ---- */
+    .shell { margin-top: 56px; padding: 28px 20px 80px; max-width: 1180px; margin-left: auto; margin-right: auto; }
+
+    .signed-out {
+      text-align: center; padding: 100px 20px; color: var(--faint); font-size: 13px;
+    }
+    .signed-out strong { display: block; color: var(--dim); font-size: 17px; margin-bottom: 10px; font-family: 'mcfontb', sans-serif; }
+    .signed-out a { color: var(--blue); }
+
+    /* ---- hero ---- */
+    .hero {
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .hero-welcome { font-size: 22px; color: var(--white); font-family: 'mcfontb', sans-serif; }
+    .hero-welcome span { color: var(--green); }
+    .hero-sub { font-size: 12px; color: var(--dimmer); margin-top: 6px; }
+    .hero-actions { display: flex; gap: 10px; }
+    .btn {
+      font-size: 13px; padding: 9px 16px; border: 1px solid var(--border-alt); background: #1e1e1e;
+      color: var(--dim); transition: color .15s, border-color .15s, background .15s;
+    }
+    .btn:hover { color: var(--green); border-color: var(--green); }
+    .btn-primary { background: var(--green); border-color: var(--green); color: #0c0c0c; font-family: 'mcfont', sans-serif; }
+    .btn-primary:hover { background: #78e3a6; color: #0c0c0c; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ---- main grid ---- */
+    .grid {
+      display: grid; grid-template-columns: 260px 1fr; gap: 22px; align-items: start;
+    }
+
+    /* ---- aside / quick links ---- */
+    .aside { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 76px; }
+    .panel { background: var(--panel-alt); border: 1px solid var(--border-alt); padding: 16px; }
+    .panel-title { font-size: 11px; color: var(--dimmer); letter-spacing: .06em; font-family: 'mcfontb', sans-serif; margin-bottom: 10px; }
+    .link-list { display: flex; flex-direction: column; gap: 2px; }
+    .link-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 8px; font-size: 13px; color: var(--dim);
+      transition: background .12s, color .12s;
+    }
+    .link-item .li-icon { width: 18px; text-align: center; font-size: 13px; color: var(--dimmer); }
+    .link-item:hover { color: var(--green); background: #1e2024; }
+    .link-item:hover .li-icon { color: var(--green); }
+
+    /* ---- points card ---- */
+    .points-card {
+      background: var(--panel); border: 2px dashed var(--border-alt); padding: 18px 20px;
+      transform: rotate(-.4deg); display: flex; flex-direction: column; gap: 10px;
+    }
+    .points-num { font-size: 32px; color: var(--purple); font-family: 'mcfontb', sans-serif; line-height: 1; }
+    .points-lbl { font-size: 11px; color: var(--dimmer); letter-spacing: .06em; margin-top: 4px; }
+    .points-btns { display: flex; gap: 8px; margin-top: 6px; }
+    .points-btns .btn { flex: 1; text-align: center; font-size: 12px; padding: 8px 0; }
+    .obsidian-tag { font-size: 10px; color: var(--purple); border: 1px solid #3a2a4a; padding: 3px 7px; align-self: flex-start; }
+
+    /* ---- section heading ---- */
+    .section { margin-bottom: 32px; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+    .section-title { font-size: 16px; color: var(--white); font-family: 'mcfontb', sans-serif; }
+    .section-link { font-size: 12px; color: var(--blue); }
+
+    /* ---- project tabs ---- */
+    .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .tab {
+      font-size: 12px; padding: 7px 14px; background: #1a1a1a; border: 1px solid var(--border);
+      color: var(--dim); transition: color .15s, border-color .15s;
+    }
+    .tab.active { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+
+    .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+    .project-card {
+      background: var(--panel-alt); border: 1px solid var(--border-alt); padding: 16px;
+      display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: border-color .15s;
+    }
+    .project-card:hover { border-color: var(--green); }
+    .project-name { font-size: 14px; color: var(--white); font-family: 'mcfontb', sans-serif; }
+    .project-desc { font-size: 12px; color: var(--dimmer); line-height: 1.5; min-height: 18px; }
+    .project-meta { font-size: 11px; color: var(--faint); display: flex; justify-content: space-between; margin-top: auto; }
+    .project-owner { color: var(--blue); }
+
+    .empty-note, .loading-note, .error-note {
+      font-size: 12px; color: var(--faint); padding: 18px; border: 1px dashed var(--border); text-align: center;
+    }
+    .error-note { color: var(--red); border-color: #3a1a1a; }
+
+    /* ---- feed ---- */
+    .feed-list { display: flex; flex-direction: column; gap: 2px; }
+    .feed-item {
+      display: flex; gap: 12px; padding: 12px 14px; background: var(--panel-alt); border: 1px solid var(--border-alt);
+      margin-bottom: 6px; transition: border-color .15s;
+    }
+    .feed-item:hover { border-color: var(--green); }
+    .feed-icon {
+      width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      background: #1e1e1e; border: 1px solid var(--border); font-size: 13px; color: var(--dim);
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-title { font-size: 13px; color: var(--text); line-height: 1.4; }
+    .feed-title b { color: var(--white); font-family: 'mcfontb', sans-serif; font-weight: normal; }
+    .feed-desc { font-size: 12px; color: var(--dimmer); margin-top: 3px; line-height: 1.4; }
+    .feed-time { font-size: 10px; color: var(--faint); margin-top: 6px; }
+
+    /* ---- editors panel ---- */
+    .editor-note { font-size: 11px; color: var(--faint); line-height: 1.5; margin-top: 8px; }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .aside { position: static; order: 2; }
+      .aside-links { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; }
+      .aside-links .link-item { flex: 0 0 auto; background: var(--panel-alt); border: 1px solid var(--border-alt); }
+      .main-col { order: 1; }
+      .topnav-search { display: none; }
+      .hero { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- username gate — shown if user has no username, cannot be dismissed -->
-  <div class="gate-overlay" id="gate-overlay">
-    <div class="gate-box">
-      <h3>Welcome to mcb<g>Code</g></h3>
-      <p>Before you continue, you need to set a username. This is how others will find you on the platform.</p>
-      <label>Username</label>
-      <input class="gate-input" type="text" id="gate-username" maxlength="32" placeholder="idktoast" autocomplete="off">
-      <div class="gate-hint">letters, numbers, _ and . only</div>
-      <div class="gate-err" id="gate-err"></div>
-      <button class="gate-btn" id="gate-btn" onclick="submitGateUsername()">Set Username</button>
-    </div>
-  </div>
-
-  <!-- new project modal -->
-<div class="modal-overlay" id="new-project-modal">
-  <div class="modal-box">
-    <h3>New Project</h3>
-    <div class="modal-field">
-      <label>Project Name</label>
-      <input type="text" id="np-name" maxlength="72" placeholder="My Awesome Addon">
-    </div>
-    <div class="modal-field">
-      <label>Description<span style="color:#333">(optional)</span></label>
-      <textarea id="np-desc" rows="3" maxlength="256" placeholder="What does this addon do?"></textarea>
-    </div>
-
-    <div class="modal-field">
-      <label>Start With</label>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="proj-btn" id="np-mode-blank" onclick="setNpMode('blank')" style="flex:1;">Start blank</button>
-        <button type="button" class="proj-btn" id="np-mode-import" onclick="setNpMode('import')" style="flex:1;">Import pack</button>
-      </div>
-    </div>
-
-    <div class="modal-field hidden" id="np-import-field">
-      <label>.mcpack / .mcaddon file</label>
-      <div id="np-drop-zone" style="border:1px dashed #2e2e2e; padding:20px; text-align:center; font-size:13px; color:#555; cursor:pointer;">
-        drag a file here, or click to browse
-      </div>
-      <input type="file" id="np-file-input" accept=".mcpack,.mcaddon,.zip" class="hidden">
-      <div id="np-file-name" style="font-size:12px; color:#05ee93; margin-top:6px;"></div>
-    </div>
-
-    <div class="modal-field hidden" id="np-progress-field">
-      <div style="background:#111; border:1px solid #2e2e2e; height:10px; width:100%;">
-        <div id="np-progress-bar" style="background:#05ee93; height:100%; width:0%; transition:width 0.15s;"></div>
-      </div>
-      <div id="np-progress-text" style="font-size:12px; color:#555; margin-top:6px;">0% Complete</div>
-      <div id="np-progress-status" style="font-size:12px; color:#555;"></div>
-    </div>
-
-    <div class="modal-err" id="np-err"></div>
-    <div class="modal-actions" id="np-actions">
-      <button class="confirm-no" onclick="closeNewProject()">Cancel</button>
-      <button class="save-btn" id="np-submit" onclick="submitNewProject()">Create</button>
-    </div>
-  </div>
-</div>
-
-  <!-- generic confirm modal — used for delete project AND leave collaboration -->
-  <div class="confirm-overlay" id="confirm-overlay">
-    <div class="confirm-box">
-      <p id="confirm-title">Are you sure?</p>
-      <small id="confirm-projname"></small>
-      <div class="confirm-actions">
-        <button class="confirm-yes" id="confirm-yes-btn" onclick="runConfirmedAction()">Confirm</button>
-        <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- delete account confirm step 1 -->
-  <div class="confirm-overlay" id="del-account-1">
-    <div class="confirm-box">
-      <p>Delete your account?</p>
-      <small>This will permanently delete your account, all projects, and settings.</small>
-      <div class="confirm-actions">
-        <button class="confirm-yes" onclick="delAccountStep2()">Yes, continue</button>
-        <button class="confirm-no" onclick="document.getElementById('del-account-1').classList.remove('visible')">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- delete account confirm step 2 -->
-  <div class="confirm-overlay" id="del-account-2">
-    <div class="confirm-box">
-      <p>Are you absolutely sure?</p>
-      <small>There is no undo. Everything will be gone forever.</small>
-      <div class="confirm-actions">
-        <button class="confirm-yes" onclick="confirmDeleteAccount()">Delete my account</button>
-        <button class="confirm-no" onclick="document.getElementById('del-account-2').classList.remove('visible')">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <div class="topnav">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
-    <span class="topnav-title">mcb<g>Code</g></span>
+    <a href="/" class="topnav-title">mcb<g>Code</g></a>
+    <div class="topnav-search">
+      <input id="topnav-search-input" type="text" placeholder="search mcbcode..." autocomplete="off" maxlength="64">
+    </div>
     <div class="topnav-right">
-	<span id="user-email"></span>
-    <div id="notif-placeholder"></div>
-    <script src="https://mcbcode.com/elements/notifications.js"></script>
-      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+      <a class="icon-btn" href="/notifications" title="notifications">
+        <img src="https://mcbcode.com/img/icons/bell.png"><span class="dot" id="notif-dot"></span>
+      </a>
+      <a class="avatar-link" id="topnav-avatar" href="/account">?</a>
     </div>
   </div>
 
-  <div class="sidebar-scrim" id="sidebar-scrim" onclick="toggleSidebar()"></div>
-
-  <div class="layout">
-    <div class="sidebar" id="sidebar">
-      <nav class="sidebar-nav">
-        <div class="sidebar-label">Main</div>
-        <div class="sidebar-item active" data-target="section-home" onclick="navTo(this)">
-          <img src="https://mcbcode.com/theme/favicon.png" alt="">
-          <span>Home</span>
-        </div>
-        <div class="sidebar-item" data-target="section-projects" onclick="navTo(this)">
-          <img src="https://ccvaults.com/assets/15.$%20Mobs/3.%20Hostile/Shulker_Closed.webp" alt="">
-          <span>Projects</span>
-        </div>
-        <div class="sidebar-label">Tools</div>
-        <div class="sidebar-item" data-target="section-editor" onclick="navTo(this)">
-          <img src="https://ccvaults.com/textures/command_block_conditional.png" alt="">
-          <span>Editors</span>
-        </div>
-        <div class="sidebar-bottom">
-          <div class="sidebar-item" data-target="section-account" onclick="navTo(this)">
-            <img src="https://mcbcode.com/img/icons/default-red.png" alt="">
-            <span>Account</span>
-          </div>
-        </div>
-      </nav>
-    </div>
-
-    <div class="main" id="main">
-    <script src="https://mcbcode.com/elements/obsidian.js"></script>
-	<br><br>
-      <!-- HOME -->
-      <div class="dash-section" id="section-home">
-        <h2>Home</h2>
-        <p>Welcome back to mcb<g>Code</g>.</p>
-        <div class="stat-row">
-          <div class="stat">
-            <div class="stat-value" id="stat-projects">—</div>
-            <div class="stat-label">Projects</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value" id="stat-points">-</div>
-            <div class="stat-label">Points - Spend them <a href="https://mcbcode.com/points">here</a></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PROJECTS -->
-      <div class="dash-section" id="section-projects">
-        <h2>Projects</h2>
-        <p>Your Minecraft addon projects. Click a project to open it.</p>
-        <div class="project-toolbar">
-          <span class="project-list-header" id="projects-limit-label"></span>
-          <button class="new-project-btn" id="new-proj-btn" onclick="openNewProject()">+ New Project</button>
-        </div>
-        <div class="project-list" id="project-list">
-          <div class="empty" id="projects-empty" style="display:none;">No projects yet. Hit "New Project" to get started.</div>
-        </div>
-      </div>
-
-      <!-- EDITOR -->
-      <div class="dash-section" id="section-editor">
-        <h2>Editor</h2>
-        <p>Quick access to the mcbCode editors.</p>
-        <div class="card-grid">
-          <div class="card" onclick="window.location.href='/editor/mcfunction'">
-            <h3>mcfunction</h3>
-            <p>Launch the mcfunction code editor</p>
-          </div>
-
-          <div class="card" onclick="window.location.href='/editor/json'">
-            <h3>json</h3>
-            <p>Launch the JSON code editor</p>
-          </div>
-
-          <div class="card" onclick="window.location.href='/editor/javascript'">
-            <h3>javascript</h3>
-            <p>Launch the JavaScript code editor</p>
-          </div>
-
-          <div class="card" onclick="window.location.href='/editor/manifest'">
-            <h3>manifest.json</h3>
-            <p>Launch the manifest code editor</p>
-          </div>
-
-          <div class="card" onclick="window.location.href='/pixel'">
-            <h3>pixel</h3>
-            <p>Launch the pixel editor</p>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ACCOUNT -->
-      <div class="dash-section" id="section-account">
-        <h2>Account</h2>
-        <p>Your login and account identity.</p>
-        <br>
-        <div class="account-field">
-          <label>Email</label>
-          <span id="acct-email" style="color:#fff; font-size:14px;"></span>
-          <span class="account-badge github" id="acct-github-badge" style="display:none;">GitHub</span>
-        </div>
-        <div class="account-field">
-          <label>Username</label>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input type="text" id="acct-username" class="text-input" style="width:200px;" maxlength="32" placeholder="set a username">
-            <button class="save-btn" onclick="saveUsername()">Save</button>
-            <span class="save-msg" id="username-msg"></span>
-          </div>
-          <small style="color:#444; font-size:11px; display:block; margin-top:4px;">letters, numbers, _ and - only</small>
-        </div>
-        <div class="account-field">
-          <label>Profile</label>
-          <div class="account-link-row">
-            <a href="#" id="acct-view-profile" class="proj-btn">View my profile</a>
-          </div>
-        </div>
-        <div class="danger-zone">
-          <h3>Danger Zone</h3>
-          <p style="font-size:13px; margin-bottom:14px;">Deleting your account removes all your projects and settings permanently.</p>
-          <button class="delete-account-btn" onclick="askDeleteAccount()">Delete Account</button>
-        </div>
-      </div>
-
-    </div>
+  <div class="shell" id="shell">
+    <div class="loading-note" style="margin-top:60px;">loading your dashboard...</div>
   </div>
 
   <script>
     const AUTH = "https://auth.mcbcode.com";
+    let me = null;
 
-    // generic confirm-modal state — one modal, reused for delete project + leave collab
-    let pendingAction = null;   // { type: "delete_project" | "leave_collab", code, row }
+    function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+    function timeAgo(s) {
+      if (!s) return "";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      const diff = Math.max(0, (Date.now() - d.getTime()) / 1000);
+      if (diff < 60) return "just now";
+      if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+      if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+      if (diff < 604800) return Math.floor(diff / 86400) + "d ago";
+      return fmtDate(s);
+    }
+
+    const FEED_ICONS = { Activity: "◍", Projects: "▤", Comments: "✉", System: "✦", GitHub: "⌥", Achievements: "★" };
+
+    document.getElementById("topnav-search-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.value.trim()) {
+        location.href = `/search?q=${encodeURIComponent(e.target.value.trim())}`;
+      }
+    });
 
     (async () => {
       try {
-        const res = await fetch(`${AUTH}/me`, { credentials: "include" });
-        if (!res.ok) return window.location.href = "/account";
-        const data = await res.json();
-        document.getElementById("user-email").textContent = data.email;
-        document.getElementById("acct-email").textContent = data.email;
-        document.getElementById("stat-points").textContent = data.points ?? 0;
-        if (data.is_github) document.getElementById("acct-github-badge").style.display = "";
-        if (data.username) {
-          document.getElementById("acct-username").value = data.username;
-          document.getElementById("acct-view-profile").href = `/profile/${encodeURIComponent(data.username)}`;
-        } else {
-          // no username — show the gate, block everything
-          document.getElementById("gate-overlay").classList.add("visible");
-          setTimeout(() => document.getElementById("gate-username").focus(), 100);
-          return; // don't load anything else until they set one
-        }
-      } catch { return window.location.href = "/account"; }
-
-      await loadProjects();
+        const r = await fetch(`${AUTH}/me`, { credentials: "include" });
+        if (!r.ok) { renderSignedOut(); return; }
+        me = await r.json();
+        renderShell();
+        loadProjects();
+        loadFeed();
+      } catch {
+        document.getElementById("shell").innerHTML = `<div class="error-note" style="margin-top:60px;">couldn't reach mcbcode. check your connection and reload.</div>`;
+      }
     })();
 
-    // ---- USERNAME GATE ----
-    async function submitGateUsername() {
-      const val = document.getElementById("gate-username").value.trim().replace(/[^a-zA-Z0-9_\-]/g, "");
-      const err = document.getElementById("gate-err");
-      const btn = document.getElementById("gate-btn");
-      if (!val) { err.textContent = "Username can't be empty."; err.classList.add("visible"); return; }
-      if (val.length < 2) { err.textContent = "At least 2 characters please."; err.classList.add("visible"); return; }
-      btn.disabled = true;
-      try {
-        const res = await fetch(`${AUTH}/profile`, {
-          method: "POST", credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: val })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById("gate-overlay").classList.remove("visible");
-          document.getElementById("acct-username").value = val;
-          document.getElementById("acct-view-profile").href = `/profile/${encodeURIComponent(val)}`;
-          await loadProjects();
-        } else {
-          err.textContent = data.error || "Something went wrong.";
-          err.classList.add("visible");
-        }
-      } catch {
-        err.textContent = "Network error. Try again.";
-        err.classList.add("visible");
-      }
-      btn.disabled = false;
+    function renderSignedOut() {
+      document.getElementById("shell").innerHTML = `
+        <div class="signed-out">
+          <strong>you're not signed in</strong>
+          <a href="/account">log in</a> to see your dashboard.
+        </div>`;
     }
 
-    document.getElementById("gate-username").addEventListener("keydown", e => {
-      if (e.key === "Enter") submitGateUsername();
-    });
+    function renderShell() {
+      const avatarEl = document.getElementById("topnav-avatar");
+      avatarEl.href = `/profile/${encodeURIComponent(me.username)}`;
+      avatarEl.innerHTML = me.pfp_url ? `<img src="${esc(me.pfp_url)}" alt="">` : esc((me.username || "?")[0].toUpperCase());
 
-    function escHtml(str) {
-      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      document.getElementById("shell").innerHTML = `
+        <div class="hero">
+          <div>
+            <div class="hero-welcome">welcome back, <span>${esc(me.username || "friend")}</span></div>
+            <div class="hero-sub">here's what's going on across mcbcode</div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn" id="import-btn" onclick="location.href='/explore'">explore</button>
+            <button class="btn btn-primary" id="new-project-btn">+ new project</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="aside">
+            <div class="points-card">
+              <div>
+                <div class="points-num">${(me.points || 0).toLocaleString()}</div>
+                <div class="points-lbl">your points</div>
+              </div>
+              ${me.is_obsidian ? `<div class="obsidian-tag">obsidian member</div>` : ""}
+              <div class="points-btns">
+                <a class="btn btn-primary" href="https://mcbcode.com/points">point shop</a>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">quick links</div>
+              <div class="link-list">
+                <a class="link-item" href="/explore">explore</a>
+                <a class="link-item" href="/profile/${encodeURIComponent(me.username)}">your profile</a>
+                <a class="link-item" href="/profile/${encodeURIComponent(me.username)}#settings">account settings</a>
+                <a class="link-item" href="/dripstone">dripstone ai</a>
+                <a class="link-item" href="https://mcbcode.com/points">point shop</a>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">editors</div>
+              <div class="link-list">
+                <a class="link-item" href="https://mcbcode.com/editor/mcfunction">.mcfunction</a>
+                <a class="link-item" href="https://mcbcode.com/editor/manifest">manifest.json</a>
+                <a class="link-item" href="https://mcbcode.com/editor/javascript">.js</a>
+                <a class="link-item" href="https://mcbcode.com/editor/json">.json</a>
+                <a class="link-item" href="https://mcbcode.com/pixel">pixel editor</a>
+              </div>
+              <div class="editor-note">the last two links are placeholders — swap them for your real editor urls.</div>
+            </div>
+          </div>
+
+          <div class="main-col">
+            <div class="section">
+              <div class="section-head">
+                <div class="section-title">your projects</div>
+                <a class="section-link" href="/projects">see all</a>
+              </div>
+              <div class="tabs">
+                <div class="tab active" data-tab="owned" onclick="setProjectTab('owned')">owned</div>
+                <div class="tab" data-tab="collab" onclick="setProjectTab('collab')">collaborating</div>
+              </div>
+              <div id="project-content"><div class="loading-note">loading projects...</div></div>
+            </div>
+
+            <div class="section">
+              <div class="section-head">
+                <div class="section-title">activity feed</div>
+                <a class="section-link" href="/notifications">see all</a>
+              </div>
+              <div id="feed-content"><div class="loading-note">loading activity...</div></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("new-project-btn").addEventListener("click", createNewProject);
     }
 
-    function formatDate(str) {
-      if (!str) return "";
-      const d = new Date(str.endsWith("Z") ? str : str + "Z");
-      return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
-    }
+    // ---- projects ----
+    let projectsData = { owned: [], collab: [] };
+    let activeProjectTab = "owned";
 
     async function loadProjects() {
-      const list  = document.getElementById("project-list");
-      const empty = document.getElementById("projects-empty");
-      const label = document.getElementById("projects-limit-label");
-      const btn   = document.getElementById("new-proj-btn");
-
-      list.innerHTML = "";
-
       try {
-        const res = await fetch(`${AUTH}/projects`, { credentials: "include" });
-        if (!res.ok) throw new Error();
-
-        const { projects, collab_projects, max_saves } = await res.json();
-
-        document.getElementById("stat-projects").textContent = projects.length;
-        label.textContent = `${projects.length} / ${max_saves} projects used`;
-        btn.disabled = projects.length >= max_saves;
-
-        if (projects.length === 0 && collab_projects.length === 0) {
-          empty.style.display = "";
-          return;
-        }
-
-        empty.style.display = "none";
-
-        function addHeading(text) {
-          const h = document.createElement("h3");
-          h.textContent = text;
-          h.style.margin = "18px 0 10px";
-          h.style.color = "#fff";
-          list.appendChild(h);
-        }
-
-        function addProject(proj, collaborator = false) {
-          const row = document.createElement("div");
-          row.className = "project-row";
-          row.id = `row-${escHtml(proj.share_code)}`;
-          row.onclick = () => openProject(proj.share_code);
-
-          const isPublic = proj.is_public === 1 || proj.is_public === true;
-
-          row.innerHTML = `
-            <div class="project-info">
-              <div class="project-name">
-                ${escHtml(proj.name)}
-                <span class="proj-badge${isPublic ? " public" : ""}">
-                  ${isPublic ? "public" : "private"}
-                </span>
-              </div>
-
-              ${
-                collaborator
-                  ? `<div class="project-desc">Owner: ${escHtml(proj.owner_username)}</div>`
-                  : (proj.description
-                      ? `<div class="project-desc">${escHtml(proj.description)}</div>`
-                      : "")
-              }
-            </div>
-
-            <div class="project-date">
-              ${escHtml(formatDate(proj.updated_at))}
-            </div>
-
-            <div class="project-actions">
-              ${
-                collaborator
-                  ? `<button class="proj-btn danger" data-leave-btn>Leave</button>`
-                  : `<button class="proj-btn danger" data-delete-btn>Delete</button>`
-              }
-            </div>
-          `;
-
-          // stop the action button from also triggering the row's "open project" click
-          const actionBtn = row.querySelector("[data-delete-btn], [data-leave-btn]");
-          actionBtn.addEventListener("click", e => {
-            e.stopPropagation();
-            if (actionBtn.hasAttribute("data-delete-btn")) {
-              askDeleteProject(proj.share_code, proj.name, row);
-            } else {
-              askLeaveCollab(proj.share_code, proj.name, row);
-            }
-          });
-
-          list.appendChild(row);
-        }
-
-        if (projects.length) {
-          addHeading("Owned Projects");
-          projects.forEach(p => addProject(p));
-        }
-
-        if (collab_projects.length) {
-          addHeading("Collaborating On");
-          collab_projects.forEach(p => addProject(p, true));
-        }
-
+        const r = await fetch(`${AUTH}/projects`, { credentials: "include" });
+        if (!r.ok) { document.getElementById("project-content").innerHTML = `<div class="error-note">couldn't load projects.</div>`; return; }
+        const d = await r.json();
+        projectsData.owned = d.projects || [];
+        projectsData.collab = d.collab_projects || [];
+        renderProjects();
       } catch {
-        empty.textContent = "Could not load projects.";
-        empty.style.display = "";
+        document.getElementById("project-content").innerHTML = `<div class="error-note">couldn't load projects.</div>`;
       }
     }
 
-    function openProject(shareCode) { window.location.href = `/project/${shareCode}/`; }
-
-    let npMode = "blank";
-    let npFile = null;
-
-    function setNpMode(mode) {
-      npMode = mode;
-      document.getElementById("np-mode-blank").style.borderColor = mode === "blank" ? "#05ee93" : "#2e2e2e";
-      document.getElementById("np-mode-blank").style.color = mode === "blank" ? "#05ee93" : "#bebebe";
-      document.getElementById("np-mode-import").style.borderColor = mode === "import" ? "#05ee93" : "#2e2e2e";
-      document.getElementById("np-mode-import").style.color = mode === "import" ? "#05ee93" : "#bebebe";
-      document.getElementById("np-import-field").classList.toggle("hidden", mode !== "import");
+    function setProjectTab(tab) {
+      activeProjectTab = tab;
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+      renderProjects();
     }
 
-    function openNewProject() {
-      document.getElementById("np-name").value = "";
-      document.getElementById("np-desc").value = "";
-      document.getElementById("np-err").textContent = "";
-      document.getElementById("np-err").classList.remove("visible");
-      document.getElementById("np-progress-field").classList.add("hidden");
-      document.getElementById("np-actions").classList.remove("hidden");
-      document.getElementById("np-file-name").textContent = "";
-      document.getElementById("np-submit").disabled = false;   // <-- add this line
-      npFile = null;
-      setNpMode("blank");
-      document.getElementById("new-project-modal").classList.add("visible");
-      setTimeout(() => document.getElementById("np-name").focus(), 50);
+    function projectCardHtml(p, showOwner) {
+      return `
+        <div class="project-card" onclick="location.href='/project/${esc(p.share_code)}/'">
+          <div class="project-name">${esc(p.name)}</div>
+          <div class="project-desc">${esc(p.description || "no description yet")}</div>
+          <div class="project-meta">
+            ${showOwner ? `<span class="project-owner">by ${esc(p.owner_username || "")}</span>` : `<span>${p.is_public ? "public" : "private"}</span>`}
+            <span>updated ${fmtDate(p.updated_at)}</span>
+          </div>
+        </div>`;
     }
 
-    function closeNewProject() { document.getElementById("new-project-modal").classList.remove("visible"); }
-
-    const npDropZone = document.getElementById("np-drop-zone");
-    const npFileInput = document.getElementById("np-file-input");
-    npDropZone.addEventListener("click", () => npFileInput.click());
-    npDropZone.addEventListener("dragover", e => { e.preventDefault(); npDropZone.style.borderColor = "#05ee93"; });
-    npDropZone.addEventListener("dragleave", () => { npDropZone.style.borderColor = "#2e2e2e"; });
-    npDropZone.addEventListener("drop", e => {
-      e.preventDefault();
-      npDropZone.style.borderColor = "#2e2e2e";
-      if (e.dataTransfer.files.length) setNpFile(e.dataTransfer.files[0]);
-    });
-    npFileInput.addEventListener("change", () => { if (npFileInput.files.length) setNpFile(npFileInput.files[0]); });
-
-    function setNpFile(file) {
-      const validExt = /\.(mcpack|mcaddon|zip)$/i.test(file.name);
-      if (!validExt) {
-        document.getElementById("np-file-name").style.color = "#ff5555";
-        document.getElementById("np-file-name").textContent = "that's not a .mcpack or .mcaddon file";
-        npFile = null;
+    function renderProjects() {
+      const el = document.getElementById("project-content");
+      const list = activeProjectTab === "owned" ? projectsData.owned : projectsData.collab;
+      if (!list.length) {
+        el.innerHTML = activeProjectTab === "owned"
+          ? `<div class="empty-note">no projects yet — hit "+ new project" to start one.</div>`
+          : `<div class="empty-note">you're not collaborating on anything yet.</div>`;
         return;
       }
-      npFile = file;
-      document.getElementById("np-file-name").style.color = "#05ee93";
-      document.getElementById("np-file-name").textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+      el.innerHTML = `<div class="project-grid">${list.map(p => projectCardHtml(p, activeProjectTab === "collab")).join("")}</div>`;
     }
 
-    async function submitNewProject() {
-      const name = document.getElementById("np-name").value.trim();
-      const desc = document.getElementById("np-desc").value.trim();
-      const err  = document.getElementById("np-err");
-      err.textContent = ""; err.classList.remove("visible");
-
-      if (!name) { err.textContent = "Project name is required."; err.classList.add("visible"); return; }
-      if (npMode === "import" && !npFile) { err.textContent = "Pick a .mcpack or .mcaddon file first, or switch to Start blank."; err.classList.add("visible"); return; }
-
-      document.getElementById("np-submit").disabled = true;
-
+    async function createNewProject() {
+      const btn = document.getElementById("new-project-btn");
+      btn.disabled = true; btn.textContent = "creating...";
       try {
-        const res = await fetch(`${AUTH}/projects`, {
+        const r = await fetch(`${AUTH}/projects`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description: desc, skip_defaults: npMode === "import" })
+          body: JSON.stringify({ name: "Untitled Project" })
         });
-        const data = await res.json();
-        if (!res.ok) { err.textContent = data.error || "Failed to create project."; err.classList.add("visible"); document.getElementById("np-submit").disabled = false; return; }
-
-        if (npMode === "blank") {
-          closeNewProject();
-          window.location.href = `/project/${data.share_code}/`;
+        const d = await r.json();
+        if (r.ok && d.share_code) {
+          location.href = `/project/${d.share_code}/`;
           return;
         }
-
-        // import mode: show progress bar, stream the upload
-        document.getElementById("np-actions").classList.add("hidden");
-        document.getElementById("np-import-field").classList.add("hidden");
-        document.getElementById("np-progress-field").classList.remove("hidden");
-
-        const importRes = await fetch(`${AUTH}/project/import?project_code=${encodeURIComponent(data.share_code)}`, {
-          method: "POST", credentials: "include", body: npFile
-        });
-
-        if (!importRes.ok || !importRes.body) {
-          err.textContent = "Import failed to start."; err.classList.add("visible");
-          document.getElementById("np-progress-field").classList.add("hidden");
-          document.getElementById("np-actions").classList.remove("hidden");
-          document.getElementById("np-submit").disabled = false;
-          return;
-        }
-
-        const reader = importRes.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop();
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            const msg = JSON.parse(line);
-            if (msg.error) {
-              err.textContent = msg.error; err.classList.add("visible");
-              document.getElementById("np-progress-field").classList.add("hidden");
-              document.getElementById("np-actions").classList.remove("hidden");
-              document.getElementById("np-submit").disabled = false;
-              return;
-            }
-            if (typeof msg.progress === "number") {
-              document.getElementById("np-progress-bar").style.width = msg.progress + "%";
-              document.getElementById("np-progress-text").textContent = `${msg.progress}% Complete`;
-              document.getElementById("np-progress-status").textContent = msg.status || "";
-            }
-            if (msg.done) {
-              if (msg.well_formed === false) {
-                alert("heads up: this pack's folder structure looked unusual (expected 2 folders each with a manifest.json), so some things might be out of place. everything got imported anyway though.");
-              }
-              window.location.href = `/project/${data.share_code}/`;
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        err.textContent = "Something went wrong."; err.classList.add("visible");
-        document.getElementById("np-progress-field").classList.add("hidden");
-        document.getElementById("np-actions").classList.remove("hidden");
-        document.getElementById("np-submit").disabled = false;
-      }
-    }
-
-    // ---- GENERIC CONFIRM MODAL (delete project / leave collaboration) ----
-    function askDeleteProject(shareCode, name, row) {
-      pendingAction = { type: "delete_project", code: shareCode, row };
-      document.getElementById("confirm-title").textContent = "Delete this project?";
-      document.getElementById("confirm-projname").textContent = name;
-      document.getElementById("confirm-yes-btn").textContent = "Delete";
-      document.getElementById("confirm-overlay").classList.add("visible");
-    }
-
-    function askLeaveCollab(shareCode, name, row) {
-      pendingAction = { type: "leave_collab", code: shareCode, row };
-      document.getElementById("confirm-title").textContent = "Leave this project?";
-      document.getElementById("confirm-projname").textContent = `you'll lose access to "${name}" — you can only rejoin if the owner adds you again.`;
-      document.getElementById("confirm-yes-btn").textContent = "Leave";
-      document.getElementById("confirm-overlay").classList.add("visible");
-    }
-
-    function closeConfirm() {
-      pendingAction = null;
-      document.getElementById("confirm-overlay").classList.remove("visible");
-    }
-
-    async function runConfirmedAction() {
-      if (!pendingAction) return closeConfirm();
-      const { type, code, row } = pendingAction;
-      closeConfirm();
-      try {
-        let res;
-        if (type === "delete_project") {
-          res = await fetch(`${AUTH}/project?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
-        } else if (type === "leave_collab") {
-          res = await fetch(`${AUTH}/project/leave?code=${encodeURIComponent(code)}`, { method: "DELETE", credentials: "include" });
-        }
-        if (res && res.ok) {
-          // update the dom directly instead of refetching — avoids a race
-          // where the list refetch happens before the delete is fully visible
-          if (row) row.remove();
-
-          const list = document.getElementById("project-list");
-          const empty = document.getElementById("projects-empty");
-          if (!list.querySelector(".project-row")) {
-            empty.textContent = "No projects yet. Hit \"New Project\" to get started.";
-            empty.style.display = "";
-          }
-
-          if (type === "delete_project") {
-            const statEl = document.getElementById("stat-projects");
-            const label = document.getElementById("projects-limit-label");
-            const btn = document.getElementById("new-proj-btn");
-            const newCount = Math.max(0, parseInt(statEl.textContent, 10) - 1);
-            statEl.textContent = newCount;
-            const match = label.textContent.match(/\/\s*(\d+)/);
-            const max = match ? parseInt(match[1], 10) : null;
-            if (max !== null) {
-              label.textContent = `${newCount} / ${max} projects used`;
-              btn.disabled = newCount >= max;
-            }
-          }
-        } else if (res) {
-          alert("Something went wrong, that action didn't go through.");
-        }
+        alert(d.error || "couldn't create the project.");
       } catch {
-        alert("Network error, try again.");
+        alert("couldn't reach mcbcode. try again in a bit.");
+      }
+      btn.disabled = false; btn.textContent = "+ new project";
+    }
+
+    // ---- feed ----
+    async function loadFeed() {
+      try {
+        const r = await fetch(`${AUTH}/notifications`, { credentials: "include" });
+        if (!r.ok) { document.getElementById("feed-content").innerHTML = `<div class="error-note">couldn't load your activity.</div>`; return; }
+        const d = await r.json();
+        const dot = document.getElementById("notif-dot");
+        if (d.unread_count > 0) { dot.textContent = d.unread_count > 9 ? "9+" : d.unread_count; dot.classList.add("visible"); }
+
+        const feed = (d.notifications || []).filter(n => n.category !== "Points").slice(0, 8);
+        renderFeed(feed);
+      } catch {
+        document.getElementById("feed-content").innerHTML = `<div class="error-note">couldn't load your activity.</div>`;
       }
     }
 
-    document.getElementById("confirm-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeConfirm(); });
-    document.getElementById("new-project-modal").addEventListener("click", e => { if (e.target === e.currentTarget) closeNewProject(); });
-
-    function askDeleteAccount() { document.getElementById("del-account-1").classList.add("visible"); }
-    function delAccountStep2() {
-      document.getElementById("del-account-1").classList.remove("visible");
-      document.getElementById("del-account-2").classList.add("visible");
+    function renderFeed(items) {
+      const el = document.getElementById("feed-content");
+      if (!items.length) {
+        el.innerHTML = `<div class="empty-note">nothing here yet — follow people and watch projects to see updates.</div>`;
+        return;
+      }
+      el.innerHTML = `<div class="feed-list">${items.map(n => `
+        <a class="feed-item" href="${n.url ? esc(n.url) : '/notifications'}">
+          <div class="feed-icon">${FEED_ICONS[n.category] || "•"}</div>
+          <div class="feed-body">
+            <div class="feed-title">${esc(n.title)}</div>
+            ${n.description ? `<div class="feed-desc">${esc(n.description)}</div>` : ""}
+            <div class="feed-time">${timeAgo(n.created_at)}</div>
+          </div>
+        </a>
+      `).join("")}</div>`;
     }
-    async function confirmDeleteAccount() {
-      document.getElementById("del-account-2").classList.remove("visible");
-      try { await fetch(`${AUTH}/account`, { method: "DELETE", credentials: "include" }); } catch {}
-      window.location.href = "/account";
-    }
-
-    async function saveUsername() {
-      const val = document.getElementById("acct-username").value.trim();
-      const msg = document.getElementById("username-msg");
-      if (!val) return;
-      try {
-        const res = await fetch(`${AUTH}/profile`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: val }) });
-        const data = await res.json();
-        if (res.ok) {
-          msg.textContent = "Saved!"; msg.className = "save-msg ok";
-          document.getElementById("acct-view-profile").href = `/profile/${encodeURIComponent(val)}`;
-        }
-        else { msg.textContent = data.error || "Error"; msg.className = "save-msg err"; }
-      } catch { msg.textContent = "Error"; msg.className = "save-msg err"; }
-      setTimeout(() => { msg.className = "save-msg"; msg.textContent = ""; }, 3000);
-    }
-
-    // ---- SIDEBAR (overlay + blur, never shifts content) ----
-    let sidebarOpen = false;
-    function toggleSidebar() {
-      sidebarOpen = !sidebarOpen;
-      document.getElementById("sidebar").classList.toggle("expanded", sidebarOpen);
-      document.getElementById("sidebar-scrim").classList.toggle("visible", sidebarOpen);
-      document.getElementById("main").classList.toggle("blurred", sidebarOpen);
-    }
-
-    function navTo(el) {
-      document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-      el.classList.add("active");
-      const target = document.getElementById(el.dataset.target);
-      if (target) target.scrollIntoView({ behavior: "smooth" });
-      // close the sidebar after navigating, since it's an overlay now
-      if (sidebarOpen) toggleSidebar();
-    }
-
-    async function doLogout() {
-      await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
-      window.location.href = "/account";
-    }
-
-	  document.getElementById("get-obsidian-btn").addEventListener("click", async () => {
-    const res = await fetch("https://auth.mcbcode.com/stripe/checkout", {
-        method: "POST",
-        credentials: "include"
-    });
-    const data = await res.json();
-    if (data.ok) {
-        window.location.href = data.checkout_url;
-    } else {
-        alert(data.error || "something went wrong starting checkout");
-    }
-});
   </script>
 
-  <script src="https://mcbcode.com/elements/feedback.js"></script>
-	
-  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
