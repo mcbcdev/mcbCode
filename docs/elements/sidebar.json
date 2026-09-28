@@ -35,7 +35,7 @@
         { "name": "5.2 content log errors", "href": "/docs/02-content-log-errors" },
         { "name": "5.3 fixing json and common mistakes", "href": "/docs/03-fixing-json-and-common-mistakes" },
         { "name": "5.4 missing textures and broken behavior", "href": "/docs/04-missing-textures-and-broken-behavior" },
-        { "name": "5.5 checking compatibility", "href": "/docs/05-checking-compatibility" },
+        { "name": "5.5 checking compatibility", "href": "/docs/05-checking-compatibility" }
       ]
     },
     {
