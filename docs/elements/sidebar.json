@@ -1,3 +1,4 @@
+
 {
   "sections": [
     {
@@ -9,10 +10,39 @@
       ]
     },
     {
+      "title": "Beginners Guide",
+      "links": [
+        { "name": "01 - Creating a Project in mcbCode", "href": "/docs/01-creating-a-project-in-mcbcode" },
+        { "name": "01 - JSON in Addons", "href": "/docs/01-json-in-addons" },
+        { "name": "01 - Testing in a World", "href": "/docs/01-testing-in-a-world" },
+        { "name": "01 - What Are Addons?", "href": "/docs/01-what-are-addons" },
+        { "name": "01 - What Are Functions?", "href": "/docs/01-what-are-functions" },
+        { "name": "02 - Behavior Packs vs Resource Packs", "href": "/docs/02-behavior-packs-vs-resource-packs" },
+        { "name": "02 - Content Log Errors", "href": "/docs/02-content-log-errors" },
+        { "name": "02 - Custom Items", "href": "/docs/02-custom-items" },
+        { "name": "02 - Projects, Files, and Folders", "href": "/docs/02-projects-files-and-folders" },
+        { "name": "02 - Your First mcfunction", "href": "/docs/02-your-first-mcfunction" },
+        { "name": "03 - Commands, Selectors, and Coordinates", "href": "/docs/03-commands-selectors-coordinates" },
+        { "name": "03 - Custom Entities: The Big Picture", "href": "/docs/03-custom-entities-big-picture" },
+        { "name": "03 - Fixing JSON and Common Mistakes", "href": "/docs/03-fixing-json-and-common-mistakes" },
+        { "name": "03 - Tools and Accounts You Need", "href": "/docs/03-tools-and-accounts-you-need" },
+        { "name": "03 - Your First Manifest", "href": "/docs/03-your-first-manifest" },
+        { "name": "04 - Addon File Formats", "href": "/docs/04-addon-file-formats" },
+        { "name": "04 - Missing Textures and Broken Behavior", "href": "/docs/04-missing-textures-and-broken-behavior" },
+        { "name": "04 - Scoreboards and Basic Logic", "href": "/docs/04-scoreboards-and-basic-logic" },
+        { "name": "04 - Textures and Resource Packs", "href": "/docs/04-textures-and-resource-packs" },
+        { "name": "04 - UUIDs and Modules", "href": "/docs/04-uuids-and-modules" },
+        { "name": "05 - Animations and Other Customization", "href": "/docs/05-animations-and-other-customization" },
+        { "name": "05 - Checking Compatibility", "href": "/docs/05-checking-compatibility" },
+        { "name": "05 - Exporting and Testing", "href": "/docs/05-exporting-and-testing" },
+        { "name": "05 - Organizing and Running Functions", "href": "/docs/05-organizing-and-running-functions" }
+      ]
+    },
+    {
       "title": "User Data",
       "links": [
         { "name": "Changing Settings", "href": "/docs/changing-settings" },
-        { "name": "Creating an Account", "href": "/docs/changing-account-info" }
+        { "name": "Changing Account Info", "href": "/docs/changing-account-info" }
       ]
     },
     {
@@ -21,6 +51,14 @@
         { "name": "Adding Collaborators", "href": "/docs/adding-collaborators" },
         { "name": "Creating Files", "href": "/docs/creating-files" },
         { "name": "Creating Folders", "href": "/docs/creating-folders" }
+      ]
+    },
+    {
+      "title": "Other",
+      "links": [
+        { "name": "Android App", "href": "/docs/android-app" },
+        { "name": "Getting Started", "href": "/docs/getting-started" },
+        { "name": "MCP", "href": "/docs/mcp" }
       ]
     }
   ]
