@@ -25,7 +25,7 @@
         { "name": "3.2 your first mcfunction", "href": "/docs/02-your-first-mcfunction" },
         { "name": "3.3 commands, selectors, and coordinates", "href": "/docs/03-commands-selectors-coordinates" },
         { "name": "3.4 scoreboards and basic logic", "href": "/docs/04-scoreboards-and-basic-logic" },
-        { "name": "3.5 organizing and running functions", "href": "/docs/05-organizing-and-running-functions" }
+        { "name": "3.5 organizing and running functions", "href": "/docs/05-organizing-and-running-functions" },
         { "name": "4.1 json in addons", "href": "/docs/01-json-in-addons" },
         { "name": "4.2 custom items", "href": "/docs/02-custom-items" },
         { "name": "4.3 custom entities: The Big Picture", "href": "/docs/03-custom-entities-big-picture" },
