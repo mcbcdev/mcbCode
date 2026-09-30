@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
+
+  <title>mcbCode | Settings</title>
+  <style>
+    :root {
+      --bg: #111214;
+      --surface: #161719;
+      --surface-2: #1a1c1f;
+      --surface-3: #222326;
+      --border: #2a2a2e;
+      --border-2: #343438;
+      --text: #c8c8c8;
+      --text-strong: #ffffff;
+      --muted: #888;
+      --dim: #555;
+      --green: #05ee93;
+      --green-hover: #78e3a6;
+      --blue: #00b2ff;
+      --danger: #ff5555;
+      --space-1: 6px;
+      --space-2: 12px;
+      --space-3: 18px;
+      --space-4: 24px;
+      --space-5: 36px;
+      --space-6: 48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'mcfont', sans-serif; overflow-x: hidden; letter-spacing: 0; }
+    a { text-decoration: none; color: #fff; transition: color 0.2s; }
+    a:hover { color: var(--green); }
+    g { color: var(--green); }
+
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+    /* ---- TOPNAV (same as profile page) ---- */
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
+    .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+    .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .nav-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; }
+    .nav-btn:hover { color: var(--green); border-color: var(--green); }
+
+    /* ---- PAGE ---- */
+    .page { margin-top: 48px; padding: var(--space-5) 16px var(--space-6); }
+    .settings-wrap { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-4); }
+
+    .page-head { display: flex; flex-direction: column; gap: var(--space-1); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
+    .back-link { font-size: 12px; color: var(--muted); width: fit-content; }
+    .back-link:hover { color: var(--blue); }
+    .page-title { font-size: 28px; color: var(--text-strong); font-family: 'mcfontb', sans-serif; line-height: 1.1; }
+    .page-sub { font-size: 13px; color: var(--dim); }
+
+    .section { display: flex; flex-direction: column; gap: var(--space-2); }
+    .section-title { font-size: 15px; color: var(--blue); font-family: 'mcfontb', sans-serif; padding-bottom: 10px; border-bottom: 1px solid #1e1e22; }
+
+    /* ---- SETTING ROWS ---- */
+    .setting-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; gap: var(--space-2); }
+    .setting-label { font-size: 13px; color: #ccc; }
+    .setting-desc { font-size: 11px; color: var(--dim); margin-top: 5px; line-height: 1.5; }
+
+    /* toggle (real button, same look as the profile page) */
+    .toggle { position: relative; width: 40px; height: 22px; background: var(--surface-3); border: 1px solid var(--border-2); cursor: pointer; flex-shrink: 0; margin-left: 16px; padding: 0; transition: background 0.15s, border-color 0.15s; }
+    .toggle[aria-checked="true"] { background: var(--green); border-color: var(--green); }
+    .toggle:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; transition: left 0.15s; }
+    .toggle[aria-checked="true"] .toggle-knob { left: 20px; }
+
+    /* ---- BLOCKS (links + connected apps) ---- */
+    .block { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; display: flex; flex-direction: column; gap: var(--space-2); }
+    .block-title { font-size: 13px; color: #ccc; }
+    .block-desc { font-size: 11px; color: var(--dim); margin-top: -6px; }
+
+    .link-rows { display: flex; flex-direction: column; gap: var(--space-1); }
+    .link-edit-row { display: flex; gap: 8px; }
+    .link-edit-row .edit-input { flex: 1; min-width: 0; }
+    .link-edit-row .edit-input.label-input { flex: 0 0 110px; }
+
+    .edit-input { width: 100%; background: var(--bg); border: 1px solid var(--border-2); color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; min-height: 34px; }
+    .edit-input:focus { border-color: var(--green); }
+
+    .save-row { display: flex; gap: var(--space-1); align-items: center; }
+    .sm-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 6px 12px; min-height: 30px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+    .sm-btn:hover { color: var(--green); border-color: var(--green); }
+    .sm-btn.primary { background: var(--green); border-color: var(--green); color: #0c0c0c; }
+    .sm-btn.primary:hover { background: var(--green-hover); color: #0c0c0c; }
+    .sm-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+    .sm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .inline-msg { font-size: 11px; }
+    .inline-msg.ok { color: var(--green); }
+    .inline-msg.err { color: var(--danger); }
+
+    .app-list { display: flex; flex-direction: column; gap: 8px; }
+    .app-list .setting-row { background: var(--surface-2); }
+    .empty-note { font-size: 12px; color: var(--dim); }
+
+    .danger-zone { align-self: flex-start; }
+
+    /* status toast */
+    .status { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--surface-3); border: 1px solid var(--border-2); padding: 8px 16px; font-size: 12px; color: #ccc; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 300; max-width: calc(100vw - 32px); }
+    .status.show { opacity: 1; }
+    .status.ok { border-color: var(--green); color: var(--green); }
+    .status.err { border-color: var(--danger); color: var(--danger); }
+
+    /* center message (loading / logged out) */
+    .center-msg { text-align: center; font-size: 13px; color: #444; padding: var(--space-6) 0; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; }
+    .center-msg.err { color: var(--danger); }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 800px) {
+      .page { padding: var(--space-4) 16px var(--space-5); }
+      .link-edit-row { flex-wrap: wrap; }
+      .link-edit-row .edit-input.label-input { flex: 1 1 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="/" class="topnav-logo">mcb<g>Code</g></a>
+    <div class="topnav-right">
+      <a href="/dashboard" class="nav-btn">Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="settings-wrap">
+
+      <div class="center-msg" id="loading-msg">Loading...</div>
+
+      <div class="center-msg" id="logged-out-msg" hidden>
+        <span>you need to be logged in to see your settings.</span>
+        <a class="nav-btn" href="/dashboard">Go to dashboard</a>
+      </div>
+
+      <div id="settings-content" hidden>
+
+        <header class="page-head">
+          <a class="back-link" id="back-link" href="/">Back to profile</a>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-sub" id="page-sub"></p>
+        </header>
+
+        <div class="section" style="margin-top: var(--space-4);">
+          <h2 class="section-title">Profile</h2>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label" id="lbl-show_points">Show points on profile</div>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-show_points" data-setting="show_points" disabled>
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label" id="lbl-show_email">Show email on profile</div>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-show_email" data-setting="show_email" disabled>
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <div class="block">
+            <div class="block-title">Profile links</div>
+            <div class="block-desc">up to 3 links, shown under your bio</div>
+            <div class="link-rows" id="link-edit-rows"></div>
+            <div class="save-row">
+              <button type="button" class="sm-btn primary" id="save-links-btn">Save Links</button>
+              <span class="inline-msg" id="links-msg"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="margin-top: var(--space-4);">
+          <h2 class="section-title">Collaboration</h2>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label" id="lbl-allow_collab">Allow collaborating</div>
+              <div class="setting-desc">let other users add you as a collaborator on their projects</div>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-allow_collab" data-setting="allow_collab" disabled>
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <button type="button" class="sm-btn danger danger-zone" id="leave-collabs-btn">Remove me from all projects I'm collaborating on</button>
+        </div>
+
+        <div class="section" style="margin-top: var(--space-4);">
+          <h2 class="section-title">Appearance and editor</h2>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label" id="lbl-use_mojangles_font">Use Mojangles Font</div>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-use_mojangles_font" data-setting="use_mojangles_font" disabled>
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label" id="lbl-editor_mode">Use inline code editor</div>
+              <div class="setting-desc">edit files right in the project page instead of a separate editor page</div>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-editor_mode" id="toggle-editor_mode" disabled>
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="section" style="margin-top: var(--space-4);">
+          <h2 class="section-title">Connected apps</h2>
+          <div class="block">
+            <div class="block-title">Connected apps</div>
+            <div class="block-desc">AI tools you've given read access to your projects via MCP</div>
+            <div class="app-list" id="connected-apps-list"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <script>
+    const AUTH = "https://auth.mcbcode.com";
+
+    let myUsername = null;
+    let currentSettings = null;
+    let statusTimer = null;
+
+    // ---- helpers ----
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s.endsWith("Z") ? s : s + "Z");
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    }
+
+    function showStatus(text, type) {
+      const el = document.getElementById("status");
+      el.textContent = text;
+      el.className = "status show " + (type || "");
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => { el.className = "status"; }, 2500);
+    }
+
+    function setInlineMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = "inline-msg " + (type || "");
+      setTimeout(() => { el.textContent = ""; el.className = "inline-msg"; }, 3000);
+    }
+
+    async function postSettings(body) {
+      const res = await fetch(`${AUTH}/settings`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return res.ok;
+    }
+
+    // ---- INIT ----
+    async function init() {
+      try {
+        const r = await fetch(`${AUTH}/me`, { credentials: "include" });
+        if (r.ok) {
+          const d = await r.json();
+          myUsername = d.username;
+        }
+      } catch (e) {}
+
+      document.getElementById("loading-msg").hidden = true;
+
+      if (!myUsername) {
+        document.getElementById("logged-out-msg").hidden = false;
+        return;
+      }
+
+      document.getElementById("back-link").href = `/profile/${encodeURIComponent(myUsername)}`;
+      document.getElementById("page-sub").textContent = `logged in as ${myUsername}`;
+      document.title = `mcbCode | Settings`;
+
+      const loaded = await loadSettings();
+      if (!loaded) {
+        const msg = document.getElementById("loading-msg");
+        msg.textContent = "couldn't load your settings. try refreshing the page.";
+        msg.className = "center-msg err";
+        msg.hidden = false;
+        return;
+      }
+
+      document.getElementById("settings-content").hidden = false;
+    }
+
+    async function loadSettings() {
+      try {
+        const r = await fetch(`${AUTH}/settings`, { credentials: "include" });
+        if (!r.ok) return false;
+        const d = await r.json();
+        currentSettings = d.settings;
+        renderToggles();
+        renderLinkRows();
+        loadConnectedApps();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // ---- TOGGLES ----
+    function renderToggles() {
+      if (!currentSettings) return;
+
+      document.querySelectorAll("[data-setting]").forEach(btn => {
+        const key = btn.dataset.setting;
+        btn.setAttribute("aria-checked", String(!!currentSettings[key]));
+        btn.disabled = false;
+      });
+
+      const editorBtn = document.getElementById("toggle-editor_mode");
+      editorBtn.setAttribute("aria-checked", String(currentSettings.editor_mode === "inline"));
+      editorBtn.disabled = false;
+    }
+
+    async function onToggleClick(btn) {
+      if (!currentSettings) return;
+      const key = btn.dataset.setting;
+      const oldValue = currentSettings[key];
+
+      currentSettings[key] = !oldValue;
+      renderToggles();
+
+      try {
+        const ok = await postSettings({ [key]: currentSettings[key] });
+        if (ok) {
+          showStatus("saved!", "ok");
+        } else {
+          currentSettings[key] = oldValue;
+          renderToggles();
+          showStatus("failed to save.", "err");
+        }
+      } catch (e) {
+        currentSettings[key] = oldValue;
+        renderToggles();
+        showStatus("error saving.", "err");
+      }
+    }
+
+    async function onEditorToggleClick() {
+      if (!currentSettings) return;
+      const oldMode = currentSettings.editor_mode;
+      const newMode = oldMode === "inline" ? "legacy" : "inline";
+
+      currentSettings.editor_mode = newMode;
+      renderToggles();
+
+      try {
+        const ok = await postSettings({ editor_mode: newMode });
+        if (ok) {
+          showStatus("saved!", "ok");
+        } else {
+          currentSettings.editor_mode = oldMode;
+          renderToggles();
+          showStatus("failed to save.", "err");
+        }
+      } catch (e) {
+        currentSettings.editor_mode = oldMode;
+        renderToggles();
+        showStatus("error saving.", "err");
+      }
+    }
+
+    // ---- PROFILE LINKS ----
+    function renderLinkRows() {
+      const container = document.getElementById("link-edit-rows");
+      container.textContent = "";
+      const links = (currentSettings && currentSettings.links) || [];
+
+      for (let i = 0; i < 3; i++) {
+        const l = links[i] || { label: "", url: "" };
+
+        const row = document.createElement("div");
+        row.className = "link-edit-row";
+
+        const labelInput = document.createElement("input");
+        labelInput.className = "edit-input label-input";
+        labelInput.type = "text";
+        labelInput.maxLength = 24;
+        labelInput.placeholder = "label";
+        labelInput.value = l.label || "";
+        labelInput.id = `link-label-${i}`;
+        labelInput.setAttribute("aria-label", `Link ${i + 1} label`);
+
+        const urlInput = document.createElement("input");
+        urlInput.className = "edit-input";
+        urlInput.type = "text";
+        urlInput.maxLength = 200;
+        urlInput.placeholder = "https://...";
+        urlInput.value = l.url || "";
+        urlInput.id = `link-url-${i}`;
+        urlInput.setAttribute("aria-label", `Link ${i + 1} url`);
+
+        row.appendChild(labelInput);
+        row.appendChild(urlInput);
+        container.appendChild(row);
+      }
+    }
+
+    async function saveLinks() {
+      const btn = document.getElementById("save-links-btn");
+      const links = [];
+      for (let i = 0; i < 3; i++) {
+        const url = document.getElementById(`link-url-${i}`).value.trim();
+        const label = document.getElementById(`link-label-${i}`).value.trim();
+        if (url) links.push({ label, url });
+      }
+
+      btn.disabled = true;
+      try {
+        const ok = await postSettings({ links });
+        if (ok) {
+          if (currentSettings) currentSettings.links = links;
+          setInlineMsg("links-msg", "saved!", "ok");
+        } else {
+          setInlineMsg("links-msg", "failed to save.", "err");
+        }
+      } catch (e) {
+        setInlineMsg("links-msg", "error.", "err");
+      }
+      btn.disabled = false;
+    }
+
+    // ---- CONNECTED APPS (MCP) ----
+    async function loadConnectedApps() {
+      const wrap = document.getElementById("connected-apps-list");
+      wrap.textContent = "";
+      const note = document.createElement("div");
+      note.className = "empty-note";
+      note.textContent = "loading...";
+      wrap.appendChild(note);
+
+      try {
+        const r = await fetch(`${AUTH}/mcp-oauth/connections`, { credentials: "include" });
+        if (!r.ok) { note.textContent = "couldn't load connections."; return; }
+        const d = await r.json();
+        renderConnectedApps(d.connections || []);
+      } catch (e) {
+        note.textContent = "couldn't load connections.";
+      }
+    }
+
+    function renderConnectedApps(connections) {
+      const wrap = document.getElementById("connected-apps-list");
+      wrap.textContent = "";
+
+      if (!connections.length) {
+        const note = document.createElement("div");
+        note.className = "empty-note";
+        note.textContent = "nothing connected yet.";
+        wrap.appendChild(note);
+        return;
+      }
+
+      connections.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "setting-row";
+
+        const info = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "setting-label";
+        name.textContent = c.client_name || "Unnamed app";
+        const when = document.createElement("div");
+        when.className = "setting-desc";
+        when.textContent = "connected " + fmtDate(c.connected_at);
+        info.appendChild(name);
+        info.appendChild(when);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "sm-btn danger";
+        btn.textContent = "Revoke";
+        btn.addEventListener("click", () => revokeConnectedApp(c.client_id));
+
+        row.appendChild(info);
+        row.appendChild(btn);
+        wrap.appendChild(row);
+      });
+    }
+
+    async function revokeConnectedApp(clientId) {
+      if (!confirm("Revoke this app's access to your mcbCode projects? It'll need to reconnect and get your approval again to use mcbCode after this.")) return;
+      try {
+        const res = await fetch(`${AUTH}/mcp-oauth/connections?client_id=${encodeURIComponent(clientId)}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+        if (res.ok) {
+          showStatus("access revoked.", "ok");
+          loadConnectedApps();
+        } else {
+          showStatus("failed to revoke.", "err");
+        }
+      } catch (e) {
+        showStatus("error revoking.", "err");
+      }
+    }
+
+    // ---- LEAVE ALL COLLABORATIONS ----
+    async function leaveAllCollaborations() {
+      if (!confirm("Remove yourself from every project you're currently collaborating on?")) return;
+      try {
+        const res = await fetch(`${AUTH}/me/collaborations`, { method: "DELETE", credentials: "include" });
+        if (res.ok) showStatus("you've been removed from all collaborations.", "ok");
+        else showStatus("failed.", "err");
+      } catch (e) {
+        showStatus("error.", "err");
+      }
+    }
+
+    // ---- WIRE UP BUTTONS ----
+    document.querySelectorAll("[data-setting]").forEach(btn => {
+      btn.addEventListener("click", () => onToggleClick(btn));
+    });
+    document.getElementById("toggle-editor_mode").addEventListener("click", onEditorToggleClick);
+    document.getElementById("save-links-btn").addEventListener("click", saveLinks);
+    document.getElementById("leave-collabs-btn").addEventListener("click", leaveAllCollaborations);
+
+    init();
+  </script>
+
+  <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+  <!-- monetag script -->
+  <script src="/elements/ads.js"></script>
+</body>
+</html>
