@@ -1,2 +1,4 @@
 /*.ttf
   Access-Control-Allow-Origin: *
+/*.js
+  Access-Control-Allow-Origin: *
