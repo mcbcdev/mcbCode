@@ -52,6 +52,8 @@
     .topnav-search input { flex: 1; background: none; border: none; outline: none; color: var(--white); font-family: 'mcfont', sans-serif; font-size: 13px; }
     .topnav-search input::placeholder { color: var(--faint); }
     .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .logout-btn { font-size: 11px; padding: 7px 10px; color: var(--dim); background: #1e1e1e; border: 1px solid var(--border-alt); }
+    .logout-btn:hover { color: var(--red); border-color: var(--red); }
     .icon-btn {
       width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
       background: #1e1e1e; border: 1px solid var(--border-alt); color: var(--dim);
@@ -148,6 +150,10 @@
     .project-desc { font-size: 12px; color: var(--dimmer); line-height: 1.5; min-height: 18px; }
     .project-meta { font-size: 11px; color: var(--faint); display: flex; justify-content: space-between; margin-top: auto; }
     .project-owner { color: var(--blue); }
+    .project-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+    .leave-btn { font-size: 11px; padding: 5px 8px; color: var(--dim); background: #1e1e1e; border: 1px solid var(--border); }
+    .leave-btn:hover { color: var(--red); border-color: var(--red); }
+    .leave-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .empty-note, .loading-note, .error-note {
       font-size: 12px; color: var(--faint); padding: 18px; border: 1px dashed var(--border); text-align: center;
@@ -196,6 +202,7 @@
       <a class="icon-btn" href="/notifications" title="notifications">
         <img src="https://mcbcode.com/img/icons/bell.png"><span class="dot" id="notif-dot"></span>
       </a>
+      <button class="logout-btn" id="logout-btn" type="button">log out</button>
       <a class="avatar-link" id="topnav-avatar" href="/account">?</a>
     </div>
   </div>
@@ -232,6 +239,8 @@
         location.href = `/search?q=${encodeURIComponent(e.target.value.trim())}`;
       }
     });
+
+    document.getElementById("logout-btn").addEventListener("click", logout);
 
     (async () => {
       try {
@@ -366,6 +375,7 @@
             ${showOwner ? `<span class="project-owner">by ${esc(p.owner_username || "")}</span>` : `<span>${p.is_public ? "public" : "private"}</span>`}
             <span>updated ${fmtDate(p.updated_at)}</span>
           </div>
+          ${showOwner ? `<div class="project-actions"><button class="leave-btn" type="button" data-project-code="${esc(p.share_code)}" onclick="leaveProject(event, this)">leave project</button></div>` : ""}
         </div>`;
     }
 
@@ -379,6 +389,44 @@
         return;
       }
       el.innerHTML = `<div class="project-grid">${list.map(p => projectCardHtml(p, activeProjectTab === "collab")).join("")}</div>`;
+    }
+
+    async function leaveProject(event, btn) {
+      event.stopPropagation();
+      const code = btn.dataset.projectCode;
+      if (!code || !confirm("leave this project? you can be invited back later.")) return;
+
+      btn.disabled = true;
+      btn.textContent = "leaving...";
+      try {
+        const r = await fetch(`${AUTH}/project/leave?code=${encodeURIComponent(code)}`, {
+          method: "DELETE", credentials: "include"
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || "couldn't leave the project.");
+        projectsData.collab = projectsData.collab.filter(p => p.share_code !== code);
+        renderProjects();
+      } catch (e) {
+        alert(e.message || "couldn't leave the project. try again in a bit.");
+        btn.disabled = false;
+        btn.textContent = "leave project";
+      }
+    }
+
+    async function logout() {
+      const btn = document.getElementById("logout-btn");
+      btn.disabled = true;
+      btn.textContent = "logging out...";
+      try {
+        await fetch(`${AUTH}/logout`, { method: "POST", credentials: "include" });
+      } finally {
+        me = null;
+        renderSignedOut();
+        document.getElementById("topnav-avatar").href = "/account";
+        document.getElementById("topnav-avatar").innerHTML = "?";
+        btn.disabled = false;
+        btn.textContent = "log out";
+      }
     }
 
     async function createNewProject() {
