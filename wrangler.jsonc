@@ -1,4 +1,13 @@
 {
+  "ai": {
+    "binding": "AI"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "USAGE_KV",
+      "id": "2870cfc9d57d45f3b7952e27856ba1a9"
+    }
+  ],
   "observability": {
     "logs": {
       "enabled": true,
