@@ -72,6 +72,36 @@
     }
     h3 { font-family: 'mcfontb', sans-serif; }
 
+    /* ---------- project picker (new) ---------- */
+    .project-wrap { margin-top: 14px; }
+    .project-wrap label {
+        display: block;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.75rem;
+        color: #999;
+        margin-bottom: 6px;
+    }
+    .project-select {
+        width: 100%;
+        background: #101010;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+    }
+    .project-select:focus { outline: none; border-color: var(--accent); }
+    .project-select:disabled { opacity: 0.5; cursor: not-allowed; }
+    .project-note {
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.72rem;
+        color: #777;
+        margin-top: 6px;
+        line-height: 1.4;
+    }
+    .project-note.warn { color: #ff9900; }
+
     /* ---------- usage bar ---------- */
     .usage-bar-wrap { margin-bottom: 14px; }
     .usage-bar-label {
@@ -170,8 +200,6 @@
     }
 
     /* ---------- main app layout ---------- */
-    /* normal top-to-bottom flex column: messages grow to fill space,
-       input bar just sits after it in flow. no fixed/absolute fighting. */
     .app {
         height: 100vh;
         width: 100%;
@@ -316,6 +344,86 @@
     .msg-ai ul.md-list li::marker { color: #00b2ff; }
     .msg-ai a.md-link { color: var(--accent); text-decoration: underline; }
 
+    /* ---------- proposal card (new) ---------- */
+    .proposal-card {
+        margin-top: 10px;
+        width: 100%;
+        max-width: 92%;
+        background: #161616;
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        padding: 12px;
+        font-family: 'mcfont', sans-serif;
+        color: var(--text);
+    }
+    .proposal-title {
+        font-family: 'mcfontb', sans-serif;
+        color: var(--accent);
+        margin-bottom: 4px;
+    }
+    .proposal-summary { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 10px; }
+    .proposal-op {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        background: #111;
+    }
+    .proposal-op summary {
+        cursor: pointer;
+        padding: 8px 10px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        word-break: break-all;
+    }
+    .proposal-op.static { padding: 8px 10px; font-size: 0.85rem; display: flex; gap: 8px; word-break: break-all; }
+    .op-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #1f1f1f;
+        color: var(--accent);
+        flex-shrink: 0;
+        text-transform: uppercase;
+    }
+    .op-badge.edit { color: #00b2ff; }
+    .op-badge.delete { color: var(--error); background: #2a1414; }
+    .op-badge.rename { color: #ff9900; }
+    .op-note { color: #ff9900; font-size: 0.75rem; padding: 0 10px 8px; }
+    .proposal-op pre {
+        margin: 0;
+        padding: 8px 10px;
+        max-height: 260px;
+        overflow: auto;
+        background: #0c0c0c;
+        font-family: monospace;
+        font-size: 0.8em;
+        color: #bebebe;
+        white-space: pre;
+        border-top: 1px solid var(--border);
+    }
+    .diff-add { color: #05ee93; background: #05ee9318; display: block; }
+    .diff-del { color: #ff6b6b; background: #ff6b6b18; display: block; }
+    .diff-same { color: #888; display: block; }
+    .diff-gap { color: #555; display: block; }
+
+    .proposal-buttons { display: flex; gap: 8px; margin-top: 10px; }
+    .proposal-buttons button {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-family: 'mcfontb', sans-serif;
+        cursor: pointer;
+    }
+    .btn-approve { background: var(--accent); color: #181818; }
+    .btn-reject { background: #333; color: var(--text); }
+    .proposal-buttons button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .proposal-status { margin-top: 8px; font-size: 0.85rem; color: var(--text-dim); white-space: pre-wrap; }
+    .proposal-status.bad { color: var(--error); }
+    .proposal-status.good { color: var(--accent); }
+
     /* the copy button + timestamp that sit below every finished ai reply */
     .msg-actions {
         display: flex;
@@ -404,7 +512,7 @@
     }
     .input-bar.focused { border-color: var(--accent); }
 
-    .login-notice {
+    .login-notice, .connect-notice {
         display: none;
         color: #ff9900;
         font-family: 'mcfont', sans-serif;
@@ -413,6 +521,17 @@
     }
     .login-notice a { color: var(--accent); }
     .login-notice.show { display: block; }
+    .connect-notice.show { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .connect-notice.good { color: var(--accent); }
+    .connect-btn {
+        background: var(--accent);
+        color: #181818;
+        border: none;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-family: 'mcfontb', sans-serif;
+        cursor: pointer;
+    }
 
     .selected-files-container {
         display: flex;
@@ -432,7 +551,7 @@
         border-radius: 8px;
         font-family: 'mcfont', sans-serif;
     }
-    .file-chip span { cursor: pointer; color: var(--accent); font-family: 'mcfontb', sans-serif; }
+    .file-chip .chip-x { cursor: pointer; color: var(--accent); font-family: 'mcfontb', sans-serif; }
 
     .chat-textarea {
         width: 100%;
@@ -491,11 +610,16 @@
         <div class="hero-title" id="heroTitle">what are we building?</div>
     </div>
 
-    <button class="scroll-bottom-btn" id="scrollBottomBtn" type="button">↓ latest</button>
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" type="button">&#8595; latest</button>
 
     <div class="input-bar" id="inputBar">
         <div class="login-notice" id="loginNotice">
             you need to be logged in to use DripstoneAI. <a href="https://mcbcode.com/account">log in here</a>
+        </div>
+
+        <div class="connect-notice" id="connectNotice">
+            <span id="connectText"></span>
+            <button class="connect-btn" id="connectBtn" type="button">Connect projects</button>
         </div>
 
         <div class="selected-files-container" id="selectedFilesContainer"></div>
@@ -523,6 +647,14 @@
             </div>
         </div>
         <p style="margin-top: 0; color: #888; font-size: 0.9rem;">mcb<span style="color: var(--accent);">Code</span></p>
+
+        <div class="project-wrap">
+            <label for="projectSelect">Project</label>
+            <select class="project-select" id="projectSelect" disabled>
+                <option value="">No project (general chat)</option>
+            </select>
+            <div class="project-note" id="projectNote"></div>
+        </div>
     </div>
 
     <div class="usage-bar-wrap">
@@ -542,6 +674,8 @@
             <a href="https://mcbcode.com/dashboard">Dashboard</a>
             <a href="#" id="settingsLink">Settings</a>
             <a href="https://studio.mcbcode.com">Studio</a>
+            <button type="button" id="reconnectBtn">Reconnect projects</button>
+            <button type="button" id="disconnectBtn">Disconnect projects</button>
             <button type="button" class="logout-item" id="logoutBtn">Logout</button>
         </div>
     </div>
@@ -556,16 +690,22 @@
 
     const DRIPSTONE_API = "https://dripstone-ai.mcbcode.com";
     const AUTH_ME_URL = "https://auth.mcbcode.com/me";
+    const AUTH_PROJECTS_URL = "https://auth.mcbcode.com/projects";
 
     let attachedFiles = [];
-    let conversation = []; // [{role: "user"|"assistant", content: "..."}]
+    let conversation = []; // [{role: "user"|"assistant", content: "..."}] (current chat only, never saved)
     let isLoggedIn = false;
     let isSending = false;
+    let currentProject = "";
+    let conn = { connected: false, can_write: false };
 
     const textarea = document.getElementById('autoGrowInput');
     const messagesArea = document.getElementById('messagesArea');
     const heroTitle = document.getElementById('heroTitle');
     const loginNotice = document.getElementById('loginNotice');
+    const connectNotice = document.getElementById('connectNotice');
+    const connectText = document.getElementById('connectText');
+    const connectBtn = document.getElementById('connectBtn');
     const sendBtn = document.getElementById('sendBtn');
     const inputBar = document.getElementById('inputBar');
     const usageText = document.getElementById('usageText');
@@ -576,6 +716,10 @@
     const accountDropup = document.getElementById('accountDropup');
     const settingsLink = document.getElementById('settingsLink');
     const logoutBtn = document.getElementById('logoutBtn');
+    const reconnectBtn = document.getElementById('reconnectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const projectSelect = document.getElementById('projectSelect');
+    const projectNote = document.getElementById('projectNote');
 
     function autoGrow() {
         textarea.style.height = '24px';
@@ -601,6 +745,104 @@
 
     sendBtn.addEventListener('click', sendMessage);
 
+    // ---- connecting projects (oauth) ----
+    // the worker does the real oauth dance. this just sends the browser there.
+    function startConnect() {
+        window.location.href = DRIPSTONE_API + '/oauth/start';
+    }
+    connectBtn.addEventListener('click', startConnect);
+    reconnectBtn.addEventListener('click', startConnect);
+    disconnectBtn.addEventListener('click', async () => {
+        try {
+            await fetch(DRIPSTONE_API + '/oauth/disconnect', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}',
+            });
+        } catch {}
+        conn = { connected: false, can_write: false };
+        setProject('');
+        updateConnectUI();
+        accountDropup.classList.remove('show');
+    });
+
+    function updateConnectUI(flash) {
+        connectNotice.classList.remove('show', 'good');
+        if (flash) {
+            connectText.textContent = flash.text;
+            connectNotice.classList.add('show');
+            if (flash.good) connectNotice.classList.add('good');
+            connectBtn.style.display = flash.good ? 'none' : '';
+            return;
+        }
+        if (isLoggedIn && !conn.connected) {
+            connectText.textContent = 'connect your mcbCode projects so DripstoneAI can read and edit them.';
+            connectBtn.style.display = '';
+            connectNotice.classList.add('show');
+        } else if (isLoggedIn && conn.connected && !conn.can_write) {
+            connectText.textContent = 'read-only connection: DripstoneAI can read your projects but not edit them.';
+            connectBtn.textContent = 'Allow edits';
+            connectBtn.style.display = '';
+            connectNotice.classList.add('show');
+        }
+        projectSelect.disabled = !(isLoggedIn && conn.connected);
+        disconnectBtn.style.display = conn.connected ? '' : 'none';
+        reconnectBtn.style.display = conn.connected ? '' : 'none';
+        if (!conn.connected) {
+            projectNote.className = 'project-note';
+            projectNote.textContent = 'connect your projects to pick one.';
+        } else if (!currentProject) {
+            projectNote.className = 'project-note';
+            projectNote.textContent = 'no project picked: general chat only.';
+        } else {
+            projectNote.className = 'project-note' + (conn.can_write ? '' : ' warn');
+            projectNote.textContent = conn.can_write
+                ? 'edits always need your approval.'
+                : 'read-only: edits are turned off.';
+        }
+    }
+
+    async function loadStatus() {
+        if (!isLoggedIn) return;
+        try {
+            const res = await fetch(DRIPSTONE_API + '/status', { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                conn = { connected: !!data.connected, can_write: !!data.can_write };
+            }
+        } catch {}
+        updateConnectUI();
+    }
+
+    async function loadProjects() {
+        if (!isLoggedIn) return;
+        try {
+            const res = await fetch(AUTH_PROJECTS_URL, { credentials: 'include' });
+            if (!res.ok) return;
+            const data = await res.json();
+            const all = [...(data.projects || []), ...(data.collab_projects || [])];
+            while (projectSelect.options.length > 1) projectSelect.remove(1);
+            all.forEach((p) => {
+                const opt = document.createElement('option');
+                opt.value = p.share_code;
+                opt.textContent = p.name + ' (' + p.share_code + ')';
+                projectSelect.appendChild(opt);
+            });
+            let saved = '';
+            try { saved = localStorage.getItem('dripstone_project') || ''; } catch {}
+            if (saved && all.some((p) => p.share_code === saved)) setProject(saved);
+        } catch {}
+    }
+
+    function setProject(code) {
+        currentProject = code || '';
+        projectSelect.value = currentProject;
+        try { localStorage.setItem('dripstone_project', currentProject); } catch {}
+        updateConnectUI();
+    }
+    projectSelect.addEventListener('change', () => setProject(projectSelect.value));
+
     // ---- login check ----
     // this only controls what the UI lets you do. the worker checks again
     // on its own server-side, so hitting the api directly still gets blocked.
@@ -615,7 +857,7 @@
                 const me = await res.json();
                 currentUsername = me.username || null;
                 const shortName = currentUsername
-                    ? (currentUsername.length > 12 ? currentUsername.slice(0, 12) + '…' : currentUsername)
+                    ? (currentUsername.length > 12 ? currentUsername.slice(0, 12) + '...' : currentUsername)
                     : 'Account';
                 accountName.textContent = shortName;
                 if (me.pfp_url) accountPfp.src = me.pfp_url;
@@ -819,6 +1061,164 @@
         return bubble;
     }
 
+    // ---- proposed changes (approval ui) ----
+    // everything here is built with textContent, never innerHTML, because the
+    // file contents come from the ai and must never be treated as html.
+
+    // tiny line diff so you can see exactly what an edit changes
+    function lineDiff(oldText, newText) {
+        const a = oldText.split('\n');
+        const b = newText.split('\n');
+        if (a.length * b.length > 2500000) return null;
+        const dp = Array.from({ length: a.length + 1 }, () => new Uint16Array(b.length + 1));
+        for (let i = a.length - 1; i >= 0; i--) {
+            for (let j = b.length - 1; j >= 0; j--) {
+                dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+            }
+        }
+        const out = [];
+        let i = 0, j = 0;
+        while (i < a.length && j < b.length) {
+            if (a[i] === b[j]) { out.push({ t: ' ', s: a[i] }); i++; j++; }
+            else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ t: '-', s: a[i] }); i++; }
+            else { out.push({ t: '+', s: b[j] }); j++; }
+        }
+        while (i < a.length) out.push({ t: '-', s: a[i++] });
+        while (j < b.length) out.push({ t: '+', s: b[j++] });
+        return out;
+    }
+
+    function renderDiffInto(pre, oldText, newText) {
+        const diff = lineDiff(oldText, newText);
+        if (!diff) { pre.textContent = newText; return; }
+        const keep = new Array(diff.length).fill(false);
+        diff.forEach((d, idx) => {
+            if (d.t !== ' ') for (let k = Math.max(0, idx - 2); k <= Math.min(diff.length - 1, idx + 2); k++) keep[k] = true;
+        });
+        let lastShown = true;
+        diff.forEach((d, idx) => {
+            if (!keep[idx]) {
+                if (lastShown) {
+                    const gap = document.createElement('span');
+                    gap.className = 'diff-gap';
+                    gap.textContent = '...';
+                    pre.appendChild(gap);
+                }
+                lastShown = false;
+                return;
+            }
+            lastShown = true;
+            const line = document.createElement('span');
+            line.className = d.t === '+' ? 'diff-add' : d.t === '-' ? 'diff-del' : 'diff-same';
+            line.textContent = (d.t === ' ' ? '  ' : d.t + ' ') + d.s;
+            pre.appendChild(line);
+        });
+    }
+
+    function makeEl(tag, className, text) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+
+    function renderProposal(row, proposal) {
+        const card = makeEl('div', 'proposal-card');
+        card.appendChild(makeEl('div', 'proposal-title', 'Proposed changes (nothing is applied until you approve)'));
+        card.appendChild(makeEl('div', 'proposal-summary', proposal.summary || ''));
+
+        proposal.ops.forEach((op) => {
+            const labels = { create: 'create', create_folder: 'new folder', edit: 'edit', rename: 'rename', delete: 'delete' };
+            const badgeClass = op.op === 'edit' ? 'edit' : op.op === 'delete' ? 'delete' : op.op === 'rename' ? 'rename' : '';
+            const pathText = op.op === 'rename' ? op.path + '  ->  ' + op.to : op.path;
+
+            if (op.op === 'create' || op.op === 'edit') {
+                const det = makeEl('details', 'proposal-op');
+                const sum = makeEl('summary');
+                sum.appendChild(makeEl('span', 'op-badge ' + badgeClass, labels[op.op]));
+                sum.appendChild(makeEl('span', '', pathText));
+                det.appendChild(sum);
+                if (op.warning) det.appendChild(makeEl('div', 'op-note', op.warning));
+                const pre = makeEl('pre');
+                if (op.op === 'edit') renderDiffInto(pre, op.old || '', op.new || '');
+                else pre.textContent = op.new || '';
+                det.appendChild(pre);
+                card.appendChild(det);
+            } else {
+                const box = makeEl('div', 'proposal-op static');
+                box.appendChild(makeEl('span', 'op-badge ' + badgeClass, labels[op.op] || op.op));
+                box.appendChild(makeEl('span', '', pathText + (op.note ? '  (' + op.note + ')' : '')));
+                card.appendChild(box);
+            }
+        });
+
+        const buttons = makeEl('div', 'proposal-buttons');
+        const approveBtn = makeEl('button', 'btn-approve', 'Approve');
+        const rejectBtn = makeEl('button', 'btn-reject', 'Reject');
+        approveBtn.type = 'button';
+        rejectBtn.type = 'button';
+        buttons.appendChild(approveBtn);
+        buttons.appendChild(rejectBtn);
+        card.appendChild(buttons);
+        const status = makeEl('div', 'proposal-status');
+        card.appendChild(status);
+
+        function lock() { approveBtn.disabled = true; rejectBtn.disabled = true; }
+
+        rejectBtn.addEventListener('click', () => {
+            lock();
+            status.className = 'proposal-status';
+            status.textContent = 'Rejected. Nothing was changed.';
+            conversation.push({ role: 'assistant', content: 'The user rejected the proposed changes. Nothing was changed.' });
+        });
+
+        approveBtn.addEventListener('click', async () => {
+            if (Date.now() > proposal.expires_at) {
+                lock();
+                status.className = 'proposal-status bad';
+                status.textContent = 'This proposal expired. Ask for the changes again.';
+                return;
+            }
+            lock();
+            status.className = 'proposal-status';
+            status.textContent = 'Applying...';
+            try {
+                const res = await fetch(DRIPSTONE_API + '/approve', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ proposal: proposal.token }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    status.className = 'proposal-status bad';
+                    status.textContent = data.error || 'Could not apply the changes.';
+                    if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
+                    return;
+                }
+                const done = (data.results || []).map((r) => '- ' + r.op + ': ' + r.path).join('\n');
+                if (data.failed) {
+                    status.className = 'proposal-status bad';
+                    status.textContent = 'Stopped part way. These were applied:\n' + (done || '(none)') +
+                        '\n\nFailed on ' + data.failed.op + ' ' + data.failed.path + ': ' + data.failed.message;
+                    conversation.push({ role: 'assistant', content: 'The user approved the changes but they only partly applied. Applied:\n' + (done || '(none)') + '\nFailed: ' + data.failed.op + ' ' + data.failed.path });
+                } else {
+                    status.className = 'proposal-status good';
+                    status.textContent = 'Applied:\n' + done + '\n\nRefresh your project in Studio to see the changes.';
+                    conversation.push({ role: 'assistant', content: 'The user approved the changes and they were applied:\n' + done });
+                }
+            } catch {
+                status.className = 'proposal-status bad';
+                status.textContent = 'Could not reach DripstoneAI. Check your connection and ask again.';
+            }
+        });
+
+        const actions = row.querySelector('.msg-actions');
+        if (actions) row.insertBefore(card, actions);
+        else row.appendChild(card);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
     async function sendMessage() {
         if (isSending) return;
         if (!isLoggedIn) {
@@ -856,7 +1256,7 @@
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: conversation }),
+                body: JSON.stringify({ messages: conversation, project_code: currentProject }),
             });
 
             const data = await res.json();
@@ -866,13 +1266,20 @@
                 pendingEl.classList.add('error-msg');
                 pendingEl.textContent = data.error || 'something went wrong.';
                 if (res.status === 401) await checkLogin();
+                if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
                 return;
             }
 
             pendingEl.classList.remove('pending');
             renderReply(pendingEl, data.reply);
             if (pendingEl._actionsEl) pendingEl._actionsEl.style.display = 'flex';
-            conversation.push({ role: 'assistant', content: data.reply });
+
+            let stored = data.reply;
+            if (data.proposal) {
+                stored += '\n\n(Proposed changes were shown to the user. They have not been approved yet.)';
+                renderProposal(pendingEl.closest('.msg-row'), data.proposal);
+            }
+            conversation.push({ role: 'assistant', content: stored });
             refreshUsage();
         } catch (err) {
             pendingEl.classList.remove('pending');
@@ -901,13 +1308,12 @@
         const container = document.getElementById('selectedFilesContainer');
         container.innerHTML = '';
         attachedFiles.forEach((file, index) => {
-            const chip = document.createElement('div');
-            chip.className = 'file-chip';
-            chip.innerHTML = `
-                <span>📄</span>
-                <span>${file.name}</span>
-                <span onclick="removeFile(${index})" title="Remove file">✕</span>
-            `;
+            const chip = makeEl('div', 'file-chip');
+            chip.appendChild(makeEl('span', '', file.name));
+            const x = makeEl('span', 'chip-x', 'x');
+            x.title = 'Remove file';
+            x.addEventListener('click', () => removeFile(index));
+            chip.appendChild(x);
             container.appendChild(chip);
         });
     }
@@ -950,9 +1356,22 @@
         messagesArea.scrollTop = messagesArea.scrollHeight;
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-        checkLogin();
+    window.addEventListener('DOMContentLoaded', async () => {
+        await checkLogin();
         refreshUsage();
+        await loadStatus();
+        await loadProjects();
+
+        // coming back from the connect flow: show how it went, then tidy the url
+        const params = new URLSearchParams(window.location.search);
+        const result = params.get('connect');
+        if (result) {
+            if (result === 'ok') updateConnectUI({ text: 'projects connected. pick one in the sidebar.', good: true });
+            else if (result === 'denied') updateConnectUI({ text: 'connection cancelled.' });
+            else updateConnectUI({ text: 'could not connect. try again.' });
+            history.replaceState(null, '', window.location.pathname);
+            setTimeout(() => updateConnectUI(), 5000);
+        }
     });
 </script>
 
