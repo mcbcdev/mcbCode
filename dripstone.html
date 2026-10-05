@@ -747,8 +747,32 @@
 
     // ---- connecting projects (oauth) ----
     // the worker does the real oauth dance. this just sends the browser there.
-    function startConnect() {
-        window.location.href = DRIPSTONE_API + '/oauth/start';
+    // fetch that gives up after a few seconds instead of hanging forever
+    function fetchT(url, options, ms) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ms);
+        return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+    }
+
+    async function startConnect() {
+        updateConnectUI({ text: 'opening mcbCode...' });
+        try {
+            const res = await fetchT(DRIPSTONE_API + '/oauth/start-url', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}',
+            }, 15000);
+            const data = await res.json();
+            if (res.ok && data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            updateConnectUI({ text: 'could not start the connection: ' + (data.error || 'unknown error') });
+        } catch {
+            updateConnectUI({ text: 'DripstoneAI did not answer in time. try again in a minute.' });
+        }
+        setTimeout(() => updateConnectUI(), 6000);
     }
     connectBtn.addEventListener('click', startConnect);
     reconnectBtn.addEventListener('click', startConnect);
@@ -778,6 +802,7 @@
         }
         if (isLoggedIn && !conn.connected) {
             connectText.textContent = 'connect your mcbCode projects so DripstoneAI can read and edit them.';
+            connectBtn.textContent = 'Connect projects';
             connectBtn.style.display = '';
             connectNotice.classList.add('show');
         } else if (isLoggedIn && conn.connected && !conn.can_write) {
@@ -806,7 +831,7 @@
     async function loadStatus() {
         if (!isLoggedIn) return;
         try {
-            const res = await fetch(DRIPSTONE_API + '/status', { credentials: 'include' });
+            const res = await fetchT(DRIPSTONE_API + '/status', { credentials: 'include' }, 8000);
             if (res.ok) {
                 const data = await res.json();
                 conn = { connected: !!data.connected, can_write: !!data.can_write };
@@ -818,7 +843,7 @@
     async function loadProjects() {
         if (!isLoggedIn) return;
         try {
-            const res = await fetch(AUTH_PROJECTS_URL, { credentials: 'include' });
+            const res = await fetchT(AUTH_PROJECTS_URL, { credentials: 'include' }, 8000);
             if (!res.ok) return;
             const data = await res.json();
             const all = [...(data.projects || []), ...(data.collab_projects || [])];
@@ -1358,6 +1383,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
         await checkLogin();
+        updateConnectUI(); // show the connect button right away
         refreshUsage();
         await loadStatus();
         await loadProjects();
