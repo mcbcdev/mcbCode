@@ -27,7 +27,7 @@
         padding: 0;
         height: 100%;
         overflow: hidden;
-        background: transparent;
+        background: #0c0c0c;
     }
 
     .bg-image {
@@ -602,9 +602,6 @@
 </head>
 <body>
 
-<img id="bgImage" class="bg-image" alt="Background">
-<div class="bg-overlay"></div>
-
 <div class="app" id="app">
     <div class="messages-area" id="messagesArea">
         <div class="hero-title" id="heroTitle">what are we building?</div>
@@ -682,12 +679,6 @@
 </div>
 
 <script>
-    // ---- background renderer ----
-    (function() {
-        const imgElement = document.getElementById('bgImage');
-        if (imgElement) imgElement.src = 'https://mcbcode.com/img/mc/end_city_two.png';
-    })();
-
     const DRIPSTONE_API = "https://dripstone-ai.mcbcode.com";
     const AUTH_ME_URL = "https://auth.mcbcode.com/me";
     const AUTH_PROJECTS_URL = "https://auth.mcbcode.com/projects";
