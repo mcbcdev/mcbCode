@@ -2,6 +2,16 @@
   "ai": {
     "binding": "AI"
   },
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "MCP",
+        "type": "service",
+        "service": "mcp",
+        "environment": "production"
+      }
+    ]
+  },
   "kv_namespaces": [
     {
       "binding": "USAGE_KV",
