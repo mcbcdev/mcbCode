@@ -361,6 +361,36 @@
     }
     .msg-ai.error-msg { color: var(--error); }
 
+    .wiki-activity, .wiki-sources {
+        width: 100%;
+        max-width: 92%;
+        margin-top: 7px;
+        color: #999;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+    .wiki-activity { display: flex; flex-direction: column; gap: 4px; }
+    .wiki-activity-status, .wiki-progress-row { overflow-wrap: anywhere; }
+    .wiki-activity-list { display: flex; flex-direction: column; gap: 3px; padding-left: 10px; }
+    .wiki-progress-row.error { color: var(--error); }
+    .wiki-progress-row a, .wiki-candidate a, .wiki-source-link {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+    .wiki-progress-row a:hover, .wiki-candidate a:hover, .wiki-source-link:hover { color: #fff; }
+    .wiki-sources-title { color: #888; margin-bottom: 5px; }
+    .wiki-source-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .wiki-source-link {
+        display: inline-block;
+        max-width: 100%;
+        padding: 3px 7px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow-wrap: anywhere;
+    }
+
     /* markdown styling inside ai replies */
     .msg-ai h1, .msg-ai h2, .msg-ai h3 {
         color: var(--accent);
@@ -1430,6 +1460,146 @@
         messagesArea.scrollTop = messagesArea.scrollHeight;
     }
 
+    function safeWikiHref(value) {
+        try {
+            const url = new URL(value);
+            return url.protocol === 'https:' && url.hostname === 'wiki.bedrock.dev' ? url.href : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function wikiFilename(path) {
+        return String(path || '').split('/').pop() || 'wiki page';
+    }
+
+    function getWikiActivity(bubble) {
+        if (bubble._wikiActivity) return bubble._wikiActivity;
+        const box = makeEl('div', 'wiki-activity');
+        box.setAttribute('role', 'status');
+        box.setAttribute('aria-live', 'polite');
+        const status = makeEl('div', 'wiki-activity-status');
+        const list = makeEl('div', 'wiki-activity-list');
+        box.append(status, list);
+        const row = bubble.closest('.msg-row');
+        row.insertBefore(box, bubble._actionsEl || null);
+        bubble._wikiActivity = { box, status, list, rows: new Map() };
+        return bubble._wikiActivity;
+    }
+
+    function makeWikiLink(path, url, label) {
+        const href = safeWikiHref(url);
+        if (!href) return document.createTextNode(label || wikiFilename(path));
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = label || wikiFilename(path);
+        link.title = String(path || 'bedrock wiki page');
+        return link;
+    }
+
+    function renderWikiProgress(bubble, event) {
+        if (!event || !String(event.type || '').startsWith('wiki_')) return;
+        const activity = getWikiActivity(bubble);
+
+        if (event.type === 'wiki_search') {
+            if (event.phase === 'searching') {
+                activity.status.textContent = 'searching the wiki index for: ' + String(event.query || '');
+                activity.list.replaceChildren();
+            } else if (event.phase === 'matched') {
+                const count = Number(event.count) || 0;
+                activity.status.textContent = 'found ' + count + ' possible wiki page' + (count === 1 ? '' : 's');
+                activity.list.replaceChildren();
+                (Array.isArray(event.candidates) ? event.candidates : []).slice(0, 8).forEach((page) => {
+                    if (!page || typeof page.path !== 'string') return;
+                    const item = makeEl('div', 'wiki-candidate');
+                    item.append(document.createTextNode('match: '), makeWikiLink(page.path, page.url));
+                    activity.list.appendChild(item);
+                });
+            } else if (event.phase === 'error') {
+                activity.status.textContent = 'wiki index search failed';
+            }
+            return;
+        }
+
+        if (event.type === 'wiki_page' && typeof event.path === 'string') {
+            let item = activity.rows.get(event.path);
+            if (!item) {
+                item = makeEl('div', 'wiki-progress-row');
+                activity.rows.set(event.path, item);
+                activity.list.appendChild(item);
+            }
+            item.classList.toggle('error', event.phase === 'error');
+            const labels = { searching: 'searching: ', read: 'read: ', error: 'could not read: ' };
+            item.textContent = labels[event.phase] || 'wiki page: ';
+            item.appendChild(makeWikiLink(event.path, event.url));
+        }
+    }
+
+    function renderWikiSources(bubble, references) {
+        if (!Array.isArray(references) || !references.length) return;
+        const row = bubble.closest('.msg-row');
+        const section = makeEl('div', 'wiki-sources');
+        section.appendChild(makeEl('div', 'wiki-sources-title', 'wiki sources'));
+        const list = makeEl('div', 'wiki-source-list');
+        references.forEach((reference) => {
+            if (!reference || typeof reference.path !== 'string') return;
+            const link = makeWikiLink(reference.path, reference.url);
+            if (link.nodeType === Node.TEXT_NODE) return;
+            link.className = 'wiki-source-link';
+            list.appendChild(link);
+        });
+        if (!list.childNodes.length) return;
+        section.appendChild(list);
+        row.insertBefore(section, bubble._actionsEl || null);
+    }
+
+    async function readChatStream(response, onProgress) {
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        if (!contentType.includes('text/event-stream')) return await response.json();
+        if (!response.body) return { error: 'the live reply stream was unavailable.' };
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let result = null;
+        let failure = null;
+
+        function handleFrame(frame) {
+            let eventName = 'message';
+            const dataLines = [];
+            frame.split(/\r?\n/).forEach((line) => {
+                if (line.startsWith('event:')) eventName = line.slice(6).trim();
+                else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
+            });
+            if (!dataLines.length) return;
+            let payload;
+            try { payload = JSON.parse(dataLines.join('\n')); } catch { return; }
+            if (eventName === 'progress') {
+                try { onProgress(payload); } catch {}
+            } else if (eventName === 'done') {
+                result = payload;
+            } else if (eventName === 'error') {
+                failure = payload;
+            }
+        }
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+            let boundary;
+            while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+                handleFrame(buffer.slice(0, boundary));
+                buffer = buffer.slice(boundary + 2);
+            }
+        }
+        buffer += decoder.decode().replace(/\r\n/g, '\n');
+        if (buffer.trim()) handleFrame(buffer);
+        return failure || result || { error: 'the reply stream ended before DripstoneAI finished.' };
+    }
+
     async function sendMessage() {
         if (isSending) return;
         if (!isLoggedIn) {
@@ -1464,29 +1634,33 @@
         });
 
         try {
-            const res = await fetch(DRIPSTONE_API, {
+            const res = await fetch(DRIPSTONE_API + '/stream', {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
                 body: JSON.stringify({ messages: conversation, project_code: currentProject }),
             });
 
-            const data = await res.json();
+            const data = await readChatStream(res, (progress) => renderWikiProgress(pendingEl, progress));
 
-            if (!res.ok) {
+            if (!res.ok || data.error) {
                 pendingEl.classList.remove('pending');
                 pendingEl.classList.add('error-msg');
                 pendingEl.textContent = data.error || 'something went wrong.';
-                if (res.status === 401) await checkLogin();
+                if (res.status === 401 || data.status === 401) await checkLogin();
                 if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
                 return;
             }
 
             pendingEl.classList.remove('pending');
             renderReply(pendingEl, data.reply);
+            renderWikiSources(pendingEl, data.wiki_references);
             if (pendingEl._actionsEl) pendingEl._actionsEl.style.display = 'flex';
 
             let stored = data.reply;
+            if (Array.isArray(data.wiki_references) && data.wiki_references.length) {
+                stored += '\n\nwiki sources: ' + data.wiki_references.map((reference) => reference.url).join(', ');
+            }
             if (data.proposal) {
                 stored += '\n\n(Proposed changes were shown to the user. They have not been approved yet.)';
                 renderProposal(pendingEl.closest('.msg-row'), data.proposal);
