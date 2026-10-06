@@ -361,7 +361,7 @@
     }
     .msg-ai.error-msg { color: var(--error); }
 
-    .wiki-activity, .wiki-sources {
+    .wiki-activity {
         width: 100%;
         max-width: 92%;
         margin-top: 7px;
@@ -369,27 +369,87 @@
         font-family: 'mcfont', sans-serif;
         font-size: 0.8rem;
         line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
     }
-    .wiki-activity { display: flex; flex-direction: column; gap: 4px; }
     .wiki-activity-status, .wiki-progress-row { overflow-wrap: anywhere; }
     .wiki-activity-list { display: flex; flex-direction: column; gap: 3px; padding-left: 10px; }
     .wiki-progress-row.error { color: var(--error); }
-    .wiki-progress-row a, .wiki-candidate a, .wiki-source-link {
+    .wiki-progress-row a, .wiki-candidate a {
         color: var(--accent);
         text-decoration: underline;
         text-underline-offset: 2px;
     }
-    .wiki-progress-row a:hover, .wiki-candidate a:hover, .wiki-source-link:hover { color: #fff; }
-    .wiki-sources-title { color: #888; margin-bottom: 5px; }
-    .wiki-source-list { display: flex; flex-wrap: wrap; gap: 6px; }
-    .wiki-source-link {
-        display: inline-block;
-        max-width: 100%;
-        padding: 3px 7px;
+    .wiki-progress-row a:hover, .wiki-candidate a:hover { color: #fff; }
+    .msg-sources-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        color: #aaa;
+        cursor: pointer;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.75rem;
+        padding: 4px 7px;
+    }
+    .msg-sources-btn:hover, .msg-sources-btn:focus-visible {
+        border-color: var(--border);
+        color: var(--accent);
+        outline: none;
+    }
+    .wiki-sources-dialog {
+        width: min(480px, calc(100% - 24px));
+        max-height: min(70vh, 600px);
+        overflow: auto;
+        background: #161616;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text);
+        padding: 18px;
+        font-family: 'mcfont', sans-serif;
+    }
+    .wiki-sources-dialog::backdrop { background: rgba(0, 0, 0, 0.72); }
+    .wiki-sources-dialog-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .wiki-sources-dialog h2 {
+        margin: 0;
+        color: var(--accent);
+        font-family: 'mcfontb', sans-serif;
+        font-size: 1.05rem;
+    }
+    .wiki-sources-dialog-note { margin: 4px 0 0; color: #888; font-size: 0.78rem; }
+    .wiki-sources-dialog-close {
+        background: transparent;
         border: 1px solid var(--border);
         border-radius: 6px;
-        overflow-wrap: anywhere;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-family: 'mcfont', sans-serif;
+        padding: 6px 9px;
     }
+    .wiki-sources-dialog-close:hover, .wiki-sources-dialog-close:focus-visible {
+        border-color: var(--accent);
+        color: var(--accent);
+        outline: none;
+    }
+    .wiki-source-dialog-list { display: flex; flex-direction: column; gap: 8px; }
+    .wiki-source-card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 12px;
+        background: #101010;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        text-decoration: none;
+    }
+    .wiki-source-file { color: var(--accent); overflow-wrap: anywhere; }
+    .wiki-source-path { color: #888; font-size: 0.75rem; overflow-wrap: anywhere; }
 
     /* markdown styling inside ai replies */
     .msg-ai h1, .msg-ai h2, .msg-ai h3 {
@@ -564,7 +624,14 @@
     }
     .msg-copy-btn:hover { opacity: 1; background: #1f1f1f; }
     .msg-copy-btn:active { transform: scale(0.9); }
-    .msg-copy-btn img { width: 14px; height: 14px; filter: var(--icon-filter); display: block; }
+    .msg-copy-btn img {
+        width: 14px;
+        height: 14px;
+        filter: var(--icon-filter);
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        display: block;
+    }
     .msg-timestamp {
         font-family: 'mcfont', sans-serif;
         font-size: 0.72rem;
@@ -609,17 +676,6 @@
     @keyframes pulse {
         0%, 80%, 100% { opacity: 0.25; transform: scale(0.8) rotate(0deg); }
         40% { opacity: 1; transform: scale(1.15) rotate(15deg); }
-    }
-
-    /* word-by-word fade-in-down for ai replies */
-    .word-fade {
-        display: inline-block;
-        opacity: 0;
-        transform: translateY(-8px);
-        animation: fadeInDown 0.35s ease forwards;
-    }
-    @keyframes fadeInDown {
-        to { opacity: 1; transform: translateY(0); }
     }
 
     /* ---------- input bar ---------- */
@@ -858,6 +914,17 @@
         </div>
     </div>
 </div>
+
+<dialog class="wiki-sources-dialog" id="wikiSourcesDialog" aria-labelledby="wikiSourcesTitle">
+    <div class="wiki-sources-dialog-head">
+        <div>
+            <h2 id="wikiSourcesTitle">wiki sources</h2>
+            <p class="wiki-sources-dialog-note">pages read for this answer</p>
+        </div>
+        <button class="wiki-sources-dialog-close" id="wikiSourcesCloseBtn" type="button">close</button>
+    </div>
+    <div class="wiki-source-dialog-list" id="wikiSourcesDialogList"></div>
+</dialog>
 
 <script>
     const DRIPSTONE_API = "https://dripstone-ai.mcbcode.com";
@@ -1227,41 +1294,8 @@
         return html;
     }
 
-    // walks the rendered markdown, wraps each word of plain text in a
-    // fade-in span, but leaves code blocks alone so indentation/spacing
-    // inside them isn't chopped up by the animation wrapping.
-    function animateWordsPreservingHtml(el) {
-        let wordIndex = 0;
-        function walk(node) {
-            Array.from(node.childNodes).forEach((child) => {
-                if (child.nodeType === Node.TEXT_NODE) {
-                    if (child.textContent.trim() === '') return;
-                    const frag = document.createDocumentFragment();
-                    child.textContent.split(/(\s+)/).forEach((part) => {
-                        if (part.trim() === '') {
-                            frag.appendChild(document.createTextNode(part));
-                            return;
-                        }
-                        const span = document.createElement('span');
-                        span.className = 'word-fade';
-                        span.textContent = part;
-                        span.style.animationDelay = (wordIndex * 0.035) + 's';
-                        wordIndex++;
-                        frag.appendChild(span);
-                    });
-                    node.replaceChild(frag, child);
-                } else if (child.nodeType === Node.ELEMENT_NODE) {
-                    if (child.tagName === 'PRE' || child.tagName === 'CODE' || child.classList.contains('md-code-wrap')) return;
-                    walk(child);
-                }
-            });
-        }
-        walk(el);
-    }
-
     function renderReply(el, text) {
         el.innerHTML = markdownToHtml(text);
-        animateWordsPreservingHtml(el);
     }
 
     // ---- rendering messages ----
@@ -1290,9 +1324,28 @@
             actions.className = 'msg-actions';
             actions.style.display = opts.pending ? 'none' : 'flex';
             const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            actions.innerHTML =
-                `<button class="msg-copy-btn" type="button" title="Copy"><img src="https://mcbcode.com/img/icons/copy.png" alt="Copy"></button>` +
-                `<span class="msg-timestamp">${time}</span>`;
+            const copyButton = document.createElement('button');
+            copyButton.className = 'msg-copy-btn';
+            copyButton.type = 'button';
+            copyButton.title = 'copy';
+            copyButton.setAttribute('aria-label', 'copy response');
+            const copyIcon = document.createElement('img');
+            copyIcon.src = 'https://mcbcode.com/img/icons/copy.png';
+            copyIcon.alt = '';
+            copyButton.appendChild(copyIcon);
+            actions.appendChild(copyButton);
+
+            const sourcesButton = document.createElement('button');
+            sourcesButton.className = 'msg-sources-btn';
+            sourcesButton.type = 'button';
+            sourcesButton.textContent = 'sources';
+            sourcesButton.hidden = true;
+            actions.appendChild(sourcesButton);
+
+            const timestamp = document.createElement('span');
+            timestamp.className = 'msg-timestamp';
+            timestamp.textContent = time;
+            actions.appendChild(timestamp);
             row.appendChild(actions);
             bubble._actionsEl = actions;
         }
@@ -1504,7 +1557,10 @@
         const activity = getWikiActivity(bubble);
 
         if (event.type === 'wiki_search') {
-            if (event.phase === 'searching') {
+            if (event.phase === 'checking') {
+                activity.status.textContent = 'checking the wiki blacklist';
+                activity.list.replaceChildren();
+            } else if (event.phase === 'searching') {
                 activity.status.textContent = 'searching the wiki index for: ' + String(event.query || '');
                 activity.list.replaceChildren();
             } else if (event.phase === 'matched') {
@@ -1517,6 +1573,8 @@
                     item.append(document.createTextNode('match: '), makeWikiLink(page.path, page.url));
                     activity.list.appendChild(item);
                 });
+            } else if (event.phase === 'blocked') {
+                activity.status.textContent = 'wiki lookup blocked: blacklist could not be verified';
             } else if (event.phase === 'error') {
                 activity.status.textContent = 'wiki index search failed';
             }
@@ -1530,29 +1588,46 @@
                 activity.rows.set(event.path, item);
                 activity.list.appendChild(item);
             }
-            item.classList.toggle('error', event.phase === 'error');
-            const labels = { searching: 'searching: ', read: 'read: ', error: 'could not read: ' };
+            item.classList.toggle('error', event.phase === 'error' || event.phase === 'blocked');
+            const labels = { searching: 'searching: ', read: 'read: ', error: 'could not read: ', blocked: 'blocked by blacklist: ' };
             item.textContent = labels[event.phase] || 'wiki page: ';
             item.appendChild(makeWikiLink(event.path, event.url));
         }
     }
 
     function renderWikiSources(bubble, references) {
-        if (!Array.isArray(references) || !references.length) return;
-        const row = bubble.closest('.msg-row');
-        const section = makeEl('div', 'wiki-sources');
-        section.appendChild(makeEl('div', 'wiki-sources-title', 'wiki sources'));
-        const list = makeEl('div', 'wiki-source-list');
-        references.forEach((reference) => {
-            if (!reference || typeof reference.path !== 'string') return;
-            const link = makeWikiLink(reference.path, reference.url);
-            if (link.nodeType === Node.TEXT_NODE) return;
-            link.className = 'wiki-source-link';
+        if (!Array.isArray(references) || !references.length || !bubble._actionsEl) return;
+        const button = bubble._actionsEl.querySelector('.msg-sources-btn');
+        if (!button) return;
+        const safeReferences = references.filter((reference) =>
+            reference && typeof reference.path === 'string' && safeWikiHref(reference.url)
+        );
+        if (!safeReferences.length) return;
+        button._wikiReferences = safeReferences;
+        button.hidden = false;
+        button.setAttribute('aria-label', 'show ' + safeReferences.length + ' wiki source' + (safeReferences.length === 1 ? '' : 's'));
+    }
+
+    function showWikiSources(button) {
+        const dialog = document.getElementById('wikiSourcesDialog');
+        const list = document.getElementById('wikiSourcesDialogList');
+        if (!dialog || !list) return;
+        list.replaceChildren();
+        (Array.isArray(button._wikiReferences) ? button._wikiReferences : []).forEach((reference) => {
+            const href = safeWikiHref(reference.url);
+            if (!href || typeof reference.path !== 'string') return;
+            const link = document.createElement('a');
+            link.className = 'wiki-source-card';
+            link.href = href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.appendChild(makeEl('span', 'wiki-source-file', reference.title || wikiFilename(reference.path)));
+            link.appendChild(makeEl('span', 'wiki-source-path', reference.path));
             list.appendChild(link);
         });
         if (!list.childNodes.length) return;
-        section.appendChild(list);
-        row.insertBefore(section, bubble._actionsEl || null);
+        if (typeof dialog.showModal === 'function') dialog.showModal();
+        else dialog.setAttribute('open', '');
     }
 
     async function readChatStream(response, onProgress) {
@@ -1722,6 +1797,12 @@
             return;
         }
 
+        const sourcesBtn = e.target.closest('.msg-sources-btn');
+        if (sourcesBtn) {
+            showWikiSources(sourcesBtn);
+            return;
+        }
+
         const msgBtn = e.target.closest('.msg-copy-btn');
         if (msgBtn) {
             const bubble = msgBtn.closest('.msg-row').querySelector('.msg-ai');
@@ -1730,6 +1811,12 @@
                 setTimeout(() => { msgBtn.title = 'Copy'; }, 1200);
             });
         }
+    });
+
+    const wikiSourcesDialog = document.getElementById('wikiSourcesDialog');
+    document.getElementById('wikiSourcesCloseBtn').addEventListener('click', () => wikiSourcesDialog.close());
+    wikiSourcesDialog.addEventListener('click', (event) => {
+        if (event.target === wikiSourcesDialog) wikiSourcesDialog.close();
     });
 
     // shows a "jump to latest" button whenever you've scrolled up away
