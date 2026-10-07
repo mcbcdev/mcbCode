@@ -834,7 +834,7 @@
 
         <div class="input-bar" id="inputBar">
             <div class="login-notice" id="loginNotice">
-                you need to be logged in to use DripstoneAI. <a href="https://mcbcode.com/account">log in here</a>
+                guest access: one ask per ip every 24 hours. <a href="https://mcbcode.com/account">log in for daily credits</a>
             </div>
 
             <div class="connect-notice" id="connectNotice">
@@ -892,7 +892,7 @@
     <div class="sidebar-bottom">
         <div class="usage-bar-wrap">
             <div class="usage-bar-label">
-                <span>Global usage today</span>
+                <span id="usageLabel">usage</span>
                 <span id="usageText">-- / --</span>
             </div>
             <div class="usage-bar-track"><div class="usage-bar-fill" id="usageFill"></div></div>
@@ -947,6 +947,7 @@
     const connectBtn = document.getElementById('connectBtn');
     const sendBtn = document.getElementById('sendBtn');
     const inputBar = document.getElementById('inputBar');
+    const usageLabel = document.getElementById('usageLabel');
     const usageText = document.getElementById('usageText');
     const usageFill = document.getElementById('usageFill');
     const accountBtn = document.getElementById('accountBtn');
@@ -1183,29 +1184,38 @@
             accountBtn.disabled = true;
         }
 
-        if (isLoggedIn) {
-            loginNotice.classList.remove('show');
-            textarea.disabled = false;
-            sendBtn.disabled = false;
-        } else {
-            loginNotice.classList.add('show');
-            textarea.disabled = true;
-            sendBtn.disabled = true;
-        }
+        if (isLoggedIn) loginNotice.classList.remove('show');
+        else loginNotice.classList.add('show');
+        textarea.disabled = false;
+        sendBtn.disabled = isSending;
     }
 
     // ---- usage bar ----
     async function refreshUsage() {
         try {
-            const res = await fetch(DRIPSTONE_API + '/usage');
-            if (!res.ok) return;
+            const res = await fetchT(DRIPSTONE_API + '/usage', { credentials: 'include' }, 8000);
+            if (!res.ok) throw new Error('usage unavailable');
             const data = await res.json();
-            usageText.textContent = `${data.remaining} / ${data.limit} left`;
+            if (data.unlimited) {
+                usageLabel.textContent = data.identity === 'ranked' ? 'ranked access' : 'obsidian access';
+                usageText.textContent = 'unlimited';
+                usageFill.style.width = '100%';
+                usageFill.classList.remove('low', 'empty');
+                return;
+            }
+            if (data.identity === 'guest') {
+                usageLabel.textContent = 'guest access';
+                usageText.textContent = `${data.remaining} / ${data.limit} asks left`;
+            } else {
+                usageLabel.textContent = 'daily credits';
+                usageText.textContent = `${data.remaining} / ${data.limit} credits left`;
+            }
             const pct = data.limit > 0 ? (data.remaining / data.limit) * 100 : 0;
             usageFill.style.width = pct + '%';
             usageFill.classList.toggle('low', pct <= 30 && pct > 0);
             usageFill.classList.toggle('empty', pct <= 0);
         } catch {
+            usageLabel.textContent = 'usage';
             usageText.textContent = 'unavailable';
         }
     }
@@ -1677,10 +1687,6 @@
 
     async function sendMessage() {
         if (isSending) return;
-        if (!isLoggedIn) {
-            await checkLogin();
-            return;
-        }
 
         let text = textarea.value.trim();
         if (!text) return;
@@ -1724,6 +1730,7 @@
                 pendingEl.textContent = data.error || 'something went wrong.';
                 if (res.status === 401 || data.status === 401) await checkLogin();
                 if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
+                await refreshUsage();
                 return;
             }
 
@@ -1748,7 +1755,7 @@
             pendingEl.textContent = 'could not reach DripstoneAI. check your connection.';
         } finally {
             isSending = false;
-            sendBtn.disabled = !isLoggedIn;
+            sendBtn.disabled = false;
             newChatBtn.disabled = false;
         }
     }
