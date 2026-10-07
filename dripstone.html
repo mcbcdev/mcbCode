@@ -113,28 +113,6 @@
         margin-bottom: 8px;
     }
 
-    /* project picker */
-    .project-select {
-        width: 100%;
-        background: #101010;
-        color: var(--text);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 9px;
-        font-family: 'mcfont', sans-serif;
-        font-size: 0.85rem;
-    }
-    .project-select:focus { outline: none; border-color: var(--accent); }
-    .project-select:disabled { opacity: 0.5; cursor: not-allowed; }
-    .project-note {
-        font-family: 'mcfont', sans-serif;
-        font-size: 0.72rem;
-        color: #777;
-        margin-top: 6px;
-        line-height: 1.4;
-    }
-    .project-note.warn { color: #ff9900; }
-
     /* saved chats */
     .chats-placeholder {
         border: 1px dashed var(--border);
@@ -865,6 +843,92 @@
         .input-bar { padding: 10px 12px; border-radius: 14px; }
         .scroll-bottom-btn { bottom: 110px; }
     }
+  
+    .extra-tools { display: flex; align-items: center; gap: 8px; }
+    .proposal-project { margin-top: 7px; color: var(--text-dim); font-family: 'mcfont', sans-serif; font-size: 0.76rem; }
+    .projects-open-btn {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #111;
+        color: var(--text-dim);
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.78rem;
+        cursor: pointer;
+    }
+    .projects-open-btn:hover, .projects-open-btn:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
+    .projects-open-btn span { color: var(--accent); font-family: 'mcfontb', sans-serif; }
+    .projects-dialog {
+        width: min(480px, calc(100vw - 24px));
+        max-height: min(76dvh, 640px);
+        padding: 18px;
+        color: var(--text);
+        background: var(--panel-solid);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+    }
+    .projects-dialog::backdrop { background: rgba(0, 0, 0, 0.66); }
+    .projects-dialog-head, .projects-dialog-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .projects-dialog-head { margin-bottom: 18px; }
+    .projects-dialog-head h2 { margin: 0; color: var(--text); font-family: 'mcfontb', sans-serif; font-size: 1rem; }
+    .projects-dialog-note { margin: 6px 0 0; color: var(--text-dim); font-family: 'mcfont', sans-serif; font-size: 0.78rem; line-height: 1.4; }
+    .projects-dialog-close, .projects-dialog-done, .projects-connect-btn {
+        min-height: 36px;
+        padding: 7px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #111;
+        color: var(--text);
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .projects-dialog-close:hover, .projects-dialog-done:hover, .projects-connect-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .projects-search-label { display: block; margin-bottom: 6px; color: var(--text-dim); font-family: 'mcfont', sans-serif; font-size: 0.75rem; }
+    .projects-search {
+        width: 100%;
+        min-height: 40px;
+        margin-bottom: 12px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        outline: none;
+        background: #0d0d0d;
+        color: var(--text);
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.85rem;
+    }
+    .projects-search:focus { border-color: var(--accent); }
+    .projects-picker-list { max-height: 42dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .project-picker-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #111;
+        cursor: pointer;
+    }
+    .project-picker-row:hover { border-color: #555; }
+    .project-picker-row input { width: 16px; height: 16px; accent-color: var(--accent); flex: 0 0 auto; }
+    .project-picker-label { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .project-picker-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-family: 'mcfont', sans-serif; font-size: 0.82rem; }
+    .project-picker-code { color: #888; font-family: 'mcfont', sans-serif; font-size: 0.7rem; }
+    .project-picker-empty { padding: 14px 8px; color: #888; text-align: center; font-family: 'mcfont', sans-serif; font-size: 0.8rem; }
+    .projects-dialog-foot { margin-top: 16px; color: var(--text-dim); font-family: 'mcfont', sans-serif; font-size: 0.75rem; }
+    .projects-connect-btn[hidden] { display: none; }
+    @media (max-width: 480px) {
+        .projects-dialog { padding: 14px; }
+        .projects-dialog-foot { flex-wrap: wrap; }
+    }
+
   </style>
 </head>
 <body>
@@ -910,6 +974,9 @@
                         <img src="https://mcbcode.com/img/icons/file.png" class="file-upload-icon" alt="Attach file">
                     </label>
                     <input type="file" id="fileInput" style="display: none;" multiple onchange="handleFileSelect(event)">
+                    <button class="projects-open-btn" id="projectsOpenBtn" type="button" aria-haspopup="dialog" aria-controls="projectsDialog">
+                        Projects <span id="projectsSelectedCount">0</span>
+                    </button>
                 </div>
                 <button class="send-btn" id="sendBtn">Send</button>
             </div>
@@ -930,14 +997,6 @@
     <button class="new-chat-btn" id="newChatBtn" type="button">+ New chat</button>
 
     <div class="sidebar-scroll">
-        <div class="side-section">
-            <div class="side-title">Project</div>
-            <select class="project-select" id="projectSelect" disabled>
-                <option value="">No project (general chat)</option>
-            </select>
-            <div class="project-note" id="projectNote"></div>
-        </div>
-
         <div class="side-section">
             <div class="side-title">Chats</div>
             <div class="chats-placeholder" id="chatsEmpty" aria-live="polite">log in to save chats to your account.</div>
@@ -971,6 +1030,24 @@
     </div>
 </div>
 
+<dialog class="projects-dialog" id="projectsDialog" aria-labelledby="projectsDialogTitle">
+    <div class="projects-dialog-head">
+        <div>
+            <h2 id="projectsDialogTitle">linked projects</h2>
+            <p class="projects-dialog-note" id="projectsPickerNote">choose up to 3 projects for this chat.</p>
+        </div>
+        <button class="projects-dialog-close" id="projectsCloseBtn" type="button" aria-label="close projects">close</button>
+    </div>
+    <label class="projects-search-label" for="projectsSearch">search projects</label>
+    <input class="projects-search" id="projectsSearch" type="search" placeholder="type a project name or code">
+    <div class="projects-picker-list" id="projectsPickerList" role="group" aria-label="available projects"></div>
+    <div class="projects-dialog-foot">
+        <span id="projectsDialogCount">0 of 3 selected</span>
+        <button class="projects-connect-btn" id="projectsConnectBtn" type="button" hidden>connect projects</button>
+        <button class="projects-dialog-done" id="projectsDoneBtn" type="button">done</button>
+    </div>
+</dialog>
+
 <dialog class="wiki-sources-dialog" id="wikiSourcesDialog" aria-labelledby="wikiSourcesTitle">
     <div class="wiki-sources-dialog-head">
         <div>
@@ -991,7 +1068,9 @@
     let conversation = []; // current chat transcript
     let isLoggedIn = false;
     let isSending = false;
-    let currentProject = "";
+    let availableProjects = [];
+    let currentProjectCodes = [];
+    let currentUserId = null;
     let currentChatId = null;
     let conn = { connected: false, can_write: false };
 
@@ -1015,8 +1094,16 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const reconnectBtn = document.getElementById('reconnectBtn');
     const disconnectBtn = document.getElementById('disconnectBtn');
-    const projectSelect = document.getElementById('projectSelect');
-    const projectNote = document.getElementById('projectNote');
+    const projectsOpenBtn = document.getElementById('projectsOpenBtn');
+    const projectsSelectedCount = document.getElementById('projectsSelectedCount');
+    const projectsDialog = document.getElementById('projectsDialog');
+    const projectsCloseBtn = document.getElementById('projectsCloseBtn');
+    const projectsDoneBtn = document.getElementById('projectsDoneBtn');
+    const projectsSearch = document.getElementById('projectsSearch');
+    const projectsPickerList = document.getElementById('projectsPickerList');
+    const projectsPickerNote = document.getElementById('projectsPickerNote');
+    const projectsDialogCount = document.getElementById('projectsDialogCount');
+    const projectsConnectBtn = document.getElementById('projectsConnectBtn');
     const sidebar = document.getElementById('sidebar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const sidebarClose = document.getElementById('sidebarClose');
@@ -1193,6 +1280,11 @@
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'could not load saved chat');
             currentChatId = data.chat_id;
+            const availableCodes = new Set(availableProjects.map((project) => project.share_code));
+            currentProjectCodes = normalizeProjectSelection(data.project_codes).filter((code) => availableCodes.has(code));
+            saveProjectDefaults();
+            updateProjectsButton();
+            renderProjectPicker();
             conversation = (Array.isArray(data.messages) ? data.messages : []).map((message) => ({ role: message.role, content: message.content }));
             messagesArea.querySelectorAll('.msg-row').forEach((row) => row.remove());
             heroTitle.classList.add('gone');
@@ -1299,7 +1391,11 @@
             });
         } catch {}
         conn = { connected: false, can_write: false };
-        setProject('');
+        currentProjectCodes = [];
+        saveProjectDefaults();
+        updateProjectsButton();
+        renderProjectPicker();
+        if (currentChatId) persistCurrentChatProjects();
         updateConnectUI();
         accountDropup.classList.remove('show');
     });
@@ -1324,21 +1420,10 @@
             connectBtn.style.display = '';
             connectNotice.classList.add('show');
         }
-        projectSelect.disabled = !(isLoggedIn && conn.connected);
-        disconnectBtn.style.display = conn.connected ? '' : 'none';
         reconnectBtn.style.display = conn.connected ? '' : 'none';
-        if (!conn.connected) {
-            projectNote.className = 'project-note';
-            projectNote.textContent = 'connect your projects to pick one.';
-        } else if (!currentProject) {
-            projectNote.className = 'project-note';
-            projectNote.textContent = 'no project picked: general chat only.';
-        } else {
-            projectNote.className = 'project-note' + (conn.can_write ? '' : ' warn');
-            projectNote.textContent = conn.can_write
-                ? 'edits always need your approval.'
-                : 'read-only: edits are turned off.';
-        }
+        disconnectBtn.style.display = conn.connected ? '' : 'none';
+        updateProjectsButton();
+        renderProjectPicker();
     }
 
     async function loadStatus() {
@@ -1353,35 +1438,149 @@
         updateConnectUI();
     }
 
-    async function loadProjects() {
-        if (!isLoggedIn) return;
-        try {
-            const res = await fetchT(AUTH_PROJECTS_URL, { credentials: 'include' }, 8000);
-            if (!res.ok) return;
-            const data = await res.json();
-            const all = [...(data.projects || []), ...(data.collab_projects || [])];
-            while (projectSelect.options.length > 1) projectSelect.remove(1);
-            all.forEach((p) => {
-                const opt = document.createElement('option');
-                opt.value = p.share_code;
-                opt.textContent = p.name + ' (' + p.share_code + ')';
-                projectSelect.appendChild(opt);
-            });
-            let saved = '';
-            try { saved = localStorage.getItem('dripstone_project') || ''; } catch {}
-            if (saved && all.some((p) => p.share_code === saved)) setProject(saved);
-        } catch {}
+    const MAX_PROJECT_SELECTION = 3;
+
+    function projectDefaultsKey() {
+        return 'dripstone_projects_v1:' + String(currentUserId || currentUsername || 'unknown');
     }
 
-    function setProject(code) {
-        currentProject = code || '';
-        projectSelect.value = currentProject;
-        try { localStorage.setItem('dripstone_project', currentProject); } catch {}
-        updateConnectUI();
+    function normalizeProjectSelection(codes) {
+        if (!Array.isArray(codes)) return [];
+        const valid = [];
+        for (const item of codes) {
+            if (typeof item !== 'string') continue;
+            const code = item.trim().toLowerCase();
+            if (/^[a-z0-9]{4,16}$/.test(code) && !valid.includes(code)) valid.push(code);
+        }
+        return valid.slice(0, MAX_PROJECT_SELECTION);
     }
-    projectSelect.addEventListener('change', () => {
-        setProject(projectSelect.value);
-        if (isPhone()) closeSidebar();
+
+    function saveProjectDefaults() {
+        if (!isLoggedIn) return;
+        try { localStorage.setItem(projectDefaultsKey(), JSON.stringify(currentProjectCodes)); } catch {}
+    }
+
+    function updateProjectsButton() {
+        projectsSelectedCount.textContent = String(currentProjectCodes.length);
+        projectsOpenBtn.setAttribute('aria-label', currentProjectCodes.length
+            ? 'manage ' + currentProjectCodes.length + ' selected projects'
+            : 'choose projects for this chat');
+    }
+
+    function renderProjectPicker() {
+        if (!projectsPickerList) return;
+        projectsPickerList.replaceChildren();
+        projectsDialogCount.textContent = currentProjectCodes.length + ' of ' + MAX_PROJECT_SELECTION + ' selected';
+        projectsConnectBtn.hidden = !isLoggedIn || conn.connected;
+        if (!isLoggedIn) {
+            projectsPickerNote.textContent = 'log in to choose projects from your account.';
+            projectsPickerList.appendChild(makeEl('div', 'project-picker-empty', 'projects are only available to logged-in accounts.'));
+            return;
+        }
+        if (!conn.connected) {
+            projectsPickerNote.textContent = 'connect your mcbCode projects before selecting them for the ai.';
+        } else {
+            projectsPickerNote.textContent = 'choose up to ' + MAX_PROJECT_SELECTION + ' projects for this chat. selected projects are remembered with saved chats.';
+        }
+        const query = projectsSearch.value.trim().toLowerCase();
+        const matches = availableProjects.filter((project) =>
+            (project.name + ' ' + project.share_code).toLowerCase().includes(query)
+        );
+        if (!matches.length) {
+            projectsPickerList.appendChild(makeEl('div', 'project-picker-empty', availableProjects.length ? 'no projects match that search.' : 'no applicable projects were found for this account.'));
+            return;
+        }
+        for (const project of matches) {
+            const row = document.createElement('label');
+            row.className = 'project-picker-row';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = currentProjectCodes.includes(project.share_code);
+            checkbox.disabled = !conn.connected || (!checkbox.checked && currentProjectCodes.length >= MAX_PROJECT_SELECTION);
+            checkbox.addEventListener('change', () => changeProjectSelection(project.share_code, checkbox.checked));
+            const text = document.createElement('span');
+            text.className = 'project-picker-label';
+            text.appendChild(makeEl('span', 'project-picker-name', project.name));
+            text.appendChild(makeEl('span', 'project-picker-code', project.share_code));
+            row.append(checkbox, text);
+            projectsPickerList.appendChild(row);
+        }
+    }
+
+    async function persistCurrentChatProjects() {
+        if (!currentChatId || !isLoggedIn) return true;
+        try {
+            const response = await fetchT(DRIPSTONE_API + '/chats/' + encodeURIComponent(currentChatId), {
+                method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_codes: currentProjectCodes }),
+            }, 10000);
+            return response.ok;
+        } catch { return false; }
+    }
+
+    async function changeProjectSelection(code, selected) {
+        const previous = [...currentProjectCodes];
+        if (selected && !currentProjectCodes.includes(code)) currentProjectCodes = normalizeProjectSelection([...currentProjectCodes, code]);
+        else if (!selected) currentProjectCodes = currentProjectCodes.filter((item) => item !== code);
+        saveProjectDefaults();
+        updateProjectsButton();
+        renderProjectPicker();
+        if (currentChatId && !(await persistCurrentChatProjects())) {
+            currentProjectCodes = previous;
+            saveProjectDefaults();
+            updateProjectsButton();
+            renderProjectPicker();
+            projectsPickerNote.textContent = 'could not save this chat’s project selection. try again.';
+        }
+    }
+
+    async function loadProjects() {
+        if (!isLoggedIn) {
+            availableProjects = [];
+            renderProjectPicker();
+            return;
+        }
+        try {
+            const res = await fetchT(AUTH_PROJECTS_URL, { credentials: 'include', cache: 'no-store' }, 8000);
+            if (!res.ok) throw new Error('project list unavailable');
+            const data = await res.json();
+            const all = [...(data.projects || []), ...(data.collab_projects || [])];
+            const unique = new Map();
+            for (const project of all) {
+                const code = typeof project.share_code === 'string' ? project.share_code.trim().toLowerCase() : '';
+                if (!/^[a-z0-9]{4,16}$/.test(code) || unique.has(code)) continue;
+                unique.set(code, { share_code: code, name: String(project.name || code).trim() || code });
+            }
+            availableProjects = [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
+            const availableCodes = new Set(availableProjects.map((project) => project.share_code));
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem(projectDefaultsKey()) || '[]'); } catch {}
+            currentProjectCodes = normalizeProjectSelection(saved).filter((code) => availableCodes.has(code));
+            saveProjectDefaults();
+        } catch {
+            availableProjects = [];
+            currentProjectCodes = [];
+        }
+        updateProjectsButton();
+        renderProjectPicker();
+    }
+
+    projectsOpenBtn.addEventListener('click', () => {
+        projectsSearch.value = '';
+        renderProjectPicker();
+        if (typeof projectsDialog.showModal === 'function') projectsDialog.showModal();
+        else projectsDialog.setAttribute('open', '');
+        setTimeout(() => projectsSearch.focus(), 0);
+    });
+    projectsCloseBtn.addEventListener('click', () => projectsDialog.close());
+    projectsDoneBtn.addEventListener('click', () => projectsDialog.close());
+    projectsSearch.addEventListener('input', renderProjectPicker);
+    projectsConnectBtn.addEventListener('click', () => {
+        projectsDialog.close();
+        startConnect();
+    });
+    projectsDialog.addEventListener('click', (event) => {
+        if (event.target === projectsDialog) projectsDialog.close();
     });
 
     // ---- login check ----
@@ -1396,6 +1595,7 @@
             if (isLoggedIn) {
                 const me = await res.json();
                 currentUsername = me.username || null;
+                currentUserId = me.id != null ? String(me.id) : currentUsername;
                 const shortName = currentUsername
                     ? (currentUsername.length > 12 ? currentUsername.slice(0, 12) + '...' : currentUsername)
                     : 'Account';
@@ -1411,6 +1611,7 @@
             }
         } catch {
             isLoggedIn = false;
+            currentUserId = null;
             accountName.textContent = 'Not logged in';
             accountBtn.disabled = true;
         }
@@ -1661,6 +1862,8 @@
         const card = makeEl('div', 'proposal-card');
         card.appendChild(makeEl('div', 'proposal-title', 'Proposed changes (nothing is applied until you approve)'));
         card.appendChild(makeEl('div', 'proposal-summary', proposal.summary || ''));
+        const targetProject = availableProjects.find((project) => project.share_code === proposal.project_code);
+        if (proposal.project_code) card.appendChild(makeEl('div', 'proposal-project', 'target project: ' + (targetProject ? targetProject.name + ' (' + proposal.project_code + ')' : proposal.project_code)));
 
         proposal.ops.forEach((op) => {
             const labels = { create: 'create', create_folder: 'new folder', edit: 'edit', rename: 'rename', delete: 'delete' };
@@ -1950,7 +2153,7 @@
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
-                body: JSON.stringify({ messages: conversation, project_code: currentProject, chat_id: currentChatId }),
+                body: JSON.stringify({ messages: conversation, project_codes: currentProjectCodes, chat_id: currentChatId }),
             });
 
             const data = await readChatStream(res, (progress) => renderWikiProgress(pendingEl, progress));
@@ -2088,17 +2291,17 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
         await checkLogin();
-        await refreshSavedChats();
-        updateConnectUI(); // show the connect button right away
+        updateConnectUI();
         refreshUsage();
         await loadStatus();
         await loadProjects();
+        await refreshSavedChats();
 
         // coming back from the connect flow: show how it went, then tidy the url
         const params = new URLSearchParams(window.location.search);
         const result = params.get('connect');
         if (result) {
-            if (result === 'ok') updateConnectUI({ text: 'projects connected. pick one in the sidebar.', good: true });
+            if (result === 'ok') updateConnectUI({ text: 'projects connected. choose projects from the chat bar.', good: true });
             else if (result === 'denied') updateConnectUI({ text: 'connection cancelled.' });
             else updateConnectUI({ text: 'could not connect. try again.' });
             history.replaceState(null, '', window.location.pathname);
