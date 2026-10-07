@@ -135,27 +135,78 @@
     }
     .project-note.warn { color: #ff9900; }
 
-    /* chats placeholder */
+    /* saved chats */
     .chats-placeholder {
         border: 1px dashed var(--border);
-        border-radius: 10px;
-        padding: 16px 12px;
+        border-radius: 6px;
+        padding: 12px;
         text-align: center;
-        color: #777;
+        color: #888;
         font-family: 'mcfont', sans-serif;
         font-size: 0.8rem;
         line-height: 1.5;
     }
-    .soon-badge {
-        display: inline-block;
-        background: var(--accent-dim);
-        color: var(--accent);
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        margin-bottom: 8px;
-        font-family: 'mcfontb', sans-serif;
+    .saved-chat-list { display: flex; flex-direction: column; gap: 6px; }
+    .saved-chat-list[hidden], .saved-chat-menu[hidden] { display: none; }
+    .saved-chat-row { position: relative; display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .saved-chat-open {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-dim);
+        padding: 8px 9px;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.82rem;
+        text-align: left;
+        cursor: pointer;
     }
+    .saved-chat-open:hover, .saved-chat-row.active .saved-chat-open { background: #171717; border-color: var(--border); color: var(--text); }
+    .saved-chat-open:focus-visible, .saved-chat-dots:focus-visible, .saved-chat-menu button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+    .saved-chat-dots {
+        display: grid;
+        place-items: center;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        cursor: pointer;
+    }
+    .saved-chat-dots:hover { background: #1a1a1a; border-color: var(--border); }
+    .saved-chat-dots img { width: 16px; height: 16px; object-fit: contain; image-rendering: pixelated; }
+    .saved-chat-menu {
+        position: absolute;
+        z-index: 30;
+        top: calc(100% - 2px);
+        right: 0;
+        min-width: 132px;
+        display: flex;
+        flex-direction: column;
+        padding: 4px;
+        background: var(--panel-solid);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+    }
+    .saved-chat-menu button {
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        padding: 8px 10px;
+        text-align: left;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .saved-chat-menu button:hover { background: #202020; color: var(--accent); }
+    .saved-chat-menu button[data-action="delete"] { color: var(--error); }
 
     .sidebar-bottom {
         padding: 12px 16px 16px 16px;
@@ -396,6 +447,13 @@
         border-color: var(--border);
         color: var(--accent);
         outline: none;
+    }
+    .msg-credit-note {
+        color: #888;
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.7rem;
+        padding: 4px 3px;
+        white-space: nowrap;
     }
     .wiki-sources-dialog {
         width: min(480px, calc(100% - 24px));
@@ -882,10 +940,8 @@
 
         <div class="side-section">
             <div class="side-title">Chats</div>
-            <div class="chats-placeholder">
-                <div class="soon-badge">Coming soon</div>
-                <div>Saved chats will show up here. For now, your chat lasts until you refresh or start a new one.</div>
-            </div>
+            <div class="chats-placeholder" id="chatsEmpty" aria-live="polite">log in to save chats to your account.</div>
+            <div class="saved-chat-list" id="savedChatList" role="list" aria-label="saved chats" hidden></div>
         </div>
     </div>
 
@@ -932,10 +988,11 @@
     const AUTH_PROJECTS_URL = "https://auth.mcbcode.com/projects";
 
     let attachedFiles = [];
-    let conversation = []; // [{role: "user"|"assistant", content: "..."}] (current chat only, never saved)
+    let conversation = []; // current chat transcript
     let isLoggedIn = false;
     let isSending = false;
     let currentProject = "";
+    let currentChatId = null;
     let conn = { connected: false, can_write: false };
 
     const textarea = document.getElementById('autoGrowInput');
@@ -965,6 +1022,8 @@
     const sidebarClose = document.getElementById('sidebarClose');
     const menuBtn = document.getElementById('menuBtn');
     const newChatBtn = document.getElementById('newChatBtn');
+    const savedChatList = document.getElementById('savedChatList');
+    const chatsEmpty = document.getElementById('chatsEmpty');
 
     // ---- sidebar drawer (phones) ----
     function openSidebar() {
@@ -988,6 +1047,9 @@
     function newChat() {
         if (isSending) return;
         conversation = [];
+        currentChatId = null;
+        closeChatMenus();
+        updateActiveSavedChat();
         messagesArea.querySelectorAll('.msg-row').forEach((row) => row.remove());
         heroTitle.classList.remove('gone');
         messagesArea.classList.remove('has-messages');
@@ -1033,6 +1095,176 @@
         const timer = setTimeout(() => controller.abort(), ms);
         return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
     }
+
+    function closeChatMenus() {
+        savedChatList.querySelectorAll('.saved-chat-menu').forEach((menu) => { menu.hidden = true; });
+        savedChatList.querySelectorAll('.saved-chat-dots').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+    }
+
+    function updateActiveSavedChat() {
+        savedChatList.querySelectorAll('.saved-chat-row').forEach((row) => {
+            row.classList.toggle('active', row.dataset.chatId === currentChatId);
+        });
+    }
+
+    function renderSavedChatList(chats) {
+        savedChatList.replaceChildren();
+        const items = Array.isArray(chats) ? chats : [];
+        if (!isLoggedIn) {
+            chatsEmpty.textContent = 'log in to save chats to your account.';
+            chatsEmpty.hidden = false;
+            savedChatList.hidden = true;
+            return;
+        }
+        if (!items.length) {
+            chatsEmpty.textContent = 'your saved chats will appear here after your first reply.';
+            chatsEmpty.hidden = false;
+            savedChatList.hidden = true;
+            return;
+        }
+        chatsEmpty.hidden = true;
+        savedChatList.hidden = false;
+        for (const chat of items) {
+            if (!chat || typeof chat.id !== 'string') continue;
+            const row = document.createElement('div');
+            row.className = 'saved-chat-row';
+            row.dataset.chatId = chat.id;
+            row.setAttribute('role', 'listitem');
+
+            const open = document.createElement('button');
+            open.type = 'button';
+            open.className = 'saved-chat-open';
+            open.textContent = String(chat.title || 'new chat');
+            open.title = open.textContent;
+            open.setAttribute('aria-label', 'open chat: ' + open.textContent);
+            row.appendChild(open);
+
+            const dots = document.createElement('button');
+            dots.type = 'button';
+            dots.className = 'saved-chat-dots';
+            dots.setAttribute('aria-label', 'chat options for ' + open.textContent);
+            dots.setAttribute('aria-haspopup', 'menu');
+            dots.setAttribute('aria-expanded', 'false');
+            const image = document.createElement('img');
+            image.src = 'https://mcbcode.com/img/icons/dots.png';
+            image.alt = '';
+            dots.appendChild(image);
+            row.appendChild(dots);
+
+            const menu = document.createElement('div');
+            menu.className = 'saved-chat-menu';
+            menu.setAttribute('role', 'menu');
+            menu.hidden = true;
+            for (const [action, label] of [['rename', 'rename'], ['delete', 'delete']]) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.dataset.action = action;
+                item.setAttribute('role', 'menuitem');
+                item.textContent = label;
+                menu.appendChild(item);
+            }
+            row.appendChild(menu);
+            savedChatList.appendChild(row);
+        }
+        updateActiveSavedChat();
+    }
+
+    async function refreshSavedChats() {
+        if (!isLoggedIn) {
+            renderSavedChatList([]);
+            return;
+        }
+        try {
+            const response = await fetchT(DRIPSTONE_API + '/chats', { credentials: 'include', cache: 'no-store' }, 10000);
+            if (!response.ok) throw new Error('chat list unavailable');
+            const data = await response.json();
+            renderSavedChatList(data.chats);
+        } catch {
+            chatsEmpty.textContent = 'could not load saved chats. try refreshing.';
+            chatsEmpty.hidden = false;
+            savedChatList.hidden = true;
+        }
+    }
+
+    async function loadSavedChat(chatId) {
+        if (isSending || !isLoggedIn) return;
+        try {
+            const response = await fetchT(DRIPSTONE_API + '/chats/' + encodeURIComponent(chatId), { credentials: 'include', cache: 'no-store' }, 12000);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'could not load saved chat');
+            currentChatId = data.chat_id;
+            conversation = (Array.isArray(data.messages) ? data.messages : []).map((message) => ({ role: message.role, content: message.content }));
+            messagesArea.querySelectorAll('.msg-row').forEach((row) => row.remove());
+            heroTitle.classList.add('gone');
+            messagesArea.classList.add('has-messages');
+            for (const message of conversation) {
+                const bubble = renderMessage(message.role, message.content);
+                if (message.role === 'assistant') renderReply(bubble, message.content);
+            }
+            textarea.value = '';
+            autoGrow();
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            updateActiveSavedChat();
+            if (isPhone()) closeSidebar();
+        } catch (error) {
+            renderMessage('assistant', error && error.message ? error.message : 'could not load that saved chat.', { error: true });
+        }
+    }
+
+    savedChatList.addEventListener('click', async (event) => {
+        const row = event.target.closest('.saved-chat-row');
+        if (!row) return;
+        const chatId = row.dataset.chatId;
+        const dots = event.target.closest('.saved-chat-dots');
+        if (dots) {
+            event.stopPropagation();
+            const menu = row.querySelector('.saved-chat-menu');
+            const shouldOpen = menu.hidden;
+            closeChatMenus();
+            menu.hidden = !shouldOpen;
+            dots.setAttribute('aria-expanded', String(shouldOpen));
+            return;
+        }
+        const actionButton = event.target.closest('.saved-chat-menu button[data-action]');
+        if (actionButton) {
+            event.stopPropagation();
+            const action = actionButton.dataset.action;
+            closeChatMenus();
+            if (action === 'rename') {
+                const currentTitle = row.querySelector('.saved-chat-open').textContent;
+                const nextTitle = window.prompt('rename chat', currentTitle);
+                if (nextTitle == null || !nextTitle.trim()) return;
+                try {
+                    const response = await fetchT(DRIPSTONE_API + '/chats/' + encodeURIComponent(chatId), {
+                        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: nextTitle.trim() }),
+                    }, 10000);
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'could not rename chat');
+                    await refreshSavedChats();
+                } catch (error) { window.alert(error && error.message ? error.message : 'could not rename chat'); }
+            } else if (action === 'delete') {
+                const title = row.querySelector('.saved-chat-open').textContent;
+                if (!window.confirm('delete "' + title + '"? this cannot be undone.')) return;
+                try {
+                    const response = await fetchT(DRIPSTONE_API + '/chats/' + encodeURIComponent(chatId), {
+                        method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}',
+                    }, 10000);
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'could not delete chat');
+                    if (currentChatId === chatId) newChat();
+                    await refreshSavedChats();
+                } catch (error) { window.alert(error && error.message ? error.message : 'could not delete chat'); }
+            }
+            return;
+        }
+        const openButton = event.target.closest('.saved-chat-open');
+        if (openButton) await loadSavedChat(chatId);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!savedChatList.contains(event.target)) closeChatMenus();
+    });
 
     async function startConnect() {
         closeSidebar();
@@ -1153,8 +1385,7 @@
     });
 
     // ---- login check ----
-    // this only controls what the UI lets you do. the worker checks again
-    // on its own server-side, so hitting the api directly still gets blocked.
+    // login is needed for project access; the worker enforces guest and credit limits.
     let currentUsername = null;
 
     async function checkLogin() {
@@ -1193,7 +1424,7 @@
     // ---- usage bar ----
     async function refreshUsage() {
         try {
-            const res = await fetchT(DRIPSTONE_API + '/usage', { credentials: 'include' }, 8000);
+            const res = await fetchT(DRIPSTONE_API + '/usage', { credentials: 'include', cache: 'no-store' }, 8000);
             if (!res.ok) throw new Error('usage unavailable');
             const data = await res.json();
             if (data.unlimited) {
@@ -1719,7 +1950,7 @@
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
-                body: JSON.stringify({ messages: conversation, project_code: currentProject }),
+                body: JSON.stringify({ messages: conversation, project_code: currentProject, chat_id: currentChatId }),
             });
 
             const data = await readChatStream(res, (progress) => renderWikiProgress(pendingEl, progress));
@@ -1728,16 +1959,34 @@
                 pendingEl.classList.remove('pending');
                 pendingEl.classList.add('error-msg');
                 pendingEl.textContent = data.error || 'something went wrong.';
-                if (res.status === 401 || data.status === 401) await checkLogin();
+                if (res.status === 401 || data.status === 401) {
+                    await checkLogin();
+                    await refreshSavedChats();
+                }
                 if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
                 await refreshUsage();
                 return;
             }
 
             pendingEl.classList.remove('pending');
+            if (isLoggedIn && data.chat_id) {
+                currentChatId = data.chat_id;
+                refreshSavedChats();
+            }
             renderReply(pendingEl, data.reply);
             renderWikiSources(pendingEl, data.wiki_references);
-            if (pendingEl._actionsEl) pendingEl._actionsEl.style.display = 'flex';
+            if (pendingEl._actionsEl) {
+                pendingEl._actionsEl.style.display = 'flex';
+                const charged = Number(data.usage && data.usage.credits_charged);
+                if (Number.isInteger(charged) && charged > 0) {
+                    const note = document.createElement('span');
+                    note.className = 'msg-credit-note';
+                    note.textContent = charged + (charged === 1 ? ' credit' : ' credits');
+                    note.setAttribute('aria-label', charged + (charged === 1 ? ' credit used for this ask' : ' credits used for this ask'));
+                    const timestamp = pendingEl._actionsEl.querySelector('.msg-timestamp');
+                    pendingEl._actionsEl.insertBefore(note, timestamp || null);
+                }
+            }
 
             let stored = data.reply;
             if (Array.isArray(data.wiki_references) && data.wiki_references.length) {
@@ -1839,6 +2088,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
         await checkLogin();
+        await refreshSavedChats();
         updateConnectUI(); // show the connect button right away
         refreshUsage();
         await loadStatus();
