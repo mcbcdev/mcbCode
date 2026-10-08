@@ -929,6 +929,208 @@
         .projects-dialog-foot { flex-wrap: wrap; }
     }
 
+
+
+    /* subtle visual refresh; layout, markup, and behavior remain unchanged */
+    :root {
+        color-scheme: dark;
+        --accent-dim: rgba(5, 238, 147, 0.16);
+        --panel: rgba(20, 24, 22, 0.94);
+        --panel-solid: #151917;
+        --border: #2b3730;
+        --text-dim: #c0c8c3;
+    }
+
+    html, body {
+        background: radial-gradient(ellipse at 38% 42%, #121915 0%, #0c0e0d 56%, #090a09 100%);
+    }
+
+    .sidebar {
+        background: linear-gradient(160deg, #171d19 0%, #121613 58%, #101311 100%);
+        border-left: 1px solid #294235;
+        box-shadow: -14px 0 40px rgba(0, 0, 0, 0.16), inset 1px 0 rgba(5, 238, 147, 0.04);
+    }
+
+    .sidebar-top { padding-top: 18px; }
+    .brand img { opacity: 0.92; }
+    .brand h3 { letter-spacing: 0; }
+    .side-title { color: #9aa69f; }
+    .sidebar-bottom { border-top-color: var(--border); }
+
+    .new-chat-btn {
+        border-color: rgba(5, 238, 147, 0.55);
+        background: rgba(5, 238, 147, 0.035);
+        transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+    .new-chat-btn:hover:not(:disabled) {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #101713;
+        transform: translateY(-1px);
+    }
+
+    .chats-placeholder {
+        border-color: #344139;
+        background: rgba(255, 255, 255, 0.015);
+        border-radius: 12px;
+        color: #9aa69f;
+    }
+    .saved-chat-open, .saved-chat-dots, .account-btn,
+    .account-dropup, .saved-chat-menu, .projects-dialog-close,
+    .projects-dialog-done, .projects-connect-btn, .projects-open-btn,
+    .wiki-sources-dialog-close, .code-copy-btn, .msg-sources-btn {
+        transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+    }
+    .saved-chat-open { border-radius: 6px; }
+    .saved-chat-open:hover, .saved-chat-row.active .saved-chat-open {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: #344139;
+    }
+    .saved-chat-dots:hover, .account-btn:hover { background: rgba(255, 255, 255, 0.045); }
+    .saved-chat-menu, .account-dropup {
+        background: #181e1a;
+        border-color: #344139;
+        border-radius: 12px;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+    }
+
+    .usage-bar-track {
+        height: 7px;
+        border: 0;
+        border-radius: 6px;
+        background: #252c27;
+    }
+    .usage-bar-fill { border-radius: inherit; }
+    .account-pfp { border-color: #3b4a41; }
+
+    .messages-area {
+        scrollbar-color: rgba(5, 238, 147, 0.22) transparent;
+    }
+    .hero-title {
+        font-size: clamp(1.9rem, 3.4vw, 2.35rem);
+        line-height: 1.2;
+        text-shadow: 0 0 34px rgba(5, 238, 147, 0.08);
+    }
+    .msg-user {
+        background: linear-gradient(145deg, rgba(21, 30, 25, 0.96), rgba(17, 21, 19, 0.98));
+        border-color: rgba(5, 238, 147, 0.42);
+        border-radius: 18px 18px 6px 18px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+    }
+    .msg-ai { color: #c5cdc8; }
+    .msg-ai code.md-inline-code,
+    .msg-ai pre.md-code-block { background: #141815; }
+    .md-code-wrap { border-color: #303b34; border-radius: 12px; }
+    .md-code-header { background: #191e1a; }
+
+    .proposal-card {
+        background: linear-gradient(145deg, #181d19, #141815);
+        border-color: rgba(5, 238, 147, 0.48);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    }
+    .proposal-op { border-radius: 6px; background: #151916; }
+    .proposal-buttons button { transition: transform 0.16s ease, background 0.16s ease, opacity 0.16s ease; }
+    .proposal-buttons button:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn-approve { box-shadow: 0 3px 12px rgba(5, 238, 147, 0.12); }
+    .btn-approve:hover:not(:disabled) { background: #31f3a8; }
+    .btn-reject { background: #2a302c; }
+    .btn-reject:hover:not(:disabled) { background: #373f39; }
+
+    .scroll-bottom-btn {
+        border-color: rgba(5, 238, 147, 0.48);
+        border-radius: 12px;
+        background: rgba(21, 25, 23, 0.96);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(10px);
+    }
+
+    .input-bar {
+        background: rgba(20, 24, 22, 0.88);
+        border-color: #303b34;
+        border-radius: 18px;
+        padding: 14px 16px;
+        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(16px);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .input-bar.focused {
+        border-color: rgba(5, 238, 147, 0.66);
+        background: rgba(21, 27, 23, 0.96);
+        box-shadow: 0 0 0 3px rgba(5, 238, 147, 0.07), 0 14px 38px rgba(0, 0, 0, 0.32);
+    }
+    .chat-controls { border-top-color: rgba(255, 255, 255, 0.08); }
+    .chat-textarea::placeholder { color: #8b958e; }
+    .file-chip {
+        background: rgba(5, 238, 147, 0.06);
+        border-color: rgba(5, 238, 147, 0.32);
+        border-radius: 6px;
+    }
+    .projects-open-btn {
+        background: rgba(255, 255, 255, 0.025);
+        border-color: #364139;
+    }
+    .projects-open-btn:hover, .projects-open-btn:focus-visible {
+        background: rgba(5, 238, 147, 0.06);
+        border-color: rgba(5, 238, 147, 0.55);
+    }
+    .send-btn, .connect-btn {
+        border-radius: 6px;
+        box-shadow: 0 3px 12px rgba(5, 238, 147, 0.1);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, opacity 0.16s ease;
+    }
+    .send-btn:hover:not(:disabled), .connect-btn:hover {
+        opacity: 1;
+        box-shadow: 0 5px 18px rgba(5, 238, 147, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .projects-dialog, .wiki-sources-dialog {
+        background: #171c18;
+        border-color: #354138;
+        border-radius: 18px;
+        box-shadow: 0 22px 64px rgba(0, 0, 0, 0.58);
+    }
+    .projects-search, .project-picker-row, .wiki-source-card {
+        background: #121613;
+        border-color: #303b34;
+        border-radius: 6px;
+    }
+    .project-picker-row:hover, .wiki-source-card:hover { border-color: #526157; }
+    .projects-dialog::backdrop, .wiki-sources-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(3px);
+    }
+    .projects-open-btn:focus-visible,
+    .projects-dialog button:focus-visible,
+    .projects-search:focus-visible,
+    .wiki-sources-dialog button:focus-visible,
+    .menu-btn:focus-visible,
+    .new-chat-btn:focus-visible,
+    .send-btn:focus-visible,
+    .connect-btn:focus-visible,
+    .account-btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar { border-left-width: 1px; }
+        .sidebar.open { box-shadow: -14px 0 36px rgba(0, 0, 0, 0.48); }
+        .hero-title { font-size: 1.7rem; }
+        .input-bar { padding: 12px; border-radius: 18px; }
+        .mobile-bar { padding-left: 4px; padding-right: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+
   </style>
 </head>
 <body>
