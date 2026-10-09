@@ -58,6 +58,7 @@
       "links": [
         { "name": "Android App", "href": "/docs/android-app" },
         { "name": "Getting Started", "href": "/docs/getting-started" },
+        { "name": "DripstoneAI", "href": "/docs/dripstone" },
         { "name": "MCP", "href": "/docs/mcp" }
       ]
     }
