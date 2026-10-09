@@ -429,6 +429,16 @@ function renderToolbar() {
     addWrap.appendChild(addMenu);
     toolbar.appendChild(addWrap);
 
+    const dripstoneBtn = document.createElement("button");
+    dripstoneBtn.className = "sm-btn";
+    dripstoneBtn.textContent = "Ask DripstoneAI";
+    dripstoneBtn.title = "ask DripstoneAI about this project";
+    dripstoneBtn.onclick = () => {
+      const url = `https://mcbcode.com/dripstone?project=${encodeURIComponent(shareCode)}`;
+      window.location.assign(url);
+    };
+    toolbar.appendChild(dripstoneBtn);
+
     const createWrap = document.createElement("div");
     createWrap.className = "create-wrap";
     const cbtn = document.createElement("button");
