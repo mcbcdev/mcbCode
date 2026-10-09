@@ -1271,6 +1271,7 @@
     let isLoggedIn = false;
     let isSending = false;
     let availableProjects = [];
+    let projectListLoaded = false;
     let currentProjectCodes = [];
     let currentUserId = null;
     let currentChatId = null;
@@ -1342,6 +1343,7 @@
         messagesArea.querySelectorAll('.msg-row').forEach((row) => row.remove());
         heroTitle.classList.remove('gone');
         messagesArea.classList.remove('has-messages');
+        updateProjectHeroContext();
         attachedFiles = [];
         renderFiles();
         textarea.value = '';
@@ -1662,11 +1664,29 @@
         try { localStorage.setItem(projectDefaultsKey(), JSON.stringify(currentProjectCodes)); } catch {}
     }
 
+    function updateProjectHeroContext() {
+        if (!heroTitle || heroTitle.classList.contains('gone') || messagesArea.classList.contains('has-messages')) return;
+        const selected = currentProjectCodes
+            .map((code) => availableProjects.find((project) => project.share_code === code))
+            .filter(Boolean);
+        if (!selected.length) {
+            heroTitle.textContent = 'what are we building?';
+            return;
+        }
+        const labels = selected.slice(0, 2).map((project) => String(project.name || project.share_code).trim().slice(0, 48));
+        if (selected.length > 2) labels.push('+' + (selected.length - 2) + ' more');
+        const projectNames = labels.join(', ');
+        heroTitle.textContent = conn.connected
+            ? (selected.length === 1 ? 'connected to ' + projectNames + '. what are we building?' : 'connected projects: ' + projectNames + '. what are we building?')
+            : (selected.length === 1 ? 'project linked: ' + projectNames + '. connect dripstoneai to use it.' : 'projects selected: ' + projectNames + '. connect dripstoneai to use them.');
+    }
+
     function updateProjectsButton() {
         projectsSelectedCount.textContent = String(currentProjectCodes.length);
         projectsOpenBtn.setAttribute('aria-label', currentProjectCodes.length
             ? 'manage ' + currentProjectCodes.length + ' selected projects'
             : 'choose projects for this chat');
+        updateProjectHeroContext();
     }
 
     function renderProjectPicker() {
@@ -1739,9 +1759,11 @@
     async function loadProjects() {
         if (!isLoggedIn) {
             availableProjects = [];
+            projectListLoaded = false;
             renderProjectPicker();
             return;
         }
+        projectListLoaded = false;
         try {
             const res = await fetchT(AUTH_PROJECTS_URL, { credentials: 'include', cache: 'no-store' }, 8000);
             if (!res.ok) throw new Error('project list unavailable');
@@ -1754,6 +1776,7 @@
                 unique.set(code, { share_code: code, name: String(project.name || code).trim() || code });
             }
             availableProjects = [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
+            projectListLoaded = true;
             const availableCodes = new Set(availableProjects.map((project) => project.share_code));
             let saved = [];
             try { saved = JSON.parse(localStorage.getItem(projectDefaultsKey()) || '[]'); } catch {}
@@ -1762,7 +1785,40 @@
         } catch {
             availableProjects = [];
             currentProjectCodes = [];
+            projectListLoaded = false;
         }
+        updateProjectsButton();
+        renderProjectPicker();
+    }
+
+    function applyProjectQuery() {
+        const requested = new URLSearchParams(window.location.search).get('project');
+        if (requested == null || !requested.trim()) return;
+        const code = requested.trim().toLowerCase();
+        const showLinkMessage = (message) => {
+            currentProjectCodes = [];
+            updateProjectsButton();
+            renderProjectPicker();
+            heroTitle.textContent = message;
+        };
+        if (!/^[a-z0-9]{4,16}$/.test(code)) {
+            showLinkMessage('invalid project link. check the project id.');
+            return;
+        }
+        if (!isLoggedIn) {
+            showLinkMessage('log in to load project ' + code + ' in dripstoneai.');
+            return;
+        }
+        const project = availableProjects.find((item) => item.share_code === code);
+        if (!project) {
+            showLinkMessage(projectListLoaded
+                ? 'project ' + code + ' is not available to this account.'
+                : 'could not verify access to project ' + code + '. try refreshing.');
+            return;
+        }
+        // A project-specific link selects that project alone, rather than inheriting unrelated defaults.
+        currentProjectCodes = [code];
+        saveProjectDefaults();
         updateProjectsButton();
         renderProjectPicker();
     }
@@ -2497,6 +2553,7 @@
         refreshUsage();
         await loadStatus();
         await loadProjects();
+        applyProjectQuery();
         await refreshSavedChats();
 
         // coming back from the connect flow: show how it went, then tidy the url
@@ -2506,7 +2563,9 @@
             if (result === 'ok') updateConnectUI({ text: 'projects connected. choose projects from the chat bar.', good: true });
             else if (result === 'denied') updateConnectUI({ text: 'connection cancelled.' });
             else updateConnectUI({ text: 'could not connect. try again.' });
-            history.replaceState(null, '', window.location.pathname);
+            params.delete('connect');
+            const remainingQuery = params.toString();
+            history.replaceState(null, '', window.location.pathname + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash);
             setTimeout(() => updateConnectUI(), 5000);
         }
     });
