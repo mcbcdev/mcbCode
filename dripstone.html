@@ -391,13 +391,23 @@
     .msg-ai.error-msg { color: var(--error); }
 
     .activity-log {
+        display: block;
         width: 100%;
-        max-width: 92%;
-        margin-top: 7px;
+        margin: 6px 0;
         color: #969696;
         font-family: 'mcfont', sans-serif;
         font-size: 0.78rem;
         line-height: 1.5;
+    }
+    .activity-talk {
+        margin: 5px 0 8px;
+        color: var(--text-dim);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+    .activity-error {
+        margin-top: 8px;
+        color: var(--error);
     }
     .activity-summary {
         display: flex;
@@ -1534,10 +1544,10 @@
             heroTitle.classList.add('gone');
             messagesArea.classList.add('has-messages');
             for (const message of restoredMessages) {
-                const bubble = renderMessage(message.role, message.content);
+                const bubble = renderMessage(message.role, message.role === 'assistant' ? '' : message.content);
                 if (message.role === 'assistant') {
+                    restoreTimeline(bubble, message.timeline);
                     renderReply(bubble, message.content);
-                    restoreActivity(bubble, message.activity);
                 }
             }
             textarea.value = '';
@@ -2038,7 +2048,10 @@
     }
 
     function renderReply(el, text) {
-        el.innerHTML = markdownToHtml(text);
+        if (!String(text || '').trim()) return;
+        const content = makeEl('div', 'assistant-final-reply');
+        content.innerHTML = markdownToHtml(text);
+        el.appendChild(content);
     }
 
     // ---- rendering messages ----
@@ -2102,18 +2115,28 @@
 
     function splitStoredActivity(value) {
         const content = String(value || '');
-        const match = content.match(/\n\n<!--dripstone-activity-v1:([A-Za-z0-9_-]+)-->\s*$/);
-        if (!match) return { content, activity: [] };
+        const match = content.match(/\n\n<!--dripstone-activity-v([12]):([A-Za-z0-9_-]+)-->\s*$/);
+        if (!match) return { content, timeline: [] };
         try {
-            let encoded = match[1].replace(/-/g, '+').replace(/_/g, '/');
+            let encoded = match[2].replace(/-/g, '+').replace(/_/g, '/');
             while (encoded.length % 4) encoded += '=';
             const binary = atob(encoded);
             const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
             const parsed = JSON.parse(new TextDecoder().decode(bytes));
-            const activity = Array.isArray(parsed) ? parsed.filter((label) => activityLabels.has(label)).slice(-40) : [];
-            return { content: content.slice(0, match.index), activity };
+            const timeline = [];
+            if (Array.isArray(parsed)) {
+                for (const segment of parsed.slice(-80)) {
+                    if (typeof segment === 'string' && activityLabels.has(segment)) timeline.push({ type: 'status', label: segment });
+                    else if (segment && segment.type === 'status' && activityLabels.has(segment.label)) timeline.push({ type: 'status', label: segment.label });
+                    else if (segment && segment.type === 'talk' && typeof segment.text === 'string') {
+                        const text = segment.text.trim().slice(0, 500);
+                        if (text) timeline.push({ type: 'talk', text });
+                    }
+                }
+            }
+            return { content: content.slice(0, match.index), timeline };
         } catch {
-            return { content, activity: [] };
+            return { content, timeline: [] };
         }
     }
 
@@ -2126,54 +2149,74 @@
         return icon;
     }
 
-    function getActivityLog(bubble, open = true) {
-        if (bubble._activityLog) return bubble._activityLog;
-        const details = makeEl('details', 'activity-log');
-        details.open = open;
-        const summary = makeEl('summary', 'activity-summary');
-        summary.appendChild(makeActivityIcon());
-        const current = makeEl('span', 'activity-current', 'thinking');
-        summary.appendChild(current);
-        details.appendChild(summary);
-        const list = makeEl('ol', 'activity-list');
-        details.appendChild(list);
-        const row = bubble.closest('.msg-row');
-        row.insertBefore(details, bubble._actionsEl || null);
-        bubble._activityLog = { details, current, list, entries: [] };
-        return bubble._activityLog;
+    function closeActivityGroup(group) {
+        if (!group) return;
+        group.current.textContent = group.lastLabel + ' · ' + group.count + (group.count === 1 ? ' step' : ' steps');
+        group.details.open = false;
     }
 
-    function appendActivity(bubble, label) {
-        if (!activityLabels.has(label)) return;
-        const log = getActivityLog(bubble, true);
-        if (log.entries[log.entries.length - 1] === label) return;
-        log.entries.push(label);
-        const item = makeEl('li', 'activity-step');
-        item.appendChild(makeActivityIcon());
-        item.appendChild(makeEl('span', '', label));
-        log.list.appendChild(item);
-        log.current.textContent = label;
-        messagesArea.scrollTop = messagesArea.scrollHeight;
+    function appendTimelineSegment(bubble, segment) {
+        if (!segment || !bubble) return;
+        const state = bubble._timeline || (bubble._timeline = { activeGroup: null, groups: [], count: 0 });
+        if (segment.type === 'status' && activityLabels.has(segment.label)) {
+            let group = state.activeGroup;
+            if (!group) {
+                const details = makeEl('details', 'activity-log');
+                details.open = true;
+                const summary = makeEl('summary', 'activity-summary');
+                summary.appendChild(makeActivityIcon());
+                const current = makeEl('span', 'activity-current', segment.label);
+                summary.appendChild(current);
+                details.appendChild(summary);
+                const list = makeEl('ol', 'activity-list');
+                details.appendChild(list);
+                bubble.appendChild(details);
+                group = { details, current, list, count: 0, lastLabel: segment.label };
+                state.activeGroup = group;
+                state.groups.push(group);
+            }
+            const item = makeEl('li', 'activity-step');
+            item.appendChild(makeActivityIcon());
+            item.appendChild(makeEl('span', '', segment.label));
+            group.list.appendChild(item);
+            group.count += 1;
+            group.lastLabel = segment.label;
+            group.current.textContent = segment.label;
+            state.count += 1;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            return;
+        }
+        if (segment.type === 'talk' && typeof segment.text === 'string' && segment.text.trim()) {
+            closeActivityGroup(state.activeGroup);
+            state.activeGroup = null;
+            bubble.appendChild(makeEl('div', 'activity-talk', segment.text.trim().slice(0, 500)));
+            state.count += 1;
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
     }
 
-    function restoreActivity(bubble, entries) {
-        (Array.isArray(entries) ? entries : []).forEach((label) => appendActivity(bubble, label));
-        const log = bubble._activityLog;
-        if (!log) return;
-        log.current.textContent = 'activity · ' + log.entries.length + (log.entries.length === 1 ? ' step' : ' steps');
-        log.details.open = false;
+    function restoreTimeline(bubble, timeline) {
+        (Array.isArray(timeline) ? timeline : []).forEach((segment) => {
+            if (typeof segment === 'string') appendTimelineSegment(bubble, { type: 'status', label: segment });
+            else appendTimelineSegment(bubble, segment);
+        });
+        finishTimeline(bubble);
     }
 
-    function renderActivityProgress(bubble, event) {
-        if (!event || event.type !== 'activity' || !activityLabels.has(event.label)) return;
-        appendActivity(bubble, event.label);
+    function renderProgress(bubble, event) {
+        if (!event) return;
+        bubble.classList.remove('pending');
+        const spinner = bubble.querySelector('.dot-pulse');
+        if (spinner) spinner.remove();
+        if (event.type === 'activity') appendTimelineSegment(bubble, { type: 'status', label: event.label });
+        else if (event.type === 'talk') appendTimelineSegment(bubble, { type: 'talk', text: event.text });
     }
 
-    function finishActivity(bubble) {
-        const log = bubble && bubble._activityLog;
-        if (!log) return;
-        log.current.textContent = 'activity · ' + log.entries.length + (log.entries.length === 1 ? ' step' : ' steps');
-        log.details.open = false;
+    function finishTimeline(bubble) {
+        const state = bubble && bubble._timeline;
+        if (!state) return;
+        state.groups.forEach(closeActivityGroup);
+        state.activeGroup = null;
     }
 
     // ---- proposed changes (approval ui) ----
@@ -2535,13 +2578,15 @@
                 body: JSON.stringify({ messages: conversation, project_codes: currentProjectCodes, chat_id: currentChatId }),
             });
 
-            const data = await readChatStream(res, (progress) => renderActivityProgress(pendingEl, progress));
+            const data = await readChatStream(res, (progress) => renderProgress(pendingEl, progress));
 
             if (!res.ok || data.error) {
                 pendingEl.classList.remove('pending');
                 pendingEl.classList.add('error-msg');
-                pendingEl.textContent = data.error || 'something went wrong.';
-                finishActivity(pendingEl);
+                const spinner = pendingEl.querySelector('.dot-pulse');
+                if (spinner) spinner.remove();
+                pendingEl.appendChild(makeEl('div', 'activity-error', data.error || 'something went wrong.'));
+                finishTimeline(pendingEl);
                 if (res.status === 401 || data.status === 401) {
                     await checkLogin();
                     await refreshSavedChats();
@@ -2552,8 +2597,10 @@
             }
 
             pendingEl.classList.remove('pending');
-            if (!pendingEl._activityLog && Array.isArray(data.activity)) restoreActivity(pendingEl, data.activity);
-            finishActivity(pendingEl);
+            const spinner = pendingEl.querySelector('.dot-pulse');
+            if (spinner) spinner.remove();
+            if (!pendingEl._timeline && Array.isArray(data.activity)) restoreTimeline(pendingEl, data.activity);
+            finishTimeline(pendingEl);
             if (isLoggedIn && data.chat_id) {
                 currentChatId = data.chat_id;
                 refreshSavedChats();
@@ -2586,8 +2633,10 @@
         } catch (err) {
             pendingEl.classList.remove('pending');
             pendingEl.classList.add('error-msg');
-            pendingEl.textContent = 'could not reach DripstoneAI. check your connection.';
-            finishActivity(pendingEl);
+            const spinner = pendingEl.querySelector('.dot-pulse');
+            if (spinner) spinner.remove();
+            pendingEl.appendChild(makeEl('div', 'activity-error', 'could not reach DripstoneAI. check your connection.'));
+            finishTimeline(pendingEl);
         } finally {
             isSending = false;
             sendBtn.disabled = false;
