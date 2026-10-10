@@ -381,12 +381,12 @@
         line-height: 1.55;
         padding-top: 2px;
     }
-    .msg-ai.pending {
+    .msg-ai.pending { color: #777; }
+    .response-loading {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        color: #777;
-        font-style: italic;
+        justify-content: flex-start;
+        min-height: 10px;
+        margin-top: 8px;
     }
     .msg-ai.error-msg { color: var(--error); }
 
@@ -421,8 +421,7 @@
         list-style: none;
     }
     .activity-summary::-webkit-details-marker { display: none; }
-    .activity-summary::after { content: '⌄'; color: #777; margin-left: 2px; }
-    .activity-log[open] > .activity-summary::after { content: '⌃'; }
+
     .activity-icon {
         width: 14px;
         height: 14px;
@@ -2047,11 +2046,23 @@
         return html;
     }
 
+    function insertResponseNode(bubble, node) {
+        const loading = bubble && bubble._loadingIndicator;
+        if (loading && loading.parentNode === bubble) bubble.insertBefore(node, loading);
+        else if (bubble) bubble.appendChild(node);
+    }
+
+    function removeResponseLoading(bubble) {
+        const loading = bubble && bubble._loadingIndicator;
+        if (loading && loading.parentNode) loading.remove();
+        if (bubble) bubble._loadingIndicator = null;
+    }
+
     function renderReply(el, text) {
         if (!String(text || '').trim()) return;
         const content = makeEl('div', 'assistant-final-reply');
         content.innerHTML = markdownToHtml(text);
-        el.appendChild(content);
+        insertResponseNode(el, content);
     }
 
     // ---- rendering messages ----
@@ -2068,7 +2079,10 @@
 
         if (opts.pending) {
             bubble.classList.add('pending');
-            bubble.innerHTML = '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+            const loading = makeEl('div', 'response-loading');
+            loading.innerHTML = '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+            bubble.appendChild(loading);
+            bubble._loadingIndicator = loading;
         } else {
             bubble.textContent = text;
         }
@@ -2170,13 +2184,12 @@
                 details.appendChild(summary);
                 const list = makeEl('ol', 'activity-list');
                 details.appendChild(list);
-                bubble.appendChild(details);
+                insertResponseNode(bubble, details);
                 group = { details, current, list, count: 0, lastLabel: segment.label };
                 state.activeGroup = group;
                 state.groups.push(group);
             }
             const item = makeEl('li', 'activity-step');
-            item.appendChild(makeActivityIcon());
             item.appendChild(makeEl('span', '', segment.label));
             group.list.appendChild(item);
             group.count += 1;
@@ -2189,7 +2202,7 @@
         if (segment.type === 'talk' && typeof segment.text === 'string' && segment.text.trim()) {
             closeActivityGroup(state.activeGroup);
             state.activeGroup = null;
-            bubble.appendChild(makeEl('div', 'activity-talk', segment.text.trim().slice(0, 500)));
+            insertResponseNode(bubble, makeEl('div', 'activity-talk', segment.text.trim().slice(0, 500)));
             state.count += 1;
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
@@ -2206,8 +2219,6 @@
     function renderProgress(bubble, event) {
         if (!event) return;
         bubble.classList.remove('pending');
-        const spinner = bubble.querySelector('.dot-pulse');
-        if (spinner) spinner.remove();
         if (event.type === 'activity') appendTimelineSegment(bubble, { type: 'status', label: event.label });
         else if (event.type === 'talk') appendTimelineSegment(bubble, { type: 'talk', text: event.text });
     }
@@ -2583,10 +2594,9 @@
             if (!res.ok || data.error) {
                 pendingEl.classList.remove('pending');
                 pendingEl.classList.add('error-msg');
-                const spinner = pendingEl.querySelector('.dot-pulse');
-                if (spinner) spinner.remove();
-                pendingEl.appendChild(makeEl('div', 'activity-error', data.error || 'something went wrong.'));
+                insertResponseNode(pendingEl, makeEl('div', 'activity-error', data.error || 'something went wrong.'));
                 finishTimeline(pendingEl);
+                removeResponseLoading(pendingEl);
                 if (res.status === 401 || data.status === 401) {
                     await checkLogin();
                     await refreshSavedChats();
@@ -2597,8 +2607,6 @@
             }
 
             pendingEl.classList.remove('pending');
-            const spinner = pendingEl.querySelector('.dot-pulse');
-            if (spinner) spinner.remove();
             if (!pendingEl._timeline && Array.isArray(data.activity)) restoreTimeline(pendingEl, data.activity);
             finishTimeline(pendingEl);
             if (isLoggedIn && data.chat_id) {
@@ -2629,14 +2637,14 @@
                 renderProposal(pendingEl.closest('.msg-row'), data.proposal);
             }
             conversation.push({ role: 'assistant', content: stored });
+            removeResponseLoading(pendingEl);
             refreshUsage();
         } catch (err) {
             pendingEl.classList.remove('pending');
             pendingEl.classList.add('error-msg');
-            const spinner = pendingEl.querySelector('.dot-pulse');
-            if (spinner) spinner.remove();
-            pendingEl.appendChild(makeEl('div', 'activity-error', 'could not reach DripstoneAI. check your connection.'));
+            insertResponseNode(pendingEl, makeEl('div', 'activity-error', 'could not reach DripstoneAI. check your connection.'));
             finishTimeline(pendingEl);
+            removeResponseLoading(pendingEl);
         } finally {
             isSending = false;
             sendBtn.disabled = false;
