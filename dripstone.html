@@ -680,12 +680,84 @@
         font-family: 'mcfontb', sans-serif;
         cursor: pointer;
     }
+    .btn-review { background: #242424; color: #ccc; border: 1px solid var(--border) !important; }
+    .btn-review:hover, .btn-review:focus-visible { border-color: var(--accent) !important; color: var(--accent); outline: none; }
     .btn-approve { background: var(--accent); color: #181818; }
     .btn-reject { background: #333; color: var(--text); }
     .proposal-buttons button:disabled { opacity: 0.4; cursor: not-allowed; }
     .proposal-status { margin-top: 8px; font-size: 0.85rem; color: var(--text-dim); white-space: pre-wrap; }
     .proposal-status.bad { color: var(--error); }
     .proposal-status.good { color: var(--accent); }
+    .review-changes-dialog {
+        width: min(1120px, calc(100% - 24px));
+        max-width: 1120px;
+        max-height: 90vh;
+        padding: 0;
+        overflow: hidden;
+        background: #141414;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text);
+        font-family: 'mcfont', sans-serif;
+    }
+    .review-changes-dialog::backdrop { background: rgba(0, 0, 0, 0.78); }
+    .review-dialog-frame { display: flex; flex-direction: column; max-height: 90vh; }
+    .review-dialog-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+    }
+    .review-dialog-head h2 { margin: 0; color: var(--accent); font: 1.05rem 'mcfontb', sans-serif; }
+    .review-dialog-close {
+        padding: 6px 10px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-family: 'mcfont', sans-serif;
+    }
+    .review-dialog-close:hover, .review-dialog-close:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+    .review-dialog-body { overflow: auto; padding: 16px; }
+    .review-summary {
+        margin: 0 0 14px;
+        padding: 11px 13px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #191919;
+        color: var(--text-dim);
+        line-height: 1.5;
+    }
+    .review-file-card, .review-structure-note {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #101010;
+    }
+    .review-file-title, .review-structure-note { padding: 9px 12px; color: #bbb; overflow-wrap: anywhere; }
+    .review-code-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px; background: var(--border); }
+    .review-code-pane { min-width: 0; background: #0c0c0c; }
+    .review-code-label { padding: 7px 10px; color: #888; background: #151515; font-size: 0.75rem; }
+    .review-code-pane pre {
+        max-height: 52vh;
+        min-height: 140px;
+        margin: 0;
+        padding: 10px;
+        overflow: auto;
+        color: #c2c2c2;
+        font: 0.8rem/1.5 monospace;
+        white-space: pre;
+        tab-size: 4;
+    }
+    @media (max-width: 680px) {
+        .review-code-grid { grid-template-columns: minmax(0, 1fr); }
+        .review-code-pane pre { max-height: 34vh; min-height: 100px; }
+        .review-dialog-body { padding: 10px; }
+    }
 
     /* the copy button + timestamp that sit below every finished ai reply */
     .msg-actions {
@@ -2291,96 +2363,171 @@
         return el;
     }
 
+    function makeReviewDialog(proposal) {
+        const dialog = makeEl('dialog', 'review-changes-dialog');
+        const frame = makeEl('div', 'review-dialog-frame');
+        const head = makeEl('div', 'review-dialog-head');
+        head.appendChild(makeEl('h2', '', 'review changes'));
+        const close = makeEl('button', 'review-dialog-close', 'close');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'close review changes');
+        close.addEventListener('click', () => dialog.close());
+        head.appendChild(close);
+        frame.appendChild(head);
+
+        const body = makeEl('div', 'review-dialog-body');
+        body.appendChild(makeEl('p', 'review-summary', proposal.change_summary || 'a summary could not be generated for these changes.'));
+        let hasFileReview = false;
+        (Array.isArray(proposal.ops) ? proposal.ops : []).forEach((op) => {
+            const hasSource = ['create', 'edit'].includes(op.op) ||
+                (['rename', 'delete'].includes(op.op) && (typeof op.old === 'string' || typeof op.new === 'string'));
+            if (hasSource) {
+                hasFileReview = true;
+                let afterPath = op.path;
+                if (op.op === 'rename') {
+                    const slash = String(op.path || '').lastIndexOf('/');
+                    afterPath = (slash >= 0 ? String(op.path).slice(0, slash + 1) : '') + String(op.to || '');
+                }
+                const title = makeEl('div', 'review-file-title', (op.op || 'change') + ': ' + (op.op === 'rename' ? op.path + ' → ' + afterPath : op.path));
+                const card = makeEl('section', 'review-file-card');
+                card.appendChild(title);
+                const grid = makeEl('div', 'review-code-grid');
+                const beforeLabel = op.op === 'create' ? 'before · file does not exist' : 'before · ' + op.path;
+                const afterLabel = op.op === 'delete' ? 'after · file deleted' : 'after · ' + afterPath;
+                const beforeCode = op.op === 'create' ? '(file did not exist before this proposal)' :
+                    (typeof op.old === 'string' ? op.old : '(previous file content unavailable)');
+                const afterCode = op.op === 'delete' ? '(file deleted)' :
+                    (typeof op.new === 'string' ? op.new : (typeof op.old === 'string' ? op.old : '(new file content unavailable)'));
+                [[beforeLabel, beforeCode], [afterLabel, afterCode]].forEach(([label, text]) => {
+                    const pane = makeEl('div', 'review-code-pane');
+                    pane.appendChild(makeEl('div', 'review-code-label', label));
+                    pane.appendChild(makeEl('pre', '', text));
+                    grid.appendChild(pane);
+                });
+                card.appendChild(grid);
+                body.appendChild(card);
+            } else {
+                const action = op.op === 'create_folder' ? 'create folder' : op.op === 'rename' ? 'rename folder' : op.op === 'delete' ? 'delete folder' : (op.op || 'change');
+                const path = op.op === 'rename' ? op.path + ' → ' + op.to : op.path;
+                body.appendChild(makeEl('div', 'review-structure-note', action + ': ' + (path || '') + (op.note ? ' · ' + op.note : '')));
+            }
+        });
+        if (!hasFileReview && !(proposal.ops || []).length) body.appendChild(makeEl('div', 'review-structure-note', 'no file content is available to review.'));
+        frame.appendChild(body);
+        dialog.appendChild(frame);
+        dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+        document.body.appendChild(dialog);
+        return dialog;
+    }
+
     function renderProposal(row, proposal) {
         const card = makeEl('div', 'proposal-card');
-        card.appendChild(makeEl('div', 'proposal-title', 'Proposed changes (nothing is applied until you approve)'));
+        card.appendChild(makeEl('div', 'proposal-title', 'proposed changes (nothing is applied until you approve)'));
         card.appendChild(makeEl('div', 'proposal-summary', proposal.summary || ''));
         const targetProject = availableProjects.find((project) => project.share_code === proposal.project_code);
         if (proposal.project_code) card.appendChild(makeEl('div', 'proposal-project', 'target project: ' + (targetProject ? targetProject.name + ' (' + proposal.project_code + ')' : proposal.project_code)));
 
-        proposal.ops.forEach((op) => {
-            const labels = { create: 'create', create_folder: 'new folder', edit: 'edit', rename: 'rename', delete: 'delete' };
+        const labels = { create: 'create', create_folder: 'new folder', edit: 'edit', rename: 'rename', delete: 'delete' };
+        (Array.isArray(proposal.ops) ? proposal.ops : []).forEach((op) => {
             const badgeClass = op.op === 'edit' ? 'edit' : op.op === 'delete' ? 'delete' : op.op === 'rename' ? 'rename' : '';
-            const pathText = op.op === 'rename' ? op.path + '  ->  ' + op.to : op.path;
-
-            if (op.op === 'create' || op.op === 'edit') {
-                const det = makeEl('details', 'proposal-op');
-                const sum = makeEl('summary');
-                sum.appendChild(makeEl('span', 'op-badge ' + badgeClass, labels[op.op]));
-                sum.appendChild(makeEl('span', '', pathText));
-                det.appendChild(sum);
-                if (op.warning) det.appendChild(makeEl('div', 'op-note', op.warning));
-                const pre = makeEl('pre');
-                if (op.op === 'edit') renderDiffInto(pre, op.old || '', op.new || '');
-                else pre.textContent = op.new || '';
-                det.appendChild(pre);
-                card.appendChild(det);
-            } else {
-                const box = makeEl('div', 'proposal-op static');
-                box.appendChild(makeEl('span', 'op-badge ' + badgeClass, labels[op.op] || op.op));
-                box.appendChild(makeEl('span', '', pathText + (op.note ? '  (' + op.note + ')' : '')));
-                card.appendChild(box);
-            }
+            const pathText = op.op === 'rename' ? op.path + '  →  ' + op.to : op.path;
+            const box = makeEl('div', 'proposal-op static');
+            box.appendChild(makeEl('span', 'op-badge ' + badgeClass, labels[op.op] || op.op));
+            box.appendChild(makeEl('span', '', pathText + (op.note ? '  (' + op.note + ')' : '')));
+            card.appendChild(box);
+            if (op.warning) card.appendChild(makeEl('div', 'op-note', op.warning));
         });
 
         const buttons = makeEl('div', 'proposal-buttons');
-        const approveBtn = makeEl('button', 'btn-approve', 'Approve');
-        const rejectBtn = makeEl('button', 'btn-reject', 'Reject');
-        approveBtn.type = 'button';
-        rejectBtn.type = 'button';
-        buttons.appendChild(approveBtn);
-        buttons.appendChild(rejectBtn);
+        const reviewBtn = makeEl('button', 'btn-review', 'review changes');
+        const approveBtn = makeEl('button', 'btn-approve', 'approve');
+        const rejectBtn = makeEl('button', 'btn-reject', 'reject');
+        reviewBtn.type = approveBtn.type = rejectBtn.type = 'button';
+        buttons.append(reviewBtn, approveBtn, rejectBtn);
         card.appendChild(buttons);
         const status = makeEl('div', 'proposal-status');
         card.appendChild(status);
+        const reviewDialog = makeReviewDialog(proposal);
+        reviewBtn.addEventListener('click', () => reviewDialog.showModal());
 
         function lock() { approveBtn.disabled = true; rejectBtn.disabled = true; }
+        function pauseChatControls() {
+            const previous = { sending: isSending, sendDisabled: sendBtn.disabled, newChatDisabled: newChatBtn.disabled };
+            isSending = true;
+            sendBtn.disabled = true;
+            newChatBtn.disabled = true;
+            return () => {
+                isSending = previous.sending;
+                sendBtn.disabled = previous.sendDisabled;
+                newChatBtn.disabled = previous.newChatDisabled;
+            };
+        }
 
-        rejectBtn.addEventListener('click', () => {
+        rejectBtn.addEventListener('click', async () => {
             lock();
+            const resumeChat = pauseChatControls();
             status.className = 'proposal-status';
-            status.textContent = 'Rejected. Nothing was changed.';
-            conversation.push({ role: 'assistant', content: 'The user rejected the proposed changes. Nothing was changed.' });
+            status.textContent = 'saving rejection…';
+            try {
+                const res = await fetch(DRIPSTONE_API + '/proposal-outcome', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ proposal: proposal.token, decision: 'rejected', chat_id: currentChatId }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.history_saved) throw new Error(data.error || 'could not save the decision');
+                status.textContent = 'rejected. nothing was changed.';
+                refreshSavedChats();
+            } catch (error) {
+                status.className = 'proposal-status bad';
+                status.textContent = 'rejected. nothing was changed, but the decision could not be saved to chat history. tell the ai in your next message.';
+            } finally {
+                resumeChat();
+            }
         });
 
         approveBtn.addEventListener('click', async () => {
             if (Date.now() > proposal.expires_at) {
                 lock();
                 status.className = 'proposal-status bad';
-                status.textContent = 'This proposal expired. Ask for the changes again.';
+                status.textContent = 'this proposal expired. ask for the changes again.';
                 return;
             }
             lock();
+            const resumeChat = pauseChatControls();
             status.className = 'proposal-status';
-            status.textContent = 'Applying...';
+            status.textContent = 'applying…';
             try {
                 const res = await fetch(DRIPSTONE_API + '/approve', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ proposal: proposal.token }),
+                    body: JSON.stringify({ proposal: proposal.token, chat_id: currentChatId }),
                 });
                 const data = await res.json();
                 if (!res.ok) {
                     status.className = 'proposal-status bad';
-                    status.textContent = data.error || 'Could not apply the changes.';
+                    status.textContent = data.error || 'could not apply the changes.';
                     if (data.needs_connect) { conn.connected = false; updateConnectUI(); }
                     return;
                 }
                 const done = (data.results || []).map((r) => '- ' + r.op + ': ' + r.path).join('\n');
                 if (data.failed) {
                     status.className = 'proposal-status bad';
-                    status.textContent = 'Stopped part way. These were applied:\n' + (done || '(none)') +
-                        '\n\nFailed on ' + data.failed.op + ' ' + data.failed.path + ': ' + data.failed.message;
-                    conversation.push({ role: 'assistant', content: 'The user approved the changes but they only partly applied. Applied:\n' + (done || '(none)') + '\nFailed: ' + data.failed.op + ' ' + data.failed.path });
+                    status.textContent = 'stopped part way. these were applied:\n' + (done || '(none)') +
+                        '\n\nfailed on ' + data.failed.op + ' ' + data.failed.path + ': ' + data.failed.message;
                 } else {
                     status.className = 'proposal-status good';
-                    status.textContent = 'Applied:\n' + done + '\n\nRefresh your project in Studio to see the changes.';
-                    conversation.push({ role: 'assistant', content: 'The user approved the changes and they were applied:\n' + done });
+                    status.textContent = 'applied:\n' + done + '\n\nrefresh your project in studio to see the changes.';
                 }
+                if (!data.history_saved) status.textContent += '\n\nwarning: the approval could not be saved to chat history. tell the ai in your next message.';
+                refreshSavedChats();
             } catch {
                 status.className = 'proposal-status bad';
-                status.textContent = 'Could not reach DripstoneAI. Check your connection and ask again.';
+                status.textContent = 'could not reach dripstoneai. check your connection and ask again.';
+            } finally {
+                resumeChat();
             }
         });
 
@@ -2633,7 +2780,7 @@
                 stored += '\n\nwiki sources: ' + data.wiki_references.map((reference) => reference.url).join(', ');
             }
             if (data.proposal) {
-                stored += '\n\n(Proposed changes were shown to the user. They have not been approved yet.)';
+                stored += '\n\n(a change proposal was shown: ' + String(data.proposal.summary || 'proposed changes').replace(/\s+/g, ' ').slice(0, 200) + '. nothing has been applied yet.)';
                 renderProposal(pendingEl.closest('.msg-row'), data.proposal);
             }
             conversation.push({ role: 'assistant', content: stored });
