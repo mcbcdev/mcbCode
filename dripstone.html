@@ -390,18 +390,54 @@
     }
     .msg-ai.error-msg { color: var(--error); }
 
-    .wiki-activity {
+    .activity-log {
         width: 100%;
         max-width: 92%;
         margin-top: 7px;
-        color: #999;
+        color: #969696;
         font-family: 'mcfont', sans-serif;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         line-height: 1.5;
+    }
+    .activity-summary {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        max-width: 100%;
+        color: #969696;
+        cursor: pointer;
+        overflow-wrap: anywhere;
+        list-style: none;
+    }
+    .activity-summary::-webkit-details-marker { display: none; }
+    .activity-summary::after { content: '⌄'; color: #777; margin-left: 2px; }
+    .activity-log[open] > .activity-summary::after { content: '⌃'; }
+    .activity-icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        object-fit: contain;
+        image-rendering: pixelated;
+    }
+    .activity-list {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
+        margin: 6px 0 0 3px;
+        padding: 0 0 0 10px;
+        border-left: 1px solid #353535;
+        list-style: none;
     }
+    .activity-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        min-height: 18px;
+        color: #858585;
+        overflow-wrap: anywhere;
+    }
+    .activity-log[hidden] { display: none; }
     .wiki-activity-status, .wiki-progress-row { overflow-wrap: anywhere; }
     .wiki-activity-list { display: flex; flex-direction: column; gap: 3px; padding-left: 10px; }
     .wiki-progress-row.error { color: var(--error); }
@@ -1489,13 +1525,20 @@
             saveProjectDefaults();
             updateProjectsButton();
             renderProjectPicker();
-            conversation = (Array.isArray(data.messages) ? data.messages : []).map((message) => ({ role: message.role, content: message.content }));
+            const restoredMessages = (Array.isArray(data.messages) ? data.messages : []).map((message) => {
+                const split = splitStoredActivity(message.content);
+                return { role: message.role, content: split.content, activity: split.activity };
+            });
+            conversation = restoredMessages.map(({ role, content }) => ({ role, content }));
             messagesArea.querySelectorAll('.msg-row').forEach((row) => row.remove());
             heroTitle.classList.add('gone');
             messagesArea.classList.add('has-messages');
-            for (const message of conversation) {
+            for (const message of restoredMessages) {
                 const bubble = renderMessage(message.role, message.content);
-                if (message.role === 'assistant') renderReply(bubble, message.content);
+                if (message.role === 'assistant') {
+                    renderReply(bubble, message.content);
+                    restoreActivity(bubble, message.activity);
+                }
             }
             textarea.value = '';
             autoGrow();
@@ -2055,6 +2098,84 @@
         return bubble;
     }
 
+    const activityLabels = new Set(['thinking', 'checking the wiki', 'searching your project', 'editing files']);
+
+    function splitStoredActivity(value) {
+        const content = String(value || '');
+        const match = content.match(/\n\n<!--dripstone-activity-v1:([A-Za-z0-9_-]+)-->\s*$/);
+        if (!match) return { content, activity: [] };
+        try {
+            let encoded = match[1].replace(/-/g, '+').replace(/_/g, '/');
+            while (encoded.length % 4) encoded += '=';
+            const binary = atob(encoded);
+            const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+            const parsed = JSON.parse(new TextDecoder().decode(bytes));
+            const activity = Array.isArray(parsed) ? parsed.filter((label) => activityLabels.has(label)).slice(-40) : [];
+            return { content: content.slice(0, match.index), activity };
+        } catch {
+            return { content, activity: [] };
+        }
+    }
+
+    function makeActivityIcon() {
+        const icon = document.createElement('img');
+        icon.className = 'activity-icon';
+        icon.src = 'https://mcbcode.com/img/icons/dripstone.png';
+        icon.alt = '';
+        icon.setAttribute('aria-hidden', 'true');
+        return icon;
+    }
+
+    function getActivityLog(bubble, open = true) {
+        if (bubble._activityLog) return bubble._activityLog;
+        const details = makeEl('details', 'activity-log');
+        details.open = open;
+        const summary = makeEl('summary', 'activity-summary');
+        summary.appendChild(makeActivityIcon());
+        const current = makeEl('span', 'activity-current', 'thinking');
+        summary.appendChild(current);
+        details.appendChild(summary);
+        const list = makeEl('ol', 'activity-list');
+        details.appendChild(list);
+        const row = bubble.closest('.msg-row');
+        row.insertBefore(details, bubble._actionsEl || null);
+        bubble._activityLog = { details, current, list, entries: [] };
+        return bubble._activityLog;
+    }
+
+    function appendActivity(bubble, label) {
+        if (!activityLabels.has(label)) return;
+        const log = getActivityLog(bubble, true);
+        if (log.entries[log.entries.length - 1] === label) return;
+        log.entries.push(label);
+        const item = makeEl('li', 'activity-step');
+        item.appendChild(makeActivityIcon());
+        item.appendChild(makeEl('span', '', label));
+        log.list.appendChild(item);
+        log.current.textContent = label;
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function restoreActivity(bubble, entries) {
+        (Array.isArray(entries) ? entries : []).forEach((label) => appendActivity(bubble, label));
+        const log = bubble._activityLog;
+        if (!log) return;
+        log.current.textContent = 'activity · ' + log.entries.length + (log.entries.length === 1 ? ' step' : ' steps');
+        log.details.open = false;
+    }
+
+    function renderActivityProgress(bubble, event) {
+        if (!event || event.type !== 'activity' || !activityLabels.has(event.label)) return;
+        appendActivity(bubble, event.label);
+    }
+
+    function finishActivity(bubble) {
+        const log = bubble && bubble._activityLog;
+        if (!log) return;
+        log.current.textContent = 'activity · ' + log.entries.length + (log.entries.length === 1 ? ' step' : ' steps');
+        log.details.open = false;
+    }
+
     // ---- proposed changes (approval ui) ----
     // everything here is built with textContent, never innerHTML, because the
     // file contents come from the ai and must never be treated as html.
@@ -2414,12 +2535,13 @@
                 body: JSON.stringify({ messages: conversation, project_codes: currentProjectCodes, chat_id: currentChatId }),
             });
 
-            const data = await readChatStream(res, (progress) => renderWikiProgress(pendingEl, progress));
+            const data = await readChatStream(res, (progress) => renderActivityProgress(pendingEl, progress));
 
             if (!res.ok || data.error) {
                 pendingEl.classList.remove('pending');
                 pendingEl.classList.add('error-msg');
                 pendingEl.textContent = data.error || 'something went wrong.';
+                finishActivity(pendingEl);
                 if (res.status === 401 || data.status === 401) {
                     await checkLogin();
                     await refreshSavedChats();
@@ -2430,6 +2552,8 @@
             }
 
             pendingEl.classList.remove('pending');
+            if (!pendingEl._activityLog && Array.isArray(data.activity)) restoreActivity(pendingEl, data.activity);
+            finishActivity(pendingEl);
             if (isLoggedIn && data.chat_id) {
                 currentChatId = data.chat_id;
                 refreshSavedChats();
@@ -2463,6 +2587,7 @@
             pendingEl.classList.remove('pending');
             pendingEl.classList.add('error-msg');
             pendingEl.textContent = 'could not reach DripstoneAI. check your connection.';
+            finishActivity(pendingEl);
         } finally {
             isSending = false;
             sendBtn.disabled = false;
