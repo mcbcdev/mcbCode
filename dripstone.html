@@ -2151,7 +2151,7 @@
 
     function closeActivityGroup(group) {
         if (!group) return;
-        group.current.textContent = group.lastLabel + ' · ' + group.count + (group.count === 1 ? ' step' : ' steps');
+        group.current.textContent = 'activity · ' + group.count + (group.count === 1 ? ' step' : ' steps');
         group.details.open = false;
     }
 
@@ -2181,7 +2181,7 @@
             group.list.appendChild(item);
             group.count += 1;
             group.lastLabel = segment.label;
-            group.current.textContent = segment.label;
+            group.current.textContent = 'activity · ' + group.count + (group.count === 1 ? ' step' : ' steps');
             state.count += 1;
             messagesArea.scrollTop = messagesArea.scrollHeight;
             return;
