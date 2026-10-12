@@ -225,6 +225,7 @@
     .field { margin-bottom: 16px; }
     .field-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--dimmer); letter-spacing: .06em; font-family: 'mcfontb', sans-serif; margin-bottom: 7px; }
     .field-label span { color: var(--faint); font-family: 'mcfont', sans-serif; letter-spacing: 0; }
+    .field-hint { font-size: 11px; color: var(--faint); line-height: 1.45; margin-top: 6px; }
     .input, .textarea {
       width: 100%; background: #1a1c1f; border: 1px solid var(--border-alt); color: var(--white);
       font-family: 'mcfont', sans-serif; font-size: 13px; padding: 10px 12px; outline: none;
@@ -317,6 +318,17 @@
           <div class="modal-sub">name it, then start fresh or bring in an existing pack.</div>
         </div>
         <button class="modal-close" id="np-close" type="button" title="close">x</button>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="np-type">PROJECT TYPE</label>
+        <select class="input" id="np-type">
+          <option value="addon">addon (bp + rp)</option>
+          <option value="texture_pack">texture pack (rp only)</option>
+          <option value="skinpack">skinpack (rp only)</option>
+          <option value="script">script (bp only)</option>
+        </select>
+        <div class="field-hint" id="np-type-hint">starts with behavior and resource pack folders.</div>
       </div>
 
       <div class="field">
@@ -597,6 +609,8 @@
     // ---- new project modal ----
     const np = {
       overlay: document.getElementById("np-overlay"),
+      type: document.getElementById("np-type"),
+      typeHint: document.getElementById("np-type-hint"),
       name: document.getElementById("np-name"),
       desc: document.getElementById("np-desc"),
       nameCount: document.getElementById("np-name-count"),
@@ -626,6 +640,17 @@
     };
 
     function npMaxBytes() { return (me && me.is_obsidian ? 25 : 10) * 1024 * 1024; }
+
+    const PROJECT_TYPE_HINTS = {
+      addon: "starts with behavior and resource pack folders.",
+      texture_pack: "starts with a resource pack folder.",
+      skinpack: "starts with a skin pack manifest and starter metadata in the rp folder.",
+      script: "starts with a behavior pack and a javascript entry file."
+    };
+
+    function npUpdateTypeHint() {
+      np.typeHint.textContent = PROJECT_TYPE_HINTS[np.type.value] || PROJECT_TYPE_HINTS.addon;
+    }
 
     function npShowError(msg, html) {
       if (html) np.error.innerHTML = msg; else np.error.textContent = msg;
@@ -690,6 +715,8 @@
     }
 
     function openNewProject() {
+      np.type.value = "addon";
+      npUpdateTypeHint();
       np.name.value = "";
       np.desc.value = "";
       np.nameCount.textContent = "0/72";
@@ -714,6 +741,7 @@
 
     np.name.addEventListener("input", () => { np.nameCount.textContent = np.name.value.length + "/72"; });
     np.desc.addEventListener("input", () => { np.descCount.textContent = np.desc.value.length + "/256"; });
+    np.type.addEventListener("change", npUpdateTypeHint);
     np.optScratch.addEventListener("click", () => npSetMode("scratch"));
     np.optUpload.addEventListener("click", () => npSetMode("upload"));
     np.close.addEventListener("click", closeNewProject);
@@ -770,7 +798,7 @@
           const r = await fetch(`${AUTH}/projects`, {
             method: "POST", credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, description, skip_defaults: uploading })
+            body: JSON.stringify({ name, description, project_type: np.type.value, skip_defaults: uploading })
           });
           const d = await r.json().catch(() => ({}));
           if (!r.ok || !d.share_code) throw new Error(d.error || "couldn't create the project.");
