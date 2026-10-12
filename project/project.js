@@ -107,15 +107,33 @@
       return f.name.toLowerCase().endsWith(".mcstructure") ? "structure" : "model";
     }
 
+    function findRootFolder(name) {
+      return allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === name);
+    }
+    function legacySinglePackFolder() {
+      const type = project?.project_type;
+      const name = type === "script" ? "BP" : (type === "texture_pack" || type === "skinpack" ? "RP" : null);
+      return name ? findRootFolder(name) : null;
+    }
+    function singlePackRootParentId() {
+      return legacySinglePackFolder()?.id ?? null;
+    }
     function currentFolderIsPackRoot() {
-  return currentPath.length === 1 && ["BP", "RP"].includes(currentPath[0].name.toUpperCase());
-}
-function findRootFolder(name) {
-  return allFiles.find(f => f.type === "folder" && f.parent_id === null && f.name.toUpperCase() === name);
-}
-function hasPackIcon(folderId) {
-  return allFiles.some(f => f.type === "file" && String(f.parent_id) === String(folderId) && f.name.toLowerCase() === "pack_icon.png");
-}
+      if (project?.project_type === "addon") {
+        return currentPath.length === 1 && ["BP", "RP"].includes(currentPath[0].name.toUpperCase());
+      }
+      const legacy = legacySinglePackFolder();
+      if (!legacy) return currentPath.length === 0;
+      return currentPath.length === 1 && String(currentPath[0].id) === String(legacy.id);
+    }
+    function hasPackIcon(folderId) {
+      return allFiles.some(f => f.type === "file" && (f.parent_id === null ? null : String(f.parent_id)) === (folderId === null ? null : String(folderId)) && f.name.toLowerCase() === "pack_icon.png");
+    }
+    function packIconTargets() {
+      if (project?.project_type === "addon") return [findRootFolder("BP"), findRootFolder("RP")].filter(Boolean);
+      const legacy = legacySinglePackFolder();
+      return [legacy || { id: null, name: "project root" }];
+    }
     // ---- URL <-> folder path helpers ----
     function buildPathUrl(pathArr) {
       const base = `/project/${shareCode}`;
@@ -170,7 +188,7 @@ function hasPackIcon(folderId) {
     // fallback if that file can't be reached, so the guardrail system
     // still works even if the config request fails.
     const DEFAULT_GUARDRAILS = {
-      "manifest.json": ["/BP/", "/RP/"]
+      "manifest.json": ["/", "/BP/", "/RP/"]
     };
     let guardrails = DEFAULT_GUARDRAILS;
 
@@ -196,6 +214,9 @@ function hasPackIcon(folderId) {
     // inside folder path `folderSegments` (array of folder name strings)
     function checkGuardrail(fileName, folderSegments) {
       const folderPath = "/" + folderSegments.join("/") + (folderSegments.length ? "/" : "");
+      if (fileName.toLowerCase() === "manifest.json" && folderSegments.length === 0 && ["texture_pack", "script"].includes(project?.project_type)) {
+        return { ok: true };
+      }
       const rules = guardrails || {};
 
       // 1. exact filename rule takes priority over extension rules
@@ -396,6 +417,7 @@ function renderContributors() {
 function renderToolbar() {
   const toolbar = document.querySelector(".proj-header-actions");
   toolbar.innerHTML = "";
+  if (project?.project_type === "skinpack") return;
 
   if (canEdit()) {
     // "+ Add Files" dropdown: Folder / File / Image / Structure
@@ -417,7 +439,7 @@ function renderToolbar() {
       { label: "+ Structure", action: () => document.getElementById("mcstructure-upload-input").click(), needsSubfolder: true },
     ];
     items.forEach(item => {
-      if (item.needsSubfolder && isAtRoot()) return;
+      if (item.needsSubfolder && isAtRoot() && project?.project_type === "addon") return;
       const el = document.createElement("div");
       el.className = "share-menu-item";
       el.textContent = item.label;
@@ -1257,7 +1279,318 @@ preview.innerHTML = `
       row.querySelector(".file-icon").classList.add("open");
     openImagePreview = file.id;
     }
+let skinpackRenderSequence = 0;
+let skinpackEditorState = null;
+
+function ensureSkinpackEditorStyles() {
+  if (document.getElementById("skinpack-editor-styles")) return;
+  const style = document.createElement("style");
+  style.id = "skinpack-editor-styles";
+  style.textContent = `
+    .skinpack-editor{display:grid;gap:18px;padding:6px 0 24px}
+    .skinpack-panel{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:18px}
+    .skinpack-panel h2{font-size:16px;margin:0 0 6px;color:inherit}
+    .skinpack-help{font-size:12px;line-height:1.5;color:#999;margin:0 0 16px}
+    .skinpack-field{display:grid;gap:6px;margin:0 0 12px}
+    .skinpack-field label{font-size:12px;color:#bbb}
+    .skinpack-field input,.skinpack-field textarea,.skinpack-skin input,.skinpack-skin select{width:100%;min-height:38px;padding:9px 10px;border:1px solid rgba(255,255,255,.14);border-radius:6px;background:rgba(0,0,0,.18);color:inherit;font:inherit}
+    .skinpack-field textarea{min-height:76px;resize:vertical}
+    .skinpack-topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .skinpack-skins{display:grid;gap:12px}
+    .skinpack-skin{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.45fr) auto;align-items:end;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:6px}
+    .skinpack-skin label{display:grid;gap:6px;font-size:11px;color:#aaa}
+    .skinpack-texture{font-size:11px;color:#999;grid-column:1/-1;overflow-wrap:anywhere}
+    .skinpack-empty{padding:18px;border:1px dashed rgba(255,255,255,.16);border-radius:6px;color:#999;font-size:13px}
+    .skinpack-status{min-height:18px;font-size:12px;color:#05ee93}
+    .skinpack-error{min-height:18px;font-size:12px;color:#ff7777}
+    .skinpack-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    @media(max-width:640px){.skinpack-panel{padding:12px}.skinpack-skin{grid-template-columns:1fr;align-items:stretch}.skinpack-texture{grid-column:auto}}
+  `;
+  document.head.appendChild(style);
+}
+
+function skinpackRootId() {
+  return singlePackRootParentId();
+}
+
+function skinpackParseLang(text) {
+  const values = {};
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const split = line.indexOf("=");
+    if (split < 0) continue;
+    values[line.slice(0, split).trim()] = line.slice(split + 1).trim();
+  }
+  return values;
+}
+
+function skinpackLangValue(text, key, fallback) {
+  const values = skinpackParseLang(text);
+  return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : fallback;
+}
+
+function skinpackBuildLang(text, serializeName, packName, skins, displayNames) {
+  const packKey = `skinpack.${serializeName}`;
+  const skinPrefix = `skin.${serializeName}.`;
+  const lines = String(text || "").replace(/\r/g, "").split("\n").filter(line => {
+    const equal = line.indexOf("=");
+    if (equal < 0) return true;
+    const key = line.slice(0, equal).trim();
+    return key !== packKey && !key.startsWith(skinPrefix);
+  });
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  lines.push(`${packKey}=${packName}`);
+  skins.forEach((skin, index) => {
+    const id = String(skin.localization_name || `skin_${index + 1}`);
+    lines.push(`skin.${serializeName}.${id}=${displayNames[index] || id}`);
+  });
+  return lines.join("\n") + "\n";
+}
+
+async function skinpackEnsureChildFolder(parentId, name) {
+  const parentKey = parentId === null ? null : String(parentId);
+  let folder = allFiles.find(f => f.type === "folder" && (f.parent_id === null ? null : String(f.parent_id)) === parentKey && f.name.toLowerCase() === name.toLowerCase());
+  if (folder) return folder.id;
+  const res = await fetch(`${AUTH}/project/file`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_code: shareCode, parent_id: parentId, name, type: "folder" })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `failed to create ${name} folder`);
+  folder = { id: data.file_id, project_id: project.id, parent_id: parentId, name, type: "folder", save_id: null, updated_at: new Date().toISOString() };
+  allFiles.push(folder);
+  return folder.id;
+}
+
+async function skinpackWriteTextFile(parentId, filename, content) {
+  const existing = findFileInFolder(parentId, filename);
+  const body = { project_code: shareCode, name: filename, type: "file", content };
+  if (existing) body.file_id = existing.id; else body.parent_id = parentId;
+  const res = await fetch(`${AUTH}/project/file`, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `failed to save ${filename}`);
+  if (existing) existing.updated_at = new Date().toISOString();
+  else allFiles.push({ id: data.file_id, project_id: project.id, parent_id: parentId, name: filename, type: "file", save_id: data.save_id || null, updated_at: new Date().toISOString() });
+  return data;
+}
+
+async function renderSkinpackEditor() {
+  const list = document.getElementById("file-list");
+  const sequence = ++skinpackRenderSequence;
+  ensureSkinpackEditorStyles();
+  list.innerHTML = `<div class="loading-msg">loading skin pack info...</div>`;
+  const rootId = skinpackRootId();
+  const manifestFile = findFileInFolder(rootId, "manifest.json");
+  const skinsFile = findFileInFolder(rootId, "skins.json");
+  const textFolder = allFiles.find(f => f.type === "folder" && String(f.parent_id) === String(rootId) && f.name.toLowerCase() === "texts");
+  const langFile = textFolder ? findFileInFolder(textFolder.id, "en_US.lang") : findFileInFolder(rootId, "en_US.lang");
+  try {
+    const [manifestText, skinsText, langText] = await Promise.all([
+      readFileContent(manifestFile), readFileContent(skinsFile), readFileContent(langFile)
+    ]);
+    if (sequence !== skinpackRenderSequence) return;
+    if (!manifestFile || !skinsFile || manifestText === null || skinsText === null) throw new Error("skin pack starter files are missing. make sure manifest.json and skins.json are in the pack root.");
+    const manifest = JSON.parse(manifestText);
+    const skinsData = JSON.parse(skinsText);
+    if (!manifest.header || !Array.isArray(skinsData.skins)) throw new Error("skin pack files are missing required fields.");
+    if (!skinsData.serialize_name) skinsData.serialize_name = skinsData.localization_name || `mcb_skinpack_${project.id}`;
+    const serializeName = String(skinsData.serialize_name);
+    const lang = langText || "";
+    const packName = skinpackLangValue(lang, `skinpack.${serializeName}`, manifest.header.name || project.name || "skin pack");
+    const displayNames = skinsData.skins.map((skin, index) => skinpackLangValue(lang, `skin.${serializeName}.${skin.localization_name}`, `skin ${index + 1}`));
+    skinpackEditorState = { rootId, manifestFile, skinsFile, langFile, textFolder, manifest, skins: skinsData, lang, packName, displayNames };
+    renderSkinpackEditorContent();
+  } catch (error) {
+    if (sequence !== skinpackRenderSequence) return;
+    list.innerHTML = `<section class="skinpack-panel"><h2>skin pack editor</h2><p class="skinpack-error">${esc(error.message || "failed to load skin pack files.")}</p><p class="skinpack-help">the project file tree is hidden in skin-pack mode. check the starter manifest and skins.json files before editing.</p></section>`;
+  }
+}
+
+function renderSkinpackEditorContent() {
+  const state = skinpackEditorState;
+  if (!state) return;
+  const list = document.getElementById("file-list");
+  const editable = canEdit();
+  const disabled = editable ? "" : "disabled";
+  const serializeName = String(state.skins.serialize_name || state.skins.localization_name);
+  const rows = state.skins.skins.map((skin, index) => `
+    <article class="skinpack-skin">
+      <label>skin name<input data-skin-name="${index}" maxlength="48" value="${esc(state.displayNames[index] || `skin ${index + 1}`)}" ${disabled}></label>
+      <label>model<select data-skin-geometry="${index}" ${disabled}>
+        <option value="geometry.humanoid.custom" ${skin.geometry === "geometry.humanoid.custom" ? "selected" : ""}>steve</option>
+        <option value="geometry.humanoid.customSlim" ${skin.geometry === "geometry.humanoid.customSlim" ? "selected" : ""}>alex</option>
+      </select></label>
+      ${editable ? `<button type="button" class="sm-btn" data-skin-remove="${index}">remove</button>` : ""}
+      <div class="skinpack-texture">texture: ${esc(skin.texture || "missing texture")}</div>
+    </article>`).join("");
+  list.innerHTML = `
+    <div class="skinpack-editor">
+      <section class="skinpack-panel">
+        <h2>skin pack info</h2>
+        <p class="skinpack-help">edit the pack name, description, and skin names here. save changes writes them to the pack manifest and english localization file.</p>
+        <div class="skinpack-field"><label for="skinpack-name">pack name</label><input id="skinpack-name" maxlength="72" value="${esc(state.packName)}" ${disabled}></div>
+        <div class="skinpack-field"><label for="skinpack-description">description</label><textarea id="skinpack-description" maxlength="256" ${disabled}>${esc(state.manifest.header.description || "")}</textarea></div>
+        <div class="skinpack-actions">
+          ${editable ? `<button type="button" class="sm-btn" id="skinpack-save">save changes</button><button type="button" class="sm-btn" id="skinpack-icon-button">upload pack icon</button><input type="file" id="skinpack-icon-input" accept="image/png" hidden>` : ""}
+          <span class="skinpack-status" id="skinpack-status"></span>
+        </div>
+        <div class="skinpack-error" id="skinpack-error" role="status"></div>
+      </section>
+      <section class="skinpack-panel">
+        <div class="skinpack-topline"><div><h2>skins</h2><p class="skinpack-help" style="margin:6px 0 0">add a 64×64 or 64×32 png. the image is saved in the pack root.</p></div>
+        ${editable ? `<div><button type="button" class="sm-btn" id="skinpack-add">add skin</button><input type="file" id="skinpack-image-input" accept=".png,image/png" hidden></div>` : ""}</div>
+        <div class="skinpack-skins">${rows || `<div class="skinpack-empty">no skins yet. add a png to create the first one.</div>`}</div>
+      </section>
+    </div>`;
+
+  if (!editable) return;
+  document.getElementById("skinpack-save").addEventListener("click", saveSkinpackChanges);
+  document.getElementById("skinpack-add").addEventListener("click", () => document.getElementById("skinpack-image-input").click());
+  document.getElementById("skinpack-image-input").addEventListener("change", handleSkinpackImageAdd);
+  document.getElementById("skinpack-icon-button").addEventListener("click", () => document.getElementById("skinpack-icon-input").click());
+  document.getElementById("skinpack-icon-input").addEventListener("change", event => handlePackIconUpload(event));
+  document.querySelectorAll("[data-skin-name]").forEach(input => input.addEventListener("input", event => {
+    state.displayNames[Number(event.target.dataset.skinName)] = event.target.value;
+  }));
+  document.querySelectorAll("[data-skin-geometry]").forEach(select => select.addEventListener("change", event => {
+    state.skins.skins[Number(event.target.dataset.skinGeometry)].geometry = event.target.value;
+  }));
+  document.querySelectorAll("[data-skin-remove]").forEach(button => button.addEventListener("click", () => removeSkinpackSkin(Number(button.dataset.skinRemove))));
+}
+
+async function saveSkinpackChanges() {
+  const state = skinpackEditorState;
+  if (!state || !canEdit()) return false;
+  const name = document.getElementById("skinpack-name").value.trim();
+  const description = document.getElementById("skinpack-description").value.trim();
+  const error = document.getElementById("skinpack-error");
+  const status = document.getElementById("skinpack-status");
+  const button = document.getElementById("skinpack-save");
+  error.textContent = "";
+  status.textContent = "";
+  if (!name) { error.textContent = "enter a pack name first."; return false; }
+  if (name.length > 72 || description.length > 256) { error.textContent = "the pack name or description is too long."; return false; }
+  button.disabled = true;
+  button.textContent = "saving...";
+  try {
+    const serializeName = String(state.skins.serialize_name || state.skins.localization_name);
+    state.manifest.header.name = name;
+    state.manifest.header.description = description;
+    await writeJSONFile(state.rootId, "manifest.json", state.manifest);
+    await writeJSONFile(state.rootId, "skins.json", state.skins);
+    const textsId = await skinpackEnsureChildFolder(state.rootId, "texts");
+    const lang = skinpackBuildLang(state.lang, serializeName, name, state.skins.skins, state.displayNames);
+    await skinpackWriteTextFile(textsId, "en_US.lang", lang);
+    state.lang = lang;
+    state.packName = name;
+    state.textFolder = allFiles.find(f => f.type === "folder" && String(f.id) === String(textsId));
+    state.langFile = findFileInFolder(textsId, "en_US.lang");
+    updateStats();
+    status.textContent = "saved.";
+    return true;
+  } catch (errorValue) {
+    error.textContent = errorValue.message || "failed to save skin pack info.";
+    return false;
+  } finally {
+    button.disabled = false;
+    button.textContent = "save changes";
+  }
+}
+
+function uniqueSkinLocalizationName(label) {
+  const base = String(label || "skin").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "skin";
+  const used = new Set((skinpackEditorState?.skins.skins || []).map(skin => skin.localization_name));
+  let result = base;
+  let suffix = 2;
+  while (used.has(result)) result = `${base}_${suffix++}`;
+  return result;
+}
+
+async function handleSkinpackImageAdd(event) {
+  const input = event.target;
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (!file || !skinpackEditorState || !canEdit()) return;
+  const error = document.getElementById("skinpack-error");
+  const status = document.getElementById("skinpack-status");
+  error.textContent = "";
+  status.textContent = "";
+  if (file.type !== "image/png" || !file.name.toLowerCase().endsWith(".png")) {
+    error.textContent = "choose a png skin texture.";
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    error.textContent = "skin textures must be 5 mb or smaller.";
+    return;
+  }
+  if (findFileInFolder(skinpackEditorState.rootId, file.name)) {
+    error.textContent = "a file with that name already exists in the pack root. rename the png and try again.";
+    return;
+  }
+  try {
+    await uploadPngFile(skinpackEditorState.rootId, file.name, file);
+    const label = file.name.replace(/\.png$/i, "").replace(/[_-]+/g, " ").trim() || `skin ${skinpackEditorState.skins.skins.length + 1}`;
+    const localizationName = uniqueSkinLocalizationName(label);
+    skinpackEditorState.skins.skins.push({
+      localization_name: localizationName,
+      geometry: "geometry.humanoid.custom",
+      texture: file.name,
+      type: "free"
+    });
+    skinpackEditorState.displayNames.push(label);
+    const saved = await saveSkinpackChanges();
+    if (!saved) return;
+    renderSkinpackEditor();
+  } catch (errorValue) {
+    error.textContent = errorValue.message || "failed to add this skin.";
+  }
+}
+
+async function removeSkinpackSkin(index) {
+  const state = skinpackEditorState;
+  if (!state || !canEdit() || !state.skins.skins[index]) return;
+  const skin = state.skins.skins[index];
+  const displayName = state.displayNames[index] || skin.localization_name;
+  if (!confirm(`remove "${displayName}" from this skin pack? its png is deleted too if no other skin uses it.`)) return;
+  state.skins.skins.splice(index, 1);
+  state.displayNames.splice(index, 1);
+  const saved = await saveSkinpackChanges();
+  if (!saved) { renderSkinpackEditorContent(); return; }
+  const textureStillUsed = state.skins.skins.some(item => item.texture === skin.texture);
+  if (!textureStillUsed) {
+    const textureFile = findFileInFolder(state.rootId, skin.texture);
+    if (textureFile) {
+      try {
+        const url = `${AUTH}/project/file?file_id=${encodeURIComponent(textureFile.id)}&project_code=${encodeURIComponent(shareCode)}`;
+        const response = await fetch(url, { method: "DELETE", credentials: "include" });
+        if (response.ok) removeFromCache(textureFile.id);
+        else document.getElementById("skinpack-status").textContent = "skin removed; its unused png could not be deleted.";
+      } catch {
+        document.getElementById("skinpack-status").textContent = "skin removed; its unused png could not be deleted.";
+      }
+    }
+  }
+  renderSkinpackEditor();
+}
+
 function renderFileList() {
+  if (project?.project_type === "skinpack") {
+    currentPath = [];
+    const pathSegments = document.getElementById("path-segments");
+    if (pathSegments) pathSegments.innerHTML = "";
+    const toolbar = document.querySelector(".proj-header-actions");
+    if (toolbar) toolbar.innerHTML = "";
+    const rootUrl = buildPathUrl([]);
+    if (location.pathname !== rootUrl) history.replaceState({ path: [] }, "", rootUrl);
+    renderSkinpackEditor();
+    return;
+  }
   renderPathBar();
   renderToolbar();
   const list = document.getElementById("file-list");
@@ -1270,53 +1603,48 @@ function renderFileList() {
     .filter(f => (f.parent_id === null ? null : String(f.parent_id)) === parentKey)
     .sort((a, b) => { if (a.type !== b.type) return a.type === "folder" ? -1 : 1; return a.name.localeCompare(b.name); });
 
-  // beginner hint at the project root explaining BP/RP structure, plus
-  // quick-create shortcuts, if those folders don't exist yet. once both
-  // folders exist, swap this out for a "what's next" nudge instead, so
-  // beginners always have an answer to "ok, now what do i do?"
-  // (usability fixes: unexplained BP/RP abbreviations, unclear project
-  // structure, and new projects with no obvious next step)
   if (isAtRoot()) {
-    const hasBP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "BP");
-    const hasRP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "RP");
+    const type = project?.project_type || "addon";
     const hint = document.createElement("div");
     hint.className = "root-hint";
-
     let showHint = true;
-    if (!hasBP || !hasRP) {
-      hint.innerHTML = `
-        <div style="margin-bottom:6px;"><b>Behavior Pack (BP)</b> — the gameplay code/behavior for your addon.</div>
-        <div style="margin-bottom:6px;"><b>Resource Pack (RP)</b> — the textures, models, and sounds for your addon.</div>
-        most addons need both, sitting at the root of your project. ${canEdit() ? "create whichever ones you're missing:" : ""}`;
-      if (canEdit()) {
-        const actions = document.createElement("div");
-        actions.className = "hint-actions";
-        if (!hasBP) {
-          const b = document.createElement("button");
-          b.className = "sm-btn"; b.textContent = "+ BP folder";
-          b.onclick = () => quickCreateRootFolder("BP");
-          actions.appendChild(b);
+    if (type === "addon") {
+      const hasBP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "BP");
+      const hasRP = children.some(f => f.type === "folder" && f.name.toUpperCase() === "RP");
+      if (!hasBP || !hasRP) {
+        hint.innerHTML = `
+          <div style="margin-bottom:6px;"><b>Behavior Pack (BP)</b> — the gameplay code/behavior for your addon.</div>
+          <div style="margin-bottom:6px;"><b>Resource Pack (RP)</b> — the textures, models, and sounds for your addon.</div>
+          most addons need both, sitting at the root of your project. ${canEdit() ? "create whichever ones you're missing:" : ""}`;
+        if (canEdit()) {
+          const actions = document.createElement("div");
+          actions.className = "hint-actions";
+          if (!hasBP) {
+            const b = document.createElement("button");
+            b.className = "sm-btn"; b.textContent = "+ BP folder";
+            b.onclick = () => quickCreateRootFolder("BP");
+            actions.appendChild(b);
+          }
+          if (!hasRP) {
+            const b = document.createElement("button");
+            b.className = "sm-btn"; b.textContent = "+ RP folder";
+            b.onclick = () => quickCreateRootFolder("RP");
+            actions.appendChild(b);
+          }
+          hint.appendChild(actions);
         }
-        if (!hasRP) {
-          const b = document.createElement("button");
-          b.className = "sm-btn"; b.textContent = "+ RP folder";
-          b.onclick = () => quickCreateRootFolder("RP");
-          actions.appendChild(b);
-        }
-        hint.appendChild(actions);
-      }
-    } else {
-      // both folders exist — this is the "your addon is ready, what now?" moment.
-      // count real files (not folders) anywhere in the project to guess whether
-      // this looks like a brand-new, still-empty project. if the project already
-      // has real content, skip the hint entirely (but keep rendering the file
-      // list below no matter what — that's the part that was broken before).
-      const totalFiles = allFiles.filter(f => f.type === "file").length;
-      if (totalFiles === 0 && canEdit()) {
-        hint.innerHTML = `<b>your addon is ready.</b> mcbcode set up a <b>BP</b> (Behavior Pack) and <b>RP</b> (Resource Pack) for you — you don't need to understand every folder inside them yet. <b>next:</b> open the BP or RP folder and create your first file, or use the create button above to make a block or item.`;
       } else {
-        showHint = false;
+        const totalFiles = allFiles.filter(f => f.type === "file").length;
+        if (totalFiles === 0 && canEdit()) {
+          hint.innerHTML = `<b>your addon is ready.</b> mcbcode set up a <b>BP</b> (Behavior Pack) and <b>RP</b> (Resource Pack) for you. <b>next:</b> open either pack folder or use the create button above.`;
+        } else showHint = false;
       }
+    } else if (type === "texture_pack") {
+      hint.innerHTML = `<b>resource pack root.</b> the manifest, pack icon, textures, and other resource-pack folders live together here.`;
+    } else if (type === "script") {
+      hint.innerHTML = `<b>behavior pack root.</b> the manifest, pack icon, scripts folder, and other behavior-pack files live together here.`;
+    } else {
+      showHint = false;
     }
     if (showHint) list.appendChild(hint);
   }
@@ -1514,7 +1842,7 @@ document.getElementById("geojson-overlay")?.addEventListener("click", e => { if 
       }
 
       // root folder limit — give a friendly message before even hitting the server
-      if (newFileType === "folder" && isAtRoot()) {
+      if (newFileType === "folder" && isAtRoot() && project?.project_type === "addon") {
         const rootFolderCount = allFiles.filter(f => f.parent_id === null && f.type === "folder").length;
         if (rootFolderCount >= 2) {
           err.textContent = "";
@@ -1584,18 +1912,20 @@ async function handlePackIconUpload(e) {
   if (!file) return;
   if (file.type !== "image/png") { alert("only png files are allowed for pack_icon.png"); return; }
 
-  const bp = findRootFolder("BP");
-  const rp = findRootFolder("RP");
-  const targets = [bp, rp].filter(Boolean);
-  if (!targets.length) { alert("couldn't find your BP/RP folders."); return; }
-
+  const targets = packIconTargets();
+  if (!targets.length) { alert("couldn't find the pack root."); return; }
   const buf = await file.arrayBuffer();
 
   for (const folder of targets) {
-    const existing = allFiles.find(f => f.type === "file" && String(f.parent_id) === String(folder.id) && f.name.toLowerCase() === "pack_icon.png");
+    const parentId = folder.id ?? null;
+    const existing = findFileInFolder(parentId, "pack_icon.png");
     const params = new URLSearchParams({ project_code: shareCode });
     if (existing) params.set("file_id", existing.id);
-    else { params.set("new", "1"); params.set("name", "pack_icon.png"); params.set("parent_id", folder.id); }
+    else {
+      params.set("new", "1");
+      params.set("name", "pack_icon.png");
+      if (parentId !== null) params.set("parent_id", parentId);
+    }
 
     try {
       const res = await fetch(`${AUTH}/project/structure/save?${params.toString()}`, {
@@ -1605,14 +1935,10 @@ async function handlePackIconUpload(e) {
       });
       const d = await res.json();
       if (!res.ok) { alert(d.error || `failed to set pack_icon.png in ${folder.name}`); continue; }
-      if (!existing) {
-        allFiles.push({ id: d.file_id, project_id: project.id, parent_id: folder.id, name: "pack_icon.png", type: "file", save_id: null, updated_at: new Date().toISOString() });
-      } else {
-        existing.updated_at = new Date().toISOString();
-      }
+      if (!existing) allFiles.push({ id: d.file_id, project_id: project.id, parent_id: parentId, name: "pack_icon.png", type: "file", save_id: null, updated_at: new Date().toISOString() });
+      else existing.updated_at = new Date().toISOString();
     } catch { alert(`something went wrong uploading to ${folder.name}.`); }
   }
-
   updateStats();
   renderFileList();
 }
