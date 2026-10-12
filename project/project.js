@@ -417,9 +417,8 @@ function renderContributors() {
 function renderToolbar() {
   const toolbar = document.querySelector(".proj-header-actions");
   toolbar.innerHTML = "";
-  if (project?.project_type === "skinpack") return;
 
-  if (canEdit()) {
+  if (canEdit() && project?.project_type !== "skinpack") {
     // "+ Add Files" dropdown: Folder / File / Image / Structure
     const addWrap = document.createElement("div");
     addWrap.className = "share-wrap";
@@ -1443,7 +1442,7 @@ function renderSkinpackEditorContent() {
         <div class="skinpack-error" id="skinpack-error" role="status"></div>
       </section>
       <section class="skinpack-panel">
-        <div class="skinpack-topline"><div><h2>skins</h2><p class="skinpack-help" style="margin:6px 0 0">add a 64×64 or 64×32 png. the image is saved in the pack root.</p></div>
+        <div class="skinpack-topline"><div><h2>skins</h2><p class="skinpack-help" style="margin:6px 0 0">add a 64×64, legacy 64×32, or hd 128×128 png. the image is saved in the pack root.</p></div>
         ${editable ? `<div><button type="button" class="sm-btn" id="skinpack-add">add skin</button><input type="file" id="skinpack-image-input" accept=".png,image/png" hidden></div>` : ""}</div>
         <div class="skinpack-skins">${rows || `<div class="skinpack-empty">no skins yet. add a png to create the first one.</div>`}</div>
       </section>
@@ -1512,6 +1511,14 @@ function uniqueSkinLocalizationName(label) {
   return result;
 }
 
+async function readSkinPngDimensions(file) {
+  const header = new Uint8Array(await file.slice(0, 24).arrayBuffer());
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (header.length < 24 || !signature.every((byte, index) => header[index] === byte)) return null;
+  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+  return { width: view.getUint32(16), height: view.getUint32(20) };
+}
+
 async function handleSkinpackImageAdd(event) {
   const input = event.target;
   const file = input.files && input.files[0];
@@ -1527,6 +1534,12 @@ async function handleSkinpackImageAdd(event) {
   }
   if (file.size > 5 * 1024 * 1024) {
     error.textContent = "skin textures must be 5 mb or smaller.";
+    return;
+  }
+  const dimensions = await readSkinPngDimensions(file);
+  const acceptedDimensions = [[64, 64], [64, 32], [128, 128]];
+  if (!dimensions || !acceptedDimensions.some(([width, height]) => dimensions.width === width && dimensions.height === height)) {
+    error.textContent = "use a png sized 64×64, legacy 64×32, or hd 128×128.";
     return;
   }
   if (findFileInFolder(skinpackEditorState.rootId, file.name)) {
@@ -1584,8 +1597,7 @@ function renderFileList() {
     currentPath = [];
     const pathSegments = document.getElementById("path-segments");
     if (pathSegments) pathSegments.innerHTML = "";
-    const toolbar = document.querySelector(".proj-header-actions");
-    if (toolbar) toolbar.innerHTML = "";
+    renderToolbar();
     const rootUrl = buildPathUrl([]);
     if (location.pathname !== rootUrl) history.replaceState({ path: [] }, "", rootUrl);
     renderSkinpackEditor();
@@ -2167,7 +2179,8 @@ async function toggleWatch() {
         if (!res.ok) { alert("Failed to fetch project data."); return; }
         exportFileData = await res.json();
         const rootFiles = exportFileData.files.filter(f => f.parent_id === null && f.type === "file");
-        if (rootFiles.length > 0) {
+        const isFlatPack = ["texture_pack", "script", "skinpack"].includes(project?.project_type);
+        if (rootFiles.length > 0 && !isFlatPack) {
           document.getElementById("export-warn-list").innerHTML = rootFiles.map(f => `<li>${esc(f.name)}</li>`).join("");
           document.getElementById("export-warn-overlay").classList.add("open");
         } else { await doExport(); }
@@ -2190,7 +2203,7 @@ async function toggleWatch() {
       // beginner-friendly staged status text instead of a single unexplained
       // "Loading..." — lets people see what export is actually doing
       // (usability fix: unexplained export loading state)
-      btn.disabled = true; btn.textContent = "Packing BP/RP...";
+      btn.disabled = true; btn.textContent = "Preparing pack...";
       try {
         const files = exportFileData.files;
         const projectName = exportFileData.project_name.replace(/[^a-zA-Z0-9_\- ]/g, "").trim() || "project";
@@ -2234,7 +2247,7 @@ async function toggleWatch() {
           const zip = new JSZip();
           const onlyPack = hasBP ? rootFolders.find(f => f.name.toUpperCase() === "BP") : rootFolders.find(f => f.name.toUpperCase() === "RP");
           if (!onlyPack) {
-            files.filter(f => f.type === "file" && f.parent_id !== null).forEach(f => addFileToZip(zip, getRelativeParts(f, null).join("/"), f));
+            files.filter(f => f.type === "file").forEach(f => addFileToZip(zip, getRelativeParts(f, null).join("/"), f));
           } else {
             files.filter(f => f.type === "file" && isUnderFolder(f, onlyPack.id))
                  .forEach(f => addFileToZip(zip, getRelativeParts(f, onlyPack.id).join("/"), f));
