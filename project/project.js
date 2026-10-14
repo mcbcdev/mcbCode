@@ -454,10 +454,7 @@ function renderToolbar() {
     dripstoneBtn.className = "sm-btn";
     dripstoneBtn.textContent = "Ask DripstoneAI";
     dripstoneBtn.title = "ask DripstoneAI about this project";
-    dripstoneBtn.onclick = () => {
-      const url = `https://mcbcode.com/dripstone?project=${encodeURIComponent(shareCode)}`;
-      window.location.assign(url);
-    };
+    dripstoneBtn.onclick = () => toggleDripPanel();
     toolbar.appendChild(dripstoneBtn);
 
     const createWrap = document.createElement("div");
@@ -3399,3 +3396,307 @@ async function mfSave() {
 }
 
 document.getElementById("manifest-editor-overlay")?.addEventListener("click", e => { if (e.target === e.currentTarget) closeModal("manifest-editor-overlay"); });
+
+// ================= INLINE EDITOR FIXES =================
+// these replace the older versions of renderHighlight (later definitions win)
+let ieHlToken = 0;
+
+function renderHighlight() {
+  if (!ieCurrentFile) return;
+  const ta = document.getElementById("ie-textarea");
+  const out = document.getElementById("ie-highlight-code");
+  const hl = document.getElementById("ie-highlight");
+  const code = ta.value;
+  const ext = getExt(ieCurrentFile.name);
+
+  if (ext === "mcfunction") {
+    if (!out.innerHTML) out.innerHTML = highlightMcfunctionFallback(code) + "\n";
+    if (mcHighlighterReady && typeof window.applyHighlighting === "function") {
+      const myToken = ++ieHlToken;
+      window.applyHighlighting(code).then(html => {
+        if (myToken !== ieHlToken) return;
+        out.innerHTML = html + "\n"; // the trailing newline keeps the last line aligned
+        hl.scrollTop = ta.scrollTop;
+        hl.scrollLeft = ta.scrollLeft;
+      }).catch(() => {
+        if (myToken === ieHlToken) out.innerHTML = highlightMcfunctionFallback(code) + "\n";
+      });
+      return;
+    }
+    loadMcfunctionHighlighter();
+  } else {
+    out.innerHTML = highlightForExt(ext)(code) + "\n";
+  }
+  hl.scrollTop = ta.scrollTop;
+  hl.scrollLeft = ta.scrollLeft;
+}
+
+// tab key types 4 spaces instead of jumping out of the editor, ctrl+s saves
+document.getElementById("ie-textarea")?.addEventListener("keydown", e => {
+  if (!ieCanEditFile) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    saveInlineFile();
+    return;
+  }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    document.execCommand("insertText", false, "    ");
+  }
+});
+
+// ================= DRIPSTONEAI SIDE PANEL =================
+const DRIP = "https://dripstone-ai.mcbcode.com";
+let dripOpen = false;
+let dripBuilt = false;
+let dripBusy = false;
+let dripChatId = null;
+let dripHistory = [];
+let dripChecked = false;
+
+function dripBuild() {
+  if (dripBuilt) return;
+  dripBuilt = true;
+
+  const css = document.createElement("style");
+  css.textContent = `
+    #drip-panel{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100vw;background:#141618;border-left:1px solid #343438;display:none;flex-direction:column;z-index:40;font-size:13px;color:#ccc}
+    body.drip-open #drip-panel{display:flex}
+    body.drip-open{margin-right:440px}
+    @media(max-width:800px){body.drip-open{margin-right:0}#drip-panel{width:100vw}}
+    .drip-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #343438}
+    .drip-title{font-weight:bold;color:#05ee93}
+    .drip-proj{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666;font-size:11px}
+    .drip-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .drip-msg{padding:8px 10px;border:1px solid #343438;line-height:1.5;word-break:break-word;white-space:pre-wrap}
+    .drip-msg.user{background:#1a1c1f;align-self:flex-end;max-width:90%}
+    .drip-msg.ai{background:#17191b}
+    .drip-msg.err{color:#ff7777;border-color:#3a1414}
+    .drip-msg.prop{border-color:#05ee93;background:#0f1a16;white-space:normal}
+    .drip-msg pre{background:#0e0f10;padding:8px;overflow-x:auto;margin:6px 0;white-space:pre;font-size:12px}
+    .drip-msg code{font-family:monospace;color:#9bd}
+    .drip-talk{font-size:11px;color:#777;font-style:italic}
+    .drip-op{margin:8px 0;padding-top:6px;border-top:1px solid #1f3a30;word-break:break-all}
+    .drip-warn{color:#ff9900;font-size:11px;margin-top:2px}
+    .drip-actions{display:flex;gap:8px;margin-top:10px}
+    .drip-pstatus{font-size:11px;margin-top:6px;color:#05ee93}
+    .drip-status{padding:0 12px;min-height:16px;font-size:11px;color:#05ee93}
+    .drip-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #343438}
+    .drip-input textarea{flex:1;resize:none;background:#1a1c1f;border:1px solid #343438;color:#ddd;padding:8px;font:inherit}
+  `;
+  document.head.appendChild(css);
+
+  const panel = document.createElement("div");
+  panel.id = "drip-panel";
+  panel.innerHTML = `
+    <div class="drip-head">
+      <span class="drip-title">DripstoneAI</span>
+      <span class="drip-proj" id="drip-proj"></span>
+      <button class="sm-btn" id="drip-new">new chat</button>
+      <button class="sm-btn" id="drip-close">close</button>
+    </div>
+    <div class="drip-msgs" id="drip-msgs"></div>
+    <div class="drip-status" id="drip-status"></div>
+    <div class="drip-input">
+      <textarea id="drip-text" rows="2" placeholder="ask dripstone to build or fix something in this project..."></textarea>
+      <button class="primary-btn" id="drip-send">Send</button>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  document.getElementById("drip-close").onclick = () => toggleDripPanel();
+  document.getElementById("drip-new").onclick = () => { if (!dripBusy) dripReset(); };
+  document.getElementById("drip-send").onclick = dripSend;
+  document.getElementById("drip-text").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); dripSend(); }
+  });
+  dripReset();
+}
+
+function dripReset() {
+  dripChatId = null;
+  dripHistory = [];
+  document.getElementById("drip-msgs").innerHTML = "";
+  dripAdd("ai", "hi! i can read and edit this project. every change shows up here first and only happens after you press Approve.");
+}
+
+function toggleDripPanel() {
+  dripBuild();
+  dripOpen = !dripOpen;
+  document.body.classList.toggle("drip-open", dripOpen);
+  if (!dripOpen) return;
+  document.getElementById("drip-proj").textContent = project ? project.name : "";
+  document.getElementById("drip-text").focus();
+  if (!dripChecked) { dripChecked = true; dripCheckConnection(); }
+}
+
+async function dripCheckConnection() {
+  try {
+    const res = await fetch(DRIP + "/status", { credentials: "include" });
+    const d = await res.json();
+    if (!d.connected || !d.can_write) {
+      dripAdd("err", 'your projects are not connected to dripstone yet (or write access is off). open <a href="https://mcbcode.com/dripstone" target="_blank" style="color:#05ee93;">mcbcode.com/dripstone</a>, press connect projects once, then come back here.');
+    }
+  } catch {}
+}
+
+function dripAdd(cls, html) {
+  const box = document.getElementById("drip-msgs");
+  const el = document.createElement("div");
+  el.className = "drip-msg " + cls;
+  el.innerHTML = html;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+// tiny markdown: code fences, inline code, bold
+function dripRender(text) {
+  const FENCE = "`".repeat(3);
+  return String(text).split(FENCE).map((part, i) => {
+    if (i % 2) return "<pre>" + esc(part.replace(/^[a-zA-Z0-9_+-]*\n/, "").replace(/\n$/, "")) + "</pre>";
+    return esc(part).replace(/`([^`\n]+)`/g, "<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  }).join("");
+}
+
+async function dripPost(path, body) {
+  const res = await fetch(DRIP + path, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  let d = {};
+  try { d = await res.json(); } catch {}
+  if (!res.ok && !d.error) d.error = "request failed (" + res.status + ")";
+  return d;
+}
+
+async function dripSend() {
+  if (dripBusy) return;
+  const ta = document.getElementById("drip-text");
+  const text = ta.value.trim();
+  if (!text) return;
+  ta.value = "";
+  dripBusy = true;
+  document.getElementById("drip-send").disabled = true;
+  dripAdd("user", esc(text));
+  dripHistory.push({ role: "user", content: text });
+
+  // saved chats: once we have a chat id, the worker remembers the history itself
+  const body = {
+    messages: dripChatId ? [{ role: "user", content: text }] : dripHistory.slice(-20),
+    project_codes: isLoggedIn() ? [shareCode] : []
+  };
+  if (dripChatId) body.chat_id = dripChatId;
+
+  try {
+    const res = await fetch(DRIP + "/stream", {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok || !res.body) throw new Error("couldn't reach dripstone (status " + res.status + ")");
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) !== -1) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        dripHandleEvent(chunk);
+      }
+    }
+  } catch (e) {
+    dripAdd("err", esc(e.message || "something went wrong."));
+  }
+  document.getElementById("drip-status").textContent = "";
+  document.getElementById("drip-send").disabled = false;
+  dripBusy = false;
+}
+
+function dripHandleEvent(chunk) {
+  let ev = "message";
+  let data = "";
+  chunk.split("\n").forEach(line => {
+    if (line.startsWith("event:")) ev = line.slice(6).trim();
+    else if (line.startsWith("data:")) data += line.slice(5).trim();
+  });
+  let d;
+  try { d = JSON.parse(data); } catch { return; }
+  const status = document.getElementById("drip-status");
+
+  if (ev === "progress") {
+    if (d.type === "activity") status.textContent = d.label + "...";
+    else if (d.type === "talk") dripAdd("ai drip-talk", esc(d.text));
+  } else if (ev === "done") {
+    if (d.chat_id) dripChatId = d.chat_id;
+    if (d.reply) {
+      dripAdd("ai", dripRender(d.reply));
+      dripHistory.push({ role: "assistant", content: d.reply });
+    }
+    if (d.proposal) dripProposal(d.proposal);
+  } else if (ev === "error") {
+    dripAdd("err", esc(d.error || "something went wrong."));
+  }
+}
+
+function dripProposal(p) {
+  const rows = (p.ops || []).map(o => {
+    const label = o.op === "create_folder" ? "new folder" : o.op;
+    const warn = o.warning ? `<div class="drip-warn">${esc(o.warning)}</div>` : "";
+    let view = "";
+    if (typeof o.old === "string" && o.old && o.op === "edit") view += `<details><summary>before</summary><pre>${esc(o.old.slice(0, 4000))}</pre></details>`;
+    if (typeof o.new === "string" && o.new) view += `<details><summary>${o.op === "edit" ? "after" : "contents"}</summary><pre>${esc(o.new.slice(0, 4000))}</pre></details>`;
+    return `<div class="drip-op"><b>${esc(label)}</b> ${esc(o.path)}${o.to ? " -> " + esc(o.to) : ""}${warn}${view}</div>`;
+  }).join("");
+
+  const card = dripAdd("prop", `
+    <div><b>proposed changes</b></div>
+    ${p.change_summary ? `<div class="drip-talk">${esc(p.change_summary)}</div>` : ""}
+    ${rows}
+    <div class="drip-actions">
+      <button class="primary-btn" data-a="ok">Approve</button>
+      <button class="sm-btn" data-a="no">Reject</button>
+    </div>
+    <div class="drip-pstatus"></div>
+  `);
+  const pstatus = card.querySelector(".drip-pstatus");
+  const okBtn = card.querySelector('[data-a="ok"]');
+  const noBtn = card.querySelector('[data-a="no"]');
+
+  okBtn.onclick = async () => {
+    okBtn.disabled = true; noBtn.disabled = true;
+    pstatus.textContent = "applying...";
+    const d = await dripPost("/approve", { proposal: p.token, chat_id: dripChatId });
+    if (d.error) { pstatus.style.color = "#ff7777"; pstatus.textContent = d.error; return; }
+    if (d.ok) pstatus.textContent = "applied!";
+    else {
+      pstatus.style.color = "#ff9900";
+      pstatus.textContent = "stopped at " + d.failed.op + " " + d.failed.path + ": " + d.failed.message;
+    }
+    await refreshProjectFiles();
+  };
+
+  noBtn.onclick = async () => {
+    okBtn.disabled = true; noBtn.disabled = true;
+    pstatus.textContent = "rejected. nothing was changed.";
+    try { await dripPost("/proposal-outcome", { decision: "rejected", proposal: p.token, chat_id: dripChatId }); } catch {}
+  };
+}
+
+// reloads the file list from the server so new/edited files show up on the left right away
+async function refreshProjectFiles() {
+  try {
+    const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+    if (!r.ok) return;
+    const d = await r.json();
+    allFiles = d.files || [];
+    currentPath = resolveFolderNames(currentPath.map(c => c.name));
+    updateStats();
+    renderFileList();
+  } catch {}
+}
