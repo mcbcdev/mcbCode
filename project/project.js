@@ -1228,9 +1228,12 @@ async function creatorSave() {
       const preview = document.createElement("div");
       preview.className = "image-preview-row";
 
+      const editUrl = `https://mcbcode.com/pixel?project=${encodeURIComponent(shareCode)}&file=${file.id}&back=${encodeURIComponent(location.pathname)}`;
+
       preview.innerHTML = `
-        <div class="image-preview-inner">
-          <img src="${AUTH}/project/asset?file_id=${file.id}" alt="${esc(file.name)}">
+        <div class="image-preview-inner" style="flex-direction:column; gap:10px;">
+          <img src="${AUTH}/project/asset?file_id=${file.id}&v=${Date.now()}" alt="${esc(file.name)}">
+          ${canEdit() ? `<a class="primary-btn" href="${editUrl}" style="display:inline-block;">Edit in Pixel Editor</a>` : ""}
         </div>
       `;
 
