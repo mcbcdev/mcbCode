@@ -760,6 +760,8 @@
     <button class="tb-btn" onclick="clearCanvas()">Clear</button>
   </div>
   <div class="spacer"></div>
+  <button class="tb-btn" id="bridge-back-btn" onclick="backToProject()" style="display:none;">Back to Project</button>
+  <button class="tb-btn" id="bridge-save-btn" onclick="saveToProject()" style="display:none;">Save to Project</button>
   <button class="tb-btn" onclick="triggerImport()">Import Image</button>
   <button class="tb-btn" onclick="openDimModal()">Resize</button>
   <button class="tb-btn" onclick="openDownloadModal()">Download</button>
@@ -1021,8 +1023,8 @@ function newTabState(name, w, h){
     pixels: new Array((w||16)*(h||16)).fill(null),
     undoStack: [], redoStack: [],
     overlayPixels: new Array((w||16)*(h||16)).fill(null),
-    overlayActive: false, preOverlayPixels: null
-  };
+    overlayActive: false, preOverlayPixels: null,
+    source: null, dirty: false  };
 }
 
 // pull the live globals into the active tab object (call before switching away)
@@ -1043,6 +1045,7 @@ function applyTabState(t){
   document.getElementById('info-w').textContent=W+'px';
   document.getElementById('info-h').textContent=H+'px';
   updateOverlayIndicator();
+  updateBridgeButtons();
   fitToScreen();
   render();
 }
@@ -1143,8 +1146,8 @@ function saveTabs(){
     captureActiveTabState();
     const data = { activeTabId, tabIdCounter, tabs: tabs.map(t=>({
       id:t.id, name:t.name, W:t.W, H:t.H,
-      pixels:t.pixels, overlayPixels:t.overlayPixels, overlayActive:t.overlayActive
-      // undo/redo history intentionally NOT persisted (gets huge) — pixels themselves are saved
+      pixels:t.pixels, overlayPixels:t.overlayPixels, overlayActive:t.overlayActive,
+      source:t.source || null, dirty:!!t.dirty      // undo/redo history intentionally NOT persisted (gets huge) — pixels themselves are saved
     })) };
     localStorage.setItem(TABS_KEY, JSON.stringify(data));
   }catch(e){}
@@ -1160,8 +1163,8 @@ function loadTabs(){
       id:t.id, name:t.name, W:t.W, H:t.H,
       pixels:t.pixels, undoStack:[], redoStack:[],
       overlayPixels:t.overlayPixels || new Array(t.W*t.H).fill(null),
-      overlayActive: !!t.overlayActive, preOverlayPixels:null
-    }));
+      overlayActive: !!t.overlayActive, preOverlayPixels:null,
+      source: t.source || null, dirty: !!t.dirty    }));
     activeTabId = tabs.find(t=>t.id===data.activeTabId) ? data.activeTabId : tabs[0].id;
     tabIdCounter = data.tabIdCounter || (tabs.length+1);
     return true;
@@ -1201,13 +1204,19 @@ function initCanvas(){
 
 // UNDO/REDO
 // stack entries: { pixels, overlayPixels, overlayActive }
+function markDirty(){
+  const t = tabs.find(t => t.id === activeTabId);
+  if(t) t.dirty = true;
+}
 function pushUndo(){
+  markDirty();
   undoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
   if(undoStack.length>80) undoStack.shift();
   redoStack=[];
 }
 function undo(){
   if(!undoStack.length) return;
+  markDirty();
   redoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
   const state=undoStack.pop();
   pixels=state.pixels;
@@ -1218,6 +1227,7 @@ function undo(){
 }
 function redo(){
   if(!redoStack.length) return;
+  markDirty();
   undoStack.push({ pixels: pixels.slice(), overlayPixels: overlayPixels.slice(), overlayActive: overlayActive });
   const state=redoStack.pop();
   pixels=state.pixels;
@@ -1226,7 +1236,6 @@ function redo(){
   updateOverlayIndicator();
   render();
 }
-
 // RENDER
 function render(){
   ctx.clearRect(0,0,W,H);
@@ -2072,11 +2081,140 @@ paletteBroadcast.onmessage = e => {
   }
 };
 
+// ============================================================
+// PROJECT BRIDGE — edit a png from a project, save it back to r2
+// url looks like: /pixel?project=SHARECODE&file=FILEID&back=/project/SHARECODE/folder
+// ============================================================
+const AUTH = "https://auth.mcbcode.com";
+const bridgeParams  = new URLSearchParams(location.search);
+const bridgeProject = bridgeParams.get('project');
+const bridgeFile    = bridgeParams.get('file');
+
+// only allow going back to project pages on this site, nothing else
+function safeBackUrl(){
+  const b = bridgeParams.get('back') || '';
+  if(b.startsWith('/project/') || b.startsWith('/s/')) return b;
+  return '/project/' + encodeURIComponent(bridgeProject) + '/';
+}
+
+function updateBridgeButtons(){
+  const t = tabs.find(t => t.id === activeTabId);
+  const on = !!(t && t.source);
+  document.getElementById('bridge-back-btn').style.display = on ? '' : 'none';
+  document.getElementById('bridge-save-btn').style.display = on ? '' : 'none';
+}
+
+function imageDataToPixels(imgData, w, h){
+  const out = new Array(w * h).fill(null);
+  for(let i = 0; i < w * h; i++){
+    const r = imgData.data[i*4], g = imgData.data[i*4+1], b = imgData.data[i*4+2], a = imgData.data[i*4+3];
+    if(a === 0) out[i] = null;
+    else if(a < 255) out[i] = rgbToHex(r,g,b) + alphaHex(a/255);
+    else out[i] = rgbToHex(r,g,b);
+  }
+  return out;
+}
+
+async function loadBridgeFromUrl(){
+  if(!bridgeProject || !bridgeFile) return;
+
+  // already have a tab for this exact file? just switch to it (keeps unsaved work)
+  const existing = tabs.find(t => t.source && String(t.source.file) === String(bridgeFile) && t.source.project === bridgeProject);
+  if(existing){ switchTab(existing.id); return; }
+
+  showToast('loading image from project...');
+  try{
+    const [meRes, projRes] = await Promise.all([
+      fetch(AUTH + '/me', { credentials: 'include' }),
+      fetch(AUTH + '/project?code=' + encodeURIComponent(bridgeProject), { credentials: 'include' })
+    ]);
+    if(!meRes.ok) throw new Error('log in at mcbcode.com first');
+    if(!projRes.ok) throw new Error('project not found');
+    const me = await meRes.json();
+    const pd = await projRes.json();
+
+    const allowed = me.id === pd.project.owner_id || pd.is_collaborator;
+    if(!allowed) throw new Error('only the owner or collaborators can edit this image');
+
+    const f = (pd.files || []).find(x => String(x.id) === String(bridgeFile));
+    if(!f || f.type !== 'file' || !f.name.toLowerCase().endsWith('.png')) throw new Error('that file is not a png in this project');
+
+    const imgRes = await fetch(AUTH + '/project/asset?file_id=' + encodeURIComponent(bridgeFile) + '&t=' + Date.now(), { credentials: 'include', cache: 'no-store' });
+    if(!imgRes.ok) throw new Error('could not load the image');
+    const bitmap = await createImageBitmap(await imgRes.blob());
+    if(bitmap.width > 512 || bitmap.height > 512) throw new Error('image is bigger than 512x512, too large for the editor');
+
+    const off = document.createElement('canvas');
+    off.width = bitmap.width; off.height = bitmap.height;
+    const offCtx = off.getContext('2d');
+    offCtx.drawImage(bitmap, 0, 0);
+    const imgData = offCtx.getImageData(0, 0, bitmap.width, bitmap.height);
+
+    captureActiveTabState();
+    // if the only tab is the untouched blank one, replace it
+    if(tabs.length === 1 && !tabs[0].source && !tabs[0].pixels.some(p => p != null)) tabs = [];
+
+    const t = newTabState(f.name.slice(0, 30), bitmap.width, bitmap.height);
+    t.pixels = imageDataToPixels(imgData, bitmap.width, bitmap.height);
+    t.source = { project: bridgeProject, file: String(bridgeFile), name: f.name, back: safeBackUrl() };
+    t.dirty = false;
+    tabs.push(t);
+    activeTabId = t.id;
+    applyTabState(t);
+    renderTabStrip();
+    saveTabs();
+    showToast('loaded ' + f.name);
+  }catch(e){
+    showToast(e.message || 'could not load image');
+  }
+}
+
+async function saveToProject(){
+  const t = tabs.find(t => t.id === activeTabId);
+  if(!t || !t.source) return;
+
+  // bake any pending overlay brush strokes in first so they get saved
+  if(overlayActive){ pushUndo(); commitOverlay(); render(); }
+
+  const btn = document.getElementById('bridge-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try{
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if(!blob) throw new Error('could not export the image');
+    const params = new URLSearchParams({ project_code: t.source.project, file_id: t.source.file });
+    const res = await fetch(AUTH + '/project/structure/save?' + params.toString(), {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: blob
+    });
+    const d = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(d.error || 'save failed');
+    t.dirty = false;
+    saveTabs();
+    showToast('saved to project');
+  }catch(e){
+    showToast(e.message || 'save failed');
+  }
+  btn.disabled = false; btn.textContent = 'Save to Project';
+}
+
+async function backToProject(){
+  const t = tabs.find(t => t.id === activeTabId);
+  if(!t || !t.source) return;
+  if(t.dirty){
+    const ok = await customConfirm('you have unsaved changes. your edits stay in this tab, but they are not saved to the project yet.', { title: 'unsaved changes', okText: 'go back anyway' });
+    if(!ok) return;
+  }
+  saveTabs();
+  location.href = t.source.back;
+}
+
 // BOOT
 loadPalette();
 applyLayoutMode();
 initTabs();
 setColor('#05ee93');
+loadBridgeFromUrl();
 </script>
 
 <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
