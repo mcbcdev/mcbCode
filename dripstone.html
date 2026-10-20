@@ -977,6 +977,21 @@
         font-size: 0.78rem;
         cursor: pointer;
     }
+    
+        .model-label {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 6px;
+        background: #0c0c0c;
+        color: var(--text-dim);
+        font-family: 'mcfont', sans-serif;
+        font-size: 0.78rem;
+    }
+    
     .projects-open-btn:hover, .projects-open-btn:focus-visible { border-color: var(--accent); color: var(--text); outline: none; }
     .projects-open-btn span { color: var(--accent); font-family: 'mcfontb', sans-serif; }
     .projects-dialog {
@@ -1248,6 +1263,33 @@
         }
     }
 
+.model-popup {
+  position: absolute;
+  top: calc(-10px);
+  z-index: 10;
+  width: 220px;
+  padding: 12px;
+  font-size: 18px;
+  border-radius: 8px;
+  background: #00000080;
+  color: #bebebe;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.model-popup a {
+    text-decoration: none;
+}
+.model-wrap:hover .model-popup,
+.model-wrap:focus-within .model-popup,
+.model-wrap.is-open .model-popup {
+  opacity: 1;
+  visibility: visible;
+}
+
+
   </style>
 </head>
 <body>
@@ -1256,7 +1298,7 @@
 
 <div class="app" id="app">
     <div class="mobile-bar">
-        <div class="mobile-title">Dripstone<span>AI</span></div>
+        <div class="mobile-title">dripstone<span>AI</span></div>
         <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
                 <line x1="4" y1="7" x2="20" y2="7"></line>
@@ -1289,13 +1331,31 @@
 
             <div class="chat-controls">
                 <div class="extra-tools">
-                    <label for="fileInput" title="Attach file">
+                    <label for="fileInput" title="Attach file" style="display: none;">
                         <img src="https://mcbcode.com/img/icons/file.png" class="file-upload-icon" alt="Attach file">
                     </label>
                     <input type="file" id="fileInput" style="display: none;" multiple onchange="handleFileSelect(event)">
                     <button class="projects-open-btn" id="projectsOpenBtn" type="button" aria-haspopup="dialog" aria-controls="projectsDialog">
-                        Projects <span id="projectsSelectedCount">0</span>
+                        projects <span id="projectsSelectedCount">0</span>
                     </button>
+
+
+                    <div class="model-wrap">
+                      <button class="model-label" type="button" aria-expanded="false">
+                        <img src="https://mcbcode.com/img/icons/terracotta.png" alt="" style="width: 20px">
+                        terracotta 2.2
+                      </button>
+
+                      <div class="model-popup">
+                        uses sources from<br>
+                        - <a href="https://wiki.bedrock.dev" target="_blank"><img src="https://mcbcode.com/img/icons/bedrock_wiki.png" style="width: 18px;"> bedrock wiki</a>
+                        <br>
+                        - <a href="https://learn.microsoft.com" target="_blank"><img src="https://mcbcode.com/img/icons/microsoft_symbol.png" style="width: 18px;"> MS Learn</a> 
+                        <br><img src="https://mcbcode.com/img/icons/warning.png" style="width: 18px;"><span style="color: #ffcc00"> still in beta</span>
+                      </div>
+                    </div>
+
+
                 </div>
                 <button class="send-btn" id="sendBtn">Send</button>
             </div>
@@ -1431,6 +1491,23 @@
     const newChatBtn = document.getElementById('newChatBtn');
     const savedChatList = document.getElementById('savedChatList');
     const chatsEmpty = document.getElementById('chatsEmpty');
+
+document.querySelectorAll(".model-wrap").forEach((wrap) => {
+  const button = wrap.querySelector(".model-label");
+
+  button.addEventListener("click", () => {
+    const isOpen = wrap.classList.toggle("is-open");
+    button.setAttribute("aria-expanded", isOpen);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!wrap.contains(event.target)) {
+      wrap.classList.remove("is-open");
+      button.setAttribute("aria-expanded", "false");
+    }
+  });
+});
+
 
     // ---- sidebar drawer (phones) ----
     function openSidebar() {
@@ -2197,7 +2274,7 @@
         return bubble;
     }
 
-    const activityLabels = new Set(['thinking', 'checking the wiki', 'searching your project', 'editing files']);
+    const activityLabels = new Set(['thinking', 'checking resources', 'searching your project', 'editing files']);
 
     function splitStoredActivity(value) {
         const content = String(value || '');
