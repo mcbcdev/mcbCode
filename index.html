@@ -163,54 +163,72 @@
       color: var(--bg-color);
     }
 
-    /* --- Hero --- */
+    /* --- Title-screen-inspired hero --- */
+    @keyframes splashPulse {
+      from { transform: rotate(-16deg) scale(0.96); }
+      to { transform: rotate(-16deg) scale(1.04); }
+    }
+
     .hero-wrapper {
       position: relative;
       width: 100%;
+      overflow: hidden;
       background-image:
-        linear-gradient(180deg, rgba(12, 12, 12, 0.5) 40%, rgba(12, 12, 12, 1) 100%),
+        radial-gradient(ellipse at center, rgba(12, 12, 12, 0.08) 0%, rgba(12, 12, 12, 0.5) 78%),
+        linear-gradient(180deg, rgba(12, 12, 12, 0.28) 0%, rgba(12, 12, 12, 0.2) 48%, rgba(12, 12, 12, 1) 100%),
         url('https://mcbcode.com/img/mc/end_city_one.png');
       background-size: cover;
-      background-position: center top;
+      background-position: center;
       background-repeat: no-repeat;
     }
 
     .hero-container {
-      padding: 10vh 5% 12vh 5%;
+      min-height: 100svh;
+      padding: 150px 5% 78px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       position: relative;
     }
 
-    /* floating little block icons around the hero, purely decorative */
-    .float-deco {
-      position: absolute;
-      width: 34px;
-      height: 34px;
-      image-rendering: pixelated;
-      opacity: 0.85;
-      animation: floatBlock 6s ease-in-out infinite;
-      pointer-events: none;
+    .hero-title-stack {
+      position: relative;
+      display: inline-block;
+      margin: 0 0 28px;
+      padding: 0 18px 14px;
     }
-    .float-deco.d1 { top: 14%; left: 8%; animation-delay: 0s; }
-    .float-deco.d2 { top: 62%; right: 10%; animation-delay: 1.5s; width: 26px; height: 26px; }
-    .float-deco.d3 { top: 30%; right: 20%; animation-delay: 3s; width: 22px; height: 22px; }
 
     #tagline {
-      font-size: clamp(2.2rem, 5.5vw, 4rem);
+      margin: 0;
+      color: #fff;
       font-family: 'mcfontb', sans-serif;
-      background: linear-gradient(90deg, #ffffff, var(--accent-color), #ffffff);
-      background-size: 200% auto;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: gradientBG 8s ease infinite;
-      margin-bottom: 24px;
+      font-size: clamp(4.5rem, 12vw, 10rem);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      white-space: nowrap;
+      text-shadow: 10px 10px 0 #283428, 0 12px 24px rgba(0, 0, 0, 0.85);
+    }
+
+    .wordmark-code { color: var(--accent-color); font-family: mcfontb;}
+
+    .hero-splash {
+      position: absolute;
+      right: -10%;
+      bottom: 12%;
+      z-index: 1;
+      width: max-content;
+      max-width: 78vw;
+      margin: 0;
+      color: #fff04a;
+      font-family: 'mcfont', sans-serif;
+      font-size: clamp(1rem, 2vw, 1.55rem);
       line-height: 1.2;
-      max-width: 980px;
-      text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      text-shadow: 3px 3px 0 #8a5b08;
+      transform-origin: center;
+      animation: splashPulse 0.25s ease-in-out infinite alternate;
+      pointer-events: none;
     }
 
     .hero-subtext {
@@ -218,9 +236,36 @@
       font-family: 'mcfont', sans-serif;
       max-width: 780px;
       line-height: 1.7;
-      margin-bottom: 40px;
+      margin: 0 0 30px;
       color: #e0e0e0;
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    .hero-utility-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .hero-github { margin-top: 26px; }
+
+    @media (max-width: 600px) {
+      .hero-container { min-height: 100svh; padding: 120px 6% 60px; }
+      .hero-title-stack { padding: 0 4px 20px; margin-bottom: 22px; }
+      #tagline { font-size: clamp(3.5rem, 16vw, 5.5rem); }
+      .hero-splash { right: 0; bottom: 0; font-size: 1rem; }
+      .hero-subtext { font-size: 1rem; margin-bottom: 24px; }
+      .hero-buttons { flex-direction: column; width: 100%; gap: 12px; }
+      .hero-buttons button, .hero-buttons .btn { width: 100%; }
+      .hero-utility-buttons { width: 100%; flex-direction: column; gap: 12px; }
+      .hero-utility-buttons .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-container { animation: none; }
+      .hero-splash { animation: none; opacity: 1; transform: rotate(-8deg) scale(1); }
     }
 
     .hero-buttons {
@@ -688,9 +733,6 @@
     }
 
     @media (max-width: 600px) {
-      #tagline { font-size: 2.1rem; }
-      .hero-buttons { flex-direction: column; width: 100%; }
-      .hero-buttons button, .hero-buttons .btn { width: 100%; }
       .footer-bottom { flex-direction: column; text-align: center; }
     }
 
@@ -709,24 +751,16 @@
 </head>
 <body>
 
-  <!-- Main Hero Section with Background -->
+  <!-- Main Hero Section with a Minecraft title-screen-inspired wordmark -->
   <div class="hero-wrapper">
-    <main class="hero-container">
+    <main class="hero-container" aria-labelledby="tagline">
 
-      <div style="margin-top: 6%"></div>
-
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        built for bedrock, not java
+      <div class="hero-title-stack">
+        <h1 id="tagline">mcb<span class="wordmark-code">Code</span></h1>
+        <p class="hero-splash" id="hero-splash" aria-live="off">build bedrock addons!</p>
       </div>
 
-      <h1 id="tagline">build bedrock addons without starting from <span style="color: #ffffff; font-family: mcfontb">zero</span>.</h1>
-
-
-      
-    <h2 style="color: #ff0000; background-color: #ff000080; padding: 16px; border-radius: 18px; display: none;">mcbCode is DOWN until 7:00pm EST</h2>
-
-
+      <h2 style="color: #ff0000; background-color: #ff000080; padding: 16px; border-radius: 18px; display: none;">mcbCode is DOWN until 7:00pm EST</h2>
 
       <p class="hero-subtext">
         the fast, lightweight web editor built specifically for minecraft bedrock creators. craft manifests, write commands, and paint textures — all in your browser, no setup required.
@@ -736,20 +770,20 @@
         <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">get started</button>
         <button class="btn" onclick="window.location.href='https://mcbcode.com/dashboard'">go to dashboard</button>
       </div>
-      <br>
-      <div style="display: flex; gap: 16px;">
+
+      <div class="hero-utility-buttons">
         <button class="btn" onclick="window.location.href='https://mcbcode.com/download'" style="border-color: #d138d9; color: #d138d9; background-color: #d138d959;">
           android app
-          <p style="line-height 0.1; margin-bottom: 0;">download now! <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
+          <p style="line-height: 0.1; margin-bottom: 0;">download now! <img src="https://mcbcode.com/img/icons/link.png" alt="" style="height: 12px;"></p>
         </button>
         <button class="btn" onclick="window.location.href='https://studio.mcbcode.com'" style="border-color: #8338d9; color: #8338d9; background-color: #8338d959;">
           studio.mcbc
-          <p style="line-height 0.1; margin-bottom: 0;">[beta] open <img src="https://mcbcode.com/img/icons/link.png" style="height: 12px;"></p>
+          <p style="line-height: 0.1; margin-bottom: 0;">[beta] open <img src="https://mcbcode.com/img/icons/link.png" alt="" style="height: 12px;"></p>
         </button>
       </div>
-      <br><br><br><br><br>
-              <button class="btn" id="sogh" onclick="window.location.href='https://github.com/mcbcdev/mcbcode'"><img src="https://mcbcode.com/img/icons/github_symbol.svg" style="height: 15px;"> Star us on GitHub</button>
-    </main>
+
+      <button class="btn hero-github" id="sogh" onclick="window.location.href='https://github.com/mcbcdev/mcbcode'"><img src="https://mcbcode.com/img/icons/github_symbol.svg" alt="" style="height: 15px;"> star us on github</button>
+     </main>
   </div>
 
   <!-- Interactive Suite Launcher / Editors Matrix -->
@@ -913,13 +947,14 @@
 
   </section>
   <br><br><br>
-
+</div>
   <!-- Structured Footer -->
   <footer>
     <div class="footer-grid">
       <div class="footer-col">
         <h4>mcbCode</h4>
         <p style="font-size: 0.85rem; line-height: 1.5;">the web-first development workspace tailored specifically for bedrock creators.</p>
+    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('support us!', '#00b2ff80', 'X8X51J5WEA');kofiwidget2.draw();</script>
       </div>
       <div class="footer-col">
         <h4>tools</h4>
@@ -1150,8 +1185,9 @@
         <a href="https://mcbcode.com/search">search</a>
         <a href="https://mcbcode.com/explore" style="color: #00b2ff !important; background-color: #00b2ff1a;">explore</a>
         <a href="https://mcbcode.com/download">download</a>
-        <a href="https://mcbcode.com/dripstone">dripstoneAI</a>
-        <a href="https://status.mcbcode.com">status</a>
+        <a href="https://mcbcode.com/dripstone" style="color: #05ee93 !important; background-color: #05ee931a;">dripstoneAI</a>
+        <a href="https://status.mcbcode.com" style="color: #ff0000 !important; background-color: #ff00001a;">status</a>
+    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('support us!', '#871e77', 'X8X51J5WEA');kofiwidget2.draw();</script>
       </div>
     </div>
   </div>
@@ -1173,6 +1209,7 @@
       dropdownMenu.classList.remove("active");
     }
   });
+
 </script>
 
 </body>
