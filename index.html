@@ -752,9 +752,6 @@
     </main>
   </div>
 
-  <!-- obsidian snippet -->
-  <script src="https://mcbcode.com/elements/obsidian.js"></script>
-
   <!-- Interactive Suite Launcher / Editors Matrix -->
   <section>
     <div class="section-header">
@@ -783,7 +780,7 @@
             <img src="https://mcbcode.com/img/icons/slashdot.png" alt="Command Editor">
             <span class="editor-tag">.mcfunction</span>
           </div>
-          <h3>command suite</h3>
+          <h3>commands editor</h3>
           <p>write clean commands with high-visibility syntax highlight and error checking.</p>
         </div>
       </a>
@@ -823,61 +820,7 @@
     </div>
   </section>
 
-  <div class="pixel-divider" style="margin-top: 100px;"></div>
-
-  <!-- Core Showcase Sections -->
   <div class="showcase-container">
-
-    <div class="showcase-block">
-      <div class="showcase-info">
-        <span class="badge-inline">Why mcbCode</span>
-        <h2>a friendlier way to mod</h2>
-        <p>Forget heavy desktop IDEs and overcomplicated setups like <a href="https://bridge-core.app" target="_blank" title="dont get me wrong, great site">bridge.</a> you shouldn't need a computer science degree to create custom items, custom blocks, or new entity behaviors.</p>
-      </div>
-      <div class="showcase-image-wrapper">
-        <img src="https://mcbcode.com/img/project-preview.png" alt="mcbCode Editor Preview">
-      </div>
-    </div>
-
-    <div class="showcase-block">
-      <div class="showcase-info">
-        <span class="badge-inline">Pack Setup</span>
-        <h2>skip the boring stuff</h2>
-        <p>setting up your pack structure from scratch is tedious. input your pack name, choose your targets, and mcbCode formats valid minecraft bedrock code immediately.</p>
-      </div>
-      <div class="showcase-code"><span>{</span>
-  <span class="sc-key">"format_version"</span>: <span class="sc-num">2</span>,
-  <span class="sc-key">"header"</span>: {
-    <span class="sc-key">"name"</span>: <span class="sc-str">"My Awesome Addon"</span>,
-    <span class="sc-key">"description"</span>: <span class="sc-str">"Made super easily with mcbCode"</span>,
-    <span class="sc-key">"uuid"</span>: <span class="sc-str">"f81d4fae-7dec-11d0-a765-00a0c91e6bf6"</span>,
-    <span class="sc-key">"version"</span>: [<span class="sc-num">1</span>, <span class="sc-num">0</span>, <span class="sc-num">0</span>]
-  }
-<span>}</span></div>
-    </div>
-
-    <div class="showcase-block">
-      <div class="showcase-info">
-        <span class="badge-inline">textures</span>
-        <h2>pixel art & texture editor</h2>
-        <p>design pixel textures right in your browser. no third-party image editor needed — export 16x16-512x512 png assets directly into your active project workspace.</p>
-      </div>
-      <div class="showcase-image-wrapper">
-        <img src="https://mcbcode.com/img/pixel-preview.png" alt="Pixel Art Tool Preview">
-      </div>
-    </div>
-
-    <div class="showcase-block">
-      <div class="showcase-info">
-        <span class="badge-inline">Commands</span>
-        <h2>write commands faster</h2>
-        <p>no more syntax guesswork or unseen typos. the command script editor color-codes target selectors, coordinates, and arguments for max clarity.</p>
-      </div>
-      <div class="showcase-code"><span class="sc-cmd">execute</span> as <span class="sc-sel">@a</span> at <span class="sc-sel">@s</span> run particle minecraft:basic_smoke_particle ~ ~1 ~
-<span class="sc-cmd">give</span> <span class="sc-sel">@s</span> diamond_sword <span class="sc-num">1</span> <span class="sc-num">0</span> {<span class="sc-str">"minecraft:item_lock"</span>: {<span class="sc-str">"mode"</span>: <span class="sc-str">"lock_in_slot"</span>}}
-<span class="sc-cmd">playsound</span> random.levelup <span class="sc-sel">@s</span> ~ ~ ~</div>
-    </div>
-
     <div class="showcase-block">
       <div class="showcase-info">
         <span class="badge-inline" style="color: var(--amethyst);">DripstoneAI</span>
@@ -892,7 +835,6 @@
         <textarea style="background-color: #343434; color: #ffffff; padding: 8px; outline: none; resize: none; border-color: #565656; border-radius: 6px;" rows="1" disabled placeholder="Ask another question..."></textarea>
       </div>
     </div>
-
   </div>
 
   <!-- Obsidian pricing --> 
@@ -932,6 +874,43 @@
         </ul>
       </div>
     </div>
+  </section>
+
+  <div class="pixel-divider" style="margin-top: 100px;"></div>
+
+
+
+  <!-- Core Showcase Sections -->
+  <div class="showcase-container">
+
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <span class="badge-inline">Why mcbCode</span>
+        <h2>a friendlier way to mod</h2>
+        <p>Forget heavy desktop IDEs and overcomplicated setups like <a href="https://bridge-core.app" target="_blank" title="dont get me wrong, great site">bridge.</a> you shouldn't need a computer science degree to create custom items, custom blocks, or new entity behaviors.</p>
+      </div>
+      <div class="showcase-image-wrapper">
+        <img src="https://mcbcode.com/img/project-preview.png" alt="mcbCode Editor Preview">
+      </div>
+    </div>
+
+    <div class="showcase-block">
+      <div class="showcase-info">
+        <span class="badge-inline">Pack Setup</span>
+        <h2>skip the boring stuff</h2>
+        <p>setting up your pack structure from scratch is tedious. input your pack name, choose your targets, and mcbCode formats valid minecraft bedrock code immediately.</p>
+      </div>
+      <div class="showcase-code"><span>{</span>
+  <span class="sc-key">"format_version"</span>: <span class="sc-num">2</span>,
+  <span class="sc-key">"header"</span>: {
+    <span class="sc-key">"name"</span>: <span class="sc-str">"My Awesome Addon"</span>,
+    <span class="sc-key">"description"</span>: <span class="sc-str">"Made super easily with mcbCode"</span>,
+    <span class="sc-key">"uuid"</span>: <span class="sc-str">"f81d4fae-7dec-11d0-a765-00a0c91e6bf6"</span>,
+    <span class="sc-key">"version"</span>: [<span class="sc-num">1</span>, <span class="sc-num">0</span>, <span class="sc-num">0</span>]
+  }
+<span>}</span></div>
+    </div>
+
   </section>
   <br><br><br>
 
@@ -1171,6 +1150,8 @@
         <a href="https://mcbcode.com/search">search</a>
         <a href="https://mcbcode.com/explore" style="color: #00b2ff !important; background-color: #00b2ff1a;">explore</a>
         <a href="https://mcbcode.com/download">download</a>
+        <a href="https://mcbcode.com/dripstone">dripstoneAI</a>
+        <a href="https://status.mcbcode.com">status</a>
       </div>
     </div>
   </div>
