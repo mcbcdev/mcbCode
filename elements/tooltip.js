@@ -150,7 +150,13 @@
   }
 
   function renderTooltipText(popup, text) {
-    const colorCode = /\\#([0-9a-fA-F]{6})/g;
+    const formatCode = /\\(#[0-9a-fA-F]{6}|bold|italic|underline|strikethrough)/gi;
+    const activeStyles = {
+      bold: false,
+      italic: false,
+      underline: false,
+      strikethrough: false
+    };
     let currentColor = null;
     let lastIndex = 0;
     let match;
@@ -159,20 +165,36 @@
 
     function appendSegment(segment) {
       if (!segment) return;
-      if (!currentColor) {
+      const hasStyle = Object.values(activeStyles).some(Boolean);
+      if (!currentColor && !hasStyle) {
         popup.appendChild(document.createTextNode(segment));
         return;
       }
+
       const span = document.createElement('span');
-      span.style.color = currentColor;
+      if (currentColor) span.style.color = currentColor;
+      if (activeStyles.bold) span.style.fontFamily = "'mcfontb', mcfont, sans-serif";
+      if (activeStyles.italic) span.style.fontStyle = 'italic';
+
+      const decorations = [];
+      if (activeStyles.underline) decorations.push('underline');
+      if (activeStyles.strikethrough) decorations.push('line-through');
+      if (decorations.length) span.style.textDecorationLine = decorations.join(' ');
+
       span.textContent = segment;
       popup.appendChild(span);
     }
 
-    while ((match = colorCode.exec(text)) !== null) {
+    while ((match = formatCode.exec(text)) !== null) {
       appendSegment(text.slice(lastIndex, match.index));
-      currentColor = `#${match[1]}`;
-      lastIndex = colorCode.lastIndex;
+      const code = match[1];
+      if (code.startsWith('#')) {
+        currentColor = code;
+      } else {
+        const styleName = code.toLowerCase();
+        activeStyles[styleName] = !activeStyles[styleName];
+      }
+      lastIndex = formatCode.lastIndex;
     }
 
     appendSegment(text.slice(lastIndex));
