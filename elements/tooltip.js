@@ -1,8 +1,3 @@
-/*
- * mc-tooltip.js
- * Add mctooltip="text in here" to any element, then include this file with defer.
- * Upload the nine-slice frame to https://mcbcode.com/img/tooltip.png.
- */
 (() => {
   'use strict';
 
@@ -30,16 +25,19 @@
         display: block;
         box-sizing: border-box;
         max-width: min(320px, calc(100vw - 16px));
-        padding: 4px 6px;
-        border: 8px solid transparent;
+        padding: 1px 3px; /* adjust these if the text needs more or less breathing room */
+        border: 6px solid transparent;
         border-image-source: url("${frameImageUrl}");
-        border-image-slice: 6 fill;
-        border-image-width: 8px;
+
+        border-image-slice: 4 fill;
+        border-width: 9px;
+        border-image-width: 9px;
+
         border-image-repeat: stretch;
         image-rendering: pixelated;
         color: #ffffff;
         font-family: mcfont, Minecraft, Arial, sans-serif;
-        font-size: 13px;
+        font-size: 16px;
         line-height: 1.35;
         letter-spacing: 0;
         white-space: pre-wrap;
