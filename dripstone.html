@@ -1335,7 +1335,7 @@
                         <img src="https://mcbcode.com/img/icons/file.png" class="file-upload-icon" alt="Attach file">
                     </label>
                     <input type="file" id="fileInput" style="display: none;" multiple onchange="handleFileSelect(event)">
-                    <button class="projects-open-btn" id="projectsOpenBtn" type="button" aria-haspopup="dialog" aria-controls="projectsDialog">
+                    <button class="projects-open-btn" id="projectsOpenBtn" type="button" aria-haspopup="dialog" aria-controls="projectsDialog" mctooltip="add projects that \#00b2ffdripstoneAI \#ffffffcan access">
                         projects <span id="projectsSelectedCount">0</span>
                     </button>
 
@@ -1379,7 +1379,7 @@
     <div class="sidebar-scroll">
         <div class="side-section">
             <div class="side-title">Chats</div>
-            <div class="chats-placeholder" id="chatsEmpty" aria-live="polite">log in to save chats to your account.</div>
+            <div class="chats-placeholder" id="chatsEmpty" aria-live="polite" mctooltip="log in, its \#05ee93free!">log in to save chats to your account.</div>
             <div class="saved-chat-list" id="savedChatList" role="list" aria-label="saved chats" hidden></div>
         </div>
     </div>
@@ -2977,6 +2977,8 @@ document.querySelectorAll(".model-wrap").forEach((wrap) => {
         }
     });
 </script>
+
+<script src="https://mcbcode.com/elements/tooltip.js" defer></script>
 
 </body>
 </html>
