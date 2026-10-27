@@ -21,6 +21,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>mcbCode | The Beginner-Friendly Bedrock Editor</title>
 
+
   <style>
     :root {
       --hero-width: 10vh;
@@ -245,8 +246,8 @@
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 16px;
       margin-top: 18px;
+
     }
 
     .hero-github { margin-top: 26px; }
@@ -257,7 +258,7 @@
       #tagline { font-size: clamp(3.5rem, 16vw, 5.5rem); }
       .hero-splash { right: 0; bottom: 0; font-size: 1rem; }
       .hero-subtext { font-size: 1rem; margin-bottom: 24px; }
-      .hero-buttons { flex-direction: column; width: 100%; gap: 12px; }
+      .hero-buttons { width: 100%; gap: 12px; }
       .hero-buttons button, .hero-buttons .btn { width: 100%; }
       .hero-utility-buttons { width: 100%; flex-direction: column; gap: 12px; }
       .hero-utility-buttons .btn { width: 100%; }
@@ -269,7 +270,6 @@
     }
 
     .hero-buttons {
-      display: flex;
       gap: 20px;
       justify-content: center;
       flex-wrap: wrap;
@@ -736,6 +736,113 @@
       .footer-bottom { flex-direction: column; text-align: center; }
     }
 
+    .hero-utility-buttons:has(.paired-utility-button) {
+      width: 70vw;
+      max-width: 500px;
+      gap: 0;
+      box-shadow: 0 0 0 3px #151211;
+    }
+
+    .hero-utility-buttons .paired-dripstone {
+      --button-accent: #36c1ff;
+      --button-accent-dark: #006ba8;
+      --button-text: #00b2ff;
+      --button-bg: #00b2ff59;
+    }
+
+    .hero-utility-buttons .paired-studio {
+      --button-accent: #ae78f0;
+      --button-accent-dark: #6423ad;
+      --button-text: #8338d9;
+      --button-bg: #8338d959;
+    }
+
+    .hero-utility-buttons .paired-utility-button {
+      color: var(--button-text);
+      background-color: var(--button-bg);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-left: 3px solid var(--button-accent);
+      border-top: 3px solid var(--button-accent);
+      border-bottom: 3px solid var(--button-accent-dark);
+      border-right: 3px solid var(--button-accent-dark);
+      border-radius: 0;
+      transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, flex 0.25s ease, opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
+    }
+
+    .hero-utility-buttons:has(.paired-dripstone:hover) .paired-studio,
+    .hero-utility-buttons:has(.paired-studio:hover) .paired-dripstone {
+      opacity: 0.42;
+      filter: grayscale(1) brightness(0.68);
+      transform: scale(0.96);
+    }
+
+    .hero-utility-buttons:has(.paired-dripstone:hover) .paired-studio {
+      --button-accent: #ffffff;
+      --button-accent-dark: #787878;
+      --button-text: #121212;
+      --button-bg: #565656;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-right: 3px solid var(--button-accent);
+      border-bottom: 3px solid var(--button-accent);
+      border-top: 3px solid var(--button-accent-dark);
+      border-left: 0;
+    }
+
+    .hero-utility-buttons:has(.paired-studio:hover) .paired-dripstone {
+      --button-accent: #ae78f0;
+      --button-accent-dark: #6423ad;
+      --button-text: #8338d9;
+      --button-bg: #8338d959;
+      border-right: 0;
+      border-bottom: 3px solid var(--button-accent);
+      border-top: 3px solid var(--button-accent-dark);
+      border-left: 3px solid var(--button-accent-dark);
+    }
+
+    .hero-utility-buttons .paired-utility-button:first-child {
+      border-right: 0;
+    }
+
+    .hero-utility-buttons .paired-utility-button:last-child {
+      border-left: 0;
+    }
+
+    .hero-utility-buttons .paired-utility-button:hover {
+      box-shadow: none;
+      border-right: 3px solid var(--button-accent);
+      border-bottom: 3px solid var(--button-accent);
+      border-top: 3px solid var(--button-accent-dark);
+      border-left: 3px solid var(--button-accent-dark);
+      border-radius: 0;
+    }
+
+    .hero-utility-buttons .paired-utility-button:first-child:hover {
+      border-right: 0;
+    }
+
+    .hero-utility-buttons .paired-utility-button:last-child:hover {
+      border-left: 0;
+    }
+
+    @media (min-width: 601px) {
+      .hero-utility-buttons:has(.paired-dripstone:hover) .paired-dripstone,
+      .hero-utility-buttons:has(.paired-studio:hover) .paired-studio {
+        flex: 3 !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-utility-buttons:has(.paired-utility-button) {
+        flex-direction: row;
+        gap: 0;
+      }
+      .hero-utility-buttons:has(.paired-utility-button) .paired-utility-button {
+        width: auto;
+      }
+    }
+
     #sogh {
       background-color: #0FBF3E;
       color: #ffffff;
@@ -747,6 +854,56 @@
       border-radius: 6px !important;
       border: 2px solid #0E4A2E;
     }
+
+    #hero-btn {
+        box-shadow: 0 0 0 3px #151211;
+        border-left: 3px solid #ffffff;
+        border-top: 3px solid #ffffff;
+        border-bottom: 3px solid #656364;
+        border-right: 3px solid #656364;
+        border-radius: 0px;
+        background-color: #c6c6c6;
+        color: #121212;
+
+        width: 100%;
+
+        transition: none;
+    }
+
+    #hero-btn:hover {
+        box-shadow: 0 0 0 3px #151211;
+        border-right: 3px solid #ffffff;
+        border-bottom: 3px solid #ffffff;
+        border-top: 3px solid #656364;
+        border-left: 3px solid #656364;
+        border-radius: 0px;
+        background-color: #c6c6c6;
+        color: #343434;
+    }
+
+    .green {
+        box-shadow: 0 0 0 3px #151211 !important;
+        border-right: 3px solid #75e3a5 !important;
+        border-bottom: 3px solid #75e3a5 !important;
+        border-top: 3px solid #009e55 !important;
+        border-left: 3px solid #009e55 !important;
+        border-radius: 0px;
+        background-color: #05ee93 !important;
+        color: #00000080 !important;
+    }
+
+    .green:hover {
+        box-shadow: 0 0 0 3px #151211 !important;
+        border-left: 3px solid #75e3a5 !important;
+        border-top: 3px solid #75e3a5 !important;
+        border-bottom: 3px solid #009e55 !important;
+        border-right: 3px solid #009e55 !important;
+        border-radius: 0px;
+        background-color: #05ee93 !important;
+        color: #000000bf !important;
+    }
+
+    
   </style>
 </head>
 <body>
@@ -762,27 +919,21 @@
 
       <h2 style="color: #ff0000; background-color: #ff000080; padding: 16px; border-radius: 18px; display: none;">mcbCode is DOWN until 7:00pm EST</h2>
 
-      <p class="hero-subtext">
-        the fast, lightweight web editor built specifically for minecraft bedrock creators. craft manifests, write commands, and paint textures — all in your browser, no setup required.
-      </p>
-
-      <div class="hero-buttons">
-        <button id="tryitout" onclick="window.location.href='https://mcbcode.com/account'">get started</button>
-        <button class="btn" onclick="window.location.href='https://mcbcode.com/dashboard'">go to dashboard</button>
+      <div class="hero-buttons" style="width: 70vw; max-width: 500px;">
+        <button mctooltip="sign up today!" id="hero-btn" class="green" onclick="window.location.href='https://mcbcode.com/account'">get started</button><br><br>
+        <button mctooltip="already logged in?" id="hero-btn" onclick="window.location.href='https://mcbcode.com/dashboard'">go to dashboard</button>
       </div>
 
       <div class="hero-utility-buttons">
-        <button class="btn" onclick="window.location.href='https://mcbcode.com/download'" style="border-color: #d138d9; color: #d138d9; background-color: #d138d959;">
-          android app
-          <p style="line-height: 0.1; margin-bottom: 0;">download now! <img src="https://mcbcode.com/img/icons/link.png" alt="" style="height: 12px;"></p>
+        <button class="btn paired-utility-button paired-dripstone" onclick="window.location.href='https://mcbcode.com/dripstone'" style="flex: 1;">
+          dripstoneAI
         </button>
-        <button class="btn" onclick="window.location.href='https://studio.mcbcode.com'" style="border-color: #8338d9; color: #8338d9; background-color: #8338d959;">
-          studio.mcbc
-          <p style="line-height: 0.1; margin-bottom: 0;">[beta] open <img src="https://mcbcode.com/img/icons/link.png" alt="" style="height: 12px;"></p>
+        <button class="btn paired-utility-button paired-studio" onclick="window.location.href='https://studio.mcbcode.com'" style="flex: 1;">
+          studio
         </button>
-      </div>
 
-      <button class="btn hero-github" id="sogh" onclick="window.location.href='https://github.com/mcbcdev/mcbcode'"><img src="https://mcbcode.com/img/icons/github_symbol.svg" alt="" style="height: 15px;"> star us on github</button>
+      </div>
+      <button mctooltip="helps us out a lot!" class="btn hero-github" id="sogh" onclick="window.location.href='https://github.com/mcbcdev/mcbcode'"><img src="https://mcbcode.com/img/icons/github_symbol.svg" alt="" style="height: 15px;"> star us on github</button>
      </main>
   </div>
 
@@ -1181,12 +1332,12 @@
         <a href="https://mcbcode.com/docs/mcp">mcp</a>
         <a href="https://mcbcode.com/docs/">documentation</a>
         <a href="https://mcbcode.com/about">about</a>
-        <a href="https://mcbcode.com/profile">profiles</a>
+        <a href="https://mcbcode.com/profile">profiles<uah/a>
         <a href="https://mcbcode.com/search">search</a>
         <a href="https://mcbcode.com/explore" style="color: #00b2ff !important; background-color: #00b2ff1a;">explore</a>
         <a href="https://mcbcode.com/download">download</a>
-        <a href="https://mcbcode.com/dripstone" style="color: #05ee93 !important; background-color: #05ee931a;">dripstoneAI</a>
-        <a href="https://status.mcbcode.com" style="color: #ff0000 !important; background-color: #ff00001a;">status</a>
+        <a href="https://mcbcode.com/dripstone" style="color: #05ee93 !important; background-color: #05ee931a;" mctooltip="new updates!">dripstoneAI</a>
+        <a href="https://status.mcbcode.com">status</a>
     <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('support us!', '#871e77', 'X8X51J5WEA');kofiwidget2.draw();</script>
       </div>
     </div>
@@ -1211,6 +1362,8 @@
   });
 
 </script>
+
+<script src="https://mcbcode.com/elements/tooltip.js" defer></script>
 
 </body>
 </html>
