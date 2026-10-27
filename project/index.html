@@ -713,7 +713,7 @@
       <span style="font-size:11px; color:transparent; user-select:none;" id="nav-user"></span>
       <div id="notif-placeholder"></div>
       <script src="https://mcbcode.com/elements/notifications.js"></script>
-      <button class="nav-btn" onclick="window.location.href='https://mcbcode.com/dashboard';">Dashboard</button>
+      <button class="nav-btn" onclick="window.location.href='https://mcbcode.com/dashboard';" mctooltip="back to dashboard">Dashboard</button>
     </div>
   </div>
 
@@ -721,15 +721,15 @@
 
     <div class="proj-header">
 <div class="proj-header-top">
-  <span class="proj-title" id="proj-title">Loading...</span>
+  <span class="proj-title" id="proj-title">loading...</span>
   <span class="proj-badge" id="proj-badge">public</span>
         <div class="proj-header-actions">
         </div>
       </div>
       <div class="proj-tabs">
-        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: -90deg;"> Info</div>
-        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> Files</div>
-        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display:none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> Settings</div>
+        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: -90deg;"> info</div>
+        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> files</div>
+        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display:none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> settings</div>
       </div>
     </div>
 
@@ -737,28 +737,28 @@
 
       <div class="meta-panel">
         <div class="meta-section">
-          <div class="meta-label">About</div>
-          <div class="meta-value" id="m-desc">Couldn't load</div>
+          <div class="meta-label">about</div>
+          <div class="meta-value" id="m-desc">couldn't load</div>
         </div>
         <div class="meta-section">
-          <div class="meta-label">Contributors</div>
+          <div class="meta-label">contributors</div>
           <div class="meta-value">
-            <span class="green" id="m-owner">Couldn't load</span>
+            <span class="green" id="m-owner">couldn't load</span>
             <span id="m-collaborators"></span>
           </div>
         </div>
         <div class="meta-section">
-          <div class="meta-label">Updated</div>
-          <div class="meta-value" id="m-updated">Couldn't load</div>
+          <div class="meta-label">updated</div>
+          <div class="meta-value" id="m-updated">couldn't load</div>
         </div>
         <div class="meta-section">
           <div class="meta-label">Project ID</div>
-          <div class="meta-value mono" id="m-code" style="cursor:pointer;" onclick="copyProjectLink()" title="click to copy project link">XXXXXXXX</div>
+          <div class="meta-value mono" id="m-code" style="cursor:pointer;" onclick="copyProjectLink()" title="click to copy project link" mctooltip="shareable code, tied to this project">XXXXXXXX</div>
         </div>
         <div class="meta-section">
           <div class="stat-row">
-            <div class="stat"><div class="stat-val" id="s-files">?</div><div class="stat-lbl">Files</div></div>
-            <div class="stat"><div class="stat-val" id="s-folders">?</div><div class="stat-lbl">Folders</div></div>
+            <div class="stat"><div class="stat-val" id="s-files">?</div><div class="stat-lbl">files</div></div>
+            <div class="stat"><div class="stat-val" id="s-folders">?</div><div class="stat-lbl">folders</div></div>
           </div>
         </div>
       </div>
@@ -925,6 +925,8 @@
   <script src="https://mcbcode.com/project/project.js"></script>
 
   <script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+<script src="https://mcbcode.com/elements/tooltip.js" defer></script>
 
   <!-- monetag script -->
 <script src="/elements/ads.js"></script>
