@@ -30,11 +30,11 @@
         display: block;
         box-sizing: border-box;
         max-width: min(320px, calc(100vw - 16px));
-        padding: 7px 10px;
-        border: 6px solid transparent;
+        padding: 4px 6px;
+        border: 8px solid transparent;
         border-image-source: url("${frameImageUrl}");
         border-image-slice: 6 fill;
-        border-image-width: 6px;
+        border-image-width: 8px;
         border-image-repeat: stretch;
         image-rendering: pixelated;
         color: #ffffff;
