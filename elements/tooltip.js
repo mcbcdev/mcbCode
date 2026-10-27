@@ -149,6 +149,35 @@
     popup.style.visibility = 'visible';
   }
 
+  function renderTooltipText(popup, text) {
+    const colorCode = /\\#([0-9a-fA-F]{6})/g;
+    let currentColor = null;
+    let lastIndex = 0;
+    let match;
+
+    popup.replaceChildren();
+
+    function appendSegment(segment) {
+      if (!segment) return;
+      if (!currentColor) {
+        popup.appendChild(document.createTextNode(segment));
+        return;
+      }
+      const span = document.createElement('span');
+      span.style.color = currentColor;
+      span.textContent = segment;
+      popup.appendChild(span);
+    }
+
+    while ((match = colorCode.exec(text)) !== null) {
+      appendSegment(text.slice(lastIndex, match.index));
+      currentColor = `#${match[1]}`;
+      lastIndex = colorCode.lastIndex;
+    }
+
+    appendSegment(text.slice(lastIndex));
+  }
+
   function showTooltip(trigger, mode, point = null) {
     const text = trigger.getAttribute('mctooltip');
     if (text === null || text.trim() === '') return;
@@ -165,7 +194,7 @@
 
     activeMode = mode;
     if (point) lastPointer = point;
-    popup.textContent = text;
+    renderTooltipText(popup, text);
     popup.setAttribute('aria-hidden', 'false');
     popup.hidden = false;
     positionPopup(trigger, point || (mode === 'pointer' ? lastPointer : null));
