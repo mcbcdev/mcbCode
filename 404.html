@@ -28,7 +28,7 @@ html, body {
     left: 0;
     width: 100%; 
     height: 100%;
-    z-index: -1;
+    z-index: 0;
     background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(https://mcbcode.com/img/mc/end_pillar.png);
     background-repeat: no-repeat; 
     background-position: center center;
@@ -141,6 +141,7 @@ html, body {
         font-family: 'mcfont', sans-serif;
         font-size: 13px;
         padding: 8px 20px;
+        border-radius: 6px;
         cursor: pointer;
         text-decoration: none;
         transition: color 0.2s, border-color 0.2s;
@@ -207,6 +208,7 @@ if (path.startsWith("/docs/")) {
         showNotFound();
       });
   }
+
 } else if (path.startsWith("/project/") && path !== "/project/") {
   redirecting = true;
   sessionStorage.setItem("spa-redirect", fullPath);
