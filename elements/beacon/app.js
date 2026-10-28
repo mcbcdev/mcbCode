@@ -247,7 +247,10 @@ async function bootModelMode() {
   $("#side-panel").innerHTML = document.getElementById("cube-panel-template").innerHTML;
   model = new BeaconModel(canvas);
   model.onChange = markDirty;
-  model.onSelectionChange = renderInspector;
+  model.onSelectionChange = (index, cube) => {
+    renderInspector(index, cube);
+    renderCubeList();
+  };
 
   let bytes = null;
   if (window.BeaconProject.currentFile) {
