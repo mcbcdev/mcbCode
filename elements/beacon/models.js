@@ -6,6 +6,7 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TransformControls } from "three/addons/controls/TransformControls.js";
 
 // bedrock model space: 16 units per block, so we scale down by 16 for display
 const UNIT = 1 / 16;
@@ -26,6 +27,19 @@ export class BeaconModel {
     this.controls.dampingFactor = 0.08;
     this.controls.target.set(0, 0.5, 0);
 
+    this.transformControls = new TransformControls(this.camera, canvas);
+    this.transformControls.setMode("translate");
+    this.transformControls.setSpace("local");
+    this.scene.add(this.transformControls);
+    this.transformMode = "translate";
+    this.snapEnabled = false;
+    this.dragSnapshot = null;
+    this.transformControls.addEventListener("dragging-changed", event => {
+      this.controls.enabled = !event.value;
+      if (event.value) this._beginTransform();
+      else this._finishTransform();
+    });
+
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 1.2));
     const dir = new THREE.DirectionalLight(0xffffff, 0.9);
     dir.position.set(3, 5, 2);
@@ -34,6 +48,7 @@ export class BeaconModel {
 
     this.cubeGroup = new THREE.Group();
     this.scene.add(this.cubeGroup);
+    this.cubeNodes = [];
 
     this.identifier = "geometry.custom";
     this.textureSize = [16, 16];
@@ -41,6 +56,8 @@ export class BeaconModel {
     this.selectedIndex = -1;
     this.onSelectionChange = null;
     this.onChange = null;
+    this.undoStack = [];
+    this.redoStack = [];
 
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
@@ -90,6 +107,7 @@ export class BeaconModel {
   }
 
   addCube() {
+    this._recordHistory();
     this.cubes.push({
       name: `cube${this.cubes.length}`,
       origin: [-4, 0, -4],
@@ -104,6 +122,8 @@ export class BeaconModel {
   }
 
   removeCube(i) {
+    if (!Number.isInteger(i) || i < 0 || i >= this.cubes.length) return;
+    this._recordHistory();
     this.cubes.splice(i, 1);
     this._rebuild();
     const next = this.cubes.length ? Math.min(i, this.cubes.length - 1) : -1;
@@ -111,9 +131,152 @@ export class BeaconModel {
     if (this.onChange) this.onChange();
   }
 
+  duplicateSelected() {
+    if (this.selectedIndex < 0) return;
+    this._recordHistory();
+    const source = this.cubes[this.selectedIndex];
+    const copy = {
+      name: `${source.name || "cube"}_copy`,
+      origin: [...source.origin],
+      size: [...source.size],
+      pivot: [...source.pivot],
+      rotation: [...source.rotation],
+      uv: Array.isArray(source.uv) ? [...source.uv] : source.uv
+    };
+    copy.origin[0] += 1;
+    copy.pivot[0] += 1;
+    this.cubes.splice(this.selectedIndex + 1, 0, copy);
+    this._rebuild();
+    this.select(this.selectedIndex + 1);
+    if (this.onChange) this.onChange();
+  }
+
+  setTransformMode(mode) {
+    if (!["select", "translate", "rotate", "scale"].includes(mode)) return;
+    this.transformMode = mode;
+    if (mode !== "select") this.transformControls.setMode(mode);
+    this._attachTransform();
+    this._applySnap();
+  }
+
+  setSnapEnabled(enabled) {
+    this.snapEnabled = !!enabled;
+    this._applySnap();
+  }
+
+  _applySnap() {
+    this.transformControls.setTranslationSnap(this.snapEnabled ? UNIT : null);
+    this.transformControls.setRotationSnap(this.snapEnabled ? THREE.MathUtils.degToRad(15) : null);
+    this.transformControls.setScaleSnap(null);
+  }
+
+  _attachTransform() {
+    if (this.transformMode === "select" || this.selectedIndex < 0 || !this.cubeNodes[this.selectedIndex]) {
+      this.transformControls.detach();
+      return;
+    }
+    const { group, mesh } = this.cubeNodes[this.selectedIndex];
+    this.transformControls.attach(this.transformMode === "scale" ? mesh : group);
+  }
+
+  _beginTransform() {
+    if (this.selectedIndex < 0 || !this.cubeNodes[this.selectedIndex]) return;
+    const { group, mesh } = this.cubeNodes[this.selectedIndex];
+    this.dragSnapshot = {
+      index: this.selectedIndex,
+      mode: this.transformMode,
+      position: group.position.clone(),
+      meshScale: mesh.scale.clone(),
+      origin: [...this.cubes[this.selectedIndex].origin],
+      size: [...this.cubes[this.selectedIndex].size],
+      pivot: [...this.cubes[this.selectedIndex].pivot]
+    };
+  }
+
+  _finishTransform() {
+    const snapshot = this.dragSnapshot;
+    this.dragSnapshot = null;
+    if (!snapshot || !this.cubes[snapshot.index]) return;
+    const cube = this.cubes[snapshot.index];
+    const { group, mesh } = this.cubeNodes[snapshot.index];
+
+    if (snapshot.mode === "translate") {
+      const delta = group.position.clone().sub(snapshot.position).toArray().map(v => v / UNIT);
+      cube.origin = snapshot.origin.map((v, axis) => v + delta[axis]);
+      cube.pivot = snapshot.pivot.map((v, axis) => v + delta[axis]);
+    } else if (snapshot.mode === "rotate") {
+      cube.rotation = [group.rotation.x, group.rotation.y, group.rotation.z]
+        .map(value => THREE.MathUtils.radToDeg(value));
+    } else if (snapshot.mode === "scale") {
+      const scale = mesh.scale.toArray();
+      cube.size = snapshot.size.map((v, axis) => Math.max(0.01, v * Math.abs(scale[axis])));
+      cube.origin = snapshot.origin.map((v, axis) => v + (snapshot.size[axis] - cube.size[axis]) / 2);
+    }
+
+    this._rebuild();
+    this._attachTransform();
+    if (this.onChange) this.onChange();
+  }
+
+  _recordHistory() {
+    this.undoStack.push(JSON.parse(JSON.stringify(this.cubes)));
+    if (this.undoStack.length > 100) this.undoStack.shift();
+    this.redoStack = [];
+  }
+
+  undo() {
+    if (!this.undoStack.length) return;
+    this.redoStack.push(JSON.parse(JSON.stringify(this.cubes)));
+    this.cubes = this.undoStack.pop();
+    this.selectedIndex = this.cubes.length ? Math.min(this.selectedIndex, this.cubes.length - 1) : -1;
+    this._rebuild();
+    this.select(this.selectedIndex);
+    if (this.onChange) this.onChange();
+  }
+
+  redo() {
+    if (!this.redoStack.length) return;
+    this.undoStack.push(JSON.parse(JSON.stringify(this.cubes)));
+    this.cubes = this.redoStack.pop();
+    this.selectedIndex = this.cubes.length ? Math.min(this.selectedIndex, this.cubes.length - 1) : -1;
+    this._rebuild();
+    this.select(this.selectedIndex);
+    if (this.onChange) this.onChange();
+  }
+
+  frameSelection() {
+    const targetObjects = this.selectedIndex >= 0 && this.cubeNodes[this.selectedIndex]
+      ? [this.cubeNodes[this.selectedIndex].group]
+      : this.cubeNodes.map(node => node.group);
+    if (!targetObjects.length) return;
+    const bounds = new THREE.Box3();
+    targetObjects.forEach(object => bounds.expandByObject(object));
+    if (bounds.isEmpty()) return;
+    const center = bounds.getCenter(new THREE.Vector3());
+    const size = bounds.getSize(new THREE.Vector3());
+    const radius = Math.max(size.length() * 0.8, 0.5);
+    const direction = this.camera.position.clone().sub(this.controls.target).normalize();
+    this.controls.target.copy(center);
+    this.camera.position.copy(center).add(direction.multiplyScalar(radius * 2.8));
+    this.camera.near = Math.max(0.01, radius / 100);
+    this.camera.far = Math.max(200, radius * 20);
+    this.camera.updateProjectionMatrix();
+    this.controls.update();
+  }
+
+  resetCamera() {
+    this.camera.position.set(2.4, 2, 2.8);
+    this.controls.target.set(0, 0.5, 0);
+    this.camera.near = 0.01;
+    this.camera.far = 200;
+    this.camera.updateProjectionMatrix();
+    this.controls.update();
+  }
+
   select(i) {
     this.selectedIndex = Number.isInteger(i) && i >= 0 && i < this.cubes.length ? i : -1;
     this._updateSelectionHighlight();
+    this._attachTransform();
     if (this.onSelectionChange) {
       this.onSelectionChange(this.selectedIndex, this.selectedIndex >= 0 ? this.cubes[this.selectedIndex] : null);
     }
@@ -132,12 +295,14 @@ export class BeaconModel {
 
   updateSelected(field, value) {
     if (this.selectedIndex < 0) return;
+    this._recordHistory();
     this.cubes[this.selectedIndex][field] = value;
     this._rebuild();
     if (this.onChange) this.onChange();
   }
 
   _rebuild() {
+    this.transformControls.detach();
     this.cubeGroup.traverse(object => {
       if (!object.isMesh) return;
       object.geometry?.dispose();
@@ -145,6 +310,7 @@ export class BeaconModel {
       else object.material?.dispose();
     });
     this.cubeGroup.clear();
+    this.cubeNodes = [];
     this.cubes.forEach((c, i) => {
       const [sx, sy, sz] = c.size;
       const geo = new THREE.BoxGeometry(Math.max(sx, 0.01) * UNIT, Math.max(sy, 0.01) * UNIT, Math.max(sz, 0.01) * UNIT);
@@ -170,11 +336,14 @@ export class BeaconModel {
       group.userData.cubeIndex = i;
       mesh.userData.cubeIndex = i;
       this.cubeGroup.add(group);
+      this.cubeNodes.push({ group, mesh });
     });
     this._updateSelectionHighlight();
+    this._attachTransform();
   }
 
   _onPointerDown(e) {
+    if (e.button !== 0 || this.transformControls.axis !== null) return;
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
