@@ -245,12 +245,14 @@ function renderBlockInspector(positions, entries) {
 // ---------------- model mode ----------------
 async function bootModelMode() {
   $("#side-panel").innerHTML = document.getElementById("cube-panel-template").innerHTML;
+  $(".viewport-hint").textContent = "select a cube, then use move / rotate / resize. drag empty space to orbit; scroll to zoom. snap uses 1/16-block movement and 15° rotation steps.";
   model = new BeaconModel(canvas);
   model.onChange = markDirty;
   model.onSelectionChange = (index, cube) => {
     renderInspector(index, cube);
     renderCubeList();
   };
+  buildModelToolbar();
 
   let bytes = null;
   if (window.BeaconProject.currentFile) {
@@ -281,6 +283,41 @@ async function bootModelMode() {
       setStatus("saved!");
     } catch (e) { setStatus("save failed: " + e.message); }
   };
+}
+
+function buildModelToolbar() {
+  const toolbar = $(".viewport-toolbar");
+  toolbar.insertAdjacentHTML("afterbegin", `
+    <div class="model-toolbar" role="toolbar" aria-label="model tools">
+      <button class="tool-btn" data-transform="select" title="Select without gizmo (Q)">select</button>
+      <button class="tool-btn active" data-transform="translate" title="Move (W)">move</button>
+      <button class="tool-btn" data-transform="rotate" title="Rotate (E)">rotate</button>
+      <button class="tool-btn" data-transform="scale" title="Resize (R)">resize</button>
+      <button class="tool-btn" data-model-action="snap" title="Toggle grid snapping (G)">snap off</button>
+      <span class="tool-separator"></span>
+      <button class="tool-btn" data-model-action="duplicate" title="Duplicate selected cube (Ctrl/Cmd+D)">duplicate</button>
+      <button class="tool-btn" data-model-action="delete" title="Delete selected cube (Delete)">delete</button>
+      <span class="tool-separator"></span>
+      <button class="tool-btn" data-model-action="frame" title="Frame selection (F)">frame</button>
+      <button class="tool-btn" data-model-action="camera" title="Reset camera">camera</button>
+    </div>`);
+
+  toolbar.querySelectorAll("[data-transform]").forEach(button => {
+    button.onclick = () => {
+      model.setTransformMode(button.dataset.transform);
+      toolbar.querySelectorAll("[data-transform]").forEach(item => item.classList.toggle("active", item === button));
+    };
+  });
+
+  toolbar.querySelector('[data-model-action="snap"]').onclick = event => {
+    model.setSnapEnabled(!model.snapEnabled);
+    event.currentTarget.textContent = model.snapEnabled ? "snap on" : "snap off";
+    event.currentTarget.classList.toggle("active", model.snapEnabled);
+  };
+  toolbar.querySelector('[data-model-action="duplicate"]').onclick = () => model.duplicateSelected();
+  toolbar.querySelector('[data-model-action="delete"]').onclick = () => model.removeCube(model.selectedIndex);
+  toolbar.querySelector('[data-model-action="frame"]').onclick = () => model.frameSelection();
+  toolbar.querySelector('[data-model-action="camera"]').onclick = () => model.resetCamera();
 }
 
 function renderCubeList() {
@@ -354,7 +391,11 @@ function buildMenuBar() {
     { label: "Clear selection (Esc)", action: () => scene.clearSelection() },
     { label: "Delete selection (Del)", action: () => scene.deleteSelection() }
   ] : [
-    { label: "Add cube", action: () => { model.addCube(); renderCubeList(); } }
+    { label: "Undo (Ctrl+Z)", action: () => model.undo() },
+    { label: "Redo (Ctrl+Y)", action: () => model.redo() },
+    { label: "Add cube", action: () => model.addCube() },
+    { label: "Duplicate cube (Ctrl+D)", action: () => model.duplicateSelected() },
+    { label: "Delete cube (Del)", action: () => model.removeCube(model.selectedIndex) }
   ];
 
   const viewItems = mode === "structure" ? [
@@ -468,8 +509,14 @@ function showShortcutsOverlay() {
 // ---------------- keyboard shortcuts ----------------
 
 const SHORTCUTS = [
+  ["Q", "select without showing the model transform gizmo"],
   ["Ctrl/Cmd+Z", "undo"],
   ["Ctrl/Cmd+Y or Ctrl+Shift+Z", "redo"],
+  ["W / E / R", "move / rotate / resize selected model cube"],
+  ["Ctrl/Cmd+D", "duplicate selected cube in model mode"],
+  ["Delete / Backspace", "delete selected cube in model mode"],
+  ["G", "toggle model transform snapping"],
+  ["F", "frame model selection or all cubes"],
   ["Delete / Backspace", "delete selected block(s)"],
   ["Escape", "clear selection"],
   ["1-9", "pick block 1-9 from the palette"],
@@ -511,9 +558,34 @@ function bindShortcuts() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); (mode === "structure" ? saveStructure() : $("#save-btn").click()); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") { e.preventDefault(); if (mode === "structure") exportStructureFile(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") { e.preventDefault(); if (mode === "structure") scene.selectAll(); return; }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); if (mode === "structure") scene.clearSelection(); return; }
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); if (mode === "structure") scene.undo(); return; }
-    if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); if (mode === "structure") scene.redo(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); if (mode === "structure") scene.clearSelection(); else model.duplicateSelected(); return; }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); if (mode === "structure") scene.undo(); else model.undo(); return; }
+    if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); if (mode === "structure") scene.redo(); else model.redo(); return; }
+
+    if (mode === "model") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") { e.preventDefault(); model.duplicateSelected(); return; }
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); model.removeCube(model.selectedIndex); return; }
+      if (e.key.toLowerCase() === "w" || e.key.toLowerCase() === "e" || e.key.toLowerCase() === "r") {
+        const tool = { w: "translate", e: "rotate", r: "scale" }[e.key.toLowerCase()];
+        model.setTransformMode(tool);
+        document.querySelectorAll("[data-transform]").forEach(button => button.classList.toggle("active", button.dataset.transform === tool));
+        return;
+      }
+      if (e.key.toLowerCase() === "q") {
+        model.setTransformMode("select");
+        document.querySelectorAll("[data-transform]").forEach(button => button.classList.toggle("active", button.dataset.transform === "select"));
+        return;
+      }
+      if (e.key.toLowerCase() === "g") {
+        model.setSnapEnabled(!model.snapEnabled);
+        const button = document.querySelector('[data-model-action="snap"]');
+        if (button) { button.textContent = model.snapEnabled ? "snap on" : "snap off"; button.classList.toggle("active", model.snapEnabled); }
+        return;
+      }
+      if (e.key.toLowerCase() === "f") { model.frameSelection(); return; }
+      if (e.key === "Escape") { model.select(-1); return; }
+      return;
+    }
 
     if (mode !== "structure") return; // rest of the shortcuts are structure-mode only
 
