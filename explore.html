@@ -1287,6 +1287,33 @@
     }
     document.getElementById("compose-project-remove").addEventListener("click", clearAttachedProject);
 
+    async function applyProjectHandoff() {
+      const params = new URLSearchParams(location.search);
+      const code = (params.get("project") || "").trim().toLowerCase();
+      if (!code) return false;
+      setExploreTab("feed");
+      if (!/^[a-z0-9]{4,16}$/.test(code)) {
+        alert("this project link doesn't look valid.");
+        return true;
+      }
+      try {
+        const res = await fetch(`${API}/project?code=${encodeURIComponent(code)}`);
+        const data = await res.json();
+        const isPublic = data.project && (data.project.is_public === 1 || data.project.is_public === true);
+        if (!res.ok || !data.ok || !data.project || !isPublic) {
+          alert("couldn't attach this project. check that the project is public, then try again.");
+          return true;
+        }
+        setAttachedProject(code, data.project.name || "project");
+        if (params.get("compose") === "1") {
+          requestAnimationFrame(() => composeInput.focus({ preventScroll: true }));
+        }
+      } catch {
+        alert("couldn't load this project link. try again in a moment.");
+      }
+      return true;
+    }
+
     // ---- project picker modal ----
     const pickerOverlay = document.getElementById("project-picker-overlay");
     document.getElementById("compose-plus").addEventListener("click", async () => {
@@ -1357,7 +1384,9 @@
     });
 
     loadMe();
-    loadDiscover();
+    const handoffCode = (new URLSearchParams(location.search).get("project") || "").trim();
+    if (handoffCode) applyProjectHandoff();
+    else loadDiscover();
   </script>
 </body>
 </html>
