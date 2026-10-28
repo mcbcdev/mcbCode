@@ -19,11 +19,14 @@
       --card-border: rgba(255, 255, 255, 0.1);
       --text-main: #ffffff;
       --text-muted: #bebebe;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
     }
 
     *, *::before, *::after {
       font-weight: normal !important;
-      border-radius: 0px !important;
+      border-radius: var(--radius-sm);
       box-sizing: border-box;
     }
 
@@ -40,9 +43,9 @@
     h1, h2, h3 { color: var(--text-main); margin: 0; font-family: 'mcfontb', 'mcfont', sans-serif; }
 
     #page {
-      max-width: 720px;
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 40px 16px 140px 16px;
+      padding: 36px 24px 168px;
     }
 
     #page-header {
@@ -56,6 +59,188 @@
     #page-header p {
       margin-top: 6px;
       font-size: 0.95rem;
+    }
+
+    [hidden] { display: none !important; }
+
+    #explore-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 22px 0 24px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .explore-tab {
+      min-height: 46px;
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      color: #888;
+      cursor: pointer;
+      font-family: 'mcfontb', 'mcfont', sans-serif;
+      font-size: 0.95rem;
+      padding: 10px 16px 12px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .explore-tab:hover { color: var(--text-main); }
+    .explore-tab.active, .explore-tab[aria-selected="true"] {
+      color: var(--accent-color);
+      border-bottom-color: var(--accent-color);
+    }
+
+    #discover-panel { min-height: 260px; }
+
+    #discover-search-form { margin-bottom: 20px; }
+
+    #discover-search-form label {
+      display: block;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .discover-search-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #discover-search {
+      flex: 1;
+      min-width: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.9rem;
+      padding: 11px 12px;
+    }
+
+    #discover-search:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+    #discover-search-submit {
+      min-height: 44px;
+      background: var(--accent-dark);
+      border: 1px solid var(--accent-color);
+      color: #fff;
+      cursor: pointer;
+      font-family: 'mcfontb', sans-serif;
+      padding: 0 18px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    #discover-search-submit:hover { background: var(--accent-color); color: var(--bg-color); }
+
+    .discover-quick-searches {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .discover-quick-searches span { color: #777; font-size: 0.78rem; }
+
+    .discover-chip {
+      min-height: 34px;
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'mcfont', sans-serif;
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .discover-chip:hover { border-color: var(--accent-color); color: var(--accent-color); }
+
+    #discover-summary {
+      color: #888;
+      font-size: 0.82rem;
+      margin: 0 0 12px;
+    }
+
+    #discover-results {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .discover-card {
+      min-width: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .discover-card:hover { border-color: rgba(5,238,147,0.55); background: rgba(20,24,22,0.9); }
+
+    .discover-card-title {
+      color: var(--text-main);
+      font-family: 'mcfontb', sans-serif;
+      font-size: 1rem;
+      overflow-wrap: anywhere;
+    }
+
+    .discover-card-title:hover { color: var(--accent-color); }
+
+    .discover-card-type {
+      color: var(--accent-color);
+      font-family: monospace;
+      font-size: 0.72rem;
+    }
+
+    .discover-card-description {
+      color: #aaa;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .discover-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .discover-card-tag {
+      color: #aaa;
+      border: 1px solid var(--card-border);
+      font-size: 0.7rem;
+      padding: 3px 6px;
+    }
+
+    .discover-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: auto;
+      padding-top: 9px;
+      color: #777;
+      font-size: 0.75rem;
+    }
+
+    .discover-card-meta a { color: var(--text-muted); }
+    .discover-card-meta a:hover { color: var(--accent-color); }
+
+    .discover-open-link {
+      align-self: flex-start;
+      color: var(--accent-color);
+      font-size: 0.82rem;
+    }
+
+    .discover-open-link:hover { color: var(--text-main); }
+
+    .discover-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 52px 16px;
+      color: #777;
+      border: 1px dashed var(--card-border);
     }
 
     /* sort bar */
@@ -83,6 +268,13 @@
       border-color: rgba(255,255,255,0.3);
     }
 
+    .sort-btn:focus-visible, .explore-tab:focus-visible, .discover-chip:focus-visible,
+    #discover-search-submit:focus-visible, .react-btn:focus-visible,
+    .post-actions button:focus-visible, .post-link-btn:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 3px;
+    }
+
     .sort-btn.active {
       color: var(--bg-color);
       background-color: var(--accent-color);
@@ -99,6 +291,7 @@
     .post-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
       padding: 18px;
     }
 
@@ -161,28 +354,48 @@
     .post-actions {
       display: flex;
       align-items: center;
-      gap: 14px;
+      flex-wrap: wrap;
+      gap: 12px;
       font-size: 0.85rem;
     }
 
     .react-group {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 6px;
     }
 
     .react-btn {
-      background: transparent;
+      min-width: 62px;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.025);
       border: 1px solid var(--card-border);
       color: var(--text-muted);
-      padding: 6px 10px;
+      padding: 7px 10px;
       cursor: pointer;
       font-size: 0.9rem;
       line-height: 1;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
-    .react-btn.like.active { color: var(--accent-color); border-color: var(--accent-color); }
-    .react-btn.dislike.active { color: var(--danger-color); border-color: var(--danger-color); }
+    .react-btn:hover { border-color: rgba(255,255,255,0.28); color: var(--text-main); }
+    .react-btn.like.active { color: var(--accent-color); border-color: var(--accent-color); background: rgba(5,238,147,0.08); }
+    .react-btn.dislike.active { color: var(--danger-color); border-color: var(--danger-color); background: rgba(247,47,47,0.08); }
+
+    .reaction-icon {
+      display: block;
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .reaction-icon.like { transform: rotate(180deg); }
+    .reaction-icon.dislike { transform: rotate(0deg); }
 
     .fight-bar {
       height: 4px;
@@ -223,8 +436,9 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(680px, 92vw);
-      background: rgba(18,18,18,0.95);
+      background: rgba(18,18,18,0.96);
       border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
       backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
@@ -372,6 +586,7 @@
     .modal-box {
       background: #141414;
       border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
       width: min(480px, 90vw);
       max-height: 70vh;
       display: flex;
@@ -487,9 +702,22 @@
     .project-pick-item .p-name { color: var(--text-main); font-family: 'mcfontb', sans-serif; }
     .project-pick-item .p-desc { font-size: 0.8rem; color: #777; margin-top: 2px; }
 
-    @media (max-width: 600px) {
-      #compose-bar { width: 94vw; bottom: 12px; padding: 8px; }
+    @media (max-width: 680px) {
+      #page { padding: 26px 16px 180px; }
+      #page-header { margin-bottom: 18px; }
+      #explore-tabs { margin: 16px 0 20px; }
+      #discover-results { grid-template-columns: 1fr; }
+      .discover-search-row { flex-direction: column; }
+      #discover-search-submit { width: 100%; }
+      .post-card { padding: 15px; }
+      .post-head { align-items: flex-start; }
+      .post-project-chip { max-width: 42%; overflow: hidden; text-overflow: ellipsis; }
+      #compose-bar { width: calc(100vw - 24px); bottom: 12px; padding: 8px; border-radius: var(--radius-md); }
       #compose-send { padding: 10px 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     }
   </style>
 </head>
@@ -498,9 +726,36 @@
   <div id="page">
     <div id="page-header">
       <h1>explore</h1>
-      <p>see what other bedrock creators on mcbcode are building.</p>
+      <p>find public projects or catch up with what creators are sharing.</p>
     </div>
 
+    <div id="explore-tabs" role="tablist" aria-label="explore sections">
+      <button class="explore-tab active" id="tab-discover" type="button" role="tab" tabindex="0" aria-selected="true" aria-controls="discover-panel">discover</button>
+      <button class="explore-tab" id="tab-feed" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="feed-panel">feed</button>
+    </div>
+
+    <section id="discover-panel" role="tabpanel" aria-labelledby="tab-discover">
+      <form id="discover-search-form">
+        <label for="discover-search">search public projects</label>
+        <div class="discover-search-row">
+          <input id="discover-search" type="search" maxlength="64" placeholder="project name, description, or tag" autocomplete="off">
+          <button id="discover-search-submit" type="submit">search</button>
+        </div>
+        <div class="discover-quick-searches" aria-label="quick project searches">
+          <span>try:</span>
+          <button class="discover-chip" type="button" data-query="entity">entity</button>
+          <button class="discover-chip" type="button" data-query="texture">texture</button>
+          <button class="discover-chip" type="button" data-query="script">script</button>
+          <button class="discover-chip" type="button" data-query="weapon">weapon</button>
+        </div>
+      </form>
+      <p id="discover-summary" aria-live="polite">latest public projects</p>
+      <div id="discover-results" aria-live="polite">
+        <div class="discover-empty">loading public projects...</div>
+      </div>
+    </section>
+
+    <section id="feed-panel" role="tabpanel" aria-labelledby="tab-feed" hidden>
     <div id="sort-bar">
       <button class="sort-btn active" data-sort="trending">trending</button>
       <button class="sort-btn" data-sort="relevant">relevant</button>
@@ -513,9 +768,10 @@
     <div id="feed">
       <div class="empty-state">loading posts...</div>
     </div>
+    </section>
   </div>
 
-  <div id="compose-bar">
+  <div id="compose-bar" hidden>
     <button id="compose-plus" title="attach a project">+</button>
     <div id="compose-input-wrap">
       <div id="compose-project-chip">
@@ -554,6 +810,104 @@
     let ME = null;
     let currentSort = "trending";
     let myProjects = [];
+    let discoverRequestId = 0;
+    let discoverTimer = null;
+
+    function projectPageUrl(code) {
+      return "https://mcbcode.com/project/" + encodeURIComponent(code || "") + "/";
+    }
+
+    function readableProjectType(type) {
+      const names = {
+        addon: "addon",
+        texture_pack: "texture pack",
+        skinpack: "skin pack",
+        script: "script project",
+      };
+      return names[type] || "bedrock project";
+    }
+
+    function readableProjectDate(value) {
+      if (!value) return "";
+      const normalized = String(value).replace(" ", "T");
+      const date = new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized) ? normalized : normalized + "Z");
+      return Number.isNaN(date.getTime()) ? "" : "updated " + date.toLocaleDateString();
+    }
+
+    function projectCardHtml(project) {
+      const code = encodeURIComponent(project.share_code || "");
+      const title = escapeHtml(project.name || "untitled project");
+      const description = escapeHtml(project.description || "no description yet");
+      const tags = Array.isArray(project.tags) ? project.tags.slice(0, 4) : [];
+      const tagHtml = tags.length
+        ? `<div class="discover-card-tags">${tags.map(tag => `<span class="discover-card-tag">${escapeHtml(String(tag))}</span>`).join("")}</div>`
+        : "";
+      const owner = project.owner_username
+        ? `<a href="${profileUrl(project.owner_username)}">@${escapeHtml(project.owner_username)}</a>`
+        : "<span>mcbCode creator</span>";
+      const date = readableProjectDate(project.updated_at);
+      return `
+        <article class="discover-card">
+          <div class="discover-card-type">${escapeHtml(readableProjectType(project.project_type))}</div>
+          <a class="discover-card-title" href="${projectPageUrl(project.share_code)}">${title}</a>
+          <div class="discover-card-description">${description}</div>
+          ${tagHtml}
+          <div class="discover-card-meta"><span>${owner}</span><span>${escapeHtml(date)}</span></div>
+          <a class="discover-open-link" href="${projectPageUrl(project.share_code)}">open project &rarr;</a>
+        </article>`;
+    }
+
+    async function loadDiscover(query = "") {
+      const requestId = ++discoverRequestId;
+      const resultsEl = document.getElementById("discover-results");
+      const summaryEl = document.getElementById("discover-summary");
+      const cleanQuery = query.trim().slice(0, 64);
+      resultsEl.innerHTML = '<div class="discover-empty">loading public projects...</div>';
+      summaryEl.textContent = cleanQuery ? `searching for “${cleanQuery}”...` : "latest public projects";
+
+      try {
+        const endpoint = cleanQuery
+          ? `${API}/search?q=${encodeURIComponent(cleanQuery)}`
+          : `${API}/projects/recent`;
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error("request failed");
+        const data = await response.json();
+        if (requestId !== discoverRequestId) return;
+        if (!data.ok) throw new Error("project search failed");
+
+        const projects = Array.isArray(data.projects) ? data.projects : [];
+        summaryEl.textContent = cleanQuery
+          ? `${projects.length} matching public ${projects.length === 1 ? "project" : "projects"} (up to 30)`
+          : "latest public projects · 8 shown";
+
+        if (!projects.length) {
+          resultsEl.innerHTML = `<div class="discover-empty">${cleanQuery ? "no matching public projects. try another search." : "no public projects to show yet."}</div>`;
+          return;
+        }
+        resultsEl.innerHTML = projects.map(projectCardHtml).join("");
+      } catch {
+        if (requestId !== discoverRequestId) return;
+        summaryEl.textContent = "public projects";
+        resultsEl.innerHTML = '<div class="discover-empty">couldn’t load projects. try again in a moment.</div>';
+      }
+    }
+
+    function setExploreTab(tab) {
+      const showDiscover = tab === "discover";
+      const discoverTab = document.getElementById("tab-discover");
+      const feedTab = document.getElementById("tab-feed");
+      discoverTab.classList.toggle("active", showDiscover);
+      feedTab.classList.toggle("active", !showDiscover);
+      discoverTab.setAttribute("aria-selected", String(showDiscover));
+      feedTab.setAttribute("aria-selected", String(!showDiscover));
+      discoverTab.tabIndex = showDiscover ? 0 : -1;
+      feedTab.tabIndex = showDiscover ? -1 : 0;
+      document.getElementById("discover-panel").hidden = !showDiscover;
+      document.getElementById("feed-panel").hidden = showDiscover;
+      document.getElementById("compose-bar").hidden = showDiscover;
+      if (showDiscover) loadDiscover(document.getElementById("discover-search").value);
+      else loadFeed();
+    }
 
     // ---- custom modal (replaces browser confirm()/prompt()) ----
     function showModal({ title, message = "", showTextarea = false, textValue = "", confirmLabel = "confirm", danger = false }) {
@@ -675,6 +1029,29 @@
       return `<div class="fight-bar"><div class="side-like" style="width:${likePct}%"></div><div class="side-dislike" style="width:${dislikePct}%"></div></div>`;
     }
 
+    function reactionIconUrl(active) {
+      return active
+        ? "https://mcbcode.com/img/icons/dropdown-selected.png"
+        : "https://mcbcode.com/img/icons/dropdown.png";
+    }
+
+    function reactionButtonHtml(type, count, active) {
+      const action = type === "like" ? "upvote" : "downvote";
+      const countLabel = count === 1 ? "1 reaction" : `${count} reactions`;
+      return `<button class="react-btn ${type} ${active ? "active" : ""}" data-type="${type}" aria-label="${action}, ${countLabel}" aria-pressed="${active}"><img class="reaction-icon ${type}" src="${reactionIconUrl(active)}" alt=""><span class="reaction-count">${count}</span></button>`;
+    }
+
+    function updateReactionButton(button, type, count, active) {
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+      const action = type === "like" ? "upvote" : "downvote";
+      button.setAttribute("aria-label", `${action}, ${count} ${count === 1 ? "reaction" : "reactions"}`);
+      const icon = button.querySelector(".reaction-icon");
+      if (icon) icon.src = reactionIconUrl(active);
+      const countEl = button.querySelector(".reaction-count");
+      if (countEl) countEl.textContent = count;
+    }
+
     function postCardHtml(post) {
       const isOwner = ME && ME.id === post.author_id;
       const projectChip = post.project_share_code
@@ -697,8 +1074,8 @@
           <div class="post-actions">
             <div class="react-block">
               <div class="react-group">
-                <button class="react-btn like ${post.my_reaction === "like" ? "active" : ""}" data-type="like">&#9650; ${post.likes}</button>
-                <button class="react-btn dislike ${post.my_reaction === "dislike" ? "active" : ""}" data-type="dislike">&#9660; ${post.dislikes}</button>
+                ${reactionButtonHtml("like", post.likes, post.my_reaction === "like")}
+                ${reactionButtonHtml("dislike", post.dislikes, post.my_reaction === "dislike")}
               </div>
               ${renderFightBar(post.likes, post.dislikes)}
             </div>
@@ -757,10 +1134,8 @@
             if (!data.ok) { alert(data.error || "couldn't react"); return; }
             const likeBtn = card.querySelector(".react-btn.like");
             const dislikeBtn = card.querySelector(".react-btn.dislike");
-            likeBtn.innerHTML = "&#9650; " + data.likes;
-            dislikeBtn.innerHTML = "&#9660; " + data.dislikes;
-            likeBtn.classList.toggle("active", data.my_reaction === "like");
-            dislikeBtn.classList.toggle("active", data.my_reaction === "dislike");
+            updateReactionButton(likeBtn, "like", data.likes, data.my_reaction === "like");
+            updateReactionButton(dislikeBtn, "dislike", data.dislikes, data.my_reaction === "dislike");
             card.querySelector(".fight-bar").outerHTML = renderFightBar(data.likes, data.dislikes);
           });
         });
@@ -793,6 +1168,41 @@
           card.remove();
         });
     }
+
+    // ---- discover and feed tabs ----
+    const exploreTabs = [document.getElementById("tab-discover"), document.getElementById("tab-feed")];
+    exploreTabs[0].addEventListener("click", () => setExploreTab("discover"));
+    exploreTabs[1].addEventListener("click", () => setExploreTab("feed"));
+    exploreTabs.forEach((tab, index) => {
+      tab.addEventListener("keydown", event => {
+        let nextIndex = index;
+        if (event.key === "ArrowRight") nextIndex = (index + 1) % exploreTabs.length;
+        else if (event.key === "ArrowLeft") nextIndex = (index - 1 + exploreTabs.length) % exploreTabs.length;
+        else if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = exploreTabs.length - 1;
+        else return;
+        event.preventDefault();
+        exploreTabs[nextIndex].focus();
+        exploreTabs[nextIndex].click();
+      });
+    });
+
+    const discoverSearch = document.getElementById("discover-search");
+    document.getElementById("discover-search-form").addEventListener("submit", event => {
+      event.preventDefault();
+      clearTimeout(discoverTimer);
+      loadDiscover(discoverSearch.value);
+    });
+    discoverSearch.addEventListener("input", () => {
+      clearTimeout(discoverTimer);
+      discoverTimer = setTimeout(() => loadDiscover(discoverSearch.value), 250);
+    });
+    document.querySelectorAll(".discover-chip").forEach(button => {
+      button.addEventListener("click", () => {
+        discoverSearch.value = button.dataset.query || "";
+        loadDiscover(discoverSearch.value);
+      });
+    });
 
     // ---- sort bar ----
     document.querySelectorAll(".sort-btn").forEach(btn => {
@@ -947,7 +1357,7 @@
     });
 
     loadMe();
-    loadFeed();
+    loadDiscover();
   </script>
 </body>
 </html>
