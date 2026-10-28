@@ -473,28 +473,17 @@ hr {
 <script>
   // ---- figure out which page to load ----
   function getPageName() {
-    const params = new URLSearchParams(window.location.search);
+    const match = window.location.pathname.match(/^\/docs\/([^/]+)\/?$/);
 
-    if (params.has("page")) {
-      return params.get("page");
+    if (!match || match[1] === "index.html") {
+      return "getting-started";
     }
 
-    // fallback: last segment after /docs/
-    const parts = window.location.pathname.split("/docs/");
-
-    if (parts.length > 1) {
-      const seg = parts[1].split("/").filter(Boolean).pop();
-
-      if (seg && seg !== "index.html") {
-        return seg.replace(/\.html$/, "");
-      }
-    }
-
-    return "getting-started";
+    return decodeURIComponent(match[1]).replace(/\.html$/i, "");
   }
 
   const pageName = getPageName();
-  const mdFile = `https://mcbcode.com/docs/md/${pageName}.md`;
+  const mdFile = `/docs/md/${encodeURIComponent(pageName)}.md`;
 
   let rawMarkdown = "";
 
