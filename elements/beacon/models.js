@@ -112,12 +112,22 @@ export class BeaconModel {
   }
 
   select(i) {
-    this.selectedIndex = i;
-    this.cubeGroup.children.forEach((m, idx) => {
-      m.material.emissive?.setHex(idx === i ? 0x05ee93 : 0x000000);
-      m.material.emissiveIntensity = idx === i ? 0.35 : 0;
+    this.selectedIndex = Number.isInteger(i) && i >= 0 && i < this.cubes.length ? i : -1;
+    this._updateSelectionHighlight();
+    if (this.onSelectionChange) {
+      this.onSelectionChange(this.selectedIndex, this.selectedIndex >= 0 ? this.cubes[this.selectedIndex] : null);
+    }
+  }
+
+  _updateSelectionHighlight() {
+    this.cubeGroup.traverse(object => {
+      if (!object.isMesh) return;
+      const selected = object.userData.cubeIndex === this.selectedIndex;
+      object.material.emissive?.setHex(selected ? 0x05ee93 : 0x000000);
+      if (object.material.emissiveIntensity !== undefined) {
+        object.material.emissiveIntensity = selected ? 0.35 : 0;
+      }
     });
-    if (this.onSelectionChange) this.onSelectionChange(i, i >= 0 ? this.cubes[i] : null);
   }
 
   updateSelected(field, value) {
@@ -128,6 +138,12 @@ export class BeaconModel {
   }
 
   _rebuild() {
+    this.cubeGroup.traverse(object => {
+      if (!object.isMesh) return;
+      object.geometry?.dispose();
+      if (Array.isArray(object.material)) object.material.forEach(material => material.dispose());
+      else object.material?.dispose();
+    });
     this.cubeGroup.clear();
     this.cubes.forEach((c, i) => {
       const [sx, sy, sz] = c.size;
@@ -155,7 +171,7 @@ export class BeaconModel {
       mesh.userData.cubeIndex = i;
       this.cubeGroup.add(group);
     });
-    if (this.selectedIndex >= 0) this.select(this.selectedIndex);
+    this._updateSelectionHighlight();
   }
 
   _onPointerDown(e) {
