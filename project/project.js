@@ -450,13 +450,6 @@ function renderToolbar() {
     addWrap.appendChild(addMenu);
     toolbar.appendChild(addWrap);
 
-    const dripstoneBtn = document.createElement("button");
-    dripstoneBtn.className = "sm-btn";
-    dripstoneBtn.textContent = "Ask DripstoneAI";
-    dripstoneBtn.title = "ask DripstoneAI about this project";
-    dripstoneBtn.onclick = () => toggleDripPanel();
-    toolbar.appendChild(dripstoneBtn);
-
     const createWrap = document.createElement("div");
     createWrap.className = "create-wrap";
     const cbtn = document.createElement("button");
@@ -490,6 +483,17 @@ function renderToolbar() {
     toolbar.appendChild(createWrap);
   }
 
+  const dripstoneBtn = document.createElement("button");
+  dripstoneBtn.className = "sm-btn";
+  dripstoneBtn.textContent = "Open in DripstoneAI";
+  dripstoneBtn.title = "open DripstoneAI with this project selected (requires the project to be connected)";
+  dripstoneBtn.onclick = () => {
+    const target = new URL("https://mcbcode.com/dripstone");
+    target.searchParams.set("project", shareCode);
+    window.open(target.toString(), "_blank", "noopener,noreferrer");
+  };
+  toolbar.appendChild(dripstoneBtn);
+
   // watch button — visible to any logged-in user, shows total count (identities stay private)
   if (isLoggedIn()) {
     const bwatch = document.createElement("button");
@@ -515,19 +519,48 @@ function renderToolbar() {
     toolbar.appendChild(bsnap);
   }
     
-  // export button: visible to everyone, but greyed out / disabled if not logged in
+  // export menu: downloads are available to guests for public projects too.
+  const exportWrap = document.createElement("div");
+  exportWrap.className = "share-wrap";
+  exportWrap.id = "export-menu-wrap";
   const bexport = document.createElement("button");
   bexport.id = "export-btn";
   bexport.className = "sm-btn export-highlight";
   bexport.textContent = "Export";
-  if (isLoggedIn()) {
-    bexport.onclick = startExport;
-    bexport.title = "download this project as a .mcaddon or .mcpack";
-  } else {
-    bexport.disabled = true;
-    bexport.title = "log in to export this project";
-  }
-  toolbar.appendChild(bexport);
+  bexport.title = "choose a download or sharing action";
+  bexport.setAttribute("aria-haspopup", "menu");
+  bexport.setAttribute("aria-expanded", "false");
+  bexport.onclick = e => { e.stopPropagation(); toggleExportMenu(); };
+
+  const exportMenu = document.createElement("div");
+  exportMenu.className = "share-menu";
+  exportMenu.id = "export-menu";
+  exportMenu.setAttribute("role", "menu");
+  const downloadItem = document.createElement("div");
+  downloadItem.className = "share-menu-item";
+  downloadItem.setAttribute("role", "menuitem");
+  downloadItem.tabIndex = 0;
+  downloadItem.textContent = "download project (.mcaddon / .mcpack)";
+  downloadItem.addEventListener("click", () => { closeExportMenu(); startExport(); });
+  downloadItem.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); downloadItem.click(); } });
+
+  const shareExploreItem = document.createElement("div");
+  shareExploreItem.className = "share-menu-item";
+  shareExploreItem.setAttribute("role", "menuitem");
+  shareExploreItem.tabIndex = 0;
+  const projectIsPublic = project.is_public === 1 || project.is_public === true;
+  shareExploreItem.textContent = projectIsPublic ? "share project to explore" : "share to explore (make project public first)";
+  shareExploreItem.style.opacity = projectIsPublic ? "" : "0.55";
+  shareExploreItem.setAttribute("aria-disabled", String(!projectIsPublic));
+  shareExploreItem.addEventListener("click", () => {
+    const currentlyPublic = project.is_public === 1 || project.is_public === true;
+    if (!currentlyPublic) { alert("only public projects can be attached to an explore post. make this project public first."); return; }
+    shareProjectToExplore();
+  });
+  shareExploreItem.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shareExploreItem.click(); } });
+  exportMenu.append(downloadItem, shareExploreItem);
+  exportWrap.append(bexport, exportMenu);
+  toolbar.appendChild(exportWrap);
 
   // share button + dropdown, right of Export
   const shareWrap = document.createElement("div");
@@ -564,6 +597,28 @@ function closeAddFilesMenu() {
   document.getElementById("add-files-menu")?.classList.remove("open");
 }
 document.addEventListener("click", e => { if (!e.target.closest(".share-wrap")) { closeAddFilesMenu(); } });
+
+function toggleExportMenu() {
+  const menu = document.getElementById("export-menu");
+  const button = document.getElementById("export-btn");
+  if (!menu || !button) return;
+  const isOpen = menu.classList.toggle("open");
+  button.setAttribute("aria-expanded", String(isOpen));
+}
+function closeExportMenu() {
+  document.getElementById("export-menu")?.classList.remove("open");
+  document.getElementById("export-btn")?.setAttribute("aria-expanded", "false");
+}
+document.addEventListener("click", e => { if (!e.target.closest("#export-menu-wrap")) closeExportMenu(); });
+
+function shareProjectToExplore() {
+  closeExportMenu();
+  const target = new URL("https://mcbcode.com/explore");
+  target.searchParams.set("tab", "feed");
+  target.searchParams.set("project", shareCode);
+  target.searchParams.set("compose", "1");
+  window.location.assign(target.toString());
+}
 
 function toggleShareMenu() {
   document.getElementById("share-menu").classList.toggle("open");
@@ -2170,21 +2225,71 @@ async function toggleWatch() {
 
 
     // ---- EXPORT ----
+    async function loadGuestPublicExportData() {
+      const projectIsPublic = project.is_public === 1 || project.is_public === true;
+      if (!projectIsPublic) throw new Error("only public projects can be exported without signing in.");
+
+      const files = allFiles.slice();
+      const output = files.slice();
+      let nextIndex = 0;
+      async function loadOne(file) {
+        if (file.type !== "file") return { ...file, content: "", is_base64: false };
+        if (file.save_id) {
+          const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(file.save_id)}`);
+          let data = {};
+          try { data = await res.json(); } catch {}
+          if (!res.ok || (data.content != null && typeof data.content !== "string")) throw new Error(`couldn't read ${file.name}.`);
+          return { ...file, content: typeof data.content === "string" ? data.content : "", is_base64: false };
+        }
+
+        const res = await fetch(`${AUTH}/project/asset?file_id=${encodeURIComponent(file.id)}`);
+        if (!res.ok) throw new Error(`couldn't read ${file.name} (status ${res.status}).`);
+        const blob = await res.blob();
+        const content = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+          reader.onerror = () => reject(new Error(`couldn't process ${file.name}.`));
+          reader.readAsDataURL(blob);
+        });
+        return { ...file, content, is_base64: true };
+      }
+      async function worker() {
+        while (true) {
+          const index = nextIndex++;
+          if (index >= files.length) return;
+          output[index] = await loadOne(files[index]);
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(5, files.length) }, worker));
+      return { project_name: project.name || "project", files: output };
+    }
+
     async function startExport() {
-      if (!isLoggedIn()) return;
       const btn = document.getElementById("export-btn");
+      exportFileData = null;
       btn.disabled = true; btn.textContent = "Checking files...";
       try {
-        const res = await fetch(`${AUTH}/project/export?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
-        if (!res.ok) { alert("Failed to fetch project data."); return; }
-        exportFileData = await res.json();
+        const projectIsPublic = project.is_public === 1 || project.is_public === true;
+        if (isLoggedIn()) {
+          const res = await fetch(`${AUTH}/project/export?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
+          if (res.ok) exportFileData = await res.json();
+          else if (!projectIsPublic) {
+            let data = {};
+            try { data = await res.json(); } catch {}
+            throw new Error(data.error || "Failed to fetch project data.");
+          }
+        }
+        if (!exportFileData || !Array.isArray(exportFileData.files)) {
+          if (!projectIsPublic && !isLoggedIn()) throw new Error("only public projects can be exported without signing in.");
+          exportFileData = await loadGuestPublicExportData();
+        }
         const rootFiles = exportFileData.files.filter(f => f.parent_id === null && f.type === "file");
         const isFlatPack = ["texture_pack", "script", "skinpack"].includes(project?.project_type);
         if (rootFiles.length > 0 && !isFlatPack) {
           document.getElementById("export-warn-list").innerHTML = rootFiles.map(f => `<li>${esc(f.name)}</li>`).join("");
           document.getElementById("export-warn-overlay").classList.add("open");
         } else { await doExport(); }
-      } catch { alert("Export failed."); }
+      } catch (e) { alert(e.message || "Export failed."); }
       btn.disabled = false; btn.textContent = "Export";
     }
 
@@ -2798,11 +2903,9 @@ function highlightJS(code) {
       const textarea = document.getElementById("ie-textarea");
 
       // ---- permissions ----
-      // owner/collaborator: full view + edit
-      // logged in, not a collaborator: view only, no editing
-      // not logged in: no viewing at all — blurred + blocked with a login prompt
+      // public projects are readable by anyone; writes remain owner/collaborator only.
       ieCanEditFile = isOwner || isCollab;
-      const canView = isLoggedIn(); // owners/collabs are always logged in too
+      const canView = project.is_public === 1 || project.is_public === true || isOwner || isCollab;
 
       editorEl.classList.toggle("ie-readonly", !ieCanEditFile);
       editorEl.classList.toggle("ie-blocked", !canView);
@@ -2816,9 +2919,6 @@ function highlightJS(code) {
       document.getElementById("ie-textarea").value = "";
       document.getElementById("ie-highlight-code").innerHTML = "";
       document.getElementById("inline-editor-overlay").classList.add("open");
-
-      // not logged in: never fetch file contents at all
-      if (!canView) return;
 
       try {
         const res = await fetch(`${AUTH}/save?id=${encodeURIComponent(f.save_id)}`, { credentials: "include" });
@@ -2896,9 +2996,6 @@ function highlightJS(code) {
     // readOnly attribute (covers paste-via-keyboard-shortcut edge cases)
     document.getElementById("ie-textarea")?.addEventListener("keydown", e => {
       if (!ieCanEditFile && !(e.ctrlKey || e.metaKey) && e.key.length === 1) e.preventDefault();
-    });
-    document.getElementById("ie-textarea")?.addEventListener("copy", e => {
-      if (!isLoggedIn()) e.preventDefault();
     });
     document.getElementById("inline-editor-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeInlineEditor(); });
 
@@ -3206,10 +3303,6 @@ async function openManifestEditor(f) {
   document.getElementById("mf-save-btn").style.display = mfCanEdit ? "" : "none";
   document.getElementById("manifest-editor-overlay").classList.add("open");
 
-  if (!isLoggedIn()) {
-    document.getElementById("mf-visual-body").innerHTML = `<div class="loading-msg">Log in to view this file.</div>`;
-    return;
-  }
   if (!f.save_id) {
     document.getElementById("mf-visual-body").innerHTML = `<div class="loading-msg">This file has no data yet.</div>`;
     return;
