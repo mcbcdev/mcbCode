@@ -5,38 +5,40 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="/theme/ui-theme.css">
+  <script src="/theme/ui-theme.js"></script>
   <title>mcbCode | Point Shop</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; background: #0c0c0c; color: #c8c8c8; font-family: 'mcfont', sans-serif; }
-    a { text-decoration: none; color: #fff; }
-    g { color: #05ee93; }
-    p2 { color: #ff00d0; }
+    html, body { min-height: 100%; background: var(--ui-bg); color: var(--ui-text); font-family: 'mcfont', sans-serif; }
+    a { text-decoration: none; color: var(--ui-text-strong); }
+    g { color: var(--ui-accent); }
+    p2 { color: var(--ui-pink); }
 
-    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: rgba(20,20,20,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 16px; }
-    .topnav-title { font-size: 20px; color: #fff; font-family: 'mcfontb', sans-serif; }
+    .topnav { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--ui-topbar); backdrop-filter: blur(8px); border-bottom: 1px solid var(--ui-border); display: flex; align-items: center; padding: 0 20px; z-index: 200; gap: 16px; }
+    .topnav-title { font-size: 20px; color: var(--ui-text-strong); font-family: 'mcfontb', sans-serif; }
     .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-    .nav-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
-    .nav-btn:hover { color: #05ee93; border-color: #05ee93; }
+    .nav-btn { background: var(--ui-surface-raised); border: 1px solid var(--ui-border); color: var(--ui-text); font-family: 'mcfont', sans-serif; font-size: 13px; padding: 6px 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .nav-btn:hover { color: var(--ui-accent); border-color: var(--ui-accent); }
 
     .shell { margin-top: 56px; padding: 48px 20px 80px; max-width: 1000px; margin-left: auto; margin-right: auto; }
 
     .shop-header { text-align: center; margin-bottom: 12px; }
-    .shop-title { font-size: 30px; color: #fff; font-family: 'mcfontb', sans-serif; transform: rotate(-1deg); display: inline-block; }
-    .shop-sub { font-size: 13px; color: #666; margin-top: 8px; max-width: 460px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+    .shop-title { font-size: 30px; color: var(--ui-text-strong); font-family: 'mcfontb', sans-serif; transform: rotate(-1deg); display: inline-block; }
+    .shop-sub { font-size: 13px; color: var(--ui-muted); margin-top: 8px; max-width: 460px; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
     .balance-wrap { display: flex; justify-content: center; margin: 28px 0 44px; }
     .balance-card {
-      background: #141414; border: 2px dashed #2e2e2e; padding: 14px 28px;
+      background: var(--ui-surface); border: 2px dashed var(--ui-border); padding: 14px 28px;
       display: flex; align-items: center; gap: 14px; transform: rotate(0.6deg);
     }
-    .balance-num { font-size: 30px; color: #dc6bff; font-family: 'mcfontb', sans-serif; }
-    .balance-lbl { font-size: 11px; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
+    .balance-num { font-size: 30px; color: var(--ui-purple); font-family: 'mcfontb', sans-serif; }
+    .balance-lbl { font-size: 11px; color: var(--ui-muted); letter-spacing: 0.08em; text-transform: uppercase; }
 
     .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; }
 
     .item-card {
-      background: #141414; border: 1px solid #232323; padding: 22px 20px;
+      background: var(--ui-surface); border: 1px solid var(--ui-border); padding: 22px 20px;
       display: flex; flex-direction: column; gap: 12px;
       transition: transform 0.15s ease, border-color 0.15s ease;
       position: relative;
@@ -44,50 +46,50 @@
     .item-card:nth-child(1) { transform: rotate(-0.8deg); }
     .item-card:nth-child(2) { transform: rotate(0.6deg); }
     .item-card:nth-child(3) { transform: rotate(-0.4deg); }
-    .item-card:hover { transform: rotate(0deg) scale(1.02); border-color: #05ee93; }
+    .item-card:hover { transform: rotate(0deg) scale(1.02); border-color: var(--ui-accent); }
 
     .item-icon { font-size: 26px; }
-    .item-name { font-size: 16px; color: #fff; font-family: 'mcfontb', sans-serif; }
-    .item-desc { font-size: 12px; color: #777; line-height: 1.6; flex: 1; }
+    .item-name { font-size: 16px; color: var(--ui-text-strong); font-family: 'mcfontb', sans-serif; }
+    .item-desc { font-size: 12px; color: var(--ui-muted); line-height: 1.6; flex: 1; }
     .item-cost-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-    .item-cost { font-size: 18px; color: #dc6bff; font-family: 'mcfontb', sans-serif; }
-    .item-cost span { font-size: 11px; color: #555; margin-left: 4px; font-family: 'mcfont', sans-serif; }
+    .item-cost { font-size: 18px; color: var(--ui-purple); font-family: 'mcfontb', sans-serif; }
+    .item-cost span { font-size: 11px; color: var(--ui-muted); margin-left: 4px; font-family: 'mcfont', sans-serif; }
 
     .buy-btn {
-      background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif;
+      background: var(--ui-accent); border: none; color: var(--ui-on-accent); font-family: 'mcfont', sans-serif;
       font-size: 13px; padding: 8px 0; cursor: pointer; transition: background 0.2s; width: 100%;
     }
-    .buy-btn:hover { background: #78e3a6; }
-    .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #333; color: #777; }
+    .buy-btn:hover { background: var(--ui-accent-hover); }
+    .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; background: var(--ui-surface-hover); color: var(--ui-muted); }
 
-    .owned-tag { font-size: 10px; color: #05ee93; border: 1px solid #0a3a2a; padding: 2px 6px; align-self: flex-start; }
+    .owned-tag { font-size: 10px; color: var(--ui-accent); border: 1px solid var(--ui-accent-deep); padding: 2px 6px; align-self: flex-start; }
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: var(--ui-overlay-strong); z-index: 500; align-items: center; justify-content: center; }
     .modal-overlay.visible { display: flex; }
-    .modal-box { background: #1a1a1a; border: 2px dashed #2e2e2e; padding: 28px 30px; min-width: 320px; max-width: 420px; width: 100%; transform: rotate(-0.4deg); }
-    .modal-box h3 { color: #fff; font-size: 16px; margin-bottom: 10px; font-family: 'mcfontb', sans-serif; }
-    .modal-box p { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.6; }
-    .modal-select { width: 100%; background: #111; border: 1px solid #2e2e2e; color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; margin-bottom: 14px; }
-    .modal-select:focus { border-color: #05ee93; }
-    .modal-err { font-size: 12px; color: #ff5555; margin-bottom: 10px; display: none; }
+    .modal-box { background: var(--ui-surface); border: 2px dashed var(--ui-border); padding: 28px 30px; min-width: 320px; max-width: 420px; width: 100%; transform: rotate(-0.4deg); }
+    .modal-box h3 { color: var(--ui-text-strong); font-size: 16px; margin-bottom: 10px; font-family: 'mcfontb', sans-serif; }
+    .modal-box p { font-size: 13px; color: var(--ui-muted); margin-bottom: 16px; line-height: 1.6; }
+    .modal-select { width: 100%; background: var(--ui-bg-soft); border: 1px solid var(--ui-border); color: var(--ui-text-strong); font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; margin-bottom: 14px; }
+    .modal-select:focus { border-color: var(--ui-accent); }
+    .modal-err { font-size: 12px; color: var(--ui-danger); margin-bottom: 10px; display: none; }
     .modal-err.visible { display: block; }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-    .cancel-btn { background: #1e1e1e; border: 1px solid #2e2e2e; color: #bebebe; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; }
-    .cancel-btn:hover { color: #fff; }
-    .confirm-btn { background: #05ee93; border: none; color: #0c0c0c; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; transition: background 0.2s; }
-    .confirm-btn:hover { background: #78e3a6; }
+    .cancel-btn { background: var(--ui-surface-raised); border: 1px solid var(--ui-border); color: var(--ui-text); font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; }
+    .cancel-btn:hover { color: var(--ui-text-strong); }
+    .confirm-btn { background: var(--ui-accent); border: none; color: var(--ui-on-accent); font-family: 'mcfont', sans-serif; font-size: 13px; padding: 7px 16px; cursor: pointer; transition: background 0.2s; }
+    .confirm-btn:hover { background: var(--ui-accent-hover); }
     .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .toast {
       position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: #141414; border: 1px solid #2e2e2e; padding: 12px 20px; font-size: 13px;
-      color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 600;
+      background: var(--ui-surface); border: 1px solid var(--ui-border); padding: 12px 20px; font-size: 13px;
+      color: var(--ui-text-strong); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 600;
     }
-    .toast.ok { border-color: #05ee93; color: #05ee93; }
-    .toast.err { border-color: #ff5555; color: #ff5555; }
+    .toast.ok { border-color: var(--ui-accent); color: var(--ui-accent); }
+    .toast.err { border-color: var(--ui-danger); color: var(--ui-danger); }
     .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    .loading-msg, .err-msg { text-align: center; padding: 60px 20px; color: #444; font-size: 13px; }
+    .loading-msg, .err-msg { text-align: center; padding: 60px 20px; color: var(--ui-muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -123,7 +125,7 @@
     <div class="modal-box">
       <h3 id="pm-title">Confirm purchase</h3>
       <p id="pm-desc"></p>
-      <select class="modal-select" id="pm-choice" style="display:none;"></select>
+      <select class="modal-select" id="pm-choice" style="display: none;"></select>
       <div class="modal-err" id="pm-err"></div>
       <div class="modal-actions">
         <button class="cancel-btn" onclick="closePurchaseModal()">Cancel</button>

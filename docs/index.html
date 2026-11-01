@@ -7,6 +7,8 @@
 
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="/theme/ui-theme.css">
+  <script src="/theme/ui-theme.js"></script>
 
 
   <!-- markdown parser -->
@@ -14,15 +16,15 @@
 
   <style>
     :root {
-      --accent-color: #05ee93;
-      --accent-dark: #00a459;
-      --accent-glow: rgba(5, 238, 147, 0.25);
-      --bg-color: #0c0c0c;
-      --card-bg: rgba(18, 18, 18, 0.75);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --text-main: #ffffff;
-      --text-muted: #bebebe;
-      --code-bg: #111111;
+      --accent-color: var(--ui-accent);
+      --accent-dark: var(--ui-accent-deep);
+      --accent-glow: var(--ui-accent-soft);
+      --bg-color: var(--ui-bg);
+      --card-bg: var(--ui-surface);
+      --card-border: var(--ui-border);
+      --text-main: var(--ui-text-strong);
+      --text-muted: var(--ui-text);
+      --code-bg: var(--ui-surface-raised);
     }
 
     *, *::before, *::after {
@@ -73,7 +75,7 @@
       left: 0;
       height: 100vh;
       overflow-y: auto;
-      background: rgba(14, 14, 14, 0.9);
+      background: var(--ui-topbar);
       border-right: 1px solid var(--card-border);
       padding: 90px 20px 30px 20px;
     }
@@ -96,9 +98,9 @@
       z-index: 100;
       width: 48px;
       height: 48px;
-      background: rgba(18, 18, 18, 0.9);
+      background: var(--ui-surface-raised);
       border: 1px solid var(--card-border);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 6px 20px var(--ui-shadow);
       cursor: pointer;
       align-items: center;
       justify-content: center;
@@ -118,7 +120,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: var(--ui-overlay);
       z-index: 90;
     }
 
@@ -158,13 +160,13 @@
     .sidebar-link:hover {
       color: var(--text-main);
       border-left: 2px solid var(--accent-color);
-      background: rgba(255,255,255,0.03);
+      background: color-mix(in srgb, var(--ui-text) 3%, transparent);
     }
 
     .sidebar-link.active {
       color: var(--accent-color);
       border-left: 2px solid var(--accent-color);
-      background: rgba(5, 238, 147, 0.08);
+      background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
     }
 
     /* --- Main content --- */
@@ -193,7 +195,7 @@
 
     .docs-toolbar button:hover {
       color: var(--accent-color);
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: color-mix(in srgb, var(--ui-text) 5%, transparent);
       transform: none;
     }
 
@@ -230,7 +232,7 @@
       border: 1px solid var(--card-border);
       padding: 2px 6px;
       font-family: 'Consolas', 'Courier New', monospace;
-      color: #00ffcc;
+      color: var(--ui-accent);
     }
 
     #docs-content pre {
@@ -260,12 +262,12 @@
     }
 
     .docs-footer a {
-      color: #bebebe;
+      color: var(--ui-text);
       text-decoration: none;
     }
 
     .docs-footer .creator {
-      color: #454545;
+      color: var(--ui-border-strong);
       font-family: 'mcfontb', sans-serif;
     }
 
@@ -299,42 +301,42 @@
     
     /* ===== headings ===== */
 h1, h2, h3, h4, h5, h6 {
-  color: #ffffff;
+  color: var(--ui-text-strong);
   margin: 28px 0 12px 0;
   line-height: 1.3;
 }
 
-h1 { font-size: 2.1rem; border-bottom: 1px solid #2a2a2a; padding-bottom: 10px; }
-h2 { font-size: 1.6rem; color: #05ee93; margin-top: 36px; }
+h1 { font-size: 2.1rem; border-bottom: 1px solid var(--ui-border); padding-bottom: 10px; }
+h2 { font-size: 1.6rem; color: var(--ui-accent); margin-top: 36px; }
 h3 { font-size: 1.3rem; }
-h4 { font-size: 1.1rem; color: #bebebe; }
+h4 { font-size: 1.1rem; color: var(--ui-text); }
 
 /* ===== paragraphs & text ===== */
 p {
-  color: #bebebe;
+  color: var(--ui-text);
   font-family: 'mcfont', sans-serif;
   line-height: 1.75;
   margin: 14px 0;
 }
 
-strong { color: #ffffff; }
-em { color: #d6d6d6; }
+strong { color: var(--ui-text-strong); }
+em { color: var(--ui-text); }
 
 /* ===== links ===== */
 a {
-  color: #05ee93;
+  color: var(--ui-accent);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 a:hover {
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(5, 238, 147, 0.25);
+  color: var(--ui-text-strong);
+  text-shadow: 0 0 8px var(--ui-shadow-soft);
 }
 
 /* ===== lists ===== */
 ul, ol {
-  color: #bebebe;
+  color: var(--ui-text);
   font-family: 'mcfont', sans-serif;
   margin: 14px 0;
   padding-left: 28px;
@@ -343,22 +345,22 @@ ul, ol {
 }
 
 li { margin: 6px 0; }
-li::marker { color: #05ee93; }
+li::marker { color: var(--ui-accent); }
 
 /* ===== inline code ===== */
 code {
-  background: #111111;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--ui-bg-soft);
+  border: 1px solid color-mix(in srgb, var(--ui-text) 10%, transparent);
   padding: 2px 6px;
   font-family: 'Consolas', 'Courier New', monospace;
-  color: #00ffcc;
+  color: var(--ui-accent);
   font-size: 0.9em;
 }
 
 /* ===== code blocks ===== */
 pre {
-  background: #111111;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--ui-bg-soft);
+  border: 1px solid color-mix(in srgb, var(--ui-text) 10%, transparent);
   padding: 20px;
   overflow-x: auto;
   margin: 18px 0;
@@ -368,14 +370,14 @@ pre code {
   border: none;
   padding: 0;
   background: none;
-  color: #d6d6d6;
+  color: var(--ui-text);
   font-size: 0.9em;
 }
 
 /* ===== blockquotes ===== */
 blockquote {
-  border-left: 4px solid #fad870;
-  background-color: #fad8701a;
+  border-left: 4px solid var(--ui-warning);
+  background-color: var(--ui-warning-soft);
   padding: 12px 16px;
   margin: 16px 0;
 }
@@ -390,30 +392,30 @@ table {
   border-collapse: collapse;
   margin: 18px 0;
   font-family: 'mcfont', sans-serif;
-  border: 1px solid #454545;
+  border: 1px solid var(--ui-border-strong);
 }
 
 th, td {
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid color-mix(in srgb, var(--ui-text) 10%, transparent);
   padding: 10px 14px;
   text-align: left;
-  color: #bebebe;
+  color: var(--ui-text);
 }
 
 th {
-  background: rgba(5, 238, 147, 0.08);
-  color: #ffffff;
+  background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
+  color: var(--ui-text-strong);
   font-family: 'mcfontb', sans-serif;
 }
 
 tr:nth-child(even) td {
-  background: rgba(255,255,255,0.02);
+  background: color-mix(in srgb, var(--ui-text) 2%, transparent);
 }
 
 /* ===== horizontal rule ===== */
 hr {
   border: none;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--ui-border);
   margin: 32px 0;
 }
   </style>
