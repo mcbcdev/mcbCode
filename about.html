@@ -4,6 +4,8 @@
 
 <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
 <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+<link rel="stylesheet" href="/theme/ui-theme.css">
+<script src="/theme/ui-theme.js"></script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,8 +15,8 @@
 <style>
 html, body {
     margin: 0;
-    background: #0c0c0c;
-    color: white;
+    background: var(--ui-bg);
+    color: var(--ui-text-strong);
     font-family: "mcfont", sans-serif;
 }
 
@@ -25,7 +27,7 @@ main {
 
 section {
     padding: 110px 0;
-    border-top: 1px solid #222;
+    border-top: 1px solid var(--ui-border);
 }
 
 section:first-child {
@@ -52,7 +54,7 @@ section:first-child {
     margin: 35px auto 0;
     font-size: 23px;
     line-height: 1.7;
-    color: #cfcfcf;
+    color: var(--ui-text);
 }
 
 h2 {
@@ -65,7 +67,7 @@ p {
     margin: 0 0 24px;
     font-size: 21px;
     line-height: 1.8;
-    color: #d2d2d2;
+    color: var(--ui-text);
 }
 
 .content {
@@ -81,12 +83,12 @@ p {
 
 .placeholder {
     aspect-ratio: 16 / 10;
-    background: #171717;
+    background: var(--ui-surface);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #777;
-    border: 1px solid #262626;
+    color: var(--ui-muted);
+    border: 1px solid var(--ui-border);
 }
 
 .creator {
@@ -126,7 +128,7 @@ p {
 
 .socials a:hover {
     border-radius: 20px;
-    background-color: #ffffff1a;
+    background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
 
 .socials img {
@@ -147,7 +149,7 @@ p {
 }
 
 .year {
-    color: #05ee93;
+    color: var(--ui-accent);
     font-size: 26px;
 }
 
@@ -189,7 +191,7 @@ h2 {
 
 <div class="content">
 
-<h2 style="color: #ffffff;">About <span style="color: #05ee93;" mctooltip="this is \#05ee93#05ee93\#ffffff, \boldmcb\#05ee93Code\#ffffff\bold's signature color"><span style="color: #ffffff;">mcb</span>Code</span></h2>
+<h2 style="color: var(--ui-text-strong);">About <span style="color: var(--ui-accent);" mctooltip="this is \#05ee93#05ee93\#ffffff, \boldmcb\#05ee93Code\#ffffff\bold's signature color"><span style="color: var(--ui-text-strong);">mcb</span>Code</span></h2>
 
 <p>
 mcbCode was created to provide an editor built specifically for Minecraft Bedrock Edition development. Rather than adapting a general-purpose code editor, every feature is designed around the workflow of creating behavior packs, resource packs, and add-ons.
@@ -217,7 +219,7 @@ The platform continues to expand with collaboration features, project management
 
 <div>
 
-<h3 style="color: #00b2ff" mctooltip="thats me lol">idktoast</h3>
+<h3 style="color: var(--ui-info)" mctooltip="thats me lol">idktoast</h3>
 
 <p>
 idktoast is the creator of mcbCode and an active Minecraft Bedrock developer. What began as a one page function editor gradually evolved into a platform dedicated to improving the Bedrock development experience for creators of every skill level.
@@ -271,7 +273,7 @@ idktoast is the creator of mcbCode and an active Minecraft Bedrock developer. Wh
 <div class="event">
 <div class="year">January 1st, 2026</div>
 <div>
-<p>mcbCode was created as an mcfunction editor. The archived file can be viewed <a href="https://mcbcode.com/archive/real-og-editor.html" style="color: #ffffff; text-decoration: none; font-family: mcfontb">here</a>.</p>
+<p>mcbCode was created as an mcfunction editor. The archived file can be viewed <a href="https://mcbcode.com/archive/real-og-editor.html" style="color: var(--ui-text-strong); text-decoration: none; font-family: mcfontb">here</a>.</p>
 </div>
 </div>
 

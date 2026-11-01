@@ -6,7 +6,7 @@
   };
   const PRESETS = {
     dark: { bg: "#0c0c0c", surface: "#161719", text: "#c8c8c8", accent: "#05ee93" },
-    light: { bg: "#f4f6f8", surface: "#ffffff", text: "#344054", accent: "#007f5f" },
+    light: { bg: "#f4f6f8", surface: "#ffffff", text: "#344054", accent: "#006b52" },
     ocean: { bg: "#0c1720", surface: "#122631", text: "#cadce5", accent: "#33d6c0" }
   };
   const COLOR_KEYS = ["bg", "surface", "text", "accent"];
@@ -14,6 +14,12 @@
 
   function isColor(value) {
     return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+  }
+
+  function normalizeHex(value) {
+    const trimmed = String(value || "").trim();
+    const withHash = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+    return /^#[0-9a-f]{6}$/i.test(withHash) ? withHash.toLowerCase() : null;
   }
 
   function readSavedTheme() {
@@ -54,15 +60,18 @@
 
     const customSemanticColors = backgroundTone === "light" ? {
       info: "#006ca8", danger: "#b42318", success: "#167a4a", warning: "#8b5a00",
-      purple: "#7042a0", pink: "#ad286d", overlay: "rgba(24, 33, 43, .34)", shadow: "rgba(24, 33, 43, .16)"
+      purple: "#7042a0", pink: "#ad286d", overlay: "rgba(24, 33, 43, .34)",
+      "overlay-strong": "rgba(24, 33, 43, .52)", "shadow-soft": "rgba(24, 33, 43, .08)", shadow: "rgba(24, 33, 43, .16)"
     } : {
       info: "#00b2ff", danger: "#ff7373", success: "#45c993", warning: "#f2bd4b",
-      purple: "#c58be8", pink: "#ed66b5", overlay: "rgba(0, 0, 0, .65)", shadow: "rgba(0, 0, 0, .48)"
+      purple: "#c58be8", pink: "#ed66b5", overlay: "rgba(0, 0, 0, .65)",
+      "overlay-strong": "rgba(0, 0, 0, .78)", "shadow-soft": "rgba(0, 0, 0, .16)", shadow: "rgba(0, 0, 0, .48)"
     };
-    const customKeys = ["info", "danger", "success", "warning", "purple", "pink", "overlay", "shadow", "text-strong", "premium-border"];
+    const customKeys = ["info", "danger", "success", "success-soft", "warning", "purple", "pink", "overlay", "overlay-strong", "shadow-soft", "shadow", "text-strong", "premium-border"];
     if (mode === "custom") {
       for (const key of customKeys) root.style.removeProperty(`--ui-${key}`);
       for (const [key, value] of Object.entries(customSemanticColors)) root.style.setProperty(`--ui-${key}`, value);
+      root.style.setProperty("--ui-success-soft", `color-mix(in srgb, var(--ui-success) 9%, transparent)`);
       root.style.setProperty("--ui-text-strong", colors.text);
       root.style.setProperty("--ui-topbar", `color-mix(in srgb, ${colors.surface} 90%, transparent)`);
       root.style.setProperty("--ui-premium-border", `color-mix(in srgb, var(--ui-purple) 38%, var(--ui-surface))`);
@@ -88,10 +97,14 @@
     surface.style.backgroundColor = colors.surface;
     surface.style.color = colors.text;
     accent.style.backgroundColor = colors.accent;
-    accent.style.color = contrastRatio("#111214", colors.accent) >= contrastRatio("#ffffff", colors.accent) ? "#111214" : "#ffffff";
+    const accentInk = contrastRatio("#111214", colors.accent) >= contrastRatio("#ffffff", colors.accent) ? "#111214" : "#ffffff";
+    accent.style.color = accentInk;
+    document.querySelectorAll(".ui-theme-dialog [data-swatch]").forEach(swatch => {
+      swatch.style.backgroundColor = colors[swatch.dataset.swatch];
+    });
     const warning = document.querySelector(".ui-theme-contrast");
     if (warning) {
-      const readable = contrastRatio(colors.bg, colors.text) >= 4.5 && contrastRatio(colors.surface, colors.text) >= 4.5 && contrastRatio(colors.accent, accent.style.color) >= 4.5;
+      const readable = contrastRatio(colors.bg, colors.text) >= 4.5 && contrastRatio(colors.surface, colors.text) >= 4.5 && contrastRatio(colors.accent, accentInk) >= 4.5;
       warning.textContent = readable ? "text contrast looks good." : "some text may be hard to read; try a lighter or darker text color.";
       warning.classList.toggle("warning", !readable);
     }
@@ -121,18 +134,19 @@
           </select>
         </div>
         <div class="ui-theme-colors" id="ui-theme-colors" hidden>
-          <label class="ui-theme-color" for="ui-color-bg">background<input id="ui-color-bg" data-color="bg" type="color"></label>
-          <label class="ui-theme-color" for="ui-color-surface">surface<input id="ui-color-surface" data-color="surface" type="color"></label>
-          <label class="ui-theme-color" for="ui-color-text">text<input id="ui-color-text" data-color="text" type="color"></label>
-          <label class="ui-theme-color" for="ui-color-accent">accent<input id="ui-color-accent" data-color="accent" type="color"></label>
+          <label class="ui-theme-color">background<span class="ui-theme-color-control"><span class="ui-theme-swatch" data-swatch="bg" aria-hidden="true"></span><input data-color="bg" type="text" inputmode="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="#0c0c0c" aria-label="background hex color"></span></label>
+          <label class="ui-theme-color">surface<span class="ui-theme-color-control"><span class="ui-theme-swatch" data-swatch="surface" aria-hidden="true"></span><input data-color="surface" type="text" inputmode="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="#161719" aria-label="surface hex color"></span></label>
+          <label class="ui-theme-color">text<span class="ui-theme-color-control"><span class="ui-theme-swatch" data-swatch="text" aria-hidden="true"></span><input data-color="text" type="text" inputmode="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="#c8c8c8" aria-label="text hex color"></span></label>
+          <label class="ui-theme-color">accent<span class="ui-theme-color-control"><span class="ui-theme-swatch" data-swatch="accent" aria-hidden="true"></span><input data-color="accent" type="text" inputmode="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="#05ee93" aria-label="accent hex color"></span></label>
         </div>
+        <p class="ui-theme-input-message" id="ui-theme-input-message" role="status" aria-live="polite" hidden></p>
         <div class="ui-theme-preview" aria-label="theme color preview">
           <div class="ui-theme-preview-tile" data-preview-main>page text</div>
           <div class="ui-theme-preview-tile" data-preview-surface>surface</div>
           <div class="ui-theme-preview-tile" data-preview-accent>accent</div>
         </div>
         <p class="ui-theme-contrast" role="status" aria-live="polite"></p>
-        <p class="ui-theme-note">your selection is saved in this browser and follows you between these test pages.</p>
+        <p class="ui-theme-note">your selection is saved in this browser and shared across mcbCode pages with theme support.</p>
         <button class="ui-theme-reset" type="button">reset to dark</button>
       </div>`;
     document.body.appendChild(dialog);
@@ -141,11 +155,21 @@
     const colorFields = dialog.querySelector("#ui-theme-colors");
     const colorInputs = dialog.querySelectorAll("[data-color]");
     const closeButton = dialog.querySelector(".ui-theme-close");
+    const inputMessage = dialog.querySelector("#ui-theme-input-message");
+
+    function setInputMessage(message) {
+      inputMessage.textContent = message;
+      inputMessage.hidden = !message;
+    }
 
     function syncPicker(theme) {
       modeSelect.value = theme.mode;
       colorFields.hidden = theme.mode !== "custom";
-      for (const input of colorInputs) input.value = theme.colors[input.dataset.color];
+      for (const input of colorInputs) {
+        input.value = theme.colors[input.dataset.color];
+        input.removeAttribute("aria-invalid");
+      }
+      setInputMessage("");
       updatePreview(theme.mode === "custom" ? theme.colors : PRESETS[theme.mode]);
     }
 
@@ -173,11 +197,27 @@
       applyTheme(theme, true);
       syncPicker(savedTheme);
     });
-    colorInputs.forEach(input => input.addEventListener("input", () => {
-      const colors = { ...savedTheme.colors, [input.dataset.color]: input.value.toLowerCase() };
-      applyTheme({ mode: "custom", colors }, true);
-      syncPicker(savedTheme);
-    }));
+    colorInputs.forEach(input => {
+      input.addEventListener("input", () => {
+        const value = normalizeHex(input.value);
+        if (!value) {
+          input.setAttribute("aria-invalid", "true");
+          setInputMessage("enter a 6-digit hex color, such as #05ee93.");
+          return;
+        }
+        input.value = value;
+        input.removeAttribute("aria-invalid");
+        setInputMessage("");
+        const colors = { ...savedTheme.colors, [input.dataset.color]: value };
+        applyTheme({ mode: "custom", colors }, true);
+      });
+      input.addEventListener("blur", () => {
+        if (input.getAttribute("aria-invalid") !== "true") return;
+        input.value = savedTheme.colors[input.dataset.color];
+        input.removeAttribute("aria-invalid");
+        setInputMessage("");
+      });
+    });
     dialog.querySelector(".ui-theme-reset").addEventListener("click", () => {
       applyTheme({ mode: "dark", colors: { ...PRESETS.dark } }, true);
       syncPicker(savedTheme);

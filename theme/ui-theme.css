@@ -1,5 +1,6 @@
-/* shared interface theme tokens; loaded only on the dashboard and profile during rollout */
+/* shared interface theme tokens for pages that opt into the site theme system */
 html {
+  --accent-color: var(--ui-accent);
   --ui-bg: #0c0c0c;
   --ui-surface: #161719;
   --ui-text: #c8c8c8;
@@ -12,6 +13,8 @@ html {
   --ui-purple: #dc6bff;
   --ui-pink: #ff00d0;
   --ui-overlay: rgba(0, 0, 0, .65);
+  --ui-overlay-strong: rgba(0, 0, 0, .78);
+  --ui-shadow-soft: rgba(0, 0, 0, .16);
   --ui-shadow: rgba(0, 0, 0, .48);
   --ui-topbar: rgba(20, 20, 20, .88);
   --ui-ink: #111214;
@@ -27,7 +30,9 @@ html {
   --ui-dim: #666666;
   --ui-faint: #4b4b4b;
   --ui-accent-hover: #78e3a6;
+  --ui-accent-deep: #006b43;
   --ui-accent-soft: rgba(5, 238, 147, .1);
+  --ui-success-soft: rgba(5, 238, 147, .08);
   --ui-danger-soft: rgba(255, 85, 85, .08);
   --ui-danger-border: #3a1a1a;
   --ui-warning-soft: rgba(255, 204, 85, .08);
@@ -42,7 +47,7 @@ html[data-ui-theme="light"] {
   --ui-surface: #ffffff;
   --ui-text: #344054;
   --ui-text-strong: #18212b;
-  --ui-accent: #007f5f;
+  --ui-accent: #006b52;
   --ui-info: #006ca8;
   --ui-danger: #b42318;
   --ui-success: #167a4a;
@@ -50,6 +55,8 @@ html[data-ui-theme="light"] {
   --ui-purple: #7042a0;
   --ui-pink: #ad286d;
   --ui-overlay: rgba(24, 33, 43, .34);
+  --ui-overlay-strong: rgba(24, 33, 43, .52);
+  --ui-shadow-soft: rgba(24, 33, 43, .08);
   --ui-shadow: rgba(24, 33, 43, .16);
   --ui-topbar: rgba(255, 255, 255, .9);
   --ui-ink: #111827;
@@ -65,7 +72,9 @@ html[data-ui-theme="light"] {
   --ui-dim: #647184;
   --ui-faint: #718096;
   --ui-accent-hover: #00684d;
+  --ui-accent-deep: #005540;
   --ui-accent-soft: rgba(0, 127, 95, .1);
+  --ui-success-soft: rgba(22, 122, 74, .08);
   --ui-danger-soft: rgba(180, 35, 24, .08);
   --ui-danger-border: #edc8c4;
   --ui-warning-soft: rgba(139, 90, 0, .08);
@@ -86,6 +95,8 @@ html[data-ui-theme="ocean"] {
   --ui-purple: #d19bff;
   --ui-pink: #ff74be;
   --ui-overlay: rgba(0, 0, 0, .68);
+  --ui-overlay-strong: rgba(0, 0, 0, .78);
+  --ui-shadow-soft: rgba(0, 0, 0, .18);
   --ui-shadow: rgba(0, 0, 0, .5);
   --ui-topbar: rgba(18, 38, 49, .9);
   --ui-ink: #071b20;
@@ -101,7 +112,9 @@ html[data-ui-theme="ocean"] {
   --ui-dim: #829da9;
   --ui-faint: #6f8a96;
   --ui-accent-hover: #64e5d2;
+  --ui-accent-deep: #176c62;
   --ui-accent-soft: rgba(51, 214, 192, .11);
+  --ui-success-soft: rgba(51, 214, 192, .08);
   --ui-danger-soft: rgba(255, 115, 115, .1);
   --ui-danger-border: #62383d;
   --ui-warning-soft: rgba(255, 196, 92, .1);
@@ -128,6 +141,8 @@ html[data-ui-theme="custom"] {
   --ui-purple: #c58be8;
   --ui-pink: #ed66b5;
   --ui-overlay: rgba(0, 0, 0, .58);
+  --ui-overlay-strong: rgba(0, 0, 0, .78);
+  --ui-shadow-soft: rgba(0, 0, 0, .16);
   --ui-shadow: rgba(0, 0, 0, .38);
   --ui-topbar: color-mix(in srgb, var(--ui-surface) 90%, transparent);
   --ui-ink: #111214;
@@ -146,7 +161,9 @@ html[data-ui-theme="custom"] {
     --ui-dim: color-mix(in srgb, var(--ui-text) 58%, var(--ui-bg));
     --ui-faint: color-mix(in srgb, var(--ui-text) 43%, var(--ui-bg));
     --ui-accent-hover: color-mix(in srgb, var(--ui-accent) 84%, var(--ui-text));
+    --ui-accent-deep: color-mix(in srgb, var(--ui-accent) 58%, var(--ui-bg));
     --ui-accent-soft: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+    --ui-success-soft: color-mix(in srgb, var(--ui-success) 9%, transparent);
     --ui-danger-soft: color-mix(in srgb, var(--ui-danger) 9%, transparent);
     --ui-danger-border: color-mix(in srgb, var(--ui-danger) 28%, var(--ui-surface));
     --ui-warning-soft: color-mix(in srgb, var(--ui-warning) 10%, transparent);
@@ -214,8 +231,13 @@ body::selection, ::selection { background: var(--ui-accent-soft); }
 }
 .ui-theme-colors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-top: 16px; }
 .ui-theme-colors[hidden] { display: none; }
-.ui-theme-color { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ui-muted); font-size: 11px; }
-.ui-theme-color input { width: 42px; height: 32px; padding: 2px; border: 1px solid var(--ui-border); border-radius: 6px; background: var(--ui-surface-raised); cursor: pointer; }
+.ui-theme-color { min-width: 0; display: flex; flex-direction: column; gap: 6px; color: var(--ui-muted); font-size: 11px; }
+.ui-theme-color-control { display: flex; align-items: center; gap: 7px; }
+.ui-theme-swatch { width: 26px; height: 26px; flex: 0 0 26px; border: 1px solid var(--ui-border-strong); border-radius: 6px; }
+.ui-theme-color input { width: 100%; min-width: 0; min-height: 34px; padding: 6px 8px; border: 1px solid var(--ui-border-strong); border-radius: 6px; background: var(--ui-bg-soft); color: var(--ui-text-strong); font: 12px monospace; }
+.ui-theme-color input[aria-invalid="true"] { border-color: var(--ui-danger); }
+.ui-theme-input-message { margin: 10px 0 0; color: var(--ui-danger); font-size: 11px; line-height: 1.4; }
+.ui-theme-input-message[hidden] { display: none; }
 .ui-theme-preview { display: grid; grid-template-columns: repeat(3, 1fr); min-height: 54px; margin: 18px 0 8px; overflow: hidden; border: 1px solid var(--ui-border); border-radius: 6px; }
 .ui-theme-preview-tile { display: flex; align-items: center; justify-content: center; padding: 8px 4px; font-size: 10px; text-align: center; }
 .ui-theme-contrast { min-height: 16px; margin: 0 0 10px; color: var(--ui-success); font-size: 11px; }
@@ -230,3 +252,12 @@ body::selection, ::selection { background: var(--ui-accent-soft); }
   .ui-theme-dialog-inner { padding: 16px; }
   .ui-theme-colors { grid-template-columns: 1fr; }
 }
+
+
+/* the about page injects this shared navigation component after page load */
+html[data-ui-theme] .navi { background-color: var(--ui-topbar) !important; border-bottom-color: var(--ui-border) !important; }
+html[data-ui-theme] .navi a { color: var(--ui-text-strong) !important; }
+html[data-ui-theme] .navi-brand span:first-child { color: var(--ui-text-strong) !important; }
+html[data-ui-theme] .navi-brand span:nth-child(2) { color: var(--ui-accent) !important; }
+html[data-ui-theme] .dropdown { background-color: var(--ui-surface) !important; border-color: var(--ui-border) !important; box-shadow: 0 10px 30px var(--ui-shadow) !important; }
+html[data-ui-theme] .dropdown-content a:hover { background-color: var(--ui-surface-hover) !important; }

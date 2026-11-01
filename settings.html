@@ -5,25 +5,27 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="/theme/ui-theme.css">
+  <script src="/theme/ui-theme.js"></script>
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
 
   <title>mcbCode | Settings</title>
   <style>
     :root {
-      --bg: #111214;
-      --surface: #161719;
-      --surface-2: #1a1c1f;
-      --surface-3: #222326;
-      --border: #2a2a2e;
-      --border-2: #343438;
-      --text: #c8c8c8;
-      --text-strong: #ffffff;
-      --muted: #888;
-      --dim: #555;
-      --green: #05ee93;
-      --green-hover: #78e3a6;
-      --blue: #00b2ff;
-      --danger: #ff5555;
+      --bg: var(--ui-bg);
+      --surface: var(--ui-surface);
+      --surface-2: var(--ui-surface-raised);
+      --surface-3: var(--ui-surface-hover);
+      --border: var(--ui-border);
+      --border-2: var(--ui-border-strong);
+      --text: var(--ui-text);
+      --text-strong: var(--ui-text-strong);
+      --muted: var(--ui-muted);
+      --dim: var(--ui-dim);
+      --green: var(--ui-accent);
+      --green-hover: var(--ui-accent-hover);
+      --blue: var(--ui-info);
+      --danger: var(--ui-danger);
       --space-1: 6px;
       --space-2: 12px;
       --space-3: 18px;
@@ -34,7 +36,7 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: 'mcfont', sans-serif; overflow-x: hidden; letter-spacing: 0; }
-    a { text-decoration: none; color: #fff; transition: color 0.2s; }
+    a { text-decoration: none; color: var(--ui-text-strong); transition: color 0.2s; }
     a:hover { color: var(--green); }
     g { color: var(--green); }
 
@@ -42,9 +44,9 @@
 
     /* ---- TOPNAV (same as profile page) ---- */
     .topnav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; z-index: 200; gap: 10px; }
-    .topnav-logo { font-size: 18px; color: #fff; font-family: 'mcfontb', sans-serif; white-space: nowrap; }
+    .topnav-logo { font-size: 18px; color: var(--ui-text-strong); font-family: 'mcfontb', sans-serif; white-space: nowrap; }
     .topnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .nav-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; }
+    .nav-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: var(--ui-muted); font-family: 'mcfont', sans-serif; font-size: 12px; padding: 5px 10px; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; }
     .nav-btn:hover { color: var(--green); border-color: var(--green); }
 
     /* ---- PAGE ---- */
@@ -58,23 +60,23 @@
     .page-sub { font-size: 13px; color: var(--dim); }
 
     .section { display: flex; flex-direction: column; gap: var(--space-2); }
-    .section-title { font-size: 15px; color: var(--blue); font-family: 'mcfontb', sans-serif; padding-bottom: 10px; border-bottom: 1px solid #1e1e22; }
+    .section-title { font-size: 15px; color: var(--blue); font-family: 'mcfontb', sans-serif; padding-bottom: 10px; border-bottom: 1px solid var(--ui-border); }
 
     /* ---- SETTING ROWS ---- */
     .setting-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; gap: var(--space-2); }
-    .setting-label { font-size: 13px; color: #ccc; }
+    .setting-label { font-size: 13px; color: var(--ui-text); }
     .setting-desc { font-size: 11px; color: var(--dim); margin-top: 5px; line-height: 1.5; }
 
     /* toggle (real button, same look as the profile page) */
     .toggle { position: relative; width: 40px; height: 22px; background: var(--surface-3); border: 1px solid var(--border-2); cursor: pointer; flex-shrink: 0; margin-left: 16px; padding: 0; transition: background 0.15s, border-color 0.15s; }
     .toggle[aria-checked="true"] { background: var(--green); border-color: var(--green); }
     .toggle:disabled { opacity: 0.4; cursor: not-allowed; }
-    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; transition: left 0.15s; }
+    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--ui-text-strong); transition: left 0.15s; }
     .toggle[aria-checked="true"] .toggle-knob { left: 20px; }
 
     /* ---- BLOCKS (links + connected apps) ---- */
     .block { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; display: flex; flex-direction: column; gap: var(--space-2); }
-    .block-title { font-size: 13px; color: #ccc; }
+    .block-title { font-size: 13px; color: var(--ui-text); }
     .block-desc { font-size: 11px; color: var(--dim); margin-top: -6px; }
 
     .link-rows { display: flex; flex-direction: column; gap: var(--space-1); }
@@ -82,14 +84,14 @@
     .link-edit-row .edit-input { flex: 1; min-width: 0; }
     .link-edit-row .edit-input.label-input { flex: 0 0 110px; }
 
-    .edit-input { width: 100%; background: var(--bg); border: 1px solid var(--border-2); color: #fff; font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; min-height: 34px; }
+    .edit-input { width: 100%; background: var(--bg); border: 1px solid var(--border-2); color: var(--ui-text-strong); font-family: 'mcfont', sans-serif; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s; min-height: 34px; }
     .edit-input:focus { border-color: var(--green); }
 
     .save-row { display: flex; gap: var(--space-1); align-items: center; }
-    .sm-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: #aaa; font-family: 'mcfont', sans-serif; font-size: 12px; padding: 6px 12px; min-height: 30px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+    .sm-btn { background: var(--surface-3); border: 1px solid var(--border-2); color: var(--ui-muted); font-family: 'mcfont', sans-serif; font-size: 12px; padding: 6px 12px; min-height: 30px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
     .sm-btn:hover { color: var(--green); border-color: var(--green); }
-    .sm-btn.primary { background: var(--green); border-color: var(--green); color: #0c0c0c; }
-    .sm-btn.primary:hover { background: var(--green-hover); color: #0c0c0c; }
+    .sm-btn.primary { background: var(--green); border-color: var(--green); color: var(--ui-on-accent); }
+    .sm-btn.primary:hover { background: var(--green-hover); color: var(--ui-on-accent); }
     .sm-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
     .sm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -104,13 +106,13 @@
     .danger-zone { align-self: flex-start; }
 
     /* status toast */
-    .status { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--surface-3); border: 1px solid var(--border-2); padding: 8px 16px; font-size: 12px; color: #ccc; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 300; max-width: calc(100vw - 32px); }
+    .status { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--surface-3); border: 1px solid var(--border-2); padding: 8px 16px; font-size: 12px; color: var(--ui-text); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 300; max-width: calc(100vw - 32px); }
     .status.show { opacity: 1; }
     .status.ok { border-color: var(--green); color: var(--green); }
     .status.err { border-color: var(--danger); color: var(--danger); }
 
     /* center message (loading / logged out) */
-    .center-msg { text-align: center; font-size: 13px; color: #444; padding: var(--space-6) 0; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; }
+    .center-msg { text-align: center; font-size: 13px; color: var(--ui-faint); padding: var(--space-6) 0; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; }
     .center-msg.err { color: var(--danger); }
 
     [hidden] { display: none !important; }
@@ -140,18 +142,29 @@
 
       <div class="center-msg" id="loading-msg">Loading...</div>
 
+      <header class="page-head">
+        <a class="back-link" id="back-link" href="/dashboard" hidden>Back to profile</a>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-sub" id="page-sub"></p>
+      </header>
+
+      <section class="section" id="site-theme-section" hidden>
+        <h2 class="section-title">Site appearance</h2>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Theme</div>
+            <div class="setting-desc">Choose a preset or customize colors for supported mcbCode pages. Saved in this browser.</div>
+          </div>
+          <button type="button" class="sm-btn" id="ui-theme-trigger">Customize</button>
+        </div>
+      </section>
+
       <div class="center-msg" id="logged-out-msg" hidden>
         <span>you need to be logged in to see your settings.</span>
         <a class="nav-btn" href="/dashboard">Go to dashboard</a>
       </div>
 
       <div id="settings-content" hidden>
-
-        <header class="page-head">
-          <a class="back-link" id="back-link" href="/">Back to profile</a>
-          <h1 class="page-title">Settings</h1>
-          <p class="page-sub" id="page-sub"></p>
-        </header>
 
         <div class="section" style="margin-top: var(--space-4);">
           <h2 class="section-title">Profile</h2>
@@ -202,7 +215,7 @@
         </div>
 
         <div class="section" style="margin-top: var(--space-4);">
-          <h2 class="section-title">Appearance and editor</h2>
+          <h2 class="section-title">Editor preferences</h2>
 
           <div class="setting-row">
             <div>
@@ -289,6 +302,7 @@
       } catch (e) {}
 
       document.getElementById("loading-msg").hidden = true;
+      document.getElementById("site-theme-section").hidden = false;
 
       if (!myUsername) {
         document.getElementById("logged-out-msg").hidden = false;
@@ -296,6 +310,8 @@
       }
 
       document.getElementById("back-link").href = `/profile/${encodeURIComponent(myUsername)}`;
+      document.getElementById("back-link").textContent = "Back to profile";
+      document.getElementById("back-link").hidden = false;
       document.getElementById("page-sub").textContent = `logged in as ${myUsername}`;
       document.title = `mcbCode | Settings`;
 
