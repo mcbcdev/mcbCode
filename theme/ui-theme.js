@@ -7,10 +7,21 @@
   const PRESETS = {
     dark: { bg: "#0c0c0c", surface: "#161719", text: "#c8c8c8", accent: "#05ee93" },
     light: { bg: "#f4f6f8", surface: "#ffffff", text: "#344054", accent: "#006b52" },
-    ocean: { bg: "#0c1720", surface: "#122631", text: "#cadce5", accent: "#33d6c0" }
+    ocean: { bg: "#0c1720", surface: "#122631", text: "#cadce5", accent: "#33d6c0" },
+    sunset: { bg: "#24151d", surface: "#35202c", text: "#f0dce5", accent: "#ff9b72" },
+    forest: { bg: "#102018", surface: "#1b3025", text: "#d5e9dc", accent: "#73d99a" },
+    lavender: { bg: "#1b1727", surface: "#292337", text: "#e7def7", accent: "#bba2ff" },
+    rose: { bg: "#281720", surface: "#39212e", text: "#f3dce6", accent: "#ff8ab6" },
+    ember: { bg: "#201512", surface: "#30211b", text: "#f4e2d8", accent: "#ff9c5b" },
+    sandstone: { bg: "#f3ead9", surface: "#fffaf0", text: "#47392e", accent: "#80542f" }
   };
+  const STATIC_TOKEN_THEMES = new Set(["dark", "light", "ocean"]);
   const COLOR_KEYS = ["bg", "surface", "text", "accent"];
   let savedTheme = readSavedTheme();
+
+  function isKnownTheme(mode) {
+    return mode === "custom" || Object.prototype.hasOwnProperty.call(PRESETS, mode);
+  }
 
   function isColor(value) {
     return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
@@ -25,7 +36,7 @@
   function readSavedTheme() {
     try {
       const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (!value || !["dark", "light", "ocean", "custom"].includes(value.mode)) return { mode: DEFAULT_THEME.mode, colors: { ...DEFAULT_THEME.colors } };
+      if (!value || !isKnownTheme(value.mode)) return { mode: DEFAULT_THEME.mode, colors: { ...DEFAULT_THEME.colors } };
       const colors = {};
       for (const key of COLOR_KEYS) colors[key] = isColor(value.colors?.[key]) ? value.colors[key] : DEFAULT_THEME.colors[key];
       return { mode: value.mode, colors };
@@ -48,7 +59,7 @@
 
   function applyTheme(theme, persist) {
     const root = document.documentElement;
-    const mode = ["dark", "light", "ocean", "custom"].includes(theme.mode) ? theme.mode : "dark";
+    const mode = isKnownTheme(theme.mode) ? theme.mode : "dark";
     const colors = mode === "custom" ? theme.colors : (PRESETS[mode] || PRESETS.dark);
     const backgroundTone = luminance(colors.bg) > 0.46 ? "light" : "dark";
     const accentInk = contrastRatio("#111214", colors.accent) >= contrastRatio("#ffffff", colors.accent) ? "#111214" : "#ffffff";
@@ -58,7 +69,7 @@
     for (const key of COLOR_KEYS) root.style.setProperty(`--ui-${key}`, colors[key]);
     root.style.setProperty("--ui-on-accent", accentInk);
 
-    const customSemanticColors = backgroundTone === "light" ? {
+    const toneSemanticColors = backgroundTone === "light" ? {
       info: "#006ca8", danger: "#b42318", success: "#167a4a", warning: "#8b5a00",
       purple: "#7042a0", pink: "#ad286d", overlay: "rgba(24, 33, 43, .34)",
       "overlay-strong": "rgba(24, 33, 43, .52)", "shadow-soft": "rgba(24, 33, 43, .08)", shadow: "rgba(24, 33, 43, .16)"
@@ -67,16 +78,17 @@
       purple: "#c58be8", pink: "#ed66b5", overlay: "rgba(0, 0, 0, .65)",
       "overlay-strong": "rgba(0, 0, 0, .78)", "shadow-soft": "rgba(0, 0, 0, .16)", shadow: "rgba(0, 0, 0, .48)"
     };
-    const customKeys = ["info", "danger", "success", "success-soft", "warning", "purple", "pink", "overlay", "overlay-strong", "shadow-soft", "shadow", "text-strong", "premium-border"];
-    if (mode === "custom") {
-      for (const key of customKeys) root.style.removeProperty(`--ui-${key}`);
-      for (const [key, value] of Object.entries(customSemanticColors)) root.style.setProperty(`--ui-${key}`, value);
+    const dynamicTokenKeys = ["info", "danger", "success", "success-soft", "warning", "purple", "pink", "overlay", "overlay-strong", "shadow-soft", "shadow", "text-strong", "premium-border", "topbar", "ink"];
+    if (mode === "custom" || !STATIC_TOKEN_THEMES.has(mode)) {
+      for (const key of dynamicTokenKeys) root.style.removeProperty(`--ui-${key}`);
+      for (const [key, value] of Object.entries(toneSemanticColors)) root.style.setProperty(`--ui-${key}`, value);
       root.style.setProperty("--ui-success-soft", `color-mix(in srgb, var(--ui-success) 9%, transparent)`);
       root.style.setProperty("--ui-text-strong", colors.text);
       root.style.setProperty("--ui-topbar", `color-mix(in srgb, ${colors.surface} 90%, transparent)`);
       root.style.setProperty("--ui-premium-border", `color-mix(in srgb, var(--ui-purple) 38%, var(--ui-surface))`);
+      root.style.setProperty("--ui-ink", backgroundTone === "light" ? "#111827" : "#111214");
     } else {
-      for (const key of customKeys) root.style.removeProperty(`--ui-${key}`);
+      for (const key of dynamicTokenKeys) root.style.removeProperty(`--ui-${key}`);
     }
 
     savedTheme = { mode, colors: { ...colors } };
@@ -118,6 +130,7 @@
     dialog.className = "ui-theme-dialog";
     dialog.id = "ui-theme-dialog";
     dialog.setAttribute("aria-labelledby", "ui-theme-title");
+    const presetOptions = Object.keys(PRESETS).map(name => `<option value="${name}">${name}</option>`).join("");
     dialog.innerHTML = `
       <div class="ui-theme-dialog-inner">
         <div class="ui-theme-heading">
@@ -127,9 +140,7 @@
         <div class="ui-theme-field">
           <label for="ui-theme-mode">theme</label>
           <select class="ui-theme-select" id="ui-theme-mode">
-            <option value="dark">dark</option>
-            <option value="light">light</option>
-            <option value="ocean">ocean</option>
+            ${presetOptions}
             <option value="custom">custom</option>
           </select>
         </div>
