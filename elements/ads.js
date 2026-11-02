@@ -3,8 +3,8 @@
 
   function loadMonetag() {
     const s = document.createElement('script');
-    s.dataset.zone = '11542124';
-    s.src = 'https://n6wxm.com/vignette.min.js';
+    s.dataset.zone = '11541954';
+    s.src = 'https://nap5k.com/tag.min.js';
     document.body.appendChild(s);
   }
 
@@ -58,7 +58,7 @@
     const popup = document.createElement('div');
     popup.id = 'mcb-ad-popup';
     popup.innerHTML = `
-      <span><a href="https://mcbcode.com/account">Sign Up</a> to remove ads forever</span>
+      <span><a href="https://mcbcode.com/account">Join Obsidian</a> to remove ads</span>
       <button aria-label="Close">x</button>
     `;
     document.body.appendChild(popup);
@@ -66,15 +66,20 @@
     popup.querySelector('button').addEventListener('click', () => popup.remove());
   }
 
+  function showAds() {
+    loadMonetag();
+    showSignupPopup();
+  }
+
   fetch(`${AUTH}/me`, { credentials: "include" })
-    .then(res => {
+    .then(async res => {
       if (!res.ok) {
-        loadMonetag();
-        showSignupPopup();
+        showAds();
+        return;
       }
+
+      const user = await res.json();
+      if (user.is_obsidian !== true) showAds();
     })
-    .catch(() => {
-      loadMonetag();
-      showSignupPopup();
-    });
+    .catch(showAds);
 })();
