@@ -167,6 +167,44 @@
     .root-hint b { color: var(--text-mid); }
     .root-hint .hint-actions { margin-top: 10px; display: flex; gap: 8px; }
 
+    /* ---------------------------------------------------------------------
+       EASY PROJECT VIEW
+    --------------------------------------------------------------------- */
+    .easy-project-view { max-width: 1120px; margin: 0 auto; padding: 30px 28px 56px; display: grid; gap: 26px; }
+    .easy-project-intro { padding: 22px 24px; background: var(--bg-1); border: 1px solid var(--line); }
+    .easy-project-intro h2 { color: var(--ui-text-strong); font: 18px 'mcfontb', sans-serif; margin-bottom: 7px; }
+    .easy-project-intro p, .easy-project-note { color: var(--text-low); font-size: 12px; line-height: 1.6; }
+    .easy-project-section { display: grid; gap: 12px; }
+    .easy-project-section h3 { color: var(--ui-text-strong); font: 14px 'mcfontb', sans-serif; }
+    .easy-project-actions, .easy-project-packs, .easy-project-assets { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .easy-project-action, .easy-project-pack, .easy-project-asset {
+      min-width: 0; border: 1px solid var(--line); background: var(--bg-1); color: var(--text-mid);
+      font: inherit; text-align: left; padding: 16px; border-radius: var(--radius-lg);
+    }
+    .easy-project-action { cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+    .easy-project-action:hover { border-color: var(--accent); background: var(--bg-2); transform: translateY(-1px); }
+    .easy-project-action strong, .easy-project-pack strong, .easy-project-asset strong { display: block; color: var(--ui-text-strong); font: 13px 'mcfontb', sans-serif; margin-bottom: 6px; }
+    .easy-project-action span, .easy-project-pack span, .easy-project-asset span { display: block; color: var(--text-low); font-size: 11px; line-height: 1.5; }
+    .easy-project-pack { display: flex; flex-direction: column; gap: 7px; }
+    .easy-project-pack .sm-btn { align-self: flex-start; margin-top: auto; }
+    .easy-project-asset { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .easy-project-asset .file-icon { width: 42px; height: 42px; border: 1px solid var(--line); background: var(--bg-2); display: grid; place-items: center; overflow: hidden; }
+    .easy-project-asset .file-icon img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+    .easy-project-asset-copy { min-width: 0; flex: 1; }
+    .easy-project-asset-copy strong, .easy-project-asset-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .easy-project-other-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+    .easy-project-other-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); background: var(--bg-1); border-radius: var(--radius-lg); }
+    .easy-project-other-item strong { overflow: hidden; color: var(--text-mid); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .easy-project-other-item span { color: var(--text-low); font-size: 10px; flex: 0 0 auto; }
+    .easy-creator-advanced { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .easy-creator-advanced summary { cursor: pointer; color: var(--text-low); font-size: 12px; margin-bottom: 14px; }
+
+    @media (max-width: 700px) {
+      .easy-project-view { padding: 20px 14px 38px; gap: 18px; }
+      .easy-project-intro { padding: 18px; }
+      .easy-project-actions, .easy-project-packs, .easy-project-assets, .easy-project-other-list { grid-template-columns: 1fr; }
+    }
+
     .image-preview-row {
       overflow: hidden; max-height: 0; opacity: 0;
       transition: max-height 0.2s ease, opacity 0.15s ease;
