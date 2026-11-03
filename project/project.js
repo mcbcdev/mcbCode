@@ -28,6 +28,7 @@
     let currentTags       = [];
     let pendingDangerAction = null;
     let openImagePreview = null;
+    window._easyProjectMode = false;
 
     // filenames that get an extra "are you sure" nudge before deleting, since
     // beginners often don't realize these are load-bearing for the pack
@@ -275,7 +276,11 @@
           window._isObsidian = d.is_obsidian || false;
           try {
             const sres = await fetch(`${AUTH}/settings`, { credentials: "include" });
-            if (sres.ok) { const sd = await sres.json(); window._editorMode = sd.settings.editor_mode || "inline"; }
+            if (sres.ok) {
+              const sd = await sres.json();
+              window._editorMode = sd.settings.editor_mode || "inline";
+              window._easyProjectMode = sd.settings.easy_project === true;
+            }
           } catch {}
         }
       } catch {}
@@ -418,7 +423,16 @@ function renderToolbar() {
   const toolbar = document.querySelector(".proj-header-actions");
   toolbar.innerHTML = "";
 
-  if (canEdit() && project?.project_type !== "skinpack") {
+  if (window._easyProjectMode) {
+    const preferencesBtn = document.createElement("button");
+    preferencesBtn.className = "sm-btn";
+    preferencesBtn.textContent = "View settings";
+    preferencesBtn.title = "Turn off Easy project mode in settings to show the file tree and code editor.";
+    preferencesBtn.onclick = () => { window.location.href = "/settings.html"; };
+    toolbar.appendChild(preferencesBtn);
+  }
+
+  if (canEdit() && project?.project_type !== "skinpack" && !window._easyProjectMode) {
     // "+ Add Files" dropdown: Folder / File / Image / Structure
     const addWrap = document.createElement("div");
     addWrap.className = "share-wrap";
@@ -483,16 +497,18 @@ function renderToolbar() {
     toolbar.appendChild(createWrap);
   }
 
-  const dripstoneBtn = document.createElement("button");
-  dripstoneBtn.className = "sm-btn";
-  dripstoneBtn.textContent = "Open in DripstoneAI";
-  dripstoneBtn.title = "open DripstoneAI with this project selected (requires the project to be connected)";
-  dripstoneBtn.onclick = () => {
-    const target = new URL("https://mcbcode.com/dripstone");
-    target.searchParams.set("project", shareCode);
-    window.open(target.toString(), "_blank", "noopener,noreferrer");
-  };
-  toolbar.appendChild(dripstoneBtn);
+  if (!window._easyProjectMode) {
+    const dripstoneBtn = document.createElement("button");
+    dripstoneBtn.className = "sm-btn";
+    dripstoneBtn.textContent = "Open in DripstoneAI";
+    dripstoneBtn.title = "open DripstoneAI with this project selected (requires the project to be connected)";
+    dripstoneBtn.onclick = () => {
+      const target = new URL("https://mcbcode.com/dripstone");
+      target.searchParams.set("project", shareCode);
+      window.open(target.toString(), "_blank", "noopener,noreferrer");
+    };
+    toolbar.appendChild(dripstoneBtn);
+  }
 
   // watch button — visible to any logged-in user, shows total count (identities stay private)
   if (isLoggedIn()) {
@@ -856,28 +872,37 @@ function openCreator(kind) {
   title.textContent = kind === "block" ? "Create Block" : "Create Item";
   const categories = kind === "block" ? BLOCK_COMPONENT_CATEGORIES : ITEM_COMPONENT_CATEGORIES;
   const textureFolder = kind === "block" ? "blocks" : "items";
+  const easyCreator = !!window._easyProjectMode;
+  const canChooseTexture = !easyCreator || project?.project_type !== "script";
+  const namespace = `mcb_${String(shareCode || "project").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 32) || "project"}`;
+  const identifierSuffix = Date.now().toString(36).slice(-5);
 
   let html = `
     <div class="set-field">
       <label>Name</label>
       <textarea id="creator-name" rows="1" maxlength="72" placeholder="e.g. Ruby Block"></textarea>
+      ${easyCreator ? `<div class="field-hint" style="color:#777; font-size:11px; margin-top:5px;">${canChooseTexture ? "give it a name and optionally upload a PNG texture. the technical setup is handled for you." : "give it a name. the technical setup is handled for you."}</div>` : ""}
     </div>
-    <div class="set-field">
-      <label>Identifier</label>
-      <textarea id="creator-identifier" rows="1" maxlength="128" placeholder="e.g. wiki:${kind}_identifier"></textarea>
-      <div class="field-hint" id="creator-identifier-hint" style="color:#666; font-size:10px; margin-top:4px;">must be in "namespace:identifier" format, e.g. wiki:ruby_block</div>
-      <div class="modal-err" id="creator-identifier-err"></div>
-    </div>
-    <div class="set-field">
+    ${easyCreator ? `<input type="hidden" id="creator-identifier" value="${namespace}:${kind}_${identifierSuffix}"><div class="modal-err" id="creator-identifier-err"></div>` : `
+      <div class="set-field">
+        <label>Identifier</label>
+        <textarea id="creator-identifier" rows="1" maxlength="128" placeholder="e.g. wiki:${kind}_identifier"></textarea>
+        <div class="field-hint" id="creator-identifier-hint" style="color:#666; font-size:10px; margin-top:4px;">must be in "namespace:identifier" format, e.g. wiki:ruby_block</div>
+        <div class="modal-err" id="creator-identifier-err"></div>
+      </div>
+    `}
+    ${canChooseTexture ? `<div class="set-field">
       <label>Texture (upload new)</label>
       <input type="file" id="creator-texture-file" accept="image/png">
-      <div class="field-hint" style="color:#666; font-size:10px; margin-top:4px;">uploads to RP/textures/${textureFolder}/ and registers it automatically. leave empty to use an existing texture instead.</div>
-    </div>
-    <div class="set-field">
-      <label>Texture Path / Shortname (used if no upload above)</label>
-      <textarea id="creator-texture-path" rows="1" placeholder="e.g. wiki:existing_texture"></textarea>
-    </div>
-
+      <div class="field-hint" style="color:#666; font-size:10px; margin-top:4px;">uploads to RP/textures/${textureFolder}/ and registers it automatically.${easyCreator ? " leave empty to use a plain texture." : " leave empty to use an existing texture instead."}</div>
+    </div>` : ""}
+    ${easyCreator ? "" : `
+      <div class="set-field">
+        <label>Texture Path / Shortname (used if no upload above)</label>
+        <textarea id="creator-texture-path" rows="1" placeholder="e.g. wiki:existing_texture"></textarea>
+      </div>
+    `}
+    ${easyCreator ? `<details class="easy-creator-advanced"><summary>More options (optional)</summary>` : ""}
     <div class="creator-section-label">Components</div>
   `;
 
@@ -939,7 +964,18 @@ function openCreator(kind) {
     </div>
   `;
 
+  if (easyCreator) html += `</details>`;
   body.innerHTML = html;
+  if (easyCreator) {
+    const nameInput = document.getElementById("creator-name");
+    const identifierInput = document.getElementById("creator-identifier");
+    const updateIdentifier = () => {
+      const slug = (nameInput.value.trim() || kind).toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 48) || kind;
+      identifierInput.value = `${namespace}:${slug}_${identifierSuffix}`;
+    };
+    nameInput.addEventListener("input", updateIdentifier);
+    updateIdentifier();
+  }
   document.getElementById("creator-overlay").classList.add("open");
   buildRecipeGrid();
 
@@ -1324,7 +1360,7 @@ preview.innerHTML = `
     <span style="font-size:12px; color:#888;">${mode === "structure" ? "3D block structure" : "3D custom model"}</span>
     <div style="display:flex; gap:8px;">
       <a class="primary-btn" href="${url}" style="display:inline-block;">Open Beacon Editor</a>
-      ${mode === "model" ? `<button class="sm-btn" onclick="openGeoJsonEditor(${file.id})">View as JSON</button>` : ""}
+      ${mode === "model" && !window._easyProjectMode ? `<button class="sm-btn" onclick="openGeoJsonEditor(${file.id})">View as JSON</button>` : ""}
     </div>
   </div>
 `;
@@ -1647,20 +1683,204 @@ async function removeSkinpackSkin(index) {
   renderSkinpackEditor();
 }
 
+function easyFolderFileCount(folderId) {
+  const stack = [folderId];
+  const visited = new Set();
+  let count = 0;
+  while (stack.length) {
+    const parentId = stack.pop();
+    const key = parentId === null ? "root" : String(parentId);
+    if (visited.has(key)) continue;
+    visited.add(key);
+    for (const file of allFiles) {
+      if ((file.parent_id === null ? null : String(file.parent_id)) !== (parentId === null ? null : String(parentId))) continue;
+      if (file.type === "folder") stack.push(file.id);
+      else count++;
+    }
+  }
+  return count;
+}
+
+function easyAssetTitle(file) {
+  const title = file.name
+    .replace(/\.mcstructure$/i, "")
+    .replace(/\.geo\.json$/i, "")
+    .replace(/\.png$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return title || (isPng(file) ? "image" : "3d content");
+}
+
+function easyContentTitle(file) {
+  return file.name
+    .replace(/\.(mcfunction|mcmeta|mctemplate|json|js|ts|lang|molang|ogg|wav|mp3|txt|md)$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() || "Project content";
+}
+
+function easyContentCategory(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".mcfunction")) return "Gameplay function";
+  if (name.endsWith(".js") || name.endsWith(".ts") || name.endsWith(".molang")) return "Custom behavior";
+  if (name.endsWith(".json") || name.endsWith(".mcmeta")) return "Pack settings";
+  if (name.endsWith(".lang") || name.endsWith(".txt") || name.endsWith(".md")) return "Text content";
+  if (/\.(ogg|wav|mp3)$/.test(name)) return "Sound";
+  return "Project content";
+}
+
+async function prepareEasyUploadDestination() {
+  const segments = window._easyProjectUploadSegments;
+  if (!segments?.length) return true;
+  window._easyProjectUploadSegments = null;
+  try {
+    await ensureFolderPath(segments);
+    let parentId = null;
+    const path = [];
+    for (const name of segments) {
+      const parentKey = parentId === null ? null : String(parentId);
+      const folder = allFiles.find(file => file.type === "folder" &&
+        (file.parent_id === null ? null : String(file.parent_id)) === parentKey &&
+        file.name.toLowerCase() === name.toLowerCase());
+      if (!folder) throw new Error(`couldn't prepare the ${name} folder.`);
+      path.push({ id: folder.id, name: folder.name });
+      parentId = folder.id;
+    }
+    currentPath = path;
+    updateStats();
+    return true;
+  } catch (error) {
+    alert(error.message || "couldn't prepare an upload folder.");
+    return false;
+  }
+}
+
+function startEasyUpload(kind) {
+  if (!canEdit()) return;
+  const projectType = project?.project_type || "addon";
+  let segments;
+  if (kind === "image") {
+    if (projectType === "script") return;
+    segments = ["RP", "textures"];
+  } else if (kind === "structure") {
+    if (["texture_pack", "skinpack"].includes(projectType)) return;
+    segments = ["BP", "structures"];
+  }
+  window._easyProjectUploadSegments = segments;
+  document.getElementById(kind === "image" ? "png-upload-input" : "mcstructure-upload-input").click();
+}
+
+function renderEasyProjectView(list) {
+  const projectType = project?.project_type || "addon";
+  const packs = projectType === "addon"
+    ? [
+        { name: "Behavior Pack", shortName: "BP", folder: findRootFolder("BP"), description: "Gameplay and custom content for your addon." },
+        { name: "Resource Pack", shortName: "RP", folder: findRootFolder("RP"), description: "Textures, models, sounds, and visuals for your addon." }
+      ]
+    : [
+        { name: projectType === "texture_pack" ? "Resource Pack" : "Behavior Pack", shortName: projectType === "texture_pack" ? "RP" : "BP", folder: legacySinglePackFolder(), description: "Your project pack and its saved content." }
+      ];
+  const packCards = packs.map(pack => {
+    if (!pack.folder) {
+      return `<article class="easy-project-pack"><strong>${esc(pack.name)}</strong><span>${esc(pack.description)}</span>${canEdit() ? `<button type="button" class="sm-btn" data-easy-create-pack="${pack.shortName}">Set up ${pack.name}</button>` : `<span>not set up yet</span>`}</article>`;
+    }
+    const count = easyFolderFileCount(pack.folder.id);
+    return `<article class="easy-project-pack"><strong>${esc(pack.name)}</strong><span>${count} saved item${count === 1 ? "" : "s"}</span><span>${esc(pack.description)}</span></article>`;
+  }).join("");
+  const visualFiles = allFiles.filter(file => file.type === "file" && (isPng(file) || isBeaconFile(file)));
+  const rootPackIds = new Set(packs.filter(pack => pack.folder).map(pack => String(pack.folder.id)));
+  const extraFolders = allFiles.filter(file => file.type === "folder" && file.parent_id === null && !rootPackIds.has(String(file.id)));
+  const otherFiles = allFiles.filter(file => file.type === "file" && !isPng(file) && !isBeaconFile(file));
+  const otherContent = [
+    ...otherFiles.map(file => `<div class="easy-project-other-item"><strong>${esc(easyContentTitle(file))}</strong><span>${easyContentCategory(file)}</span></div>`),
+    ...extraFolders.map(folder => `<div class="easy-project-other-item"><strong>${esc(folder.name)}</strong><span>Additional folder</span></div>`)
+  ].join("");
+  const assetCards = visualFiles.map(file => {
+    const image = isPng(file);
+    const label = easyAssetTitle(file);
+    const typeLabel = image ? "Image or texture" : (beaconModeFor(file) === "structure" ? "3D structure" : "3D model");
+    const icon = image
+      ? `<img loading="lazy" src="${AUTH}/project/asset?file_id=${encodeURIComponent(file.id)}" alt="${esc(label)}">`
+      : (beaconModeFor(file) === "structure" ? "3D" : "model");
+    return `<button type="button" class="easy-project-asset" data-easy-asset="${esc(file.id)}"><span class="file-icon">${icon}</span><span class="easy-project-asset-copy"><strong>${esc(label)}</strong><span>${typeLabel}</span></span></button>`;
+  }).join("");
+  const canCreate = canEdit() && !["texture_pack", "skinpack"].includes(projectType);
+  const canReplaceTexture = canEdit() && projectType !== "script" && projectType !== "skinpack";
+  const canUploadImage = canEdit() && projectType !== "script";
+  const canUploadStructure = canEdit() && !["texture_pack", "skinpack"].includes(projectType);
+  const actions = [
+    canCreate ? `<button type="button" class="easy-project-action" data-easy-action="block"><strong>Create a block</strong><span>Choose a name and optional texture. mcbCode handles the setup.</span></button>` : "",
+    canCreate ? `<button type="button" class="easy-project-action" data-easy-action="item"><strong>Create an item</strong><span>Make a custom item with a guided form.</span></button>` : "",
+    canReplaceTexture ? `<button type="button" class="easy-project-action" data-easy-action="texture"><strong>Replace a texture</strong><span>Pick an existing texture and upload its replacement.</span></button>` : "",
+    canUploadImage ? `<button type="button" class="easy-project-action" data-easy-action="image"><strong>Add an image</strong><span>Upload a PNG; mcbCode places it in your pack's textures.</span></button>` : "",
+    canUploadStructure ? `<button type="button" class="easy-project-action" data-easy-action="structure"><strong>Add a structure</strong><span>Upload a Minecraft structure file to the right place.</span></button>` : ""
+  ].filter(Boolean).join("");
+
+  list.innerHTML = `
+    <div class="easy-project-view">
+      <section class="easy-project-intro">
+        <h2>Your project, made easier</h2>
+        <p>Use guided tools to add content and see your images, models, and structures. Your project files are unchanged; technical files and code are simply hidden in this view.</p>
+      </section>
+      ${actions ? `<section class="easy-project-section"><h3>Make something</h3><div class="easy-project-actions">${actions}</div></section>` : ""}
+      <section class="easy-project-section"><h3>Your packs</h3><div class="easy-project-packs">${packCards}</div></section>
+      <section class="easy-project-section"><h3>Visual content</h3>${visualFiles.length ? `<div class="easy-project-assets">${assetCards}</div>` : `<p class="easy-project-note">Images, textures, models, and structures added to this project will appear here.</p>`}</section>
+      ${otherContent ? `<section class="easy-project-section"><h3>Other project content</h3><p class="easy-project-note">These items stay in your project. Their file contents are hidden in Easy project mode.</p><div class="easy-project-other-list">${otherContent}</div></section>` : ""}
+      ${!canEdit() ? `<p class="easy-project-note">You can browse this project. Only its owner or collaborators can make changes.</p>` : ""}
+    </div>`;
+
+  list.querySelectorAll("[data-easy-create-pack]").forEach(button => {
+    button.addEventListener("click", () => quickCreateRootFolder(button.dataset.easyCreatePack));
+  });
+  list.querySelectorAll("[data-easy-action]").forEach(button => {
+    button.addEventListener("click", () => {
+      if (button.dataset.easyAction === "block") openCreator("block");
+      if (button.dataset.easyAction === "item") openCreator("item");
+      if (button.dataset.easyAction === "texture") openReplaceTexture();
+      if (button.dataset.easyAction === "image") startEasyUpload("image");
+      if (button.dataset.easyAction === "structure") startEasyUpload("structure");
+    });
+  });
+  list.querySelectorAll("[data-easy-asset]").forEach(button => {
+    const file = allFiles.find(item => String(item.id) === button.dataset.easyAsset);
+    if (!file) return;
+    button.addEventListener("click", () => {
+      if (isPng(file)) toggleImagePreview(file, button);
+      else toggleBeaconPreview(file, button);
+    });
+  });
+}
+
 function renderFileList() {
   if (project?.project_type === "skinpack") {
     currentPath = [];
     const pathSegments = document.getElementById("path-segments");
     if (pathSegments) pathSegments.innerHTML = "";
+    const pathBar = document.querySelector(".path-bar");
+    if (pathBar) pathBar.style.display = "";
     renderToolbar();
     const rootUrl = buildPathUrl([]);
     if (location.pathname !== rootUrl) history.replaceState({ path: [] }, "", rootUrl);
     renderSkinpackEditor();
     return;
   }
+  const list = document.getElementById("file-list");
+  const pathBar = document.querySelector(".path-bar");
+  if (window._easyProjectMode) {
+    currentPath = [];
+    const pathSegments = document.getElementById("path-segments");
+    if (pathSegments) pathSegments.innerHTML = "";
+    if (pathBar) pathBar.style.display = "none";
+    const rootUrl = buildPathUrl([]);
+    if (location.pathname !== rootUrl) history.replaceState({ path: [] }, "", rootUrl);
+    renderToolbar();
+    renderEasyProjectView(list);
+    return;
+  }
+  if (pathBar) pathBar.style.display = "";
   renderPathBar();
   renderToolbar();
-  const list = document.getElementById("file-list");
   list.innerHTML = "";
   const parentId = currentFolderId();
   // coerce to string for comparison — protects against id/parent_id
@@ -1941,6 +2161,7 @@ document.getElementById("geojson-overlay")?.addEventListener("click", e => { if 
       e.target.value = ""; // reset so same file can be picked again
       if (!file) return;
       if (file.type !== "image/png") { alert("Only PNG files are allowed."); return; }
+      if (!await prepareEasyUploadDestination()) return;
 
       // beginner guardrail check applies to uploaded images too
       const folderSegments = currentPath.map(c => c.name);
@@ -2015,6 +2236,7 @@ async function handlePackIconUpload(e) {
       e.target.value = "";
       if (!file) return;
       if (!file.name.toLowerCase().endsWith(".mcstructure")) { alert("Only .mcstructure files are allowed."); return; }
+      if (!await prepareEasyUploadDestination()) return;
 
       const folderSegments = currentPath.map(c => c.name);
       const check = checkGuardrail(file.name, folderSegments);
