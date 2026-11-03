@@ -1369,6 +1369,36 @@
 
 </script>
 
+<script>
+  async function startStripeCheckout() {
+    const btn = document.getElementById("obsidian-buy");
+    const msg = document.getElementById("obsidian-msg");
+    btn.disabled = true;
+    btn.textContent = "loading...";
+    try {
+      const res = await fetch("https://auth.mcbcode.com/stripe/checkout", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (res.status === 401) {
+        // not logged in yet, send them to sign in first
+        window.location.href = "https://mcbcode.com/account";
+        return;
+      }
+      const data = await res.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+      msg.textContent = data.error || "something went wrong, try again";
+    } catch (e) {
+      msg.textContent = "something went wrong, try again";
+    }
+    btn.disabled = false;
+    btn.textContent = "get obsidian";
+  }
+</script>
+          
 <script src="https://mcbcode.com/elements/tooltip.js" defer></script>
 
 </body>
