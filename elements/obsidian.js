@@ -1,64 +1,113 @@
-console.log("Obsidian Loading...");
-const thisScript = document.currentScript;
-fetch("/elements/obsidian.html")
-  .then(res => res.text())
-  .then(html => {
-    thisScript.insertAdjacentHTML("beforebegin", html);
+(function () {
+  "use strict";
 
-    let kofiUrl = null;
+  const script = document.currentScript;
+  if (!script || !script.parentNode) return;
 
-    document.getElementById("get-obsidian-btn").addEventListener("click", async () => {
-      const res = await fetch("https://auth.mcbcode.com/obsidian/checkout-start", {
+  const styleId = "mcb-obsidian-button-styles";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      .mcb-obsidian {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        position: relative;
+        font-family: inherit;
+      }
+      .mcb-obsidian__button {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 8px 12px;
+        border: 1px solid #8063ad;
+        border-radius: 7px;
+        background: #231d32;
+        color: #f1eaff;
+        font: inherit;
+        font-size: 12px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+      }
+      .mcb-obsidian__button:hover {
+        background: #302344;
+        border-color: #b79ae8;
+        transform: translateY(-1px);
+      }
+      .mcb-obsidian__button:focus-visible {
+        outline: 2px solid #c8afff;
+        outline-offset: 2px;
+      }
+      .mcb-obsidian__button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+        transform: none;
+      }
+      .mcb-obsidian__price {
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: #ffffff12;
+        color: #d7c5f5;
+        font-size: 10px;
+      }
+      .mcb-obsidian__message {
+        margin-top: 4px;
+        color: var(--ui-muted, #aaa);
+        font-size: 11px;
+      }
+      .mcb-obsidian__message:empty {
+        display: none;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  const widget = document.createElement("div");
+  widget.className = "mcb-obsidian";
+  widget.innerHTML = `
+    <button class="mcb-obsidian__button" type="button">
+      <span class="mcb-obsidian__label">get obsidian</span>
+      <span class="mcb-obsidian__price">$4/mo</span>
+    </button>
+    <span class="mcb-obsidian__message" aria-live="polite"></span>
+  `;
+
+  const button = widget.querySelector(".mcb-obsidian__button");
+  const label = widget.querySelector(".mcb-obsidian__label");
+  const message = widget.querySelector(".mcb-obsidian__message");
+
+  button.addEventListener("click", async function () {
+    button.disabled = true;
+    label.textContent = "loading...";
+    message.textContent = "";
+
+    try {
+      const response = await fetch("https://auth.mcbcode.com/stripe/checkout", {
         method: "POST",
         credentials: "include"
       });
-      const data = await res.json();
-      if (!data.ok) {
-        alert(data.error || "something went wrong starting checkout");
+
+      if (response.status === 401) {
+        window.location.href = "https://mcbcode.com/account";
         return;
       }
 
-      kofiUrl = data.kofi_url;
-      document.getElementById("obsidian-token-display").textContent = data.token;
-      document.getElementById("obsidian-instructions").style.display = "block";
-      document.getElementById("get-obsidian-btn").style.display = "none";
-    });
+      const data = await response.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
 
-    document.getElementById("obsidian-copy-btn").addEventListener("click", () => {
-      const token = document.getElementById("obsidian-token-display").textContent;
-      navigator.clipboard.writeText(token).then(() => {
-        const btn = document.getElementById("obsidian-copy-btn");
-        const original = btn.textContent;
-        btn.textContent = "copied!";
-        setTimeout(() => { btn.textContent = original; }, 1500);
-      });
-    });
+      message.textContent = data.error || "something went wrong, try again";
+    } catch (error) {
+      message.textContent = "something went wrong, try again";
+    }
 
-    document.getElementById("obsidian-continue-btn").addEventListener("click", () => {
-      window.open(kofiUrl, "_blank");
-      document.getElementById("obsidian-continue-btn").style.display = "none";
-      document.getElementById("obsidian-copy-btn").style.display = "none";
-      document.getElementById("obsidian-status-text").style.display = "block";
-      pollObsidianStatus();
-    });
+    button.disabled = false;
+    label.textContent = "get obsidian";
   });
 
-async function pollObsidianStatus() {
-  const res = await fetch("https://auth.mcbcode.com/obsidian/status", {
-    credentials: "include"
-  });
-  const data = await res.json();
-  const statusEl = document.getElementById("obsidian-status-text");
-  if (!data.ok) return;
-
-  if (data.state === "activated") {
-    statusEl.textContent = "obsidian activated! expires " + (data.expires_at || "never");
-    return;
-  }
-  if (data.state === "processing") {
-    statusEl.textContent = "waiting for payment to process...";
-  } else {
-    statusEl.textContent = "waiting for you to complete checkout...";
-  }
-  setTimeout(pollObsidianStatus, 4000);
-}
+  script.insertAdjacentElement("afterend", widget);
+})();
