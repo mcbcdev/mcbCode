@@ -2,3 +2,5 @@
   Access-Control-Allow-Origin: *
 /*.js
   Access-Control-Allow-Origin: *
+/*.json
+  Access-Control-Allow-Origin: *
