@@ -1,591 +1,961 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#232323">
+  <meta name="description" content="A focused editor for Minecraft Bedrock mcfunction files.">
+  <link rel="manifest" href="/app/manifest.json">
+  <link rel="icon" href="/theme/favicon.png">
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link id="theme-link" rel="stylesheet" href="https://mcbcode.com/theme/editor/default.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <title>mcbcode | mcfunction editor</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0c0c0c;
+      --bar: #323232;
+      --panel: #232323;
+      --panel-hover: #414141;
+      --text: #f0f0f0;
+      --muted: #bcbcbc;
+      --quiet: #868686;
+      --border: #454545;
+      --accent: #05ee93;
+      --blue: #00b2ff;
+      --pink: #e7007b;
+      --top-height: 48px;
+      --toolbar-height: 42px;
+      --status-height: 25px;
+      --radius: 6px;
+    }
 
-<link rel="manifest" href="/app/manifest.json">
-<!-- Import Fira Code -->
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
-<!-- External Theme Link -->
-<link id="theme-link" rel="stylesheet" href="https://mcbcode.com/theme/editor/default.css">
-<meta charset="UTF-8">
-<link rel="icon" href="/theme/favicon.png">
-<title>Editor | mcbCode</title>
-<style>
-  body {
-    margin: 0;
-    background-color: #323232;
-    font-weight: 0 !important; 
-    color: #fff;
-    overflow: hidden;
-    font-family: mcfont;
-  }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    [hidden] { display: none !important; }
 
-  header.top-thing {
-    background-color: #323232;
-    display: flex; 
-    align-items: center; 
-    height: 50px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1001;
-  }
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--page);
+      color: var(--text);
+      font-family: mcfont, sans-serif;
+      font-size: 14px;
+    }
 
-  .navi {
-    font-size: 14px;
-    padding: 3px 3px;
-    user-select: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    background-color: #323232;
-    z-index: 1001;
-    border-bottom: 1px solid #444;
-  }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
-  .editor {
-    display: flex;
-    height: calc(100vh - 80px); 
-    overflow: hidden;
-    align-items: flex-start;
-    position: relative;
-    background-color: #0c0c0c;
-    margin-top: 80px; /* Offset for fixed top elements */
-  }
+    .titlebar {
+      height: var(--top-height);
+      flex: 0 0 var(--top-height);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 14px;
+      background: var(--bar);
+      border-bottom: 1px solid #202020;
+    }
 
-  .sidebar {
-    background-color: #323232;
-    width: 60px;
-    height: 100%;
-    font-size: 12px;
-    padding: 6px 0px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* Pushed content to bottom */
-    position: fixed;
-    top: 80px;
-    left: 0;
-    bottom: 0;
-    z-index: 1000;
-  }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: max-content;
+      color: var(--text);
+      font-family: mcfontb, mcfont, sans-serif;
+      font-size: 15px;
+      text-decoration: none;
+    }
 
-  .nav-left, .nav-right {
-    display: flex;
-    gap: 0px;
-    align-items: center;
-    padding-top: 1px
-  }
+    .brand img { width: 25px; height: 25px; }
+    .brand span span { color: var(--accent); }
+    .divider { width: 1px; height: 22px; flex: 0 0 1px; background: #555; }
 
-  .nav-left img {
-    width: 20px;
-    height: 20px;
-    margin: 0;
-    padding-top: 1px
-  }
+    .file-title {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      flex: 1;
+      color: var(--muted);
+    }
 
-  button {
-    background-color: transparent;
-    border: none;
-    color: #f0f0f0;
-    user-select: none;
-    margin: 0;
-    cursor: pointer;
-    font-family: mcfont;
-  }
+    .file-title input {
+      width: 190px;
+      min-width: 60px;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      border-radius: var(--radius) 0 0 var(--radius);
+      background: transparent;
+      color: var(--text);
+      font-family: mcfontb, mcfont, sans-serif;
+      outline: none;
+    }
 
-  .code-container {
-    position: relative;
-    flex: 1;
-    height: 100%;
-    overflow: hidden;
-    margin-left: 60px; /* Offset for fixed sidebar */
-  }
+    .file-title input:hover, .file-title input:focus { border-color: #595959; background: #292929; }
+    .file-extension { padding: 7px 8px 7px 3px; color: var(--muted); white-space: nowrap; }
+    .top-actions { display: flex; align-items: center; gap: 7px; }
+    .top-actions a { color: var(--muted); text-decoration: none; }
 
-  /* EXTREME OVERRIDE: 
-     We use double ID selectors to beat site.css specificity.
-     We also disable ligatures and kerning to ensure pixel-perfect character alignment.
-  */
-  #editor #codeArea, 
-  #editor #highlightLayer,
-  #editor #highlightLayer * {
-    font-family: 'Fira Code', monospace !important; 
-    font-variant-ligatures: none !important;
-    font-feature-settings: "liga" 0, "calt" 0 !important;
-    letter-spacing: normal !important;
-    line-height: 1.4 !important;
-    font-size: 16px !important;
-    white-space: pre !important;
-    word-wrap: normal !important;
-    tab-size: 4 !important;
-  }
+    .button {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 4px 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: mcfont, sans-serif;
+      white-space: nowrap;
+    }
 
-  .code-container textarea#codeArea, 
-  .code-container div#highlightLayer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 10px; /* Added some padding for better readability */
-    margin: 0;
-    border: none;
-    outline: none;
-    box-sizing: border-box;
-    overflow: auto;
-  }
+    .button:hover { background: var(--panel-hover); }
+    .button.subtle { color: var(--muted); }
+    .button.primary { background: var(--accent); color: #092318; font-family: mcfontb, mcfont, sans-serif; }
+    .button.primary:hover { background: #39f5ae; }
+    .button:disabled { opacity: .6; cursor: default; }
 
-  .code-area {
-    z-index: 2;
-    background: transparent !important;
-    color: transparent !important;
-    caret-color: #05ee93 !important;
-    resize: none;
-  }
+    .toolbar {
+      height: var(--toolbar-height);
+      flex: 0 0 var(--toolbar-height);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 12px;
+      background: var(--bar);
+      border-bottom: 1px solid var(--border);
+    }
 
-  .highlight-layer {
-    z-index: 1;
-    background-color: #0c0c0c;
-    pointer-events: none; 
-  }
+    .toolbar .button { min-height: 29px; padding: 3px 9px; }
+    .toolbar-spacer { flex: 1; }
+    .toolbar-label { padding: 0 4px; color: var(--muted); font-size: 12px; }
 
-  .nav-item {
-    position: relative;
-    display: inline-block;
-  }
+    .toolbar select {
+      height: 29px;
+      max-width: 148px;
+      padding: 2px 25px 2px 9px;
+      border: 1px solid #565656;
+      border-radius: var(--radius);
+      background: #292929;
+      color: var(--text);
+      cursor: pointer;
+      font-family: mcfont, sans-serif;
+    }
 
-  .nav-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: #212425;
-    border: 1px solid #bebebe;
-    min-width: 250px;
-    z-index: 1002;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    flex-direction: column;
-  }
+    .editor-area { display: flex; flex: 1; min-height: 0; position: relative; background: var(--page); }
+    #editor-host { display: flex; flex: 1; min-width: 0; min-height: 0; }
 
-  .nav-dropdown div {
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 12px;
-  }
+    .CodeMirror {
+      width: 100%;
+      height: 100%;
+      background: var(--page);
+      color: #ededed;
+      font-family: "Fira Code", Consolas, monospace;
+      font-size: 15px;
+      line-height: 1.55;
+    }
 
-  .nav-dropdown div:hover {
-    background-color: #454545;
-  }
+    .CodeMirror-scroll { min-height: 0; padding: 12px 0 28px; }
+    .CodeMirror-gutters { border-right: 1px solid #202020; background: var(--page); }
+    .CodeMirror-linenumber { min-width: 44px; padding: 0 12px 0 8px; color: #747474; }
+    .CodeMirror-cursor { border-left: 2px solid var(--accent); }
+    .CodeMirror-selected { background: #05ee9340 !important; }
+    .CodeMirror-focused .CodeMirror-selected { background: #05ee9340 !important; }
+    .CodeMirror-matchingbracket { color: var(--accent) !important; outline: 1px solid #05ee9366; }
+    .CodeMirror-focused { outline: none; }
+    .CodeMirror textarea { font-family: "Fira Code", Consolas, monospace; }
+    .CodeMirror-hscrollbar, .CodeMirror-vscrollbar { outline: none; }
 
-  .nav-item:hover .nav-dropdown {
-    display: flex;
-  }
+    .statusbar {
+      height: var(--status-height);
+      flex: 0 0 var(--status-height);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 11px;
+      background: #252525;
+      color: #d0d0d0;
+      font-size: 11px;
+    }
 
-  .sub-dropdown {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 95%;
-    border: 1px solid #bebebe;
-    min-width: 120px;
-    background-color: #323232;
-    z-index: 1003;
-  }
+    .status-file { color: var(--accent); font-family: mcfontb, mcfont, sans-serif; }
+    .status-spacer { flex: 1; }
+    #save-status { color: var(--quiet); }
+    .statusbar button { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font-family: mcfont, sans-serif; }
+    .statusbar button:hover { color: var(--accent); }
 
-  .has-submenu:hover .sub-dropdown {
-    display: block;
-  }
+    .find-panel {
+      position: absolute;
+      top: 10px;
+      right: 18px;
+      z-index: 5;
+      width: min(440px, calc(100vw - 30px));
+      padding: 10px;
+      border: 1px solid #555;
+      border-radius: var(--radius);
+      background: #262626;
+      box-shadow: 0 8px 28px #0009;
+    }
 
-  #exportCode { color: #00b2ff; }
-  .delete { color: #ff4d4d; }
-  
-  .file-name {
-    background-color: #0c0c0c;
-    color: #ffffff;
-    white-space: nowrap;
-    height: 18px;
-    font-size: 16px;
-    outline: none;
-    border: none;
-    padding: 6px 2px;
-    resize: none;
-    min-width: 10%;
-    line-height: 18px;
-    overflow-y: hidden
-  }
+    .find-row { display: flex; gap: 6px; margin-bottom: 7px; }
+    .find-row:last-child { margin-bottom: 0; }
+    .find-row input {
+      min-width: 0;
+      flex: 1;
+      padding: 7px 8px;
+      border: 1px solid #555;
+      border-radius: var(--radius);
+      background: #141414;
+      color: var(--text);
+      font-family: mcfont, sans-serif;
+    }
 
-  .filename-txt { background-color: #454545; padding: 6px 6px; padding-right: 12px; }
-  .filename-mcf { background-color: #1f1f1f; padding: 6px 6px; }
+    .find-row .button { min-height: 30px; padding: 4px 8px; background: #383838; border-color: #515151; }
+    .find-row .button:hover { background: #494949; }
+    #find-count { min-width: 55px; align-self: center; color: var(--muted); font-size: 11px; text-align: center; }
 
-  .copyshortcut {
-    transition: background-color 0.2s ease-in-out;
-    background-color: #1f1f1f;
-    width: 18px;
-    padding: 6px 6px; margin-left: 8px;
-  }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 13vh 16px 16px;
+      background: #0009;
+    }
 
-  .copyshortcut:hover { background-color: #454545; cursor: pointer; }
+    .dialog {
+      width: min(560px, 100%);
+      max-height: 75vh;
+      overflow: auto;
+      border: 1px solid #555;
+      border-radius: var(--radius);
+      background: #252525;
+      box-shadow: 0 18px 60px #0009;
+    }
 
-  kbs { background-color: #454545; padding: 3px 3px; }
+    .dialog-title { padding: 14px 16px 10px; color: #ededed; font-family: mcfontb, mcfont, sans-serif; font-size: 15px; }
+    .command-search { width: calc(100% - 28px); margin: 0 14px 11px; padding: 9px 10px; border: 1px solid #555; border-radius: var(--radius); background: #151515; color: var(--text); font-family: mcfont, sans-serif; }
+    .command-list { padding: 0 7px 8px; }
+    .command-option { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; border: 0; border-radius: var(--radius); background: transparent; color: var(--text); text-align: left; cursor: pointer; font-family: mcfont, sans-serif; }
+    .command-option:hover, .command-option:focus { background: #3b3b3b; outline: none; }
+    .command-option kbd, kbd { padding: 2px 5px; border: 1px solid #555; border-radius: 4px; background: #171717; color: #d4d4d4; font: 11px "Fira Code", monospace; white-space: nowrap; }
+    .dialog-footer { padding: 9px 15px; border-top: 1px solid #444; color: #929292; font-size: 11px; }
 
-  .find-panel-wrapper {
-    background-color: rgba(50, 50, 50, 0.25);
-    backdrop-filter: blur(5px);
-    padding: 4px 8px;
-    position: fixed;
-    top: 100px;
-    z-index: 1050;
-    right: 30px;
-    /* Fade effects */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
-  }
+    .shortcut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; padding: 0 16px 14px; }
+    .shortcut-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #3b3b3b; color: #d8d8d8; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
-  #findthing {
-    resize: none;
-    background-color: #0c0c0c;
-    outline: none;
-    border: none;
-    color: #ffffff;
-    height: 180px;
-  }
+    @media (max-width: 700px) {
+      .titlebar { gap: 8px; padding: 0 8px; }
+      .brand span { display: none; }
+      .file-title input { width: 130px; }
+      .top-actions .account-link { display: none; }
+      .toolbar { gap: 2px; padding: 0 6px; }
+      .toolbar .button { padding: 3px 6px; }
+      .toolbar-label { display: none; }
+      .toolbar select { max-width: 112px; }
+      .shortcut-grid { grid-template-columns: 1fr; }
+      .statusbar { gap: 9px; }
+      .status-hide-small { display: none; }
+    }
 
-  .sidebar-kbd {
-    text-align: center;
-    padding: 6px 0;
-    background-color: #343434;
-    font-size: 10px;
-    font-family: 'mcfont';
-    color: #bebebe;
-    user-select: none;
-    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-  }
-
-  .sidebar-kbd:hover, .sidebar-kbd.active {
-    color: #05ee93;
-    background-color: #454545;
-  }
-</style>
+    @media (max-width: 460px) {
+      .titlebar { gap: 6px; }
+      .brand img { width: 21px; height: 21px; }
+      .divider { display: none; }
+      .file-title input { width: min(29vw, 105px); padding-left: 4px; }
+      .file-extension { padding-right: 1px; }
+      .toolbar .copy-action { display: none; }
+      .toolbar .shortcuts-action { display: none; }
+      .CodeMirror { font-size: 13px; }
+      .statusbar { gap: 7px; padding: 0 7px; font-size: 10px; }
+    }
+  </style>
 </head>
 <body>
-
-  <div class="find-panel-wrapper">
-    <p>Find Tool</p>
-    <textarea id="findthing"></textarea>
-  </div>
-
-  <header class="top-thing">
-      <a href="https://mcbcode.com" style="padding-left: 12px;"><img src="https://mcbcode.com/theme/favicon.png" alt="icon" style="width: 36px"></a>
-      <h2 style="padding: 0px 12px;">mcb<g>Code</g></h2>
-      <div class="filename-txt">Filename:</div>
-      <textarea id="autoWidth" class="file-name" maxlength="72"></textarea>
-      <div class="filename-mcf">.mcfunction</div>
-      <div class="copyshortcut" id="copyCodeTop"><img style="width: 16px; height: 16px" src="https://ccvaults.com/thumbnails/10.%20Items/15.%20Projectiles/Ender_Pearl.png" alt="copy"></div>
+  <header class="titlebar">
+    <a class="brand" href="https://mcbcode.com" aria-label="mcbcode home">
+      <img src="https://mcbcode.com/theme/favicon.png" alt="">
+      <span>mcb<span>code</span></span>
+    </a>
+    <span class="divider" aria-hidden="true"></span>
+    <div class="file-title">
+      <label class="visually-hidden" for="filename">file name</label>
+      <input id="filename" maxlength="72" value="untitled" spellcheck="false" autocomplete="off">
+      <span class="file-extension">.mcfunction</span>
+    </div>
+    <div class="top-actions">
+      <a class="button subtle account-link" href="https://mcbcode.com/account">account</a>
+      <button class="button primary" id="save-button" type="button" hidden>save</button>
+    </div>
   </header>
 
-  <div class="navi">
-    <div class="nav-left">
-      <div class="nav-item">
-        <button>File</button>
-        <div class="nav-dropdown">
-          <div id="copyCodeMenu"><img src="https://ccvaults.com/thumbnails/10.%20Items/15.%20Projectiles/Ender_Pearl.png" style="width: 16px; height: 16px; padding-right: 4px;">Copy Code</div>
-          <div id="exportCode"><img src="https://ccvaults.com/thumbnails/10.%20Items/11.%20Materials/Diamond.png" style="width: 16px; height: 16px; padding-right: 4px;">Export as .mcfunction</div>
-          <div id="exportCodeTxt"><img src="https://ccvaults.com/thumbnails/10.%20Items/11.%20Materials/Emerald.png" style="width: 16px; height: 16px; padding-right: 4px;"><g>Export as .txt</g></div>
-        </div>
-      </div>
-      <div class="nav-item">
-        <button>Edit</button>
-        <div class="nav-dropdown">
-          <div id="colorFormat"><img src="https://ccvaults.com/thumbnails/10.%20Items/21.%20Decoration/Amethyst_Cluster.png" style="width: 16px; height: 16px; padding-right: 4px;">Color Format
-            <div class="sub-dropdown" id="colorMenu">
-              <div data-code="§0">§0 - Black</div>
-              <div data-code="§1">§1 - Dark Blue</div>
-              <div data-code="§2">§2 - Dark Green</div>
-              <div data-code="§3">§3 - Dark Aqua</div>
-              <div data-code="§4">§4 - Dark Red</div>
-              <div data-code="§5">§5 - Dark Purple</div>
-              <div data-code="§6">§6 - Gold</div>
-              <div data-code="§7">§7 - Gray</div>
-              <div data-code="§8">§8 - Dark Gray</div>
-              <div data-code="§9">§9 - Blue</div>
-              <div data-code="§a">§a - Green</div>
-              <div data-code="§b">§b - Aqua</div>
-              <div data-code="§c">§c - Red</div>
-              <div data-code="§d">§d - Light Purple</div>
-              <div data-code="§e">§e - Yellow</div>
-              <div data-code="§f">§f - White</div>
-              <div data-code="§g">§g - Gold</div>
-              <div data-code="§k">§k - Obfuscated</div>
-              <div data-code="§l">§l - Bold</div>
-              <div data-code="§o">§o - Italic</div>
-              <div data-code="§r">§r - Reset</div>
-            </div>
-          </div>
-         <div id="deleteCode" class="delete"><img src="https://ccvaults.com/thumbnails/10.%20Items/19.%20Buckets/Lava_Bucket.png" style="width: 16px; height: 16px; padding-right: 4px;">Delete Code</div>
-        </div>
-      </div>
-      <div class="nav-item">
-        <button>View</button>
-        <div class="nav-dropdown">
-          <div class="has-submenu">
-            <img src="https://ccvaults.com/thumbnails/10.%20Items/18.%20Consumables/Enchanted_Golden_Apple.png" style="width: 16px; height: 16px; padding-right: 4px;">Themes
-            <div class="sub-dropdown">
-              <div class="theme-btn" onclick="setTheme('default')">Default</div>
-              <div class="theme-btn" onclick="setTheme('neon')">Neon</div>
-              <div class="theme-btn" onclick="setTheme('blue')">Blue</div>
-              <div class="theme-btn" onclick="setTheme('soft')">Soft</div>
-              <div class="theme-btn" onclick="setTheme('grayscale')">Grayscale</div>
-              <div class="theme-btn" onclick="setTheme('solid')">Solid</div>
-            </div>
-          </div>   
-        </div>
-      </div>
-      <div class="nav-item">
-        <button>Help</button>
-        <div class="nav-dropdown" style="width: 225px;">
-          <div class="has-submenu"><img src="https://ccvaults.com/thumbnails/20.%20Blocks/18.%20Decoration/Dirt.png" style="width: 16px; height: 16px; padding-right: 4px;">Third Party Sites
-            <div class="sub-dropdown">
-              <a href="https://minecraft.wiki/w/Commands" target="_blank" style="text-decoration: none; color: #ffffff"><div>Open minecraft.wiki</div></a>
-              <a href="https://wiki.bedrock.dev/commands/intro-to-command-blocks" target="_blank" style="text-decoration: none; color: #ffffff"><div>Open wiki.bedrock.dev</div></a>
-            </div>
-          </div>
-          <div class="has-submenu">
-            <img src="https://ccvaults.com/thumbnails/20.%20Blocks/22.%20Redstone/Sticky_Piston.png" style="width: 16px; height: 16px; padding-right: 4px;">Keyboard Shortcuts
-            <div class="sub-dropdown" style="padding: 10px; font-size: 11px;">
-              <p><kbs>Ctrl+C</kbs> Copy</p>
-              <p><kbs>Ctrl+V</kbs> Paste</p>
-              <p><kbs>Ctrl+Z</kbs> Undo</p>
-              <p><kbs>Ctrl+S</kbs> Download</p>
-              <p><kbs>Ctrl+F</kbs> Find</p>
-            </div>
-          </div>
-        </div>
-      </div>
+  <nav class="toolbar" aria-label="editor actions">
+    <button class="button subtle" type="button" data-action="open">open file</button>
+    <button class="button subtle" type="button" data-action="download">download</button>
+    <button class="button subtle copy-action" type="button" data-action="copy">copy code</button>
+    <span class="toolbar-spacer"></span>
+    <button class="button subtle shortcuts-action" type="button" data-action="shortcuts">shortcuts</button>
+    <button class="button subtle" type="button" data-action="palette" title="command palette (ctrl+shift+p)">commands</button>
+    <label class="toolbar-label" for="theme-select">syntax</label>
+    <select id="theme-select" aria-label="syntax theme">
+      <option value="default">default</option>
+      <option value="neon">neon</option>
+      <option value="blue">blue</option>
+      <option value="soft">soft</option>
+      <option value="grayscale">grayscale</option>
+      <option value="solid">solid</option>
+      <option value="summer">summer</option>
+      <option value="modern">modern</option>
+    </select>
+  </nav>
+
+  <main class="editor-area" aria-label="mcfunction editor">
+    <div id="editor-host">
+      <label class="visually-hidden" for="editor-fallback">mcfunction code</label>
+      <textarea id="editor-fallback" spellcheck="false"># welcome to mcbcode
+# remove this text to start coding
+tellraw @a {"rawtext":[{"text":"§aThis is §2mcbCode"}]}</textarea>
     </div>
+    <section class="find-panel" id="find-panel" hidden aria-label="find and replace">
+      <div class="find-row">
+        <label class="visually-hidden" for="find-query">find</label>
+        <input id="find-query" type="text" placeholder="find" autocomplete="off">
+        <span id="find-count" aria-live="polite"></span>
+        <button class="button" type="button" data-action="find-previous" title="previous match">up</button>
+        <button class="button" type="button" data-action="find-next" title="next match">down</button>
+        <button class="button" type="button" data-action="close-find" aria-label="close find">close</button>
+      </div>
+      <div class="find-row">
+        <label class="visually-hidden" for="replace-query">replace with</label>
+        <input id="replace-query" type="text" placeholder="replace with" autocomplete="off">
+        <button class="button" type="button" data-action="replace">replace</button>
+        <button class="button" type="button" data-action="replace-all">replace all</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <span class="status-file">mcfunction</span>
+    <span id="cursor-position">line 1, col 1</span>
+    <span class="status-hide-small" id="selection-status">spaces: 4</span>
+    <span class="status-spacer"></span>
+    <span class="status-hide-small" id="save-status">local draft</span>
+    <button type="button" data-action="shortcuts">keyboard shortcuts</button>
+  </footer>
+
+  <input id="open-file" class="visually-hidden" type="file" accept=".mcfunction,.txt,text/plain">
+
+  <div class="modal-backdrop" id="palette-backdrop" hidden>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+      <div class="dialog-title" id="palette-title">command palette</div>
+      <input class="command-search" id="command-search" type="text" placeholder="type a command" autocomplete="off" aria-label="filter commands">
+      <div class="command-list" id="command-list"></div>
+      <div class="dialog-footer">use the arrow keys to choose an action, enter to run, escape to close</div>
+    </section>
   </div>
 
-  <div class="editor" id="editor">
-    <div class="sidebar">
-      <div class="sidebar-kbd" style="color: #00b2ff">Font:</div>
-      <div class="sidebar-kbd" id="fontdisplay" style="color: #00b2ff">16px</div>
-      <div style="border-bottom: 1px solid #bebebe"></div>
-      <div class="sidebar-kbd" id="other">Other</div>
-      <div class="sidebar-kbd" id="shift">Shift</div>
-      <div class="sidebar-kbd" id="alt">Alt</div>
-      <div class="sidebar-kbd" id="ctrl">Ctrl</div>
-    </div>
-    <div class="code-container">
-      <div class="highlight-layer" id="highlightLayer"></div>
-      <textarea class="code-area" id="codeArea" spellcheck="false" placeholder="# welcome to mcbCode"># welcome to mcbCode. 
-title @a actionbar qwertyuiop</textarea>
-    </div>
+  <div class="modal-backdrop" id="shortcuts-backdrop" hidden>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title" tabindex="-1">
+      <div class="dialog-title" id="shortcuts-title">keyboard shortcuts</div>
+      <div class="shortcut-grid">
+        <div class="shortcut-row"><span>command palette</span><kbd>ctrl+shift+p</kbd></div>
+        <div class="shortcut-row"><span>find / replace</span><kbd>ctrl+f</kbd></div>
+        <div class="shortcut-row"><span>save to account</span><kbd>ctrl+shift+s</kbd></div>
+        <div class="shortcut-row"><span>download .mcfunction</span><kbd>ctrl+s</kbd></div>
+        <div class="shortcut-row"><span>open local file</span><kbd>ctrl+o</kbd></div>
+        <div class="shortcut-row"><span>copy code</span><kbd>ctrl+shift+c</kbd></div>
+        <div class="shortcut-row"><span>undo / redo</span><kbd>ctrl+z / ctrl+y</kbd></div>
+        <div class="shortcut-row"><span>select next occurrence</span><kbd>ctrl+d</kbd></div>
+        <div class="shortcut-row"><span>toggle line comment</span><kbd>ctrl+/</kbd></div>
+        <div class="shortcut-row"><span>duplicate line</span><kbd>alt+shift+up/down</kbd></div>
+        <div class="shortcut-row"><span>move line</span><kbd>alt+up/down</kbd></div>
+        <div class="shortcut-row"><span>delete line</span><kbd>ctrl+shift+k</kbd></div>
+        <div class="shortcut-row"><span>select line</span><kbd>ctrl+l</kbd></div>
+        <div class="shortcut-row"><span>indent / outdent</span><kbd>tab / shift+tab</kbd></div>
+        <div class="shortcut-row"><span>toggle word wrap</span><kbd>alt+z</kbd></div>
+        <div class="shortcut-row"><span>delete all code</span><kbd>ctrl+alt+d</kbd></div>
+      </div>
+      <div class="dialog-footer">on mac, use command instead of ctrl</div>
+    </section>
   </div>
 
-<script>
-// Handle Filename Width and Find Tool expansion
-const autoWidthTextarea = document.getElementById('autoWidth');
-const findTextarea = document.getElementById('findthing');
+  <script src="https://mcbcode.com/backend/grammar.js"></script>
+  <script src="https://mcbcode.com/backend/highlight.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+  <script>
+    (() => {
+      const $ = (selector) => document.querySelector(selector);
+      const authBase = 'https://auth.mcbcode.com';
+      const themeNames = ['default', 'neon', 'blue', 'soft', 'grayscale', 'solid', 'summer', 'modern'];
+      const draftKey = 'mcbcode-mcfunction-draft-v3';
+      const params = new URLSearchParams(window.location.search);
+      let editor;
+      let currentSaveId = null;
+      let currentUserId = null;
+      let highlightRequest = 0;
+      let highlightMarks = [];
+      let draftTimer;
+      let wordWrap = false;
 
-const measurer = document.createElement('span');
-measurer.style.visibility = 'hidden';
-measurer.style.whiteSpace = 'pre';
-measurer.style.position = 'absolute';
-document.body.appendChild(measurer);
+      const fallback = $('#editor-fallback');
+      let startingText = fallback.value;
+      let startingFilename = 'untitled';
+      try {
+        const draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+        if (draft && typeof draft.text === 'string' && !params.has('save')) {
+          startingText = draft.text;
+          startingFilename = draft.filename || 'untitled';
+        }
+      } catch {}
 
-function adjustFilenameWidth() {
-  measurer.style.font = window.getComputedStyle(autoWidthTextarea).font;
-  measurer.textContent = autoWidthTextarea.value || autoWidthTextarea.placeholder;
-  autoWidthTextarea.style.width = (measurer.offsetWidth + 10) + 'px';
-}
+      $('#filename').value = startingFilename;
+      const setLocalStatus = (message) => { $('#save-status').textContent = message; };
 
-autoWidthTextarea.addEventListener('input', adjustFilenameWidth);
-adjustFilenameWidth();
+      function getFilename() {
+        return ($('#filename').value || 'untitled').replace(/[^a-z0-9_-]/gi, '_').slice(0, 72) || 'untitled';
+      }
 
-findTextarea.addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = this.scrollHeight + 'px';
-});
-</script>
+      function updateTitle() {
+        document.title = `${getFilename()}.mcfunction | mcbcode`;
+      }
 
-<script src="https://mcbcode.com/backend/grammar.js"></script>
-<script src="https://mcbcode.com/backend/highlight.js"></script>
+      function setTheme(name) {
+        const theme = themeNames.includes(name) ? name : 'default';
+        const link = $('#theme-link');
+        link.href = `https://mcbcode.com/theme/editor/${theme}.css`;
+        $('#theme-select').value = theme;
+        try { localStorage.setItem('selected-editor-theme', theme); } catch {}
+      }
 
-<script>
-const codeArea = document.getElementById('codeArea');
-const highlightLayer = document.getElementById('highlightLayer');
-let highlightTimeout;
+      function downloadFile(extension = 'mcfunction') {
+        const value = editor ? editor.getValue() : fallback.value;
+        const blob = new Blob([value], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${getFilename()}.${extension}`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
 
-let isHighlighting = false;
-async function updateHighlighting() {
-    if (isHighlighting || typeof applyHighlighting !== 'function') return; 
-    const text = codeArea.value;
-    isHighlighting = true;
-    window.requestAnimationFrame(async () => {
-        const highlighted = await applyHighlighting(text);
-        highlightLayer.innerHTML = highlighted;
-        isHighlighting = false;
-        syncScroll();
-    });
-}
+      async function copyCode() {
+        const value = editor ? editor.getValue() : fallback.value;
+        try {
+          await navigator.clipboard.writeText(value);
+          setLocalStatus('copied');
+          setTimeout(() => setLocalStatus('local draft'), 1500);
+        } catch {
+          setLocalStatus('clipboard access denied');
+        }
+      }
 
-function syncScroll() {
-    highlightLayer.scrollTop = codeArea.scrollTop;
-    highlightLayer.scrollLeft = codeArea.scrollLeft;
-}
+      function saveDraft() {
+        try {
+          localStorage.setItem(draftKey, JSON.stringify({ text: editor.getValue(), filename: getFilename() }));
+          setLocalStatus('local draft');
+        } catch { setLocalStatus('local storage unavailable'); }
+      }
 
-codeArea.addEventListener('scroll', syncScroll);
-codeArea.addEventListener('input', () => {
-    clearTimeout(highlightTimeout);
-    highlightTimeout = setTimeout(updateHighlighting, 10);
-});
+      function scheduleDraftSave() {
+        setLocalStatus('saving');
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(saveDraft, 300);
+      }
 
-// Auto-pairs
-codeArea.addEventListener('keydown', (e) => {
-    const pairs = { '(': ')', '{': '}', '[': ']', '"': '"' };
-    if (pairs[e.key]) {
-        e.preventDefault();
-        const start = codeArea.selectionStart;
-        const end = codeArea.selectionEnd;
-        const val = codeArea.value;
-        codeArea.value = val.substring(0, start) + e.key + pairs[e.key] + val.substring(end);
-        codeArea.setSelectionRange(start + 1, start + 1);
+      async function saveToAccount() {
+        const button = $('#save-button');
+        if (!currentUserId || button.disabled || button.hidden) return;
+        button.disabled = true;
+        button.textContent = 'saving…';
+        try {
+          const response = await fetch(`${authBase}/save`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ save_id: currentSaveId, content: editor.getValue(), filename: getFilename() })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.save_id) throw new Error('save failed');
+          currentSaveId = data.save_id;
+          const url = new URL(window.location.href);
+          url.searchParams.set('save', currentSaveId);
+          window.history.replaceState({}, '', url.toString());
+          button.textContent = 'saved';
+          setLocalStatus('saved to account');
+          setTimeout(() => { button.textContent = 'save'; }, 1800);
+        } catch {
+          button.textContent = 'save failed';
+          setTimeout(() => { button.textContent = 'save'; }, 2200);
+        } finally { button.disabled = false; }
+      }
+
+      function updateSaveButton(ownerId) {
+        const button = $('#save-button');
+        button.hidden = !(currentUserId !== null && (currentUserId === ownerId || ownerId === null));
+      }
+
+      async function loadSharedSave(saveId) {
+        try {
+          const response = await fetch(`${authBase}/save?id=${encodeURIComponent(saveId)}`, { credentials: 'include' });
+          if (!response.ok) throw new Error('share not found');
+          const data = await response.json();
+          currentSaveId = data.save_id;
+          editor.setValue(data.content || '');
+          if (data.filename) $('#filename').value = data.filename;
+          updateTitle();
+          updateSaveButton(data.owner_id);
+          setLocalStatus('shared file');
+        } catch {
+          editor.setValue('# this share code does not exist');
+          $('#save-button').hidden = true;
+          setLocalStatus('share code not found');
+        }
+      }
+
+      async function initializeAccount() {
+        try {
+          const response = await fetch(`${authBase}/me`, { credentials: 'include' });
+          if (response.ok) currentUserId = (await response.json()).id;
+        } catch {}
+        const shareId = params.get('save');
+        if (shareId) await loadSharedSave(shareId);
+        else updateSaveButton(null);
+      }
+
+      function clearHighlights() {
+        for (const mark of highlightMarks) mark.clear();
+        highlightMarks = [];
+      }
+
+      function applyLanguageMarks(source, html, requestId) {
+        if (!editor || requestId !== highlightRequest || source !== editor.getValue()) return;
+        clearHighlights();
+        const rows = html.split('\n');
+        const parser = new DOMParser();
+        const allowedClasses = new Set(['hl-command', 'hl-selector', 'hl-item', 'hl-number', 'hl-comment', 'hl-error', 'hl-word', 'hl-colorcode']);
+
+        function visit(node, classes, color, absoluteStart, offset) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.nodeValue || '';
+            if (!text) return;
+            const from = absoluteStart + offset.value;
+            offset.value += text.length;
+            const markOptions = {};
+            const safeClasses = classes.filter((name) => allowedClasses.has(name));
+            if (safeClasses.length) markOptions.className = safeClasses.join(' ');
+            if (color && /^(#[\da-f]{3,8}|rgb\([\d, .%]+\))$/i.test(color)) markOptions.css = `color:${color}`;
+            if (Object.keys(markOptions).length) highlightMarks.push(editor.markText(editor.posFromIndex(from), editor.posFromIndex(from + text.length), markOptions));
+            return;
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          const nestedClasses = classes.slice();
+          for (const name of node.classList) if (allowedClasses.has(name)) nestedClasses.push(name);
+          const nestedColor = node.style?.color || color;
+          for (const child of node.childNodes) visit(child, nestedClasses, nestedColor, absoluteStart, offset);
+        }
+
+        for (let line = 0; line < editor.lineCount(); line += 1) {
+          const parsed = parser.parseFromString(rows[line] || '', 'text/html');
+          const offset = { value: 0 };
+          const absoluteStart = editor.indexFromPos({ line, ch: 0 });
+          for (const child of parsed.body.childNodes) visit(child, [], null, absoluteStart, offset);
+        }
+      }
+
+      function updateHighlighting() {
+        const requestId = ++highlightRequest;
+        const source = editor ? editor.getValue() : '';
+        if (typeof window.applyHighlighting !== 'function') return;
+        Promise.resolve(window.applyHighlighting(source)).then((html) => applyLanguageMarks(source, html, requestId)).catch(() => {});
+      }
+      window.updateHighlighting = updateHighlighting;
+
+      function saveCurrentDraft() {
+        if (!editor) return;
+        try { localStorage.setItem(draftKey, JSON.stringify({ text: editor.getValue(), filename: getFilename() })); } catch {}
+      }
+
+      function updatePosition() {
+        if (!editor) return;
+        const cursor = editor.getCursor();
+        $('#cursor-position').textContent = `line ${cursor.line + 1}, col ${cursor.ch + 1}`;
+        const selection = editor.getSelection();
+        $('#selection-status').textContent = selection ? `${selection.length} selected` : 'spaces: 4';
+      }
+
+      function showFind(replace = false) {
+        const panel = $('#find-panel');
+        panel.hidden = false;
+        const field = $('#find-query');
+        field.focus();
+        field.select();
+        if (replace) $('#replace-query').focus();
+      }
+
+      function closeFind() {
+        $('#find-panel').hidden = true;
+        if (editor) editor.focus();
+      }
+
+      function searchCursor(query, start) {
+        if (!query) return null;
+        return editor.getSearchCursor(query, start, { caseFold: true });
+      }
+
+      function findMatch(direction = 1) {
+        const query = $('#find-query').value;
+        if (!query) return;
+        const start = direction > 0 ? editor.getCursor('to') : editor.getCursor('from');
+        const cursor = searchCursor(query, start);
+        const found = direction > 0 ? cursor.findNext() : cursor.findPrevious();
+        if (found) {
+          editor.setSelection(cursor.from(), cursor.to());
+          editor.scrollIntoView({ from: cursor.from(), to: cursor.to() }, 80);
+          $('#find-count').textContent = 'match';
+          return;
+        }
+        const lastLine = editor.lastLine();
+        const wrapStart = direction > 0 ? CodeMirror.Pos(0, 0) : CodeMirror.Pos(lastLine, editor.getLine(lastLine).length);
+        const wrapped = searchCursor(query, wrapStart);
+        const wrapFound = direction > 0 ? wrapped.findNext() : wrapped.findPrevious();
+        if (wrapFound) {
+          editor.setSelection(wrapped.from(), wrapped.to());
+          editor.scrollIntoView({ from: wrapped.from(), to: wrapped.to() }, 80);
+          $('#find-count').textContent = 'wrapped';
+        } else $('#find-count').textContent = 'no match';
+      }
+
+      function replaceCurrent() {
+        const query = $('#find-query').value;
+        if (!query) return;
+        const selection = editor.getSelection();
+        if (selection && selection.toLowerCase() === query.toLowerCase()) {
+          editor.replaceSelection($('#replace-query').value, 'around');
+        }
+        findMatch(1);
+      }
+
+      function replaceAll() {
+        const query = $('#find-query').value;
+        if (!query) return;
+        const replacement = $('#replace-query').value;
+        const cursor = searchCursor(query, CodeMirror.Pos(0, 0));
+        let count = 0;
+        editor.operation(() => {
+          while (cursor.findNext()) {
+            cursor.replace(replacement);
+            count += 1;
+          }
+        });
+        $('#find-count').textContent = `${count} replaced`;
+      }
+
+      function selectNextOccurrence() {
+        let query = editor.getSelection();
+        let start = editor.getCursor('to');
+        if (!query) {
+          const word = editor.findWordAt(editor.getCursor());
+          query = editor.getRange(word.anchor, word.head);
+          if (!query) return;
+          editor.setSelection(word.anchor, word.head);
+          start = word.head;
+        }
+        const cursor = searchCursor(query, start);
+        if (cursor.findNext()) editor.addSelection(cursor.from(), cursor.to());
+      }
+
+      function toggleLineComment() {
+        const selections = editor.listSelections();
+        const lines = new Set();
+        for (const range of selections) {
+          const first = Math.min(range.anchor.line, range.head.line);
+          const last = Math.max(range.anchor.line, range.head.line);
+          for (let line = first; line <= last; line += 1) lines.add(line);
+        }
+        const numbers = [...lines].sort((a, b) => a - b);
+        const allCommented = numbers.every((line) => /^\s*#/.test(editor.getLine(line)));
+        editor.operation(() => {
+          for (const line of numbers.reverse()) {
+            const text = editor.getLine(line);
+            const indent = text.match(/^\s*/)[0].length;
+            if (allCommented) {
+              const removeAt = text.indexOf('#', indent);
+              editor.replaceRange('', CodeMirror.Pos(line, removeAt), CodeMirror.Pos(line, removeAt + 1));
+              if (text[removeAt + 1] === ' ') editor.replaceRange('', CodeMirror.Pos(line, removeAt), CodeMirror.Pos(line, removeAt + 1));
+            } else editor.replaceRange('# ', CodeMirror.Pos(line, indent));
+          }
+        });
+      }
+
+      function moveLine(direction, duplicate = false) {
+        const selections = editor.listSelections();
+        const first = Math.min(...selections.map((range) => Math.min(range.anchor.line, range.head.line)));
+        const last = Math.max(...selections.map((range) => Math.max(range.anchor.line, range.head.line)));
+        const doc = editor.getDoc();
+        const allLines = doc.getValue().split('\n');
+        const moving = allLines.slice(first, last + 1);
+        if (duplicate) {
+          const copied = direction < 0
+            ? [...allLines.slice(0, first), ...moving, ...allLines.slice(first)].join('\n')
+            : [...allLines.slice(0, last + 1), ...moving, ...allLines.slice(last + 1)].join('\n');
+          editor.replaceRange(copied, CodeMirror.Pos(0, 0), CodeMirror.Pos(doc.lastLine(), doc.getLine(doc.lastLine()).length));
+          return;
+        }
+        if ((direction < 0 && first === 0) || (direction > 0 && last === doc.lastLine())) return;
+        const reordered = allLines.slice();
+        if (direction < 0) reordered.splice(first - 1, last - first + 2, ...moving, allLines[first - 1]);
+        else reordered.splice(first, last - first + 2, allLines[last + 1], ...moving);
+        const newFirst = first + direction;
+        const newLast = last + direction;
+        editor.operation(() => {
+          editor.replaceRange(reordered.join('\n'), CodeMirror.Pos(0, 0), CodeMirror.Pos(doc.lastLine(), doc.getLine(doc.lastLine()).length));
+          editor.setSelection(CodeMirror.Pos(newFirst, 0), CodeMirror.Pos(newLast, editor.getLine(newLast).length));
+        });
+      }
+
+      function deleteCurrentLine() {
+        const line = editor.getCursor().line;
+        if (editor.lineCount() === 1) editor.setValue('');
+        else editor.replaceRange('', CodeMirror.Pos(line, 0), CodeMirror.Pos(line + 1, 0));
+      }
+
+      function addLine(direction) {
+        const cursor = editor.getCursor();
+        if (direction > 0) {
+          editor.replaceRange('\n', CodeMirror.Pos(cursor.line, editor.getLine(cursor.line).length));
+          editor.setCursor(cursor.line + 1, 0);
+        } else {
+          editor.replaceRange('\n', CodeMirror.Pos(cursor.line, 0));
+          editor.setCursor(cursor.line, 0);
+        }
+      }
+
+      function clearCode() {
+        if (window.confirm('delete all code in this file?')) editor.setValue('');
+      }
+
+      function openFilePicker() { $('#open-file').click(); }
+      function openPalette() {
+        $('#palette-backdrop').hidden = false;
+        $('#command-search').value = '';
+        renderCommands('');
+        $('#command-search').focus();
+      }
+      function closePalette() { $('#palette-backdrop').hidden = true; editor.focus(); }
+      function openShortcuts() {
+        $('#shortcuts-backdrop').hidden = false;
+        $('#shortcuts-backdrop').querySelector('.dialog').focus();
+      }
+      function closeShortcuts() { $('#shortcuts-backdrop').hidden = true; editor.focus(); }
+
+      const paletteActions = [
+        ['download .mcfunction', 'ctrl+s', () => downloadFile('mcfunction')],
+        ['download as .txt', '', () => downloadFile('txt')],
+        ['open local file', 'ctrl+o', openFilePicker],
+        ['copy code', 'ctrl+shift+c', copyCode],
+        ['find and replace', 'ctrl+f', () => showFind(false)],
+        ['toggle word wrap', 'alt+z', () => { wordWrap = !wordWrap; editor.setOption('lineWrapping', wordWrap); }],
+        ['toggle line comment', 'ctrl+/', toggleLineComment],
+        ['keyboard shortcuts', '', openShortcuts]
+      ];
+
+      function renderCommands(filter) {
+        const list = $('#command-list');
+        list.replaceChildren();
+        const matches = paletteActions.filter(([label]) => label.includes(filter.toLowerCase()));
+        for (const [label, shortcut, action] of matches) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'command-option';
+          const name = document.createElement('span');
+          name.textContent = label;
+          const shortcutText = document.createElement('kbd');
+          shortcutText.textContent = shortcut;
+          button.append(name, shortcutText);
+          button.addEventListener('click', () => { closePalette(); action(); });
+          list.append(button);
+        }
+        if (!matches.length) {
+          const empty = document.createElement('div');
+          empty.className = 'command-option';
+          empty.textContent = 'no matching commands';
+          list.append(empty);
+        }
+      }
+
+      function buildEditor() {
+        if (!window.CodeMirror) {
+          fallback.style.width = '100%';
+          fallback.style.height = '100%';
+          fallback.style.resize = 'none';
+          fallback.style.background = '#0c0c0c';
+          fallback.style.color = '#eee';
+          fallback.style.border = '0';
+          fallback.style.padding = '16px';
+          fallback.style.font = '15px "Fira Code", monospace';
+          setLocalStatus('editor library unavailable; plain text mode');
+          return;
+        }
+
+        CodeMirror.defineMode('mcfunction', () => ({
+          startState: () => ({}),
+          token: (stream) => { stream.skipToEnd(); return null; }
+        }));
+
+        editor = CodeMirror($('#editor-host'), {
+          value: startingText,
+          mode: 'mcfunction',
+          lineNumbers: true,
+          lineWrapping: wordWrap,
+          tabSize: 4,
+          indentUnit: 4,
+          indentWithTabs: false,
+          matchBrackets: true,
+          autoCloseBrackets: true,
+          autofocus: true,
+          viewportMargin: 20,
+          extraKeys: {
+            'Ctrl-S': () => downloadFile('mcfunction'),
+            'Cmd-S': () => downloadFile('mcfunction'),
+            'Ctrl-Shift-S': saveToAccount,
+            'Cmd-Shift-S': saveToAccount,
+            'Ctrl-Shift-C': copyCode,
+            'Cmd-Shift-C': copyCode,
+            'Ctrl-Shift-P': openPalette,
+            'Cmd-Shift-P': openPalette,
+            'Ctrl-F': () => showFind(false),
+            'Cmd-F': () => showFind(false),
+            'Ctrl-H': () => showFind(true),
+            'Cmd-Alt-F': () => showFind(true),
+            'Ctrl-O': openFilePicker,
+            'Cmd-O': openFilePicker,
+            'Ctrl-D': selectNextOccurrence,
+            'Cmd-D': selectNextOccurrence,
+            'Ctrl-/': toggleLineComment,
+            'Cmd-/': toggleLineComment,
+            'Ctrl-Shift-K': deleteCurrentLine,
+            'Cmd-Shift-K': deleteCurrentLine,
+            'Ctrl-L': () => { const line = editor.getCursor().line; editor.setSelection(CodeMirror.Pos(line, 0), CodeMirror.Pos(line, editor.getLine(line).length)); },
+            'Cmd-L': () => { const line = editor.getCursor().line; editor.setSelection(CodeMirror.Pos(line, 0), CodeMirror.Pos(line, editor.getLine(line).length)); },
+            'Alt-Up': () => moveLine(-1),
+            'Alt-Down': () => moveLine(1),
+            'Alt-Shift-Up': () => moveLine(-1, true),
+            'Alt-Shift-Down': () => moveLine(1, true),
+            'Ctrl-]': () => editor.execCommand('indentMore'),
+            'Cmd-]': () => editor.execCommand('indentMore'),
+            'Ctrl-[': () => editor.execCommand('indentLess'),
+            'Cmd-[': () => editor.execCommand('indentLess'),
+            'Ctrl-Enter': () => addLine(1),
+            'Cmd-Enter': () => addLine(1),
+            'Ctrl-Shift-Enter': () => addLine(-1),
+            'Cmd-Shift-Enter': () => addLine(-1),
+            'Ctrl-Alt-D': clearCode,
+            'Cmd-Alt-D': clearCode,
+            'Alt-Z': () => { wordWrap = !wordWrap; editor.setOption('lineWrapping', wordWrap); }
+          }
+        });
+
+        fallback.remove();
+        editor.on('change', () => {
+          scheduleDraftSave();
+          updateHighlighting();
+          updateTitle();
+        });
+        editor.on('cursorActivity', updatePosition);
+        editor.on('focus', updatePosition);
+        updatePosition();
         updateHighlighting();
-    }
-});
+      }
 
-// Download Function Logic
-const triggerDownload = (ext) => {
-  const code = document.getElementById('codeArea').value;
-  const fileNameInput = document.getElementById('autoWidth');
-  if (!code) return;
-  let fileName = (fileNameInput.value || 'untitled').replace(/[^a-z0-9_\-]/gi, '_') + '.' + ext;
-  const blob = new Blob([code], { type: 'application/octet-stream' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
+      document.addEventListener('click', (event) => {
+        const action = event.target.closest('[data-action]')?.dataset.action;
+        if (!action) return;
+        const actions = {
+          open: openFilePicker,
+          download: () => downloadFile('mcfunction'),
+          copy: copyCode,
+          find: () => showFind(false),
+          'find-next': () => findMatch(1),
+          'find-previous': () => findMatch(-1),
+          'close-find': closeFind,
+          replace: replaceCurrent,
+          'replace-all': replaceAll,
+          palette: openPalette,
+          shortcuts: openShortcuts
+        };
+        if (actions[action]) actions[action]();
+      });
 
-document.getElementById('exportCode').addEventListener('click', () => triggerDownload('mcfunction'));
-document.getElementById('exportCodeTxt').addEventListener('click', () => triggerDownload('txt'));
+      $('#filename').addEventListener('input', () => { updateTitle(); scheduleDraftSave(); });
+      $('#theme-select').addEventListener('change', (event) => setTheme(event.target.value));
+      $('#find-query').addEventListener('input', () => findMatch(1));
+      $('#find-query').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); findMatch(event.shiftKey ? -1 : 1); }
+        if (event.key === 'Escape') closeFind();
+      });
+      $('#replace-query').addEventListener('keydown', (event) => { if (event.key === 'Enter') replaceCurrent(); });
+      $('#command-search').addEventListener('input', (event) => renderCommands(event.target.value));
+      $('#command-search').addEventListener('keydown', (event) => {
+        const first = $('#command-list .command-option');
+        if (event.key === 'Escape') closePalette();
+        if (event.key === 'Enter') first?.click();
+        if (event.key === 'ArrowDown') { event.preventDefault(); first?.focus(); }
+      });
+      $('#command-list').addEventListener('keydown', (event) => {
+        const items = [...$('#command-list').querySelectorAll('.command-option')];
+        const index = items.indexOf(document.activeElement);
+        if (event.key === 'ArrowDown') { event.preventDefault(); items[Math.min(index + 1, items.length - 1)]?.focus(); }
+        if (event.key === 'ArrowUp') { event.preventDefault(); if (index <= 0) $('#command-search').focus(); else items[index - 1].focus(); }
+        if (event.key === 'Escape') closePalette();
+      });
+      $('#palette-backdrop').addEventListener('click', (event) => { if (event.target.id === 'palette-backdrop') closePalette(); });
+      $('#shortcuts-backdrop').addEventListener('click', (event) => { if (event.target.id === 'shortcuts-backdrop') closeShortcuts(); });
+      $('#save-button').addEventListener('click', saveToAccount);
+      $('#open-file').addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const text = await file.text();
+        if (editor) editor.setValue(text);
+        else fallback.value = text;
+        $('#filename').value = file.name.replace(/\.(mcfunction|txt)$/i, '');
+        currentSaveId = null;
+        updateSaveButton(null);
+        updateTitle();
+        event.target.value = '';
+        editor?.focus();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (!$('#palette-backdrop').hidden) $('#palette-backdrop').hidden = true;
+        if (!$('#shortcuts-backdrop').hidden) closeShortcuts();
+      });
 
-// Copy Logic
-const copyToClipboard = () => {
-  const text = codeArea.value;
-  if (!text) return;
-  const dummy = document.createElement("textarea");
-  document.body.appendChild(dummy);
-  dummy.value = text;
-  dummy.select();
-  document.execCommand("copy");
-  document.body.removeChild(dummy);
-  console.log('Copied to clipboard');
-};
-
-document.getElementById('copyCodeTop').addEventListener('click', copyToClipboard);
-document.getElementById('copyCodeMenu').addEventListener('click', copyToClipboard);
-
-document.getElementById('deleteCode').addEventListener('click', () => {
-  codeArea.value = '';
-  updateHighlighting();
-});
-
-// Global Key Listeners
-document.addEventListener('keydown', (e) => {
-  const key = e.key.toLowerCase();
-  if (e.ctrlKey && e.altKey && key === 'd') {
-    e.preventDefault();
-    codeArea.value = '';
-    updateHighlighting();
-  }
-  if (e.ctrlKey && key === 's') {
-    e.preventDefault();
-    triggerDownload('mcfunction');
-  }
-});
-
-// Font Size
-let currentFontSize = 16;
-function setFontSize(size) {
-  currentFontSize = Math.min(Math.max(size, 8), 48);
-  const px = currentFontSize + 'px';
-  [codeArea, highlightLayer].forEach(el => el.style.fontSize = px);
-  const display = document.getElementById('fontdisplay');
-  if (display) display.textContent = px;
-  updateHighlighting();
-}
-
-window.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && (e.key === '[' || e.key === ']')) {
-    e.preventDefault();
-    setFontSize(e.key === ']' ? currentFontSize + 2 : currentFontSize - 2);
-  }
-}, true);
-
-// Find Panel
-const findPanel = document.querySelector('.find-panel-wrapper');
-window.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-    e.preventDefault();
-    const isHidden = window.getComputedStyle(findPanel).visibility === 'hidden';
-    if (isHidden) {
-      findPanel.style.visibility = 'visible';
-      findPanel.style.opacity = '1';
-      setTimeout(() => document.getElementById('findthing').focus(), 50);
-    } else {
-      findPanel.style.opacity = '0';
-      findPanel.style.visibility = 'hidden';
-    }
-  }
-  if (e.key === 'Escape') {
-    findPanel.style.opacity = '0';
-    findPanel.style.visibility = 'hidden';
-  }
-});
-
-// Keyboard State Visuals
-const keys = {
-  ctrl: document.getElementById('ctrl'),
-  shift: document.getElementById('shift'),
-  alt: document.getElementById('alt'),
-  other: document.getElementById('other')
-};
-
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Control') keys.ctrl.classList.add('active');
-  if (e.key === 'Shift') keys.shift.classList.add('active');
-  if (e.key === 'Alt') keys.alt.classList.add('active');
-  const isMod = ['Control', 'Shift', 'Alt'].includes(e.key);
-  if ((e.ctrlKey || e.shiftKey || e.altKey) && !isMod) keys.other.classList.add('active');
-});
-
-window.addEventListener('keyup', (e) => {
-  if (e.key === 'Control') keys.ctrl.classList.remove('active');
-  if (e.key === 'Shift') keys.shift.classList.remove('active');
-  if (e.key === 'Alt') keys.alt.classList.remove('active');
-  keys.other.classList.remove('active');
-});
-
-// Service Worker Fix
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-    .then(() => console.log('sw registered'))
-    .catch(err => console.warn('SW registration failed:', err));
-}
-
-// Initial Run
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(updateHighlighting, 100);
-});
-</script>
-
-<script data-goatcounter="https://mcbcode.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+      updateTitle();
+      buildEditor();
+      let savedTheme = 'default';
+      try { savedTheme = localStorage.getItem('selected-editor-theme') || 'default'; } catch {}
+      setTheme(savedTheme);
+      initializeAccount();
+    })();
+  </script>
 </body>
 </html>
