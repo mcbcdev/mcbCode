@@ -74,8 +74,15 @@
     .ac-item:hover, .ac-item.selected { background: var(--ui-surface-raised); color: var(--ui-text-strong); }
 
     /* ---- LANDING ---- */
-    .landing { margin-top: 48px; min-height: calc(100vh - 48px); padding-top: 80px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+    .landing { margin-top: 48px; min-height: calc(100vh - 48px); padding: 0 16px 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .landing.hidden { display: none; }
+
+    /* big centered search */
+    .search-wrap.centered { width: min(720px, calc(100vw - 32px)); gap: 24px; }
+    .search-wrap.centered .search-logo { font-size: 44px; }
+    .search-wrap.centered .search-logo small { font-size: 16px; margin-top: 8px; }
+    .search-wrap.centered .search-input { font-size: 20px; padding: 18px 22px; }
+    .search-wrap.centered .ac-item { font-size: 16px; padding: 12px 22px; }
 
     .recent-section { margin-top: 40px; width: min(1200px, 90vw); }
     .recent-label { font-size: 13px; color: var(--ui-faint); font-family: 'mcfontb', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; text-align: center; }
@@ -262,23 +269,6 @@
       .link-edit-row { flex-wrap: wrap; }
       .link-edit-row .edit-input.label-input { flex: 1 1 100%; }
     }
-.search-input-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.search-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.search-button {
-  font-family: 'mcfont', sans-serif;
-  font-size: 13px;
-  padding: 10px 16px;
-  cursor: pointer;
-}
   </style>
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
 </head>
@@ -328,41 +318,18 @@
     </div>
   </div>
 
-<div class="landing" id="landing">
-  <div class="search-stabilizer">
-    <div class="search-wrap centered" id="search-wrap">
-      <div class="search-logo">
-        mcb<g>Code</g>
-        <small>find a profile</small>
+  <div class="landing" id="landing">
+    <div class="search-stabilizer">
+      <div class="search-wrap centered" id="search-wrap">
+        <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
+        <div class="search-input-row">
+          <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
+          <div class="autocomplete-list" id="ac-list"></div>
+        </div>
       </div>
-
-      <form class="search-input-row" onsubmit="searchProfile(event)">
-        <input
-          class="search-input"
-          id="search-input"
-          type="text"
-          placeholder="username..."
-          autocomplete="off"
-          maxlength="32"
-          required
-        >
-        <button class="nav-btn search-button" type="submit">search</button>
-      </form>
     </div>
-  </div>
-</div>
 
-<div class="recent-section" id="recent-section">
-  <div class="recent-label">All Profiles</div>
-
-  <div class="recent-grid" id="recent-grid">
-    <div class="recent-loading">loading...</div>
   </div>
-
-  <div class="recent-loading" id="recent-sentinel">
-    loading...
-  </div>
-</div>
 
   <div class="page" id="profile-page">
     
@@ -532,6 +499,10 @@
     if (!pendingHash) pendingHash = location.hash || "";
 
     let myUsername = null;
+    let acDebounce = null;
+    let acSelected = -1;
+    let acResults  = [];
+    let searchInLanding = true; // track if search is still in landing vs topnav
     let selectedPfpFile = null;
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -569,63 +540,70 @@
         if (pendingHash === "#settings" && myUsername && myUsername === targetUser) {
           toggleSettingsView(true);
         }
-        } else {
-        // landing — search page
-        document.getElementById("search-input").focus();
-        }
+      } else {
+        // landing - just focus the search bar
+        searchInput.focus();
+      }
     })();
 
     // ---- ALL PROFILES ----
-
-    // ---- ALL PROFILES ----
-    let recentUsersLoaded = 0;
-    let recentUsersCursor = null;
-    let recentUsersLoading = false;
-    let recentUsersDone = false;
-    let recentUsersObserver = null;
-
-    function renderRecentUser(u) {
-      const cls = rankClass(u.rank);
-      const badgeStyle = u.rank
-        ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || 'var(--ui-muted)'}"`
-        : "";
-
-      const pfp = u.pfp_url || u.pfpUrl;
-      const avatarInner = pfp
-        ? `<img src="${esc(pfp)}" alt="">`
-        : esc(u.username[0].toUpperCase());
-
-      return `
-        <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
-          <div class="recent-avatar" style="${!pfp && cls ? `color:${u.rankColor}` : ''}">${avatarInner}</div>
-          <div class="recent-name ${cls}">${esc(u.username)}</div>
-          ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
-        </div>
-      `;
+    async function loadRecentUsers() {
+      const grid = document.getElementById("recent-grid");
+      try {
+        const r = await fetch(`${AUTH}/users/recent?limit=200`);
+        if (!r.ok) { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; return; }
+        const d = await r.json();
+        if (!d.users.length) { grid.innerHTML = `<div class="recent-empty">no profiles yet.</div>`; return; }
+        grid.innerHTML = d.users.map(u => {
+          const cls = rankClass(u.rank);
+          const badgeStyle = u.rank ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || 'var(--ui-muted)'}"` : "";
+          const pfp = u.pfp_url || u.pfpUrl;
+          const avatarInner = pfp
+            ? `<img src="${esc(pfp)}" alt="">`
+            : u.username[0].toUpperCase();
+          return `
+            <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
+              <div class="recent-avatar" style="${!pfp && cls ? `color:${u.rankColor}` : ''}">${avatarInner}</div>
+              <div class="recent-name ${cls}">${esc(u.username)}</div>
+              ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
+            </div>
+          `;
+        }).join("");
+      } catch { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; }
     }
 
-    // automatically load another batch when approaching the bottom
-    function initRecentUsersScroll() {
-      const sentinel = document.getElementById("recent-sentinel");
-      if (!sentinel || !("IntersectionObserver" in window)) return;
+    // ---- STICKY SEARCH ON SCROLL (landing only) ----
+    function initScrollSticky() {
+      const wrap = document.getElementById("search-wrap");
+      let restingTop = null;
 
-      recentUsersObserver = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting) {
-          loadRecentUsers();
+      const measure = () => {
+        // only measure while it's still in normal flow (not already pinned)
+        if (wrap.classList.contains("centered")) {
+          restingTop = wrap.getBoundingClientRect().top + window.scrollY;
         }
-      }, {
-        rootMargin: "300px"
-      });
+      };
+      measure();
+      window.addEventListener("resize", measure, { passive: true });
 
-      recentUsersObserver.observe(sentinel);
+      window.addEventListener("scroll", () => {
+        if (!searchInLanding || restingTop === null) return;
+        if (window.scrollY > restingTop - 58) {
+          wrap.classList.remove("centered");
+          wrap.classList.add("sticky-top");
+        } else {
+          wrap.classList.remove("sticky-top");
+          wrap.classList.add("centered");
+          measure();
+        }
+      }, { passive: true });
     }
-
-
 
     // ---- SEARCH ----
     const searchInput = document.getElementById("search-input");
     const acList      = document.getElementById("ac-list");
-    
+    if (targetUser) searchInput.value = targetUser;
+
     searchInput.addEventListener("input", () => {
       clearTimeout(acDebounce);
       const q = searchInput.value.trim();
@@ -640,22 +618,24 @@
       else if (e.key === "Escape") closeAc();
     });
 
+    async function fetchAc(q) {
+      try {
+        const r = await fetch(`${AUTH}/profile/search?q=${encodeURIComponent(q)}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        acResults = d.results || []; acSelected = -1; renderAc();
+      } catch {}
+    }
+
+    function renderAc() {
+      if (!acResults.length) { closeAc(); return; }
+      acList.innerHTML = acResults.map((u, i) => `<div class="ac-item${i === acSelected ? ' selected' : ''}" onclick="goToProfile('${esc(u)}')">${esc(u)}</div>`).join("");
+      acList.classList.add("open");
+    }
+
+    function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
     function goToProfile(u) { window.location.href = `/profile/${encodeURIComponent(u)}`; }
 
-function searchProfile(event) {
-  event.preventDefault();
-
-  const username = document.getElementById("search-input").value.trim();
-
-  if (!username) return;
-
-  goToProfile(username);
-}
-
-function goToProfile(username) {
-  window.location.href = `/profile/${encodeURIComponent(username)}`;
-}    
-    
     // ---- LOAD PROFILE ----
 async function loadProfile(username) {
   const msg = document.getElementById("center-msg");
@@ -697,6 +677,12 @@ function renderProfile(data) {
     collaborating = []
   } = data;
 
+  // move search to topnav
+  searchInLanding = false;
+  const wrap = document.getElementById("search-wrap");
+  wrap.classList.remove("centered", "sticky-top");
+  wrap.classList.add("in-nav");
+  document.getElementById("nav-search-slot").appendChild(wrap);
 
   // avatar
   const avatarEl = document.getElementById("prof-avatar");
@@ -1182,6 +1168,7 @@ async function uploadPfp() {
 }
 
     document.getElementById("pfp-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePfpModal(); });
+    document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
 
       // ---- FOLLOWING ----
     let followTargetUsername = null;
