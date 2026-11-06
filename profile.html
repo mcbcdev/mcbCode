@@ -542,35 +542,129 @@
       } else {
         // landing — load all profiles
         loadRecentUsers();
+        initRecentUsersScroll();
         initScrollSticky();
       }
     })();
 
     // ---- ALL PROFILES ----
-    async function loadRecentUsers() {
-      const grid = document.getElementById("recent-grid");
-      try {
-        const r = await fetch(`${AUTH}/users/recent?limit=200`);
-        if (!r.ok) { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; return; }
-        const d = await r.json();
-        if (!d.users.length) { grid.innerHTML = `<div class="recent-empty">no profiles yet.</div>`; return; }
-        grid.innerHTML = d.users.map(u => {
-          const cls = rankClass(u.rank);
-          const badgeStyle = u.rank ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || 'var(--ui-muted)'}"` : "";
-          const pfp = u.pfp_url || u.pfpUrl;
-          const avatarInner = pfp
-            ? `<img src="${esc(pfp)}" alt="">`
-            : u.username[0].toUpperCase();
-          return `
-            <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
-              <div class="recent-avatar" style="${!pfp && cls ? `color:${u.rankColor}` : ''}">${avatarInner}</div>
-              <div class="recent-name ${cls}">${esc(u.username)}</div>
-              ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
-            </div>
-          `;
-        }).join("");
-      } catch { grid.innerHTML = `<div class="recent-empty">couldn't load profiles.</div>`; }
+
+    // ---- ALL PROFILES ----
+    let recentUsersLoaded = 0;
+    let recentUsersCursor = null;
+    let recentUsersLoading = false;
+    let recentUsersDone = false;
+    let recentUsersObserver = null;
+
+    function renderRecentUser(u) {
+      const cls = rankClass(u.rank);
+      const badgeStyle = u.rank
+        ? `style="background:${rankBg(u.rankColor)};color:${u.rankColor || 'var(--ui-muted)'}"`
+        : "";
+
+      const pfp = u.pfp_url || u.pfpUrl;
+      const avatarInner = pfp
+        ? `<img src="${esc(pfp)}" alt="">`
+        : esc(u.username[0].toUpperCase());
+
+      return `
+        <div class="recent-card" onclick="goToProfile('${esc(u.username)}')">
+          <div class="recent-avatar" style="${!pfp && cls ? `color:${u.rankColor}` : ''}">${avatarInner}</div>
+          <div class="recent-name ${cls}">${esc(u.username)}</div>
+          ${u.rank ? `<div class="recent-rank-badge" ${badgeStyle}>${esc(u.rank.toLowerCase())}</div>` : ""}
+        </div>
+      `;
     }
+
+    async function loadRecentUsers() {
+      if (recentUsersLoading || recentUsersDone) return;
+
+      recentUsersLoading = true;
+
+      const grid = document.getElementById("recent-grid");
+      let sentinel = document.getElementById("recent-sentinel");
+
+      if (!sentinel) {
+        sentinel = document.createElement("div");
+        sentinel.id = "recent-sentinel";
+        sentinel.className = "recent-loading";
+        sentinel.textContent = "loading...";
+        sentinel.style.gridColumn = "1 / -1";
+        grid.after(sentinel);
+      }
+
+      sentinel.textContent = "loading...";
+
+      try {
+        const params = new URLSearchParams({
+          limit: "25",
+          loaded: String(recentUsersLoaded)
+        });
+
+        if (recentUsersCursor !== null) {
+          params.set("before", String(recentUsersCursor));
+        }
+
+        const r = await fetch(`${AUTH}/users/recent?${params}`);
+
+        if (!r.ok) throw new Error("Failed to load profiles");
+
+        const d = await r.json();
+
+        if (!d.users.length) {
+          recentUsersDone = true;
+
+          if (recentUsersLoaded === 0) {
+            grid.innerHTML = `<div class="recent-empty">no profiles yet.</div>`;
+          }
+
+          sentinel.textContent = recentUsersLoaded
+            ? "you've reached the end."
+            : "";
+
+          return;
+        }
+        if (recentUsersLoaded === 0) {
+          grid.innerHTML = "";
+        }
+        grid.insertAdjacentHTML(
+          "beforeend",
+          d.users.map(renderRecentUser).join("")
+        );
+
+        recentUsersLoaded += d.users.length;
+        recentUsersCursor = d.nextCursor;
+        recentUsersDone = !d.hasMore;
+
+        if (recentUsersDone) {
+          sentinel.textContent = "showing the 100 most recent profiles. use search to find everyone else.";
+        } else {
+          sentinel.textContent = "scroll for more...";
+        }
+
+      } catch (e) {
+        sentinel.textContent = "couldn't load profiles. scroll to retry.";
+      } finally {
+        recentUsersLoading = false;
+      }
+    }
+
+    // automatically load another batch when approaching the bottom
+    function initRecentUsersScroll() {
+      const sentinel = document.getElementById("recent-sentinel");
+      if (!sentinel || !("IntersectionObserver" in window)) return;
+
+      recentUsersObserver = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+          loadRecentUsers();
+        }
+      }, {
+        rootMargin: "300px"
+      });
+
+      recentUsersObserver.observe(sentinel);
+    }
+
 
     // ---- STICKY SEARCH ON SCROLL (landing only) ----
     function initScrollSticky() {
