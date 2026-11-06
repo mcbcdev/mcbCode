@@ -280,6 +280,7 @@
               const sd = await sres.json();
               window._editorMode = sd.settings.editor_mode || "inline";
               window._easyProjectMode = sd.settings.easy_project === true;
+              console.log("editor_mode from server:", sd.settings.editor_mode);
             }
           } catch {}
         }
