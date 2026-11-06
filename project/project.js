@@ -1992,11 +1992,8 @@ function renderFileList() {
       row.onclick = e => {
         if (e.target.classList.contains("file-del")) return;
         if (!f.save_id) return;
-        if (window._editorMode === "legacy") {
-          window.location.href = editorUrl(f);
-        } else {
-          openInlineEditor(f);
-        }
+        console.log("clicked file, editor mode is:", window._editorMode);
+        openInlineEditor(f);
       };
       if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
     }
