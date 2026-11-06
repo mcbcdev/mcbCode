@@ -262,6 +262,23 @@
       .link-edit-row { flex-wrap: wrap; }
       .link-edit-row .edit-input.label-input { flex: 1 1 100%; }
     }
+.search-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-button {
+  font-family: 'mcfont', sans-serif;
+  font-size: 13px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
   </style>
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
 </head>
@@ -311,16 +328,29 @@
     </div>
   </div>
 
-  <div class="landing" id="landing">
-    <div class="search-stabilizer">
-      <div class="search-wrap centered" id="search-wrap">
-        <div class="search-logo">mcb<g>Code</g><small>search for a user</small></div>
-        <div class="search-input-row">
-          <input class="search-input" id="search-input" type="text" placeholder="username..." autocomplete="off" maxlength="32">
-          <div class="autocomplete-list" id="ac-list"></div>
-        </div>
+<div class="landing" id="landing">
+  <div class="search-stabilizer">
+    <div class="search-wrap centered" id="search-wrap">
+      <div class="search-logo">
+        mcb<g>Code</g>
+        <small>find a profile</small>
       </div>
+
+      <form class="search-input-row" onsubmit="searchProfile(event)">
+        <input
+          class="search-input"
+          id="search-input"
+          type="text"
+          placeholder="username..."
+          autocomplete="off"
+          maxlength="32"
+          required
+        >
+        <button class="nav-btn search-button" type="submit">search</button>
+      </form>
     </div>
+  </div>
+</div>
 
 <div class="recent-section" id="recent-section">
   <div class="recent-label">All Profiles</div>
@@ -502,10 +532,6 @@
     if (!pendingHash) pendingHash = location.hash || "";
 
     let myUsername = null;
-    let acDebounce = null;
-    let acSelected = -1;
-    let acResults  = [];
-    let searchInLanding = true; // track if search is still in landing vs topnav
     let selectedPfpFile = null;
 
     function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -543,12 +569,10 @@
         if (pendingHash === "#settings" && myUsername && myUsername === targetUser) {
           toggleSettingsView(true);
         }
-      } else {
-        // landing — load all profiles
-        loadRecentUsers();
-        initRecentUsersScroll();
-        initScrollSticky();
-      }
+        } else {
+        // landing — search page
+        document.getElementById("search-input").focus();
+        }
     })();
 
     // ---- ALL PROFILES ----
@@ -580,79 +604,6 @@
       `;
     }
 
-    async function loadRecentUsers() {
-      if (recentUsersLoading || recentUsersDone) return;
-
-      recentUsersLoading = true;
-
-      const grid = document.getElementById("recent-grid");
-      let sentinel = document.getElementById("recent-sentinel");
-
-      if (!sentinel) {
-        sentinel = document.createElement("div");
-        sentinel.id = "recent-sentinel";
-        sentinel.className = "recent-loading";
-        sentinel.textContent = "loading...";
-        sentinel.style.gridColumn = "1 / -1";
-        grid.after(sentinel);
-      }
-
-      sentinel.textContent = "loading...";
-
-      try {
-        const params = new URLSearchParams({
-          limit: "25",
-          loaded: String(recentUsersLoaded)
-        });
-
-        if (recentUsersCursor !== null) {
-          params.set("before", String(recentUsersCursor));
-        }
-
-        const r = await fetch(`${AUTH}/users/recent?${params}`);
-
-        if (!r.ok) throw new Error("Failed to load profiles");
-
-        const d = await r.json();
-
-        if (!d.users.length) {
-          recentUsersDone = true;
-
-          if (recentUsersLoaded === 0) {
-            grid.innerHTML = `<div class="recent-empty">no profiles yet.</div>`;
-          }
-
-          sentinel.textContent = recentUsersLoaded
-            ? "you've reached the end."
-            : "";
-
-          return;
-        }
-        if (recentUsersLoaded === 0) {
-          grid.innerHTML = "";
-        }
-        grid.insertAdjacentHTML(
-          "beforeend",
-          d.users.map(renderRecentUser).join("")
-        );
-
-        recentUsersLoaded += d.users.length;
-        recentUsersCursor = d.nextCursor;
-        recentUsersDone = !d.hasMore;
-
-        if (recentUsersDone) {
-          sentinel.textContent = "showing the 100 most recent profiles. use search to find everyone else.";
-        } else {
-          sentinel.textContent = "scroll for more...";
-        }
-
-      } catch (e) {
-        sentinel.textContent = "couldn't load profiles. scroll to retry.";
-      } finally {
-        recentUsersLoading = false;
-      }
-    }
-
     // automatically load another batch when approaching the bottom
     function initRecentUsersScroll() {
       const sentinel = document.getElementById("recent-sentinel");
@@ -670,38 +621,11 @@
     }
 
 
-    // ---- STICKY SEARCH ON SCROLL (landing only) ----
-    function initScrollSticky() {
-      const wrap = document.getElementById("search-wrap");
-      let restingTop = null;
-
-      const measure = () => {
-        // only measure while it's still in normal flow (not already pinned)
-        if (wrap.classList.contains("centered")) {
-          restingTop = wrap.getBoundingClientRect().top + window.scrollY;
-        }
-      };
-      measure();
-      window.addEventListener("resize", measure, { passive: true });
-
-      window.addEventListener("scroll", () => {
-        if (!searchInLanding || restingTop === null) return;
-        if (window.scrollY > restingTop - 58) {
-          wrap.classList.remove("centered");
-          wrap.classList.add("sticky-top");
-        } else {
-          wrap.classList.remove("sticky-top");
-          wrap.classList.add("centered");
-          measure();
-        }
-      }, { passive: true });
-    }
 
     // ---- SEARCH ----
     const searchInput = document.getElementById("search-input");
     const acList      = document.getElementById("ac-list");
-    if (targetUser) searchInput.value = targetUser;
-
+    
     searchInput.addEventListener("input", () => {
       clearTimeout(acDebounce);
       const q = searchInput.value.trim();
@@ -716,24 +640,22 @@
       else if (e.key === "Escape") closeAc();
     });
 
-    async function fetchAc(q) {
-      try {
-        const r = await fetch(`${AUTH}/profile/search?q=${encodeURIComponent(q)}`);
-        if (!r.ok) return;
-        const d = await r.json();
-        acResults = d.results || []; acSelected = -1; renderAc();
-      } catch {}
-    }
-
-    function renderAc() {
-      if (!acResults.length) { closeAc(); return; }
-      acList.innerHTML = acResults.map((u, i) => `<div class="ac-item${i === acSelected ? ' selected' : ''}" onclick="goToProfile('${esc(u)}')">${esc(u)}</div>`).join("");
-      acList.classList.add("open");
-    }
-
-    function closeAc() { acList.classList.remove("open"); acList.innerHTML = ""; acResults = []; acSelected = -1; }
     function goToProfile(u) { window.location.href = `/profile/${encodeURIComponent(u)}`; }
 
+function searchProfile(event) {
+  event.preventDefault();
+
+  const username = document.getElementById("search-input").value.trim();
+
+  if (!username) return;
+
+  goToProfile(username);
+}
+
+function goToProfile(username) {
+  window.location.href = `/profile/${encodeURIComponent(username)}`;
+}    
+    
     // ---- LOAD PROFILE ----
 async function loadProfile(username) {
   const msg = document.getElementById("center-msg");
@@ -775,12 +697,6 @@ function renderProfile(data) {
     collaborating = []
   } = data;
 
-  // move search to topnav
-  searchInLanding = false;
-  const wrap = document.getElementById("search-wrap");
-  wrap.classList.remove("centered", "sticky-top");
-  wrap.classList.add("in-nav");
-  document.getElementById("nav-search-slot").appendChild(wrap);
 
   // avatar
   const avatarEl = document.getElementById("prof-avatar");
@@ -1266,7 +1182,6 @@ async function uploadPfp() {
 }
 
     document.getElementById("pfp-overlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePfpModal(); });
-    document.addEventListener("click", e => { if (!e.target.closest(".search-input-row")) closeAc(); });
 
       // ---- FOLLOWING ----
     let followTargetUsername = null;
