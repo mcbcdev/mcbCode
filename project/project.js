@@ -274,6 +274,7 @@
           document.getElementById("nav-user").textContent = d.email;
           window._myId = d.id;
           window._isObsidian = d.is_obsidian || false;
+          window._skill = Number(d.skill ?? d.skill_level) || 0; // 1-5 from onboarding, 0 if unknown
           try {
             const sres = await fetch(`${AUTH}/settings`, { credentials: "include" });
             if (sres.ok) {
@@ -419,6 +420,106 @@ function renderContributors() {
     function isAtRoot() { return currentPath.length === 0; }
     const canEdit = () => isOwner || isCollab;
     const isLoggedIn = () => !!window._myId;
+
+// ---- tool dock: the main things people want to do, in plain words ----
+// every tile calls the same function the old menus call, nothing new happens behind the scenes.
+function renderToolDock() {
+  const dock = document.getElementById("tool-dock");
+  if (!dock) return;
+  if (!project || window._easyProjectMode || project.project_type === "skinpack") {
+    dock.style.display = "none";
+    dock.innerHTML = "";
+    return;
+  }
+  const skill = window._skill || 0;
+  const beginner = skill > 0 && skill <= 2;
+  const editable = canEdit();
+  const atAddonRoot = isAtRoot() && project.project_type === "addon";
+  const icon = n => `<img src="https://mcbcode.com/img/icons/${n}.png" alt="">`;
+  const tile = (id, name, hint, ico) =>
+    `<button type="button" class="dock-tile" data-dock="${id}">${ico ? icon(ico) : ""}<span><strong>${name}</strong>${beginner && hint ? `<small>${hint}</small>` : ""}</span></button>`;
+  const group = (cls, name, tiles) => tiles.length ? `<div class="dock-group ${cls}"><div class="dock-group-name">${name}</div><div class="dock-row">${tiles.join("")}</div></div>` : "";
+
+  const make = [], files = [], out = [];
+  if (editable) {
+    make.push(tile("item", "item", "a custom item, no json needed", "item"));
+    make.push(tile("block", "block", "a custom block with a texture", "block"));
+    make.push(tile("entity", "entity", "a mob or other creature", "entity"));
+    make.push(tile("texture", "replace a texture", "swap a vanilla texture for yours", "texture"));
+    files.push(tile("folder", "new folder", "keeps your files organized"));
+    if (!atAddonRoot) {
+      files.push(tile("file", "new file", "like a .json or .mcfunction"));
+      files.push(tile("image", "add an image", "upload a png"));
+    }
+  }
+  out.push(tile("dripstone", "ask dripstone ai", "an ai that knows bedrock"));
+  out.push(tile("export", "download", "get the .mcpack or .mcaddon"));
+  out.push(tile("share", "share", "send people a link"));
+
+  const intro = beginner && editable && isOwner
+    ? `<p class="dock-intro">new here? pick something to make and mcbCode sets up the files for you.${typeof startTutorial === "function" ? ` <button type="button" data-dock="tour">take the quick tour</button>` : ""}</p>`
+    : "";
+
+  const hidden = localStorage.getItem("mcb_dock_hidden") === "1";
+  dock.className = "tool-dock" + (hidden ? " collapsed" : "");
+  dock.style.display = "";
+  dock.innerHTML = `<button type="button" class="dock-toggle" data-dock="toggle">${hidden ? "show tools" : "hide tools"}</button>` +
+    intro + group("make", "make something", make) + group("files", "your files", files) + group("out", "get it out there", out);
+
+  dock.onclick = e => {
+    const b = e.target.closest("[data-dock]");
+    if (!b) return;
+    const act = b.dataset.dock;
+    if (act === "item" || act === "block" || act === "entity") openCreator(act);
+    else if (act === "texture") openReplaceTexture();
+    else if (act === "folder") openNewFile("folder");
+    else if (act === "file") openNewFile("file");
+    else if (act === "image") document.getElementById("png-upload-input").click();
+    else if (act === "export") startExport();
+    else if (act === "share") openSharePopup();
+    else if (act === "tour") { if (typeof startTutorial === "function") startTutorial(); }
+    else if (act === "dripstone") {
+      const target = new URL("https://mcbcode.com/dripstone");
+      target.searchParams.set("project", shareCode);
+      window.open(target.toString(), "_blank", "noopener,noreferrer");
+    } else if (act === "toggle") {
+      localStorage.setItem("mcb_dock_hidden", hidden ? "0" : "1");
+      renderToolDock();
+    }
+  };
+}
+
+// ---- mcbCode Studio suggestion, only for skill 4-5 and only now and then ----
+function maybeShowStudioNudge() {
+  if (window._studioNudgeChecked) return;
+  window._studioNudgeChecked = true;
+  if ((window._skill || 0) < 4 || !isLoggedIn() || !canEdit() || window._easyProjectMode) return;
+  const KEY = "mcb_studio_nudge_v1";
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  if (st.opened || (st.dismissed || 0) >= 3) return;
+  if (st.last && Date.now() - st.last < 3 * 24 * 60 * 60 * 1000) return;
+  if (Math.random() > 0.5) return;
+  setTimeout(() => {
+    if (document.getElementById("studio-nudge")) return;
+    st.last = Date.now(); save();
+    const box = document.createElement("div");
+    box.className = "studio-nudge";
+    box.id = "studio-nudge";
+    box.innerHTML = `<strong>want a full code editor?</strong><p>mcbCode Studio is a proper ide for bedrock, with tabs, search and syntax highlighting. good for bigger packs.</p><div class="studio-nudge-row"><button type="button" class="sm-btn export-highlight" id="studio-nudge-open">try studio</button><button type="button" class="sm-btn" id="studio-nudge-close">not now</button></div>`;
+    document.body.appendChild(box);
+    document.getElementById("studio-nudge-open").onclick = () => {
+      st.opened = true; save();
+      window.open("https://studio.mcbcode.com", "_blank", "noopener,noreferrer");
+      box.remove();
+    };
+    document.getElementById("studio-nudge-close").onclick = () => {
+      st.dismissed = (st.dismissed || 0) + 1; save();
+      box.remove();
+    };
+  }, 5000);
+}
 
 function renderToolbar() {
   const toolbar = document.querySelector(".proj-header-actions");
@@ -597,6 +698,9 @@ function renderToolbar() {
   shareWrap.appendChild(bshare);
   shareWrap.appendChild(shareMenu);
   toolbar.appendChild(shareWrap);
+
+  renderToolDock();
+  maybeShowStudioNudge();
 }
 
 function toggleAddFilesMenu() {
@@ -2849,7 +2953,7 @@ async function linkGithub() {
       });
       window.addEventListener("mousemove", e => {
         if (!dragging) return;
-        const w = Math.min(460, Math.max(180, e.clientX));
+        const w = Math.min(460, Math.max(180, window.innerWidth - e.clientX)); // info panel sits on the right now
         panel.style.width = w + "px";
       });
       window.addEventListener("mouseup", () => {
