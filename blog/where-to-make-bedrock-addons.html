@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="https://mcbcode.com/theme/favicon.png" />
+  <link rel="stylesheet" href="https://mcbcode.com/theme/site.css" />
+  <title>mcbcode blog | where do i make bedrock addons?</title>
+  <style>
+    :root {
+      --page-width: 760px;
+      --page-padding: 24px;
+      --text-muted: #bebebe;
+      --surface: #151515;
+      --border: #454545;
+      --link: #00b2ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      max-width: var(--page-width);
+      margin: 0 auto;
+      padding: 48px var(--page-padding) 72px;
+      text-align: left;
+      color: #f3f3f3;
+    }
+
+    .post-header {
+      margin-bottom: 30px;
+    }
+
+    .post-content {
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .post-content > p:first-of-type {
+      color: var(--text-muted);
+      margin-top: -18px;
+    }
+
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content h4,
+    .post-content h5,
+    .post-content h6 {
+      line-height: 1.25;
+      margin: 1.5em 0 0.55em;
+    }
+
+    .post-content p,
+    .post-content ul,
+    .post-content ol,
+    .post-content blockquote,
+    .post-content pre {
+      margin: 0 0 1.1em;
+    }
+
+    .post-content a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .post-content a:hover {
+        font-style: italic;
+        text-decoration: underline;
+    }
+
+    .post-content blockquote {
+      border-left: 3px solid var(--border);
+      color: var(--text-muted);
+      margin-left: 0;
+      padding-left: 18px;
+    }
+
+    .post-content pre,
+    .raw-markdown {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: auto;
+      padding: 18px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .post-content code {
+      background: var(--surface);
+      border-radius: 6px;
+      padding: 2px 5px;
+    }
+
+    .post-content pre code {
+      background: transparent;
+      padding: 0;
+    }
+
+    .view-markdown-button,
+    .back-button {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      padding: 8px 14px;
+    }
+
+    .view-markdown-button:hover,
+    .back-button:hover {
+      border-color: var(--text-muted);
+    }
+
+    .view-markdown-button:focus-visible,
+    .back-button:focus-visible {
+      outline: 2px solid var(--link);
+      outline-offset: 3px;
+    }
+
+    .raw-view {
+      display: none;
+    }
+
+    .raw-markdown {
+      margin: 0;
+      min-height: 100vh;
+      padding: 84px 24px 36px;
+    }
+
+    .back-button {
+      position: fixed;
+      left: 24px;
+      top: 108px;
+      z-index: 2;
+    }
+
+    body.markdown-mode {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body.markdown-mode .article-view {
+      display: none;
+    }
+
+    body.markdown-mode .raw-view {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 30px 18px 54px;
+      }
+
+      .raw-markdown {
+        padding: 78px 18px 24px;
+      }
+    }
+
+    .top-navi {
+        position: fixed;
+        background-color: #0c0c0c80;
+        backdrop-filter: blur(6px);
+        padding: 18px;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        align-items: center;
+        display: flex;
+        gap: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="top-navi">
+<img src="https://mcbcode.com/img/icons/default.png" style="border-radius: 6px; height: 48px;">
+<h3>mcbCode blog</h3>
+</div>
+<div style="margin-top: 60px"></div>
+  <main class="article-view" id="article-view">
+    <header class="post-header">
+      <button class="view-markdown-button" id="view-markdown" type="button">view as markdown</button>
+    </header>
+    <article class="post-content" id="rendered-post" aria-label="blog post"></article>
+  </main>
+
+  <main class="raw-view" id="raw-view" aria-label="raw markdown view" aria-hidden="true">
+    <button class="back-button" id="back-button" type="button">back to normal</button>
+    <pre class="raw-markdown" id="raw-markdown"></pre>
+  </main>
+
+  <textarea id="post-markdown" hidden>
+# where to make bedrock addons?
+
+november 7th, 2026
+
+okay, you have an idea for an addon, the plan is there and you want to get started. there are plenty of tools for creating minecraft mods or addons, yet when you check it out, a few things usually happen. from being for java edition to being filled with tons of ads to costing money. and no one wants to research for hours and hours *(unless you do)* just trying to work on the idea you had before it goes away.
+
+enter: me! ive been developing addons for almost two years and ive been searching for the best free, *bedrock edition* addon makers for all of your ideas.
+
+---
+
+## 1. minecraft addons maker
+
+they're pretty good on tools and a great start for people who want to get into developing minecraft bedrock addons.
+
+### pros
+- has a LOT of tools and templates
+- available on google play and apple app store
+- no code editor
+
+### cons
+- way too many ads
+- a lot of bugs in the app
+- cannot make super advanced stuff
+
+### links
+
+google play listing [here](https://play.google.com/store/apps/details?id=co.pamobile.minecraft.addonsmaker) | apple app store listing [here](https://apps.apple.com/us/app/addons-maker-for-minecraft/id1208925143) | official website [here](https://addonsmaker.com)
+
+---
+
+## 2. bridge.
+
+has a few tools, and if you know what you're doing its super capable.
+
+### pros
+- no ads
+- well known with pretty big community
+- cool ui
+- documentation
+- plugins for even more support
+
+### cons
+- need a lot of experience
+- mostly supported on desktop rather than
+
+### links
+
+official website [here](https://bridge-core.app)
+
+---
+
+## 3. mcbCode
+
+the site you're on right now. built for beginners, but works for all levels of skill.
+
+### pros
+
+- meant for beginners
+- less code editors
+- works on all devices
+- tons of tools
+- project saving
+- ai builder with *actual bedrock knowledge*
+- premium plan gives even more tools
+
+### cons
+
+- ads, but not too many
+- solo developer (me), updates are slow
+
+### links
+
+official website [here](https://mcbcode.com) you're also here right now :) 
+
+  </textarea>
+
+  <script>
+    const markdownSource = document.getElementById("post-markdown").value.trim();
+    const renderedPost = document.getElementById("rendered-post");
+    const rawMarkdown = document.getElementById("raw-markdown");
+    const viewMarkdownButton = document.getElementById("view-markdown");
+    const backButton = document.getElementById("back-button");
+    const rawView = document.getElementById("raw-view");
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderInline(markdown) {
+      const codeParts = [];
+      let text = escapeHtml(markdown).replace(/`([^`]+)`/g, (_, code) => {
+        const token = `@@INLINE_CODE_${codeParts.length}@@`;
+        codeParts.push(`<code>${code}</code>`);
+        return token;
+      });
+
+      text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*|#[^\s)]*)\)/g,
+        (_, label, url) => `<a href="${url}" rel="noopener noreferrer">${label}</a>`);
+      text = text.replace(/\*\*(.+?)\*\*|__(.+?)__/g, (_, a, b) => `<strong>${a || b}</strong>`);
+      text = text.replace(/\*(?!\s)(.+?)\*|_(?!\s)(.+?)_/g, (_, a, b) => `<em>${a || b}</em>`);
+      text = text.replace(/@@INLINE_CODE_(\d+)@@/g, (_, index) => codeParts[Number(index)]);
+      return text;
+    }
+
+    function renderMarkdown(markdown) {
+      const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
+      const output = [];
+      let index = 0;
+
+      while (index < lines.length) {
+        const line = lines[index];
+
+        if (!line.trim()) {
+          index += 1;
+          continue;
+        }
+
+        if (/^\s*```/.test(line)) {
+          index += 1;
+          const codeLines = [];
+          while (index < lines.length && !/^\s*```/.test(lines[index])) {
+            codeLines.push(lines[index]);
+            index += 1;
+          }
+          if (index < lines.length) index += 1;
+          output.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+          continue;
+        }
+
+        const heading = line.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+        if (heading) {
+          const level = heading[1].length;
+          output.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+          index += 1;
+          continue;
+        }
+
+        if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) {
+          output.push("<hr>");
+          index += 1;
+          continue;
+        }
+
+        if (/^\s*>/.test(line)) {
+          const quoteLines = [];
+          while (index < lines.length && /^\s*>/.test(lines[index])) {
+            quoteLines.push(lines[index].replace(/^\s*>\s?/, ""));
+            index += 1;
+          }
+          output.push(`<blockquote><p>${renderInline(quoteLines.join("<br>"))}</p></blockquote>`);
+          continue;
+        }
+
+        const listMatch = line.match(/^\s*(?:([-*+])|(\d+)\.)\s+(.+)$/);
+        if (listMatch) {
+          const ordered = Boolean(listMatch[2]);
+          const listTag = ordered ? "ol" : "ul";
+          const items = [];
+          while (index < lines.length) {
+            const item = lines[index].match(/^\s*(?:([-*+])|(\d+)\.)\s+(.+)$/);
+            if (!item || Boolean(item[2]) !== ordered) break;
+            items.push(`<li>${renderInline(item[3])}</li>`);
+            index += 1;
+          }
+          output.push(`<${listTag}>${items.join("")}</${listTag}>`);
+          continue;
+        }
+
+        const paragraphLines = [];
+        while (index < lines.length && lines[index].trim()) {
+          if (index > 0 && (/^\s*```/.test(lines[index]) || /^\s*#{1,6}\s+/.test(lines[index]) || /^\s*>/.test(lines[index]) || /^\s*(?:[-*+]|\d+\.)\s+/.test(lines[index]) || /^\s*(---+|\*\*\*+|___+)\s*$/.test(lines[index]))) break;
+          paragraphLines.push(lines[index]);
+          index += 1;
+        }
+        if (paragraphLines.length) {
+          output.push(`<p>${renderInline(paragraphLines.join("<br>"))}</p>`);
+        } else {
+          index += 1;
+        }
+      }
+
+      return output.join("\n");
+    }
+
+    function showMarkdown() {
+      document.body.classList.add("markdown-mode");
+      rawView.setAttribute("aria-hidden", "false");
+      backButton.focus();
+    }
+
+    function showArticle() {
+      document.body.classList.remove("markdown-mode");
+      rawView.setAttribute("aria-hidden", "true");
+      viewMarkdownButton.focus();
+    }
+
+    renderedPost.innerHTML = renderMarkdown(markdownSource);
+    rawMarkdown.textContent = markdownSource;
+    viewMarkdownButton.addEventListener("click", showMarkdown);
+    backButton.addEventListener("click", showArticle);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.classList.contains("markdown-mode")) {
+        showArticle();
+      }
+    });
+  </script>
+</body>
+</html>
