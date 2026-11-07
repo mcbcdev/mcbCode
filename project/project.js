@@ -287,6 +287,8 @@
         }
       } catch {}
       if (!window._editorMode) window._editorMode = "inline"; // default, also covers logged-out viewers
+      const obsidianSlot = document.getElementById("obsidian-slot");
+      if (obsidianSlot) obsidianSlot.style.display = window._isObsidian ? "none" : "flex";
       document.getElementById("file-list").innerHTML = `<div class="loading-msg">loading your project...</div>`;
       try {
         const r = await fetch(`${AUTH}/project?code=${encodeURIComponent(shareCode)}`, { credentials: "include" });
@@ -461,7 +463,7 @@ function renderToolbar() {
     const preferencesBtn = document.createElement("button");
     preferencesBtn.className = "sm-btn";
     preferencesBtn.textContent = "View settings";
-    preferencesBtn.title = "Turn off Easy project mode in settings to show the file tree and code editor.";
+    preferencesBtn.setAttribute("mctooltip", "Turn off Easy project mode in settings to show the file tree and code editor.");
     preferencesBtn.onclick = () => { window.location.href = "/settings.html"; };
     toolbar.appendChild(preferencesBtn);
   }
@@ -473,6 +475,7 @@ function renderToolbar() {
     const addBtn = document.createElement("button");
     addBtn.className = "sm-btn";
     addBtn.textContent = "+ Add Files";
+    addBtn.setAttribute("mctooltip", "add a folder, file, image or structure here");
     addBtn.onclick = e => { e.stopPropagation(); toggleAddFilesMenu(); };
 
     const addMenu = document.createElement("div");
@@ -502,7 +505,7 @@ function renderToolbar() {
     createWrap.className = "create-wrap";
     const cbtn = document.createElement("button");
     cbtn.className = "sm-btn create-btn";
-    cbtn.title = "create a block, entity, or item";
+    cbtn.setAttribute("mctooltip", "create a block, entity, or item");
     cbtn.innerHTML = `<img src="https://mcbcode.com/img/icons/dots.png" alt="create">`;
     cbtn.onclick = e => { e.stopPropagation(); toggleCreateMenu(); };
     const cmenu = document.createElement("div");
@@ -535,7 +538,7 @@ function renderToolbar() {
     const dripstoneBtn = document.createElement("button");
     dripstoneBtn.className = "sm-btn";
     dripstoneBtn.textContent = "Open in DripstoneAI";
-    dripstoneBtn.title = "open DripstoneAI with this project selected (requires the project to be connected)";
+    dripstoneBtn.setAttribute("mctooltip", "open DripstoneAI with this project selected (requires the project to be connected)");
     dripstoneBtn.onclick = () => {
       const target = new URL("https://mcbcode.com/dripstone");
       target.searchParams.set("project", shareCode);
@@ -552,7 +555,7 @@ function renderToolbar() {
     bwatch.textContent = `${project.watcher_count ?? 0} Watching`;
     bwatch.style.color = project.is_watching ? "#05ee93" : "";
     bwatch.style.borderColor = project.is_watching ? "#05ee93" : "";
-    bwatch.title = project.is_watching ? "stop watching this project" : "watch this project for update notifications";
+    bwatch.setAttribute("mctooltip", project.is_watching ? "stop watching this project" : "watch this project for update notifications");
     bwatch.onclick = toggleWatch;
     toolbar.appendChild(bwatch);
   }
@@ -566,6 +569,7 @@ function renderToolbar() {
     bsnap.style.gap = "6px";
     bsnap.innerHTML = `<img src="https://mcbcode.com/img/icons/camera.png" alt="" style="width:14px; height:14px;"> Snapshots`;
     bsnap.onclick = openSnapshotsModal;
+    bsnap.setAttribute("mctooltip", "save or restore a backup of this project");
     toolbar.appendChild(bsnap);
   }
     
@@ -577,7 +581,7 @@ function renderToolbar() {
   bexport.id = "export-btn";
   bexport.className = "sm-btn export-highlight";
   bexport.textContent = "Export";
-  bexport.title = "choose a download or sharing action";
+  bexport.setAttribute("mctooltip", "choose a download or sharing action");
   bexport.setAttribute("aria-haspopup", "menu");
   bexport.setAttribute("aria-expanded", "false");
   bexport.onclick = e => { e.stopPropagation(); toggleExportMenu(); };
@@ -618,7 +622,7 @@ function renderToolbar() {
   const bshare = document.createElement("button");
   bshare.className = "sm-btn";
   bshare.textContent = "Share";
-  bshare.title = "get a link to this project";
+  bshare.setAttribute("mctooltip", "get a link to this project");
   bshare.onclick = e => { e.stopPropagation(); toggleShareMenu(); };
   const shareMenu = document.createElement("div");
   shareMenu.className = "share-menu";
@@ -2008,8 +2012,8 @@ function renderFileList() {
       ${pngBadge}
       ${beaconBadge}
       <span class="file-updated" title="${esc(fmtDateTime(rowTime))}">${rowTime ? esc(timeAgo(rowTime)) : "—"}</span>
-      ${canEdit() ? `<button class="file-del" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
-      ${canEdit() ? `<button class="file-del" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
+      ${canEdit() ? `<button class="file-del" mctooltip="rename" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
+      ${canEdit() ? `<button class="file-del" mctooltip="delete" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
     `;
     if (f.type === "folder") {
       row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); };
