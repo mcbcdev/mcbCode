@@ -571,6 +571,36 @@
       .file-list-empty { padding: 72px 24px; line-height: 1.7; }
       .settings-panel { padding: 36px 48px; }
     }
+
+    /* ---------------------------------------------------------------------
+       REPO-STYLE LAYOUT: title + switch on top, toolbar row over the files,
+       project info as a floating card on the right
+    --------------------------------------------------------------------- */
+    .file-panel { overflow: visible; }
+    .proj-header-actions { position: relative; z-index: 30; }
+
+    @media (min-width: 721px) and (orientation: landscape) {
+      .proj-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; padding: 18px 36px; }
+      .proj-header-top { margin: 0; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; }
+      .proj-title { font-size: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .proj-tabs { flex-shrink: 0; gap: 2px; padding: 3px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 999px; }
+      .tab { padding: 7px 18px; border: none; border-radius: 999px; }
+      .tab.active { background: var(--bg-3); color: var(--text-hi); box-shadow: inset 0 0 0 1px var(--accent); }
+
+      .proj-header-actions { margin: 0 0 14px; justify-content: flex-start; gap: 8px; }
+      .proj-header-actions #export-menu-wrap { margin-left: auto; }
+      .proj-header-actions:empty { display: none; }
+
+      .file-panel { padding: 24px 0 32px 36px; }
+      .meta-panel {
+        align-self: flex-start; max-height: calc(100% - 56px); margin: 24px 36px 32px 6px;
+        background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-lg);
+      }
+      .meta-section:last-child { border-bottom: none; }
+    }
+    @media (max-width: 720px), (orientation: portrait) {
+      .proj-header-actions { box-sizing: border-box; margin: 0; padding: 12px 16px 4px; }
+    }
   </style>
 </head>
 <body>
@@ -814,8 +844,6 @@
 <div class="proj-header-top">
   <span class="proj-title" id="proj-title">loading...</span>
   <span class="proj-badge" id="proj-badge">public</span>
-        <div class="proj-header-actions">
-        </div>
       </div>
       <div class="proj-tabs">
         <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: -90deg;"> info</div>
@@ -857,6 +885,7 @@
       <div class="resize-handle" id="meta-resize-handle"></div>
 
       <div class="file-panel">
+        <div class="proj-header-actions"></div>
         <div class="path-bar">
           <span class="path-crumb" onclick="navToRoot()">root</span>
           <span id="path-segments"></span>

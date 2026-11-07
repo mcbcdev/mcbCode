@@ -2884,7 +2884,7 @@ async function linkGithub() {
       });
       window.addEventListener("mousemove", e => {
         if (!dragging) return;
-        const w = Math.min(460, Math.max(180, window.innerWidth - e.clientX)); // info panel sits on the right now
+        const w = Math.min(460, Math.max(180, window.innerWidth - e.clientX - 36)); // info panel sits on the right now
         panel.style.width = w + "px";
       });
       window.addEventListener("mouseup", () => {
