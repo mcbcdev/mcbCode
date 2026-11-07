@@ -275,7 +275,7 @@
     /* ---------------------------------------------------------------------
        MODALS / OVERLAYS
     --------------------------------------------------------------------- */
-    .overlay { display: none; position: fixed; inset: 0; background: color-mix(in srgb, var(--ui-info) 88%, transparent); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
+    .overlay { display: none; position: fixed; inset: 0; background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
     .overlay.open { display: flex; }
     .modal { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 32px; min-width: 320px; }
     .modal h3 { color: var(--ui-text-strong); font-size: 15px; margin-bottom: 18px; font-family: 'mcfontb', sans-serif; }
@@ -308,7 +308,7 @@
     /* ---------------------------------------------------------------------
        INLINE EDITOR
     --------------------------------------------------------------------- */
-    .inline-editor-overlay { display: none; position: fixed; inset: 0; background: color-mix(in srgb, var(--ui-info) 92%, transparent); z-index: 600; align-items: center; justify-content: center; }
+    .inline-editor-overlay { display: none; position: fixed; inset: 0; background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index: 600; align-items: center; justify-content: center; }
     .inline-editor-overlay.open { display: flex; }
     .inline-editor { width: min(1100px, 96vw); height: min(760px, 92vh); background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; }
     .ie-toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
@@ -389,7 +389,7 @@
        MOBILE DRAWER
     --------------------------------------------------------------------- */
     .mobile-explorer-trigger { display: none; }
-    .drawer-scrim { display: none; position: fixed; inset: 0; background: var(--ui-overlay); z-index: 149; backdrop-filter: blur(2px); }
+    .drawer-scrim { display: none; position: fixed; inset: 0; background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index: 149; }
     .drawer-scrim.open { display: block; }
 
     /* ---------------------------------------------------------------------
@@ -397,7 +397,7 @@
     --------------------------------------------------------------------- */
     .tut-overlay { display: none; position: fixed; inset: 0; z-index: 900; pointer-events: none; }
     .tut-overlay.open { display: block; }
-    .tut-dim { position: absolute; background: color-mix(in srgb, var(--ui-info) 75%, transparent); backdrop-filter: blur(2px); transition: all 0.25s ease; pointer-events: auto; }
+    .tut-dim { position: absolute; background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: all 0.25s ease; pointer-events: auto; }
     .tut-hole { position: absolute; border: 2px solid var(--accent); border-radius: var(--radius); box-shadow: 0 0 0 4px var(--ui-shadow-soft); transition: all 0.25s ease; pointer-events: none; z-index: 901; }
     .tut-card { position: absolute; background: var(--bg-1); border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 18px 20px; max-width: 280px; z-index: 902; pointer-events: auto; transition: all 0.25s ease; box-shadow: 0 12px 32px var(--ui-shadow); }
     .tut-card-step { font-size: 10px; color: var(--accent); margin-bottom: 8px; font-family: 'mcfontb', sans-serif; }
@@ -467,7 +467,7 @@
     /* ---------------------------------------------------------------------
        CREATOR (block/entity/item) MODAL
     --------------------------------------------------------------------- */
-    .creator-overlay { display: none; position: fixed; inset: 0; background: color-mix(in srgb, var(--ui-info) 92%, transparent); z-index: 700; align-items: center; justify-content: center; }
+    .creator-overlay { display: none; position: fixed; inset: 0; background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); z-index: 700; align-items: center; justify-content: center; }
     .creator-overlay.open { display: flex; }
     .creator-panel { width: min(900px, 94vw); height: min(820px, 92vh); background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; }
     .creator-header { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
@@ -529,29 +529,6 @@
        TOOL DOCK + RIGHT-HAND PROJECT CARD (desktop) + STUDIO NUDGE
     --------------------------------------------------------------------- */
     .meta-label, .stat-lbl { letter-spacing: 0; }
-    .tool-dock { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 22px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--bg-0); position: relative; }
-    .dock-intro { flex-basis: 100%; font-size: 12px; color: var(--text-low); line-height: 1.6; }
-    .dock-intro button { background: none; border: none; color: var(--blue); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
-    .dock-group { display: flex; flex-direction: column; gap: 6px; min-width: 0; --grp: var(--accent); }
-    .dock-group.files { --grp: var(--blue); }
-    .dock-group.out { --grp: var(--ui-purple); }
-    .dock-group-name { font-size: 11px; color: var(--text-faint); }
-    .dock-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .dock-tile {
-      display: flex; align-items: center; gap: 9px; padding: 8px 12px; text-align: left;
-      background: var(--bg-1); border: 1px solid var(--line); border-left: 3px solid var(--grp);
-      border-radius: var(--radius-lg); color: var(--text-mid); font-family: 'mcfont', sans-serif; font-size: 12px;
-      cursor: pointer; transition: border-color .15s, background .15s, transform .15s;
-    }
-    .dock-tile:hover { background: var(--bg-2); border-color: var(--grp); transform: translateY(-1px); }
-    .dock-tile img { width: 18px; height: 18px; image-rendering: pixelated; flex-shrink: 0; }
-    .dock-tile strong { display: block; color: var(--ui-text-strong); font-family: 'mcfontb', sans-serif; font-weight: normal; }
-    .dock-tile small { display: block; color: var(--text-low); font-size: 10px; margin-top: 2px; max-width: 150px; line-height: 1.4; }
-    .dock-toggle { position: absolute; right: 14px; top: 8px; background: none; border: none; color: var(--text-faint); font: 11px 'mcfont', sans-serif; cursor: pointer; }
-    .dock-toggle:hover { color: var(--text-mid); }
-    .tool-dock.collapsed { padding: 8px 20px; }
-    .tool-dock.collapsed .dock-group, .tool-dock.collapsed .dock-intro { display: none; }
-    .tool-dock.collapsed .dock-toggle { position: static; }
 
     .studio-nudge {
       position: fixed; right: 20px; bottom: 20px; width: 310px; max-width: calc(100vw - 24px); z-index: 120;
@@ -568,12 +545,31 @@
       .meta-panel { order: 3; border-right: none; border-left: 1px solid var(--line); }
     }
     @media (max-width: 720px), (orientation: portrait) {
-      .tool-dock { flex-wrap: nowrap; overflow-x: auto; padding: 12px 16px; gap: 18px; scrollbar-width: thin; }
-      .dock-group { flex-shrink: 0; }
-      .dock-row { flex-wrap: nowrap; }
-      .dock-intro { flex-basis: auto; min-width: 230px; flex-shrink: 0; }
-      .dock-toggle { display: none; }
       .studio-nudge { right: 12px; left: 12px; bottom: 12px; width: auto; }
+    }
+
+    /* ---------------------------------------------------------------------
+       POLISH: more breathing room, files sit in a card like a repo browser
+    --------------------------------------------------------------------- */
+    @media (min-width: 721px) and (orientation: landscape) {
+      .proj-header { padding: 26px 36px 0; }
+      .proj-header-top { gap: 14px; margin-bottom: 22px; }
+      .proj-title { font-size: 22px; }
+      .proj-header-actions { gap: 8px; }
+      .tab { padding: 10px 18px; }
+      .meta-section { padding: 22px 28px; }
+      .meta-label { margin-bottom: 10px; }
+      .meta-value { line-height: 1.7; }
+      .stat-row { gap: 36px; }
+      .file-panel { padding: 24px 36px 32px; }
+      .path-bar { height: 50px; padding: 0 20px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+      .file-list { background: var(--bg-1); border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+      .file-list:has(.easy-project-view) { background: transparent; border: none; }
+      .file-row { padding: 13px 20px; gap: 14px; }
+      .file-row:last-child { border-bottom: none; }
+      .root-hint { padding: 18px 20px; line-height: 1.7; }
+      .file-list-empty { padding: 72px 24px; line-height: 1.7; }
+      .settings-panel { padding: 36px 48px; }
     }
   </style>
 </head>
@@ -664,7 +660,11 @@
     <div id="rt-preview-wrap" style="display: none; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 12px;">
       <img id="rt-preview-img" style="max-width: 120px; max-height: 120px; image-rendering: pixelated; border: 1px solid var(--ui-border-strong);">
       <div style="font-size: 12px; color: var(--ui-text);" id="rt-preview-label"></div>
-      <button class="primary-btn" onclick="rtConfirmReplace()">Replace Texture</button>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+        <button class="primary-btn" onclick="document.getElementById('rt-upload-input').click()">Upload an image</button>
+        <button class="sm-btn" onclick="rtConfirmReplace()">Use an image from this project</button>
+      </div>
+      <input type="file" id="rt-upload-input" accept="image/png" style="display: none;">
     </div>
     <div class="inline-msg" id="rt-status"></div>
     <div class="modal-actions">
@@ -865,7 +865,6 @@
         <input type="file" id="png-upload-input" accept="image/png" style="display: none;">
         <input type="file" id="pack-icon-upload-input" accept="image/png" style="display: none;">
         <input type="file" id="mcstructure-upload-input" accept=".mcstructure" style="display: none;">
-        <div class="tool-dock" id="tool-dock" style="display: none;"></div>
         <div class="file-list" id="file-list">
           <div class="loading-msg">Loading...</div>
         </div>
