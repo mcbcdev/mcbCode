@@ -583,8 +583,8 @@
       .proj-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; padding: 18px 36px; }
       .proj-header-top { margin: 0; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; }
       .proj-title { font-size: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .proj-tabs { flex-shrink: 0; gap: 2px; padding: 3px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 999px; }
-      .tab { padding: 7px 18px; border: none; border-radius: 999px; }
+      .proj-tabs { flex-shrink: 0; gap: 2px; padding: 3px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 12px; }
+      .tab { padding: 7px 18px; border: none; border-radius: 12px; }
       .tab.active { background: var(--bg-3); color: var(--text-hi); box-shadow: inset 0 0 0 1px var(--accent); }
 
       .proj-header-actions { margin: 0 0 14px; justify-content: flex-start; gap: 8px; }
@@ -607,12 +607,12 @@
        (everything is switched off for people who ask for reduced motion)
     --------------------------------------------------------------------- */
     .shell { overflow-x: clip; }
-    .proj-tabs { position: relative; padding: 3px; gap: 2px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 999px; }
-    .tab { position: relative; z-index: 1; border: none; border-radius: 999px; padding: 7px 18px; transition: color .2s; }
+    .proj-tabs { position: relative; padding: 3px; gap: 2px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 12px; }
+    .tab { position: relative; z-index: 1; border: none; border-radius: 12px; padding: 7px 18px; transition: color .2s; }
     .tab.active { background: transparent; box-shadow: none; color: var(--text-hi); }
     .tab-pill {
       position: absolute; top: 3px; left: 0; height: calc(100% - 6px); width: 0; z-index: 0; pointer-events: none;
-      background: var(--bg-3); border-radius: 999px; box-shadow: inset 0 0 0 1px var(--accent);
+      background: var(--bg-3); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--accent);
       transition: transform .38s cubic-bezier(.22, 1, .36, 1), width .38s cubic-bezier(.22, 1, .36, 1), opacity .2s;
     }
 
@@ -698,6 +698,31 @@
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; transition-duration: .001ms !important; }
+    }
+
+    /* ---------------------------------------------------------------------
+       INFO SHEET BUTTON (outside the tab switch) + OBSIDIAN BUTTON
+    --------------------------------------------------------------------- */
+    .proj-switch { display: flex; align-items: stretch; gap: 8px; flex-shrink: 0; }
+    .info-sheet-btn {
+      background: var(--bg-0); border: 1px solid var(--line); border-radius: 12px; color: var(--text-mid);
+      font-family: 'mcfont', sans-serif; font-size: 12px; padding: 0 14px; cursor: pointer;
+      transition: color .15s, border-color .15s, transform .15s;
+    }
+    .info-sheet-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .info-sheet-btn:active { transform: scale(.96); }
+    #obsidian-slot { align-items: center; }
+    #obsidian-slot .mcb-obsidian .mcb-obsidian__button { padding: 6px 12px; gap: 8px; }
+    #obsidian-slot .mcb-obsidian .mcb-obsidian__message {
+      position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; white-space: nowrap;
+      background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 6px 10px;
+    }
+    #obsidian-slot .mcb-obsidian .mcb-obsidian__message:empty { display: none; }
+    @media (max-width: 720px), (orientation: portrait) {
+      .proj-switch { width: 100%; }
+      .proj-switch .proj-tabs { width: auto; flex: 1; min-width: 0; }
+      .info-sheet-btn.mobile-explorer-trigger { display: inline-flex; align-items: center; gap: 6px; }
+      #obsidian-slot .mcb-obsidian__price { display: none; }
     }
   </style>
 </head>
@@ -922,7 +947,7 @@
   <div class="drawer-scrim" id="drawer-scrim" onclick="closeMobileDrawer()"></div>
 
   <div class="topnav">
-    <a href="https://mcbcode.com" class="topnav-logo">mcb<g>Code</g></a>
+    <a href="https://mcbcode.com" class="topnav-logo" mctooltip="back to the mcbCode homepage">mcb<g>Code</g></a>
     <div class="breadcrumb">
       <span style="font-size: 18px;">@</span>
       <span>Project:</span>
@@ -930,6 +955,8 @@
     </div>
     <div class="topnav-right">
       <span style="font-size: 11px; color: transparent; user-select: none;" id="nav-user"></span>
+      <div id="obsidian-slot" style="display: none;"><script src="https://mcbcode.com/elements/obsidian.js"></script></div>
+      <script>(function () { var b = document.querySelector("#obsidian-slot .mcb-obsidian__button"); if (b) b.setAttribute("mctooltip", "private projects, github sync, project backups and more. it also helps keep mcbCode free"); })();</script>
       <div id="notif-placeholder"></div>
       <script src="https://mcbcode.com/elements/notifications.js"></script>
       <button class="nav-btn" onclick="window.location.href='https://mcbcode.com/dashboard';" mctooltip="back to dashboard">Dashboard</button>
@@ -941,13 +968,15 @@
     <div class="proj-header">
 <div class="proj-header-top">
   <span class="proj-title" id="proj-title">loading...</span>
-  <span class="proj-badge" id="proj-badge">public</span>
+  <span class="proj-badge" id="proj-badge" mctooltip="who can see this project. you can change it in settings">public</span>
       </div>
-      <div class="proj-tabs">
+      <div class="proj-switch">
+        <button type="button" class="info-sheet-btn mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()" mctooltip="see this project's info"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: 180deg;"> info</button>
+        <div class="proj-tabs">
         <span class="tab-pill" id="tab-pill"></span>
-        <div class="tab mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: -90deg;"> info</div>
-        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> files</div>
-        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" style="display: none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> settings</div>
+        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)" mctooltip="browse and edit your project files"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> files</div>
+        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" mctooltip="tags, collaborators, visibility and more" style="display: none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> settings</div>
+        </div>
       </div>
     </div>
 
@@ -986,7 +1015,7 @@
       <div class="file-panel">
         <div class="proj-header-actions"></div>
         <div class="path-bar">
-          <span class="path-crumb" onclick="navToRoot()">root</span>
+          <span class="path-crumb" onclick="navToRoot()" mctooltip="jump back to the top of the project">root</span>
           <span id="path-segments"></span>
           <div class="path-toolbar" id="owner-toolbar" style="display: none;"></div>
         </div>
@@ -1123,11 +1152,11 @@
         <span class="ie-readonly-badge">read only</span>
         <span class="ie-status" id="ie-status"></span>
         <div class="ie-toolbar-actions" id="ie-toolbar-actions">
-          <button class="sm-btn" id="ie-undo-btn" onclick="ieUndo()">Undo</button>
-          <button class="sm-btn" id="ie-redo-btn" onclick="ieRedo()">Redo</button>
-          <button class="sm-btn" onclick="ieToggleWrap()">Wrap</button>
-          <button class="sm-btn export-highlight" id="ie-save-btn" onclick="saveInlineFile()">Save</button>
-          <button class="sm-btn" id="ie-close-btn" onclick="closeInlineEditor()">Close</button>
+          <button class="sm-btn" id="ie-undo-btn" onclick="ieUndo()" mctooltip="undo your last change">Undo</button>
+          <button class="sm-btn" id="ie-redo-btn" onclick="ieRedo()" mctooltip="redo what you just undid">Redo</button>
+          <button class="sm-btn" onclick="ieToggleWrap()" mctooltip="wrap long lines instead of scrolling sideways">Wrap</button>
+          <button class="sm-btn export-highlight" id="ie-save-btn" onclick="saveInlineFile()" mctooltip="save this file to your project">Save</button>
+          <button class="sm-btn" id="ie-close-btn" onclick="closeInlineEditor()" mctooltip="close the editor">Close</button>
         </div>
       </div>
       <div class="ie-body">
