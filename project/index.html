@@ -325,7 +325,7 @@
     }
     .ie-highlight { color: var(--text-mid); pointer-events: none; }
     .ie-textarea { background: transparent; color: transparent; caret-color: var(--ui-text-strong); border: none; outline: none; resize: none; }
-    .ie-textarea::selection { background: #0c0c0c80; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .ie-textarea::selection { background: color-mix(in srgb, var(--ui-info) 35%, transparent); }
     .inline-editor.ie-readonly .ie-textarea { cursor: default; caret-color: transparent; }
     .inline-editor.ie-readonly .ie-highlight { color: var(--text-low); }
     .tok-key { color: var(--ui-info); }
