@@ -174,6 +174,34 @@
     }
     .error-note { color: var(--red); border-color: var(--ui-danger-border); }
 
+    /* ---- getting started checklist ---- */
+    .checklist { background: var(--panel-alt); border: 1px solid var(--border-alt); border-radius: var(--r-md); padding: 18px; margin-bottom: 32px; }
+    .checklist-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .checklist-title { font-size: 16px; color: var(--white); font-family: 'mcfontb', sans-serif; }
+    .checklist-dismiss { background: none; border: none; color: var(--faint); font-size: 11px; }
+    .checklist-dismiss:hover { color: var(--text); }
+    .checklist-sub { font-size: 12px; color: var(--dimmer); line-height: 1.5; margin-bottom: 12px; }
+    .checklist-bar { height: 6px; background: var(--ui-surface-raised); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+    .checklist-bar-fill { height: 100%; background: var(--green); transition: width .3s; }
+    .checklist-items { display: flex; flex-direction: column; gap: 8px; }
+    .checklist-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px; width: 100%; text-align: left;
+      background: var(--ui-surface-low); border: 1px solid var(--border); border-radius: var(--r-sm);
+      color: var(--text); font-size: 13px; font-family: 'mcfont', sans-serif; transition: border-color .15s;
+    }
+    a.checklist-item:hover, button.checklist-item:hover { border-color: var(--green); color: var(--white); }
+    .checklist-item.done { opacity: .6; }
+    .checklist-item.done .checklist-label { text-decoration: line-through; }
+    .checklist-item.locked { opacity: .5; cursor: not-allowed; }
+    .checklist-box { width: 18px; height: 18px; flex: none; border: 2px solid var(--faint); border-radius: 4px; position: relative; }
+    .checklist-item.done .checklist-box { background: var(--green); border-color: var(--green); }
+    .checklist-item.done .checklist-box::after {
+      content: ""; position: absolute; left: 4px; top: 0; width: 4px; height: 9px;
+      border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+    .checklist-label { flex: 1; }
+    .checklist-hint { font-size: 11px; color: var(--faint); }
+
     /* ---- feed ---- */
     .feed-list { display: flex; flex-direction: column; gap: 2px; }
     .feed-item {
@@ -494,6 +522,7 @@
           </div>
 
           <div class="main-col">
+            <div id="checklist-content"></div>
             <div class="section">
               <div class="section-head">
                 <div class="section-title">your projects</div>
@@ -520,7 +549,80 @@
       document.getElementById("new-project-btn").addEventListener("click", openNewProject);
     }
 
+    // ---- getting started checklist ----
+    // progress is stored in this browser only (localStorage), keyed by username.
+    function checklistKey() { return "mcb_checklist_v1_" + (me && me.username ? me.username : "anon"); }
+    function loadChecklistState() {
+      try { return JSON.parse(localStorage.getItem(checklistKey()) || "{}") || {}; } catch (e) { return {}; }
+    }
+    function saveChecklistState(state) {
+      try { localStorage.setItem(checklistKey(), JSON.stringify(state)); } catch (e) {}
+    }
+    function markChecklistStep(step) {
+      if (!me) return;
+      const state = loadChecklistState();
+      if (state[step]) return;
+      state[step] = true;
+      saveChecklistState(state);
+    }
+
+    function renderChecklist() {
+      const el = document.getElementById("checklist-content");
+      if (!el || !me || !projectsLoaded) return;
+      const state = loadChecklistState();
+      if (state.dismissed) { el.innerHTML = ""; return; }
+
+      const owned = projectsData.owned;
+      const firstUrl = owned.length ? `/project/${encodeURIComponent(owned[0].share_code)}/` : null;
+      const steps = [
+        { label: "make your first project", done: owned.length > 0, newProject: owned.length === 0 },
+        { id: "open", label: "open your project and edit a file", done: !!state.open, href: firstUrl, hint: firstUrl ? "" : "make a project first" },
+        { id: "guide", label: "read the getting started guide", done: !!state.guide, href: "https://mcbcode.com/docs/getting-started" },
+        { id: "dripstone", label: "ask dripstone ai a question", done: !!state.dripstone, href: "https://mcbcode.com/dripstone" },
+        { id: "explore", label: "see what other creators made", done: !!state.explore, href: "https://mcbcode.com/explore" },
+        { id: "share", label: "make a project public so others can see it", done: owned.some(p => p.is_public), href: firstUrl, hint: firstUrl ? "" : "make a project first" }
+      ];
+      const doneCount = steps.filter(x => x.done).length;
+      const allDone = doneCount === steps.length;
+      const pct = Math.round((doneCount / steps.length) * 100);
+
+      const itemsHtml = steps.map(x => {
+        const box = `<span class="checklist-box"></span><span class="checklist-label">${esc(x.label)}</span>`;
+        if (x.done) return `<div class="checklist-item done">${box}</div>`;
+        if (x.newProject) return `<button type="button" class="checklist-item" data-checklist-new="1">${box}</button>`;
+        if (x.href) return `<a class="checklist-item" href="${esc(x.href)}" ${x.id ? `data-step="${x.id}"` : ""}>${box}</a>`;
+        return `<div class="checklist-item locked">${box}<span class="checklist-hint">${esc(x.hint || "")}</span></div>`;
+      }).join("");
+
+      el.innerHTML = `
+        <div class="checklist">
+          <div class="checklist-head">
+            <div class="checklist-title">${allDone ? "you're all set up" : "get started with mcbcode"}</div>
+            <button type="button" class="checklist-dismiss" data-checklist-dismiss="1">hide this</button>
+          </div>
+          <div class="checklist-sub">${allDone ? "you did every step. nice work. you can hide this now." : `${doneCount} of ${steps.length} done. do these in any order, they only take a minute each.`}</div>
+          <div class="checklist-bar"><div class="checklist-bar-fill" style="width:${pct}%"></div></div>
+          <div class="checklist-items">${itemsHtml}</div>
+        </div>`;
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!me) return;
+      const card = e.target.closest(".project-card");
+      if (card && activeProjectTab === "owned") markChecklistStep("open");
+      const stepEl = e.target.closest("[data-step]");
+      if (stepEl) markChecklistStep(stepEl.dataset.step);
+      if (e.target.closest("[data-checklist-new]")) openNewProject();
+      if (e.target.closest("[data-checklist-dismiss]")) {
+        const state = loadChecklistState();
+        state.dismissed = true;
+        saveChecklistState(state);
+        renderChecklist();
+      }
+    });
+
     // ---- projects ----
+    let projectsLoaded = false;
     let projectsData = { owned: [], collab: [] };
     let activeProjectTab = "owned";
 
@@ -531,7 +633,9 @@
         const d = await r.json();
         projectsData.owned = d.projects || [];
         projectsData.collab = d.collab_projects || [];
+        projectsLoaded = true;
         renderProjects();
+        renderChecklist();
       } catch {
         document.getElementById("project-content").innerHTML = `<div class="error-note">couldn't load projects.</div>`;
       }
