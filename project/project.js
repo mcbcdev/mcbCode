@@ -421,74 +421,6 @@ function renderContributors() {
     const canEdit = () => isOwner || isCollab;
     const isLoggedIn = () => !!window._myId;
 
-// ---- tool dock: the main things people want to do, in plain words ----
-// every tile calls the same function the old menus call, nothing new happens behind the scenes.
-function renderToolDock() {
-  const dock = document.getElementById("tool-dock");
-  if (!dock) return;
-  if (!project || window._easyProjectMode || project.project_type === "skinpack") {
-    dock.style.display = "none";
-    dock.innerHTML = "";
-    return;
-  }
-  const skill = window._skill || 0;
-  const beginner = skill > 0 && skill <= 2;
-  const editable = canEdit();
-  const atAddonRoot = isAtRoot() && project.project_type === "addon";
-  const icon = n => `<img src="https://mcbcode.com/img/icons/${n}.png" alt="">`;
-  const tile = (id, name, hint, ico) =>
-    `<button type="button" class="dock-tile" data-dock="${id}">${ico ? icon(ico) : ""}<span><strong>${name}</strong>${beginner && hint ? `<small>${hint}</small>` : ""}</span></button>`;
-  const group = (cls, name, tiles) => tiles.length ? `<div class="dock-group ${cls}"><div class="dock-group-name">${name}</div><div class="dock-row">${tiles.join("")}</div></div>` : "";
-
-  const make = [], files = [], out = [];
-  if (editable) {
-    make.push(tile("item", "item", "a custom item, no json needed", "item"));
-    make.push(tile("block", "block", "a custom block with a texture", "block"));
-    make.push(tile("entity", "entity", "a mob or other creature", "entity"));
-    make.push(tile("texture", "replace a texture", "swap a vanilla texture for yours", "texture"));
-    files.push(tile("folder", "new folder", "keeps your files organized"));
-    if (!atAddonRoot) {
-      files.push(tile("file", "new file", "like a .json or .mcfunction"));
-      files.push(tile("image", "add an image", "upload a png"));
-    }
-  }
-  out.push(tile("dripstone", "ask dripstone ai", "an ai that knows bedrock"));
-  out.push(tile("export", "download", "get the .mcpack or .mcaddon"));
-  out.push(tile("share", "share", "send people a link"));
-
-  const intro = beginner && editable && isOwner
-    ? `<p class="dock-intro">new here? pick something to make and mcbCode sets up the files for you.${typeof startTutorial === "function" ? ` <button type="button" data-dock="tour">take the quick tour</button>` : ""}</p>`
-    : "";
-
-  const hidden = localStorage.getItem("mcb_dock_hidden") === "1";
-  dock.className = "tool-dock" + (hidden ? " collapsed" : "");
-  dock.style.display = "";
-  dock.innerHTML = `<button type="button" class="dock-toggle" data-dock="toggle">${hidden ? "show tools" : "hide tools"}</button>` +
-    intro + group("make", "make something", make) + group("files", "your files", files) + group("out", "get it out there", out);
-
-  dock.onclick = e => {
-    const b = e.target.closest("[data-dock]");
-    if (!b) return;
-    const act = b.dataset.dock;
-    if (act === "item" || act === "block" || act === "entity") openCreator(act);
-    else if (act === "texture") openReplaceTexture();
-    else if (act === "folder") openNewFile("folder");
-    else if (act === "file") openNewFile("file");
-    else if (act === "image") document.getElementById("png-upload-input").click();
-    else if (act === "export") startExport();
-    else if (act === "share") openSharePopup();
-    else if (act === "tour") { if (typeof startTutorial === "function") startTutorial(); }
-    else if (act === "dripstone") {
-      const target = new URL("https://mcbcode.com/dripstone");
-      target.searchParams.set("project", shareCode);
-      window.open(target.toString(), "_blank", "noopener,noreferrer");
-    } else if (act === "toggle") {
-      localStorage.setItem("mcb_dock_hidden", hidden ? "0" : "1");
-      renderToolDock();
-    }
-  };
-}
-
 // ---- mcbCode Studio suggestion, only for skill 4-5 and only now and then ----
 function maybeShowStudioNudge() {
   if (window._studioNudgeChecked) return;
@@ -699,7 +631,6 @@ function renderToolbar() {
   shareWrap.appendChild(shareMenu);
   toolbar.appendChild(shareWrap);
 
-  renderToolDock();
   maybeShowStudioNudge();
 }
 
@@ -3395,6 +3326,19 @@ function rtConfirmReplace() {
   });
 }
 
+// upload a png from the computer to use as the replacement
+document.getElementById("rt-upload-input").addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file || !textureSelectedPath) return;
+  const status = document.getElementById("rt-status");
+  if (file.size > 5 * 1024 * 1024) { status.textContent = "that image is too big. keep it under 5 MB."; return; }
+  const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+  const isRealPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4E && head[3] === 0x47;
+  if (!isRealPng) { status.textContent = "that file isn't a png. pick a .png image."; return; }
+  await performTextureReplace(textureSelectedPath, file);
+});
+
 function openProjectImagePicker(onPick) {
   const pngs = allFiles.filter(f => f.type === "file" && isPng(f));
   if (!pngs.length) { alert("you don't have any images in this project yet. upload one first, then come back."); return; }
@@ -3415,9 +3359,15 @@ async function performTextureReplace(targetPath, sourceFile) {
   const status = document.getElementById("rt-status");
   status.textContent = "replacing...";
   try {
-    const res = await fetch(`${AUTH}/project/asset?file_id=${sourceFile.id}`, { credentials: "include" });
-    if (!res.ok) throw new Error("couldn't read that image.");
-    const buf = await res.arrayBuffer();
+    let buf;
+    if (sourceFile instanceof Blob) {
+      // uploaded straight from the person's computer
+      buf = await sourceFile.arrayBuffer();
+    } else {
+      const res = await fetch(`${AUTH}/project/asset?file_id=${sourceFile.id}`, { credentials: "include" });
+      if (!res.ok) throw new Error("couldn't read that image.");
+      buf = await res.arrayBuffer();
+    }
 
     const parts = ("RP/textures/" + targetPath).split("/");
     const filename = parts.pop();
