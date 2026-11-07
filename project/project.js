@@ -2852,11 +2852,64 @@ async function linkGithub() {
 
     // ---- TABS ----
     function switchTab(tab, el) {
+      const files = document.getElementById("tab-files");
+      const settings = document.getElementById("tab-settings");
+      const toSettings = tab === "settings";
+      const incoming = toSettings ? settings : files;
+      const outgoing = toSettings ? files : settings;
+      const isShown = node => getComputedStyle(node).display !== "none";
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const animClasses = ["tab-in-left", "tab-in-right", "tab-out-left", "tab-out-right"];
+
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       el.classList.add("active");
-      document.getElementById("tab-files").style.display = tab === "files" ? "flex" : "none";
-      document.getElementById("tab-settings").classList.toggle("active", tab === "settings");
+      moveTabPill();
+
+      clearTimeout(window._tabSwitchTimer);
+      const apply = () => {
+        files.style.display = tab === "files" ? "flex" : "none";
+        settings.classList.toggle("active", tab === "settings");
+        files.classList.remove(...animClasses);
+        settings.classList.remove(...animClasses);
+        if (reduced) return;
+        void incoming.offsetWidth;
+        incoming.classList.add(toSettings ? "tab-in-right" : "tab-in-left");
+      };
+
+      if (isShown(incoming) && !isShown(outgoing)) return; // already on this tab
+      if (reduced || !isShown(outgoing)) { apply(); return; }
+      // slide the current screen out first, then slide the new one in
+      outgoing.classList.remove(...animClasses);
+      void outgoing.offsetWidth;
+      outgoing.classList.add(toSettings ? "tab-out-left" : "tab-out-right");
+      window._tabSwitchTimer = setTimeout(apply, 150);
     }
+
+    // the pill behind the active tab slides to wherever the active tab is
+    let tabPillPlaced = false;
+    function moveTabPill() {
+      const pill = document.getElementById("tab-pill");
+      const active = document.querySelector(".proj-tabs .tab.active");
+      if (!pill) return;
+      if (!active || active.offsetParent === null) { pill.style.opacity = "0"; return; }
+      if (!tabPillPlaced) pill.style.transition = "none";
+      pill.style.opacity = "1";
+      pill.style.width = active.offsetWidth + "px";
+      pill.style.transform = `translateX(${active.offsetLeft}px)`;
+      if (!tabPillPlaced) {
+        tabPillPlaced = true;
+        void pill.offsetWidth;
+        pill.style.transition = "";
+      }
+    }
+    (function initTabPill() {
+      const tabs = document.querySelector(".proj-tabs");
+      if (!tabs) return;
+      moveTabPill();
+      if (window.ResizeObserver) new ResizeObserver(moveTabPill).observe(tabs);
+      window.addEventListener("resize", moveTabPill);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveTabPill);
+    })();
 
     function closeModal(id) {
       document.getElementById(id).classList.remove("open");
