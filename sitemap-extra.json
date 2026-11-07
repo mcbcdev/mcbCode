@@ -15,5 +15,6 @@
   { "path": "/profile", "changefreq": "monthly" },
   { "path": "/sync", "changefreq": "monthly" },
   { "path": "/terms-of-use", "changefreq": "monthly" },
-  { "path": "/privacy-policy", "changefreq": "monthly" }
+  { "path": "/privacy-policy", "changefreq": "monthly" },
+  { "path": "/blog/where-to-make-bedrock-addons", "changefreq": "monthly" }
 ]
