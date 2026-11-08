@@ -1973,7 +1973,6 @@ function renderFileList() {
     } else {
       showHint = false;
     }
-    if (showHint) list.appendChild(hint);
   }
 
   if (currentPath.length > 0) {
@@ -2038,6 +2037,26 @@ function renderFileList() {
     }
     list.appendChild(row);
   });
+
+  // quick tools: same actions as the create menu, listed under the files at the addon root
+  if (isAtRoot() && project?.project_type === "addon" && canEdit()) {
+    const tools = document.createElement("div");
+    tools.className = "qtool-list";
+    const items = [
+      { icon: "item", label: "Create Item", run: () => openCreator("item") },
+      { icon: "entity", label: "Create Entity", run: () => openCreator("entity") },
+      { icon: "block", label: "Create Block", run: () => openCreator("block") },
+      { icon: "texture", label: "Replace Texture", run: () => openReplaceTexture() }
+    ];
+    items.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "qtool-row";
+      row.innerHTML = `<img src="https://mcbcode.com/img/icons/${it.icon}.png" alt=""><span>${it.label}</span>`;
+      row.onclick = it.run;
+      tools.appendChild(row);
+    });
+    list.appendChild(tools);
+  }
 }
 
 let geoJsonFile = null;
