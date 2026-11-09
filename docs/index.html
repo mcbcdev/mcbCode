@@ -502,10 +502,6 @@ hr {
 
       document.title = `mcbCode Docs | ${pageName}`;
 
-      // keep the URL as ?page=...
-      const url = new URL(window.location.href);
-      url.searchParams.set("page", pageName);
-      window.history.replaceState(null, "", url);
     })
     .catch(err => {
       rawMarkdown = "";
