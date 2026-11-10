@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
   <link rel="stylesheet" href="/theme/ui-theme.css">
+  <link rel="stylesheet" href="/theme/animations.css">
   <script src="/theme/ui-theme.js"></script>
   <title>mcbCode | Dashboard</title>
   <style>
@@ -230,15 +231,12 @@
       align-items: center; justify-content: center; padding: 20px;
       background: var(--ui-overlay); backdrop-filter: blur(6px);
     }
-    .modal-overlay.open { display: flex; animation: fadeIn .15s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+    .modal-overlay.open { display: flex; }
 
     .modal {
       width: 100%; max-width: 480px; max-height: calc(100vh - 40px); overflow-y: auto;
       background: var(--panel-alt); border: 1px solid var(--border-alt); border-radius: var(--r-lg);
       padding: 24px; box-shadow: 0 20px 60px var(--ui-shadow);
-      animation: popIn .18s ease;
     }
     .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
     .modal-title { font-size: 20px; color: var(--white); font-family: 'mcfontb', sans-serif; }
@@ -317,7 +315,7 @@
     }
   </style>
 </head>
-<body>
+<body class="dashboard-page">
 
   <div class="topnav">
     <a href="/" class="topnav-title">mcb<g>Code</g></a>
