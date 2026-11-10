@@ -6,6 +6,7 @@
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
   <link rel="stylesheet" href="/theme/ui-theme.css">
+  <link rel="stylesheet" href="/theme/animations.css">
   <script src="/theme/ui-theme.js"></script>
   <script src="https://mcbcode.com/theme/mcfont.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -603,8 +604,7 @@
     }
 
     /* ---------------------------------------------------------------------
-       MOTION: sliding tab pill, sliding screens, entrances, popups, menus
-       (everything is switched off for people who ask for reduced motion)
+       TAB PILL LAYOUT
     --------------------------------------------------------------------- */
     .shell { overflow-x: clip; }
     .proj-tabs { position: relative; padding: 3px; gap: 2px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 12px; }
@@ -615,52 +615,10 @@
       background: var(--bg-3); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--accent);
       transition: transform .38s cubic-bezier(.22, 1, .36, 1), width .38s cubic-bezier(.22, 1, .36, 1), opacity .2s;
     }
-
-    @keyframes tabInRight { from { opacity: 0; transform: translateX(56px); } to { opacity: 1; transform: none; } }
-    @keyframes tabInLeft { from { opacity: 0; transform: translateX(-56px); } to { opacity: 1; transform: none; } }
-    @keyframes tabOutLeft { to { opacity: 0; transform: translateX(-56px); } }
-    @keyframes tabOutRight { to { opacity: 0; transform: translateX(56px); } }
-    .tab-in-right { animation: tabInRight .4s cubic-bezier(.22, 1, .36, 1) backwards; }
-    .tab-in-left { animation: tabInLeft .4s cubic-bezier(.22, 1, .36, 1) backwards; }
-    .tab-out-left { animation: tabOutLeft .16s ease-in forwards; pointer-events: none; }
-    .tab-out-right { animation: tabOutRight .16s ease-in forwards; pointer-events: none; }
-
-    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-    @keyframes dropIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes popIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
-    @keyframes menuIn { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
-    @keyframes nudgeIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-    @keyframes softPulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-
-    .proj-header { animation: dropIn .45s cubic-bezier(.22, 1, .36, 1) backwards; }
-    .proj-header-actions { animation: fadeIn .5s .12s ease backwards; }
-    .path-bar { animation: riseIn .5s .1s cubic-bezier(.22, 1, .36, 1) backwards; }
-    .file-list { animation: riseIn .5s .16s cubic-bezier(.22, 1, .36, 1) backwards; }
-    #file-list .file-row { animation: riseIn .32s cubic-bezier(.22, 1, .36, 1) backwards; }
-    #file-list .file-row:nth-child(2) { animation-delay: 44ms; }
-    #file-list .file-row:nth-child(3) { animation-delay: 66ms; }
-    #file-list .file-row:nth-child(4) { animation-delay: 88ms; }
-    #file-list .file-row:nth-child(5) { animation-delay: 110ms; }
-    #file-list .file-row:nth-child(6) { animation-delay: 132ms; }
-    #file-list .file-row:nth-child(7) { animation-delay: 154ms; }
-    #file-list .file-row:nth-child(8) { animation-delay: 176ms; }
-    #file-list .file-row:nth-child(9) { animation-delay: 198ms; }
-    #file-list .file-row:nth-child(10) { animation-delay: 220ms; }
-    #file-list .file-row:nth-child(11) { animation-delay: 242ms; }
-    #file-list .file-row:nth-child(12) { animation-delay: 264ms; }
-    .loading-msg { animation: softPulse 1.4s ease-in-out infinite; }
-
-    .overlay.open, .inline-editor-overlay.open, .creator-overlay.open { animation: fadeIn .22s ease; }
-    .overlay.open > *, .inline-editor-overlay.open > *, .creator-overlay.open > * { animation: popIn .3s cubic-bezier(.2, .9, .3, 1.15); }
-    .share-menu.open, .create-menu.open { animation: menuIn .18s ease-out; transform-origin: top right; }
-    .drawer-scrim.open { animation: fadeIn .25s ease; }
-    .studio-nudge { animation: nudgeIn .5s cubic-bezier(.2, .9, .3, 1.1); }
     .sm-btn:active, .nav-btn:active, .primary-btn:active { transform: scale(.96); }
 
     @media (min-width: 721px) and (orientation: landscape) {
-      .meta-panel { animation: tabInRight .55s .14s cubic-bezier(.22, 1, .36, 1) backwards; }
-      /* file tree floats: no border, just a soft shadow */
+      /* keep the desktop file tree's existing floating surface treatment */
       .path-bar { border: none; }
       .file-list { border: none; box-shadow: 0 16px 36px -14px var(--ui-shadow); }
       .file-list:has(.easy-project-view) { box-shadow: none; }
@@ -696,10 +654,6 @@
       .meta-section:last-child { border-bottom: none; padding-bottom: 28px; }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; transition-duration: .001ms !important; }
-    }
-
     /* ---------------------------------------------------------------------
        INFO SHEET BUTTON (outside the tab switch) + OBSIDIAN BUTTON
     --------------------------------------------------------------------- */
@@ -731,7 +685,7 @@
     .qtool-row:hover { color: var(--accent); }
   </style>
 </head>
-<body>
+<body class="project-page">
   
   <div class="overlay" id="new-file-overlay">
     <div class="modal">

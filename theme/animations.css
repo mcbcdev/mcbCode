@@ -1,0 +1,127 @@
+/* i keep the shared page motion here so project, dashboard, and explore stay consistent. */
+
+@keyframes mcb-tab-in-right {
+  from { opacity: 0; transform: translateX(56px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-tab-in-left {
+  from { opacity: 0; transform: translateX(-56px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-tab-out-left {
+  to { opacity: 0; transform: translateX(-56px); }
+}
+@keyframes mcb-tab-out-right {
+  to { opacity: 0; transform: translateX(56px); }
+}
+@keyframes mcb-rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-drop-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mcb-pop-in {
+  from { opacity: 0; transform: translateY(14px) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-menu-in {
+  from { opacity: 0; transform: translateY(-6px) scale(.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-nudge-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mcb-soft-pulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
+}
+
+/* i use these on the project page for its tab switch, file list, and popups. */
+.project-page .tab-in-right { animation: mcb-tab-in-right .4s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page .tab-in-left { animation: mcb-tab-in-left .4s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page .tab-out-left { animation: mcb-tab-out-left .16s ease-in forwards; pointer-events: none; }
+.project-page .tab-out-right { animation: mcb-tab-out-right .16s ease-in forwards; pointer-events: none; }
+.project-page .proj-header { animation: mcb-drop-in .45s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page .proj-header-actions { animation: mcb-fade-in .5s .12s ease backwards; }
+.project-page .path-bar { animation: mcb-rise-in .5s .1s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page .file-list { animation: mcb-rise-in .5s .16s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page #file-list .file-row { animation: mcb-rise-in .32s cubic-bezier(.22, 1, .36, 1) backwards; }
+.project-page #file-list .file-row:nth-child(2) { animation-delay: 44ms; }
+.project-page #file-list .file-row:nth-child(3) { animation-delay: 66ms; }
+.project-page #file-list .file-row:nth-child(4) { animation-delay: 88ms; }
+.project-page #file-list .file-row:nth-child(5) { animation-delay: 110ms; }
+.project-page #file-list .file-row:nth-child(6) { animation-delay: 132ms; }
+.project-page #file-list .file-row:nth-child(7) { animation-delay: 154ms; }
+.project-page #file-list .file-row:nth-child(8) { animation-delay: 176ms; }
+.project-page #file-list .file-row:nth-child(9) { animation-delay: 198ms; }
+.project-page #file-list .file-row:nth-child(10) { animation-delay: 220ms; }
+.project-page #file-list .file-row:nth-child(11) { animation-delay: 242ms; }
+.project-page #file-list .file-row:nth-child(12) { animation-delay: 264ms; }
+.project-page .loading-msg { animation: mcb-soft-pulse 1.4s ease-in-out infinite; }
+.project-page .overlay.open,
+.project-page .inline-editor-overlay.open,
+.project-page .creator-overlay.open { animation: mcb-fade-in .22s ease; }
+.project-page .overlay.open > *,
+.project-page .inline-editor-overlay.open > *,
+.project-page .creator-overlay.open > * { animation: mcb-pop-in .3s cubic-bezier(.2, .9, .3, 1.15); }
+.project-page .share-menu.open,
+.project-page .create-menu.open { animation: mcb-menu-in .18s ease-out; transform-origin: top right; }
+.project-page .drawer-scrim.open { animation: mcb-fade-in .25s ease; }
+.project-page .studio-nudge { animation: mcb-nudge-in .5s cubic-bezier(.2, .9, .3, 1.1); }
+
+@media (min-width: 721px) and (orientation: landscape) {
+  .project-page .meta-panel { animation: mcb-tab-in-right .55s .14s cubic-bezier(.22, 1, .36, 1) backwards; }
+}
+
+/* i use a light stagger on dashboard sections and cards so the content arrives in order. */
+.dashboard-page .topnav { animation: mcb-drop-in .4s cubic-bezier(.22, 1, .36, 1) backwards; }
+.dashboard-page .hero { animation: mcb-rise-in .42s .06s cubic-bezier(.22, 1, .36, 1) backwards; }
+.dashboard-page .aside .panel { animation: mcb-rise-in .38s .1s cubic-bezier(.22, 1, .36, 1) backwards; }
+.dashboard-page .checklist { animation: mcb-rise-in .38s .12s cubic-bezier(.22, 1, .36, 1) backwards; }
+.dashboard-page .project-grid .project-card,
+.dashboard-page .feed-list .feed-item { animation: mcb-rise-in .32s cubic-bezier(.22, 1, .36, 1) backwards; }
+.dashboard-page .project-grid .project-card:nth-child(2),
+.dashboard-page .feed-list .feed-item:nth-child(2) { animation-delay: 44ms; }
+.dashboard-page .project-grid .project-card:nth-child(3),
+.dashboard-page .feed-list .feed-item:nth-child(3) { animation-delay: 66ms; }
+.dashboard-page .project-grid .project-card:nth-child(4),
+.dashboard-page .feed-list .feed-item:nth-child(4) { animation-delay: 88ms; }
+.dashboard-page .project-grid .project-card:nth-child(5),
+.dashboard-page .feed-list .feed-item:nth-child(5) { animation-delay: 110ms; }
+.dashboard-page .project-grid .project-card:nth-child(6),
+.dashboard-page .feed-list .feed-item:nth-child(6) { animation-delay: 132ms; }
+.dashboard-page .modal-overlay.open { animation: mcb-fade-in .15s ease; }
+.dashboard-page .modal-overlay.open > .modal { animation: mcb-pop-in .18s ease; }
+
+/* i use the same entrance timing for explore results, including cards added by search. */
+.explore-page #page-header { animation: mcb-drop-in .42s cubic-bezier(.22, 1, .36, 1) backwards; }
+.explore-page #explore-tabs { animation: mcb-rise-in .4s .06s cubic-bezier(.22, 1, .36, 1) backwards; }
+.explore-page #discover-search-form { animation: mcb-rise-in .4s .1s cubic-bezier(.22, 1, .36, 1) backwards; }
+.explore-page #discover-results .discover-card,
+.explore-page #feed-panel .post-card { animation: mcb-rise-in .32s cubic-bezier(.22, 1, .36, 1) backwards; }
+.explore-page #discover-results .discover-card:nth-child(2),
+.explore-page #feed-panel .post-card:nth-child(2) { animation-delay: 44ms; }
+.explore-page #discover-results .discover-card:nth-child(3),
+.explore-page #feed-panel .post-card:nth-child(3) { animation-delay: 66ms; }
+.explore-page #discover-results .discover-card:nth-child(4),
+.explore-page #feed-panel .post-card:nth-child(4) { animation-delay: 88ms; }
+.explore-page #discover-results .discover-card:nth-child(5),
+.explore-page #feed-panel .post-card:nth-child(5) { animation-delay: 110ms; }
+.explore-page #discover-results .discover-card:nth-child(6),
+.explore-page #feed-panel .post-card:nth-child(6) { animation-delay: 132ms; }
+
+/* i turn off transitions and keyframes when someone asks for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
