@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <script src="/theme/ui-font.js"></script>
   <link rel="stylesheet" href="/theme/ui-theme.css">
   <script src="/theme/ui-theme.js"></script>
   <link rel="stylesheet" href="https://mcbcode.com/theme/ranks.css">
@@ -157,6 +158,13 @@
           </div>
           <button type="button" class="sm-btn" id="ui-theme-trigger">Customize</button>
         </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Font</div>
+            <div class="setting-desc">Choose Mojangles, Noto Sans, or Crimson Pro. Saved in this browser.</div>
+          </div>
+          <button type="button" class="sm-btn" id="ui-font-trigger">Change font</button>
+        </div>
       </section>
 
       <div class="center-msg" id="logged-out-msg" hidden>
@@ -216,15 +224,6 @@
 
         <div class="section" style="margin-top: var(--space-4);">
           <h2 class="section-title">Editor preferences</h2>
-
-          <div class="setting-row">
-            <div>
-              <div class="setting-label" id="lbl-use_mojangles_font">Use Mojangles Font</div>
-            </div>
-            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="lbl-use_mojangles_font" data-setting="use_mojangles_font" disabled>
-              <span class="toggle-knob"></span>
-            </button>
-          </div>
 
           <div class="setting-row">
             <div>

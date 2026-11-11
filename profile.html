@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="https://mcbcode.com/theme/favicon.png">
   <link rel="stylesheet" href="https://mcbcode.com/theme/site.css">
+  <script src="/theme/ui-font.js"></script>
   <link rel="stylesheet" href="/theme/ui-theme.css">
   <script src="/theme/ui-theme.js"></script>
 
@@ -428,12 +429,6 @@
           <div class="toggle" id="toggle-show_email" onclick="toggleSetting('show_email')"><div class="toggle-knob"></div></div>
         </div>
 
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Use Mojangles Font</div>
-          </div>
-          <div class="toggle" id="toggle-use_mojangles_font" onclick="toggleSetting('use_mojangles_font')"><div class="toggle-knob"></div></div>
-        </div>
        <div class="setting-row">
         <div>
           <div class="setting-label">Use inline code editor</div>
@@ -906,7 +901,6 @@ function renderSettingsToggles() {
     show_points: currentSettings.show_points,
     allow_collab: currentSettings.allow_collab,
     show_email: currentSettings.show_email,
-    use_mojangles_font: currentSettings.use_mojangles_font,
   };
   for (const key in map) {
     const el = document.getElementById(`toggle-${key}`);
