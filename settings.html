@@ -67,6 +67,7 @@
     .setting-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; gap: var(--space-2); }
     .setting-label { font-size: 13px; color: var(--ui-text); }
     .setting-desc { font-size: 11px; color: var(--dim); margin-top: 5px; line-height: 1.5; }
+    .setting-alpha { display: inline-block; margin-left: 7px; padding: 2px 6px; border: 1px solid var(--border-2); color: var(--dim); font-size: 9px; letter-spacing: .04em; vertical-align: 1px; }
 
     /* toggle (real button, same look as the profile page) */
     .toggle { position: relative; width: 40px; height: 22px; background: var(--surface-3); border: 1px solid var(--border-2); cursor: pointer; flex-shrink: 0; margin-left: 16px; padding: 0; transition: background 0.15s, border-color 0.15s; }
@@ -164,6 +165,15 @@
             <div class="setting-desc">Choose Mojangles, Noto Sans, or Crimson Pro. Saved in this browser.</div>
           </div>
           <button type="button" class="sm-btn" id="ui-font-trigger">Change font</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" id="lbl-ios-styling">iOS styling <span class="setting-alpha">alpha</span></div>
+            <div class="setting-desc" id="ios-styling-desc">Use the iOS-inspired look on Dashboard, Dripstone, and Explore. Saved in this browser.</div>
+          </div>
+          <button type="button" class="toggle" id="toggle-ios-styling" role="switch" aria-checked="false" aria-labelledby="lbl-ios-styling" aria-describedby="ios-styling-desc">
+            <span class="toggle-knob"></span>
+          </button>
         </div>
       </section>
 
@@ -568,6 +578,25 @@
     document.getElementById("toggle-editor_mode").addEventListener("click", onEditorToggleClick);
     document.getElementById("save-links-btn").addEventListener("click", saveLinks);
     document.getElementById("leave-collabs-btn").addEventListener("click", leaveAllCollaborations);
+
+    const iosStylingToggle = document.getElementById("toggle-ios-styling");
+    const iosStylingStorageKey = "mcbcode-ios-styling-v1";
+    function renderIosStylingToggle() {
+      let enabled = false;
+      try { enabled = localStorage.getItem(iosStylingStorageKey) === "true"; } catch (e) {}
+      iosStylingToggle.setAttribute("aria-checked", String(enabled));
+    }
+    iosStylingToggle.addEventListener("click", () => {
+      const nextValue = iosStylingToggle.getAttribute("aria-checked") !== "true";
+      try {
+        localStorage.setItem(iosStylingStorageKey, String(nextValue));
+        iosStylingToggle.setAttribute("aria-checked", String(nextValue));
+        showStatus("saved in this browser.", "ok");
+      } catch (e) {
+        showStatus("couldn't save this setting.", "err");
+      }
+    });
+    renderIosStylingToggle();
 
     init();
   </script>
