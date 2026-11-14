@@ -442,6 +442,14 @@
         border-left: 1px solid var(--ui-border);
         list-style: none;
     }
+    .activity-detail {
+        flex-basis: 100%;
+        color: var(--ui-muted);
+        font-size: 0.72rem;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        padding-left: 21px;
+    }
     .activity-step {
         display: flex;
         align-items: flex-start;
@@ -2316,7 +2324,12 @@ document.querySelectorAll(".model-wrap").forEach((wrap) => {
         icon.setAttribute('aria-hidden', 'true');
         return icon;
     }
-
+    function addStepDetail(item, text) {
+        if (!item || !text) return;
+        let box = item.querySelector('.activity-detail');
+        if (!box) { box = makeEl('div', 'activity-detail'); item.appendChild(box); }
+        box.textContent = text;
+    }
     function closeActivityGroup(group) {
         if (!group) return;
         group.current.textContent = 'activity · ' + group.count + (group.count === 1 ? ' step' : ' steps');
@@ -2346,6 +2359,8 @@ document.querySelectorAll(".model-wrap").forEach((wrap) => {
             const item = makeEl('li', 'activity-step');
             item.appendChild(makeEl('span', '', segment.label));
             group.list.appendChild(item);
+            group.lastItem = item;
+            if (segment.detail) addStepDetail(item, segment.detail);
             group.count += 1;
             group.lastLabel = segment.label;
             group.current.textContent = 'activity · ' + group.count + (group.count === 1 ? ' step' : ' steps');
@@ -2375,6 +2390,10 @@ document.querySelectorAll(".model-wrap").forEach((wrap) => {
         bubble.classList.remove('pending');
         if (event.type === 'activity') appendTimelineSegment(bubble, { type: 'status', label: event.label });
         else if (event.type === 'talk') appendTimelineSegment(bubble, { type: 'talk', text: event.text });
+        else if (event.type === 'activity_detail') {
+            const group = bubble._timeline && bubble._timeline.activeGroup;
+            if (group) addStepDetail(group.lastItem, event.text);
+        }
     }
 
     function finishTimeline(bubble) {
