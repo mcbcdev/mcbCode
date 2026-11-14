@@ -444,11 +444,26 @@
     }
     .activity-detail {
         flex-basis: 100%;
+        margin: 2px 0 0 21px;
+    }
+    .activity-detail summary {
+        cursor: pointer;
+        color: var(--ui-muted);
+        font-size: 0.72rem;
+        list-style: none;
+        width: fit-content;
+    }
+    .activity-detail summary::-webkit-details-marker { display: none; }
+    .activity-detail summary::before { content: "+ "; }
+    .activity-detail[open] summary::before { content: "- "; }
+    .activity-detail-text {
         color: var(--ui-muted);
         font-size: 0.72rem;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
-        padding-left: 21px;
+        margin-top: 4px;
+        padding-left: 10px;
+        border-left: 1px solid var(--ui-border);
     }
     .activity-step {
         display: flex;
@@ -2327,8 +2342,13 @@ document.querySelectorAll(".model-wrap").forEach((wrap) => {
     function addStepDetail(item, text) {
         if (!item || !text) return;
         let box = item.querySelector('.activity-detail');
-        if (!box) { box = makeEl('div', 'activity-detail'); item.appendChild(box); }
-        box.textContent = text;
+        if (!box) {
+            box = makeEl('details', 'activity-detail');
+            box.appendChild(makeEl('summary', '', 'thinking'));
+            box.appendChild(makeEl('div', 'activity-detail-text'));
+            item.appendChild(box);
+        }
+        box.querySelector('.activity-detail-text').textContent = text;
     }
     function closeActivityGroup(group) {
         if (!group) return;
