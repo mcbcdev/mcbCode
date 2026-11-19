@@ -1399,6 +1399,24 @@
     btn.textContent = "get obsidian";
   }
 </script>
+
+<script>
+  // add, remove, or change homepage splash lines in this list
+  const splashTexts = [
+    "build bedrock addons!",
+    "built by a solo dev!",
+    "it works on my world.",
+    "sign up today!",
+    "code doesnt hate you",
+    "dripstoneAI!",
+    "welcome! first time?"
+  ];
+
+  const splash = document.getElementById("hero-splash");
+  if (splash && splashTexts.length) {
+    splash.textContent = splashTexts[Math.floor(Math.random() * splashTexts.length)];
+  }
+</script>
           
 <script src="https://mcbcode.com/elements/tooltip.js" defer></script>
 
