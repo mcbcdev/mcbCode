@@ -24,33 +24,51 @@ mcbCode is built around projects, files, and the tools you need to work with the
 
 ### write and edit
 
-* dedicated `.mcfunction` editing
-* Minecraft Bedrock command syntax support
-* JSON/JS editing and validation
-* pixel art editing
-* multiple editor modes
-* customizable editor settings
-* support for different bedrock project file types
+- dedicated `.mcfunction` editing
+
+- Minecraft Bedrock command syntax support
+
+- JSON/JS editing and validation
+
+- pixel art editing
+
+- multiple editor modes
+
+- customizable editor settings
+
+- support for different bedrock project file types
 
 ### manage projects
 
-* create and organize projects
-* folders and multiple files within projects
-* bedrock pack support
-* project sharing
-* collaboration tools
-* project export
-* account profiles
-* profile customization
+- create and organize projects
+
+- folders and multiple files within projects
+
+- bedrock pack support
+
+- project sharing
+
+- collaboration tools
+
+- project export
+
+- account profiles
+
+- profile customization
 
 ### everything around the editor
 
-* notifications
-* points system
-* documentation and guides
-* tools for working with bedrock development resources
-* (mostly) mobile-friendly interfaces
-* tools and features designed to make getting started easier
+- notifications
+
+- points system
+
+- documentation and guides
+
+- tools for working with bedrock development resources
+
+- (mostly) mobile-friendly interfaces
+
+- tools and features designed to make getting started easier
 
 and because apparently one feature was never enough, mcbCode keeps growing.
 
@@ -76,16 +94,21 @@ no installation or separate development environment is required. create an accou
 
 mcbCode is designed to be approachable for people who are new to Bedrock development while still being useful once you know what you're doing.
 
-**[get started with mcbCode](https://mcbcode.com)**
+[**get started with mcbCode**](https://mcbcode.com)
 
 ## links
 
-* **official site:** [mcbcode](https://mcbcode.com)
-* **more about mcbCode:** [mcbcode/about](https://mcbcode.com/about)
-* **android app** (beta): [mcbcode/download](https://mcbcode.com/download)
-* **github:** [xyztoast/mcbCode](https://github.com/xyztoast/mcbCode)
-* **feedback site:** [feedback.mcbcode](https://feedback.mcbcode.com)
-* **bedrock ide:** [studio.mcbcode](https://studio.mcbcode.com)
+- **official site:** [mcbcode](https://mcbcode.com)
+
+- **more about mcbCode:** [mcbcode/about](https://mcbcode.com/about)
+
+- **android app** (beta): [mcbcode/download](https://mcbcode.com/download)
+
+- **github:** [mcbcdev/mcbCode](https://github.com/mcbcdev/mcbCode)
+
+- **feedback site:** [feedback.mcbcode](https://feedback.mcbcode.com)
+
+- **bedrock ide:** [studio.mcbcode](https://studio.mcbcode.com)
 
 <!-- add website/download/github banners here -->
 
@@ -111,7 +134,7 @@ mcbCode is independently developed and maintained.
 
 if you enjoy using it and want to support continued development, donations are appreciated. they help cover infrastructure costs and support ongoing development.
 
-**[ko-fi.com/idktoast](https://ko-fi.com/idktoast)**
+[**ko-fi.com/idktoast**](https://ko-fi.com/idktoast)
 
 ---
 
