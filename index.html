@@ -40,7 +40,6 @@
     }
 
     *, *::before, *::after {
-      font-weight: normal !important;
       box-sizing: border-box;
     }
 
@@ -92,6 +91,11 @@
     a:hover {
       color: var(--accent-color);
       text-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--accent-color);
+      outline-offset: 3px;
     }
 
     c { color: #e7007b; }
@@ -156,7 +160,7 @@
       background-color: var(--accent-dark);
       border: 1px solid var(--accent-color);
       color: #ffffff;
-      animation: auraPulse 4s infinite ease-in-out;
+      animation: none;
     }
 
     #tryitout:hover, .btn-primary:hover {
@@ -205,10 +209,10 @@
       margin: 0;
       color: #fff;
       font-family: 'mcfontb', sans-serif;
-      font-size: clamp(4.5rem, 12vw, 10rem);
+      font-size: clamp(4rem, 12vw, 9rem);
       line-height: 0.95;
-      letter-spacing: -0.055em;
-      white-space: nowrap;
+      letter-spacing: -0.045em;
+      overflow-wrap: anywhere;
       text-shadow: 10px 10px 0 #283428, 0 12px 24px rgba(0, 0, 0, 0.85);
     }
 
@@ -227,8 +231,8 @@
       font-size: clamp(1rem, 2vw, 1.55rem);
       line-height: 1.2;
       text-shadow: 3px 3px 0 #8a5b08;
+      transform: rotate(-8deg);
       transform-origin: center;
-      animation: splashPulse 0.25s ease-in-out infinite alternate;
       pointer-events: none;
     }
 
@@ -255,13 +259,13 @@
     @media (max-width: 600px) {
       .hero-container { min-height: 100svh; padding: 120px 6% 60px; }
       .hero-title-stack { padding: 0 4px 20px; margin-bottom: 22px; }
-      #tagline { font-size: clamp(3.5rem, 16vw, 5.5rem); }
+      #tagline { font-size: clamp(3.25rem, 16vw, 5rem); }
       .hero-splash { right: 0; bottom: 0; font-size: 1rem; }
       .hero-subtext { font-size: 1rem; margin-bottom: 24px; }
-      .hero-buttons { width: 100%; gap: 12px; }
+      .hero-buttons { width: 100%; gap: 12px; flex-direction: column; }
       .hero-buttons button, .hero-buttons .btn { width: 100%; }
-      .hero-utility-buttons { width: 100%; flex-direction: column; gap: 12px; }
-      .hero-utility-buttons .btn { width: 100%; }
+      .hero-utility-buttons { width: 100%; gap: 0; }
+      .hero-utility-buttons .btn { width: auto; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -270,9 +274,20 @@
     }
 
     .hero-buttons {
-      gap: 20px;
+      display: flex;
+      width: min(100%, 560px);
+      gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
+    }
+
+    .hero-buttons .btn {
+      display: inline-flex;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      text-align: center;
     }
 
     /* --- Section headers, now a little less "report cover" --- */
@@ -737,7 +752,7 @@
     }
 
     .hero-utility-buttons:has(.paired-utility-button) {
-      width: 70vw;
+      width: min(100%, 500px);
       max-width: 500px;
       gap: 0;
       box-shadow: 0 0 0 3px #151211;
@@ -855,7 +870,7 @@
       border: 2px solid #0E4A2E;
     }
 
-    #hero-btn {
+    .hero-action-secondary {
         box-shadow: 0 0 0 3px #151211;
         border-left: 3px solid #ffffff;
         border-top: 3px solid #ffffff;
@@ -865,12 +880,10 @@
         background-color: #c6c6c6;
         color: #121212;
 
-        width: 100%;
-
         transition: none;
     }
 
-    #hero-btn:hover {
+    .hero-action-secondary:hover {
         box-shadow: 0 0 0 3px #151211;
         border-right: 3px solid #ffffff;
         border-bottom: 3px solid #ffffff;
@@ -917,24 +930,24 @@
         <p class="hero-splash" id="hero-splash" aria-live="off">build bedrock addons!</p>
       </div>
 
-      <h2 style="color: #ff0000; background-color: #ff000080; padding: 16px; border-radius: 18px; display: none;">mcbCode is DOWN until 7:00pm EST</h2>
+      <p class="hero-subtext">browser-based tools for building minecraft bedrock addons, from pack setup to commands and textures.</p>
 
-      <div class="hero-buttons" style="width: 70vw; max-width: 500px;">
-        <button mctooltip="sign up today!" id="hero-btn" class="green" onclick="window.location.href='https://mcbcode.com/account'">get started</button><br><br>
-        <button mctooltip="already logged in?" id="hero-btn" onclick="window.location.href='https://mcbcode.com/dashboard'">go to dashboard</button>
+      <div class="hero-buttons">
+        <a mctooltip="sign up today!" class="btn green" href="https://mcbcode.com/account">get started</a>
+        <a mctooltip="already logged in?" class="btn hero-action-secondary" href="https://mcbcode.com/dashboard">go to dashboard</a>
       </div>
 
       <div class="hero-utility-buttons">
-        <button class="btn paired-utility-button paired-dripstone" onclick="window.location.href='https://mcbcode.com/dripstone'" style="flex: 1;">
+        <a class="btn paired-utility-button paired-dripstone" href="https://mcbcode.com/dripstone" style="flex: 1;">
           dripstoneAI
-        </button>
-        <button class="btn paired-utility-button paired-studio" onclick="window.location.href='https://studio.mcbcode.com'" style="flex: 1;">
+        </a>
+        <a class="btn paired-utility-button paired-studio" href="https://studio.mcbcode.com" style="flex: 1;">
           studio
-        </button>
+        </a>
 
       </div>
       
-      <button mctooltip="helps us out a lot!" class="btn hero-github" id="sogh" onclick="window.location.href='https://github.com/mcbcdev/mcbcode'"><img src="https://mcbcode.com/img/icons/github_symbol.svg" alt="" style="height: 15px;"> star us on github</button>
+      <a mctooltip="helps us out a lot!" class="btn hero-github" id="sogh" href="https://github.com/mcbcdev/mcbCode"><img src="https://mcbcode.com/img/icons/github_symbol.svg" alt="" style="height: 15px;"> star us on github</a>
       <br>
       <a href="https://www.producthunt.com/products/mcbcode?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-mcbcode" target="_blank" rel="noopener noreferrer" mctooltip="helps us out a lot!"><img alt="mcbCode - build bedrock addons without starting from zero. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1296370&amp;theme=dark&amp;t=1793219288594"></a>
      </main>
@@ -1099,10 +1112,9 @@
     <span class="sc-key">"uuid"</span>: <span class="sc-str">"f81d4fae-7dec-11d0-a765-00a0c91e6bf6"</span>,
     <span class="sc-key">"version"</span>: [<span class="sc-num">1</span>, <span class="sc-num">0</span>, <span class="sc-num">0</span>]
   }
-<span>}</span></div>
+  <span>}</span></div>
     </div>
 
-  </section>
   <br><br><br>
 </div>
   <!-- Structured Footer -->
@@ -1214,10 +1226,18 @@
 
     /* --- Dropdown --- */
     .dropdown-btn {
-      width: 18px;
-      height: 18px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      background-color: transparent;
       background-image: url('https://mcbcode.com/img/icons/dropdown.png');
-      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 18px;
       transition: transform 0.3s ease, filter 0.3s ease;
       cursor: pointer;
     }
@@ -1316,7 +1336,7 @@
   }
 }
 </style>
-<div class="navi">
+<nav class="navi" aria-label="site navigation">
   <div class="navi-brand">
     <a href="https://mcbcode.com">
       <img src="https://mcbcode.com/img/icons/default-transparent.png" alt="mcbCode Logo" class="navi-logo">
@@ -1329,16 +1349,16 @@
     <div class="quick-links-2">
     <a href="https://mcbcode.com/explore">explore <img src="https://mcbcode.com/img/icons/link.png" style="margin-left: 6px; height: 14px;"></a>
     </div>
-    <a href="https://github.com/xyztoast/mcbCode">source code</a>
+    <a href="https://github.com/mcbcdev/mcbCode">source code</a>
     <a href="https://mcbcode.com/dashboard">dashboard</a>
-    <div class="dropdown-btn" id="dd"></div>
-    <div class="dropdown">
+    <button class="dropdown-btn" id="dd" type="button" aria-label="toggle more navigation links" aria-controls="site-menu" aria-expanded="false"></button>
+    <div class="dropdown" id="site-menu" aria-label="additional navigation links">
       <div class="dropdown-content">
         <a href="https://mcbcode.com/terms-of-use">terms</a>
         <a href="https://mcbcode.com/docs/mcp">mcp</a>
         <a href="https://mcbcode.com/docs/">documentation</a>
         <a href="https://mcbcode.com/about">about</a>
-        <a href="https://mcbcode.com/profile">profiles<uah/a>
+        <a href="https://mcbcode.com/profile">profiles</a>
         <a href="https://mcbcode.com/search">search</a>
         <a href="https://mcbcode.com/explore" style="color: #00b2ff !important; background-color: #00b2ff1a;">explore</a>
         <a href="https://mcbcode.com/download">download</a>
@@ -1348,22 +1368,33 @@
       </div>
     </div>
   </div>
-</div>
+</nav>
 
 <script>
   const dropdownBtn = document.getElementById("dd");
   const dropdownMenu = document.querySelector(".dropdown");
 
-  dropdownBtn.onclick = (e) => {
+  function setDropdownOpen(isOpen) {
+    dropdownBtn.classList.toggle("active", isOpen);
+    dropdownMenu.classList.toggle("active", isOpen);
+    dropdownBtn.setAttribute("aria-expanded", String(isOpen));
+  }
+
+  dropdownBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    dropdownBtn.classList.toggle("active");
-    dropdownMenu.classList.toggle("active");
-  };
+    setDropdownOpen(!dropdownBtn.classList.contains("active"));
+  });
 
   document.addEventListener("click", (e) => {
     if (!dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
-      dropdownBtn.classList.remove("active");
-      dropdownMenu.classList.remove("active");
+      setDropdownOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && dropdownBtn.classList.contains("active")) {
+      setDropdownOpen(false);
+      dropdownBtn.focus();
     }
   });
 
