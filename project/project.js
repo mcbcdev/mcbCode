@@ -1978,8 +1978,10 @@ function renderFileList() {
   if (currentPath.length > 0) {
     const up = document.createElement("div");
     up.className = "file-row";
-    up.innerHTML = `<span class="file-icon folder"><img src="https://mcbcode.com/img/icons/upfolder.png" alt=""></span><span class="file-name folder">..</span>`;
-    up.onclick = () => { currentPath.pop(); pushPath(currentPath); renderFileList(); };
+    up.innerHTML = `<button type="button" class="file-open-target" aria-label="Go up one folder"><span class="file-icon folder"><img src="https://mcbcode.com/img/icons/upfolder.png" alt=""></span><span class="file-name folder">..</span></button>`;
+    up.querySelector(".file-open-target").addEventListener("click", () => {
+      currentPath.pop(); pushPath(currentPath); renderFileList();
+    });
     list.appendChild(up);
   }
   const showGhostIcon = currentFolderIsPackRoot() && !hasPackIcon(currentFolderId());
@@ -1993,47 +1995,61 @@ function renderFileList() {
     const ghost = document.createElement("div");
     ghost.className = "file-row";
     ghost.style.opacity = "0.6";
-    ghost.innerHTML = `<span class="file-icon">&gt;</span><span class="file-name">pack_icon.png</span><span class="file-badge" style="color:#ff9900; border-color:#3a2e18;">Add a pack_icon.png</span>`;
-    if (canEdit()) ghost.onclick = () => document.getElementById("pack-icon-upload-input").click();
-    else ghost.style.cursor = "default";
+    ghost.innerHTML = `<button type="button" class="file-open-target"><span class="file-icon">&gt;</span><span class="file-name">pack_icon.png</span><span class="file-badge" style="color:#ff9900; border-color:#3a2e18;">Add a pack_icon.png</span></button>`;
+    const ghostAction = ghost.querySelector(".file-open-target");
+    ghostAction.setAttribute("aria-label", "Add a pack icon");
+    if (canEdit()) ghostAction.addEventListener("click", () => document.getElementById("pack-icon-upload-input").click());
+    else ghostAction.disabled = true;
     list.appendChild(ghost);
   }
   children.forEach(f => {
     const row = document.createElement("div");
     row.className = "file-row";
     row.dataset.fileId = f.id;
-    const iconSrc = f.type === "folder" ? "https://mcbcode.com/img/icons/folder.png" : "https://mcbcode.com/img/icons/file.png";    const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
+    const iconSrc = f.type === "folder" ? "https://mcbcode.com/img/icons/folder.png" : "https://mcbcode.com/img/icons/file.png";
+    const nameClass = f.type === "folder" ? "file-name folder" : "file-name";
     const pngBadge = (f.type === "file" && isPng(f)) ? `<span class="file-badge">image</span>` : "";
-    const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
+    const beaconBadge = (f.type === "file" && isBeaconFile(f)) ? `<span class="file-badge" style="color:#05ee93;border-color:#0a3a2a;">3d</span>` : "";
+    const rowTime = f.type === "folder" ? newestUpdateInFolder(f.id) : f.updated_at;
     row.innerHTML = `
-      <span class="file-icon${f.type === 'folder' ? ' folder' : ''}"><img src="${iconSrc}" alt=""></span>
-      <span class="${nameClass}">${esc(f.name)}</span>
-      ${pngBadge}
-      ${beaconBadge}
-      <span class="file-updated" title="${esc(fmtDateTime(rowTime))}">${rowTime ? esc(timeAgo(rowTime)) : "—"}</span>
-      ${canEdit() ? `<button class="file-del" mctooltip="rename" onclick="askRename(event,${f.id},'${esc(f.name)}','${f.type}')">ren</button>` : ""}
-      ${canEdit() ? `<button class="file-del" mctooltip="delete" onclick="askDelete(event,${f.id},'${esc(f.name)}')">del</button>` : ""}
+      <button type="button" class="file-open-target">
+        <span class="file-icon${f.type === 'folder' ? ' folder' : ''}"><img src="${iconSrc}" alt=""></span>
+        <span class="${nameClass}">${esc(f.name)}</span>
+        ${pngBadge}
+        ${beaconBadge}
+        <span class="file-updated" title="${esc(fmtDateTime(rowTime))}">${rowTime ? esc(timeAgo(rowTime)) : "—"}</span>
+      </button>
+      ${canEdit() ? `<button type="button" class="file-del" data-file-action="rename" mctooltip="rename">ren</button>` : ""}
+      ${canEdit() ? `<button type="button" class="file-del" data-file-action="delete" mctooltip="delete">del</button>` : ""}
     `;
+    const openTarget = row.querySelector(".file-open-target");
+    const actionName = f.type === "folder" ? "Open folder" : isPng(f) ? "Preview image" : isBeaconFile(f) ? "Preview model" : "Open file";
+    openTarget.setAttribute("aria-label", `${actionName} ${f.name}`);
     if (f.type === "folder") {
-      row.onclick = e => { if (e.target.classList.contains("file-del")) return; currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); };
+      openTarget.addEventListener("click", () => { currentPath.push({id: f.id, name: f.name}); pushPath(currentPath); renderFileList(); });
     } else if (isPng(f)) {
-      row.onclick = e => {
-        if (e.target.classList.contains("file-del")) return;
-        toggleImagePreview(f, row);
-      };
+      openTarget.addEventListener("click", () => toggleImagePreview(f, row));
     } else if (isBeaconFile(f)) {
-      row.onclick = e => {
-        if (e.target.classList.contains("file-del")) return;
-        toggleBeaconPreview(f, row);
-      };
-    } else {
-      row.onclick = e => {
-        if (e.target.classList.contains("file-del")) return;
-        if (!f.save_id) return;
+      openTarget.addEventListener("click", () => toggleBeaconPreview(f, row));
+    } else if (f.save_id) {
+      openTarget.addEventListener("click", () => {
         console.log("clicked file, editor mode is:", window._editorMode);
         openInlineEditor(f);
-      };
-      if (!f.save_id) { row.style.opacity = "0.4"; row.style.cursor = "default"; }
+      });
+    } else {
+      openTarget.disabled = true;
+      row.style.opacity = "0.4";
+      row.style.cursor = "default";
+    }
+    const renameButton = row.querySelector('[data-file-action="rename"]');
+    if (renameButton) {
+      renameButton.setAttribute("aria-label", `Rename ${f.name}`);
+      renameButton.addEventListener("click", event => askRename(event, f.id, f.name, f.type));
+    }
+    const deleteButton = row.querySelector('[data-file-action="delete"]');
+    if (deleteButton) {
+      deleteButton.setAttribute("aria-label", `Delete ${f.name}`);
+      deleteButton.addEventListener("click", event => askDelete(event, f.id, f.name));
     }
     list.appendChild(row);
   });
@@ -2878,14 +2894,22 @@ async function linkGithub() {
       const files = document.getElementById("tab-files");
       const settings = document.getElementById("tab-settings");
       const toSettings = tab === "settings";
+      if (document.querySelector(".meta-panel")?.classList.contains("drawer-open")) closeMobileDrawer();
       const incoming = toSettings ? settings : files;
       const outgoing = toSettings ? files : settings;
       const isShown = node => getComputedStyle(node).display !== "none";
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const animClasses = ["tab-in-left", "tab-in-right", "tab-out-left", "tab-out-right"];
 
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      el.classList.add("active");
+      document.querySelectorAll(".proj-tabs .tab").forEach(t => {
+        const selected = t === el;
+        t.classList.toggle("active", selected);
+        t.setAttribute("aria-selected", String(selected));
+        t.tabIndex = selected ? 0 : -1;
+      });
+      const drawerOpen = document.querySelector(".meta-panel")?.classList.contains("drawer-open");
+      files.setAttribute("aria-hidden", String(toSettings && !drawerOpen));
+      settings.setAttribute("aria-hidden", String(!toSettings));
       moveTabPill();
 
       clearTimeout(window._tabSwitchTimer);
@@ -2907,6 +2931,20 @@ async function linkGithub() {
       outgoing.classList.add(toSettings ? "tab-out-left" : "tab-out-right");
       window._tabSwitchTimer = setTimeout(apply, 150);
     }
+
+    document.querySelector(".proj-tabs")?.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      const tabs = Array.from(document.querySelectorAll(".proj-tabs [role='tab']"))
+        .filter(item => getComputedStyle(item).display !== "none");
+      const currentTab = event.target.closest("[role='tab']");
+      const currentIndex = tabs.indexOf(currentTab);
+      if (currentIndex < 0 || !tabs.length) return;
+      event.preventDefault();
+      const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[nextIndex].focus();
+      tabs[nextIndex].click();
+    });
 
     // the pill behind the active tab slides to wherever the active tab is
     let tabPillPlaced = false;
@@ -2980,6 +3018,7 @@ async function linkGithub() {
       // regardless of which tab is currently marked "active".
       const filesPanel = document.getElementById("tab-files");
       if (filesPanel.style.display === "none") filesPanel.style.display = "flex";
+      filesPanel.setAttribute("aria-hidden", "false");
       document.querySelector(".meta-panel").classList.add("drawer-open");
       document.getElementById("drawer-scrim").classList.add("open");
     }
@@ -2989,7 +3028,9 @@ async function linkGithub() {
       // if settings tab is the active tab, restore tab-files to hidden now
       // that the drawer is closed, so we're back to the normal single-tab view
       const settingsActive = document.getElementById("tab-settings-btn").classList.contains("active");
-      if (settingsActive) document.getElementById("tab-files").style.display = "none";
+      const filesPanel = document.getElementById("tab-files");
+      filesPanel.setAttribute("aria-hidden", String(settingsActive));
+      if (settingsActive) filesPanel.style.display = "none";
     }
 
     async function doLogout() {

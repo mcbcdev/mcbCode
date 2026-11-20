@@ -147,6 +147,15 @@
     }
     .file-row:hover { background: var(--bg-2); }
     .file-row:hover .file-del { opacity: 1; }
+    .file-open-target {
+      display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
+      padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left;
+      appearance: none; cursor: pointer;
+    }
+    .file-open-target:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .file-open-target:disabled { cursor: default; }
+    .file-row:focus-within .file-del { opacity: 1; }
+    .file-del:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
     .file-icon { font-size: 13px; color: var(--text-low); width: 16px; text-align: center; flex-shrink: 0; }
     .file-icon.folder { color: var(--blue); }
     .file-icon img { width: 14px; height: 14px; image-rendering: pixelated; display: block; transition: transform 0.15s; }
@@ -432,7 +441,7 @@
       .path-toolbar { justify-content: flex-start; margin-left: 0; }
       .file-row { padding: 12px 16px; }
       .file-updated { display: none; }
-      .modal, .confirm-modal, .warn-modal { min-width: 0; width: 92vw; max-width: 380px; padding: 20px; }
+      .modal, .confirm-modal, .warn-modal { min-width: 0 !important; width: 92vw; max-width: 380px; padding: 20px; }
       .share-menu { right: auto; left: 0; }
 
       .inline-editor { width: 100vw; height: 100vh; border: none; border-radius: 0; }
@@ -518,12 +527,16 @@
     .recipe-grid textarea:focus { border-color: var(--accent); }
 
     /* custom private-project checkbox */
-    #set-private-toggle { display: none; }
+    #set-private-toggle {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+    }
     .custom-toggle-label { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 14px; color: var(--text-mid); }
     .custom-toggle-label::before {
       content: ""; display: inline-block; width: 20px; height: 20px; min-width: 20px;
       background-color: var(--bg-3); border-radius: 5px; transition: background-color 0.15s ease-in-out;
     }
+    #set-private-toggle:focus-visible + .custom-toggle-label::before { outline: 2px solid var(--accent); outline-offset: 3px; }
     #set-private-toggle:checked + .custom-toggle-label::before { background-color: var(--accent); }
 
     /* ---------------------------------------------------------------------
@@ -608,8 +621,13 @@
     --------------------------------------------------------------------- */
     .shell { overflow-x: clip; }
     .proj-tabs { position: relative; padding: 3px; gap: 2px; background: var(--bg-0); border: 1px solid var(--line); border-radius: 12px; }
-    .tab { position: relative; z-index: 1; border: none; border-radius: 12px; padding: 7px 18px; transition: color .2s; }
+    .tab {
+      display: flex; align-items: center; justify-content: center; gap: 6px; position: relative; z-index: 1;
+      border: none; border-radius: 12px; padding: 7px 18px; background: transparent; color: var(--text-mid);
+      font: inherit; cursor: pointer; appearance: none; transition: color .2s;
+    }
     .tab.active { background: transparent; box-shadow: none; color: var(--text-hi); }
+    .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .tab-pill {
       position: absolute; top: 3px; left: 0; height: calc(100% - 6px); width: 0; z-index: 0; pointer-events: none;
       background: var(--bg-3); border-radius: 12px; box-shadow: inset 0 0 0 1px var(--accent);
@@ -931,15 +949,15 @@
       </div>
       <div class="proj-switch">
         <button type="button" class="info-sheet-btn mobile-explorer-trigger" id="tab-info-btn" onclick="openMobileDrawer()" mctooltip="see this project's info"><img src="https://mcbcode.com/img/icons/dropdown.png" style="height: 10px; rotate: 180deg;"> info</button>
-        <div class="proj-tabs">
+        <div class="proj-tabs" role="tablist" aria-label="project sections">
         <span class="tab-pill" id="tab-pill"></span>
-        <div class="tab active" id="tab-files-btn" onclick="switchTab('files', this)" mctooltip="browse and edit your project files"><img src="https://mcbcode.com/img/icons/wrench.png" style="height: 10px;"> files</div>
-        <div class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" mctooltip="tags, collaborators, visibility and more" style="display: none;"><img src="https://mcbcode.com/img/icons/pencil.png" style="height: 12px;"> settings</div>
+        <button type="button" role="tab" aria-selected="true" aria-controls="tab-files" tabindex="0" class="tab active" id="tab-files-btn" onclick="switchTab('files', this)" mctooltip="browse and edit your project files"><img src="https://mcbcode.com/img/icons/wrench.png" alt="" style="height: 10px;"> files</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="tab-settings" tabindex="-1" class="tab" id="tab-settings-btn" onclick="switchTab('settings', this)" mctooltip="tags, collaborators, visibility and more" style="display: none;"><img src="https://mcbcode.com/img/icons/pencil.png" alt="" style="height: 12px;"> settings</button>
         </div>
       </div>
     </div>
 
-    <div class="panels" id="tab-files">
+    <div class="panels" id="tab-files" role="tabpanel" aria-labelledby="tab-files-btn" aria-hidden="false">
 
       <div class="meta-panel">
         <div class="meta-section">
@@ -987,7 +1005,7 @@
       </div>
     </div>
 
-    <div class="settings-panel" id="tab-settings">
+    <div class="settings-panel" id="tab-settings" role="tabpanel" aria-labelledby="tab-settings-btn" aria-hidden="true">
       <div class="settings-inner">
       <h3 style="color: var(--ui-text-strong); font-size: 15px; margin-bottom: 22px;">Project Settings</h3>
       <div class="set-field">
